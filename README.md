@@ -20,7 +20,8 @@ d. Trả xe
 e. Lịch sử & phân tích cá nhân
 + Xem các chuyến thuê trước đây, chi phí, quãng đường.
 + Thống kê thời điểm thường thuê (giờ cao điểm/thấp điểm)."
-+ "2. Chức năng cho Nhân viên tại điểm thuê (Station Staff)
++ 
+"2. Chức năng cho Nhân viên tại điểm thuê (Station Staff)
 a. Quản lý giao – nhận xe
 + Xem danh sách xe có sẵn, xe đã đặt trước, xe đang cho thuê.
 + Thực hiện thủ tục bàn giao: kiểm tra xe, chụp ảnh, cập nhật tình trạng.
@@ -34,7 +35,8 @@ c. Thanh toán tại điểm
 d. Quản lý xe tại điểm
 + Cập nhật trạng thái pin, tình trạng kỹ thuật.
 + Báo cáo sự cố hoặc hỏng hóc lên admin."
-+ "3. Chức năng cho Quản trị (Admin)
+
+"3. Chức năng cho Quản trị (Admin)
 a. Quản lý đội xe & điểm thuê
 + Giám sát số lượng xe ở từng điểm.
 + Theo dõi lịch sử giao/nhận và tình trạng xe.
