@@ -13,7 +13,7 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:8080/auth/login", {
+      const res = await axios.post("http://26.54.226.227:8080/auth/login", {
         email,
         password,
       });
@@ -44,37 +44,53 @@ const Login = () => {
   };
 
   return (
-    <div>
-      <h2>Đăng nhập</h2>
-      <form onSubmit={handleLogin}>
-        <input
-          type="email"
-          placeholder="Nhập email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Nhập mật khẩu"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <button type="submit">Đăng nhập</button>
-      </form>
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="w-full max-w-md bg-white shadow-lg rounded-lg p-8">
+        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
+          Đăng nhập
+        </h2>
 
-      {message && <p style={{ color: "red" }}>{message}</p>}
+        <form onSubmit={handleLogin} className="space-y-4">
+          <input
+            type="email"
+            placeholder="Nhập email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+          />
 
-      <p style={{ marginTop: "10px" }}>
-        Chưa có tài khoản?{" "}
-        <Link
-          to="/register"
-          style={{ color: "blue", textDecoration: "underline" }}
-        >
-          Đăng ký ngay
-        </Link>
-      </p>
+          <input
+            type="password"
+            placeholder="Nhập mật khẩu"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+          />
+
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-200"
+          >
+            Đăng nhập
+          </button>
+        </form>
+
+        {message && (
+          <p className="mt-4 text-center text-red-500 font-medium">{message}</p>
+        )}
+
+        <p className="mt-6 text-center text-gray-600">
+          Chưa có tài khoản?{" "}
+          <Link
+            to="/register"
+            className="text-blue-600 underline hover:text-blue-800"
+          >
+            Đăng ký ngay
+          </Link>
+        </p>
+      </div>
     </div>
   );
 };

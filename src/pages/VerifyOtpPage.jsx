@@ -16,7 +16,7 @@ const VerifyOtpPage = () => {
     e.preventDefault();
 
     try {
-      const res = await axios.post("http://localhost:8080/auth/verify-otp", {
+      const res = await axios.post("http://26.54.226.227:8080/auth/verify-otp", {
         otp,
         type,
       });
