@@ -1,0 +1,158 @@
+.offers {
+    padding: 80px 0;
+    background-color: white;
+}
+
+.offers-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 16px;
+}
+
+.offers-header {
+    text-align: center;
+    margin-bottom: 48px;
+}
+
+.offers-divider {
+    width: 80px;
+    height: 4px;
+    background-color: #dc2626;
+    margin: 0 auto 24px;
+}
+
+.offers-title {
+    font-size: 36px;
+    font-weight: bold;
+    color: #111827;
+    margin-bottom: 16px;
+}
+
+.offers-subtitle {
+    color: #4b5563;
+    font-size: 18px;
+}
+
+.offers-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    margin-bottom: 48px;
+}
+
+.offer-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    transition: box-shadow 0.3s;
+}
+
+.offer-card:hover {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.offer-image {
+    height: 256px;
+    overflow: hidden;
+}
+
+.offer-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s;
+}
+
+.offer-card:hover .offer-image img {
+    transform: scale(1.1);
+}
+
+.offer-content {
+    padding: 24px;
+}
+
+.offer-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #111827;
+    margin-bottom: 12px;
+}
+
+.offer-price {
+    margin-bottom: 16px;
+}
+
+.offer-price-amount {
+    font-size: 30px;
+    font-weight: bold;
+    color: #dc2626;
+}
+
+.offer-price-period {
+    color: #4b5563;
+    margin-left: 8px;
+}
+
+.offer-description {
+    color: #4b5563;
+    line-height: 1.75;
+    margin-bottom: 24px;
+}
+
+.offers-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+}
+
+.offers-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    padding: 12px 32px;
+    border-radius: 6px;
+    transition: all 0.3s;
+}
+
+.offers-button-primary {
+    background-color: #dc2626;
+    color: white;
+}
+
+.offers-button-primary:hover {
+    background-color: #b91c1c;
+}
+
+.offers-button-secondary {
+    border: 2px solid #dc2626;
+    color: #dc2626;
+    background-color: transparent;
+}
+
+.offers-button-secondary:hover {
+    background-color: #dc2626;
+    color: white;
+}
+
+.offers-button svg {
+    width: 20px;
+    height: 20px;
+}
+
+@media (max-width: 1024px) {
+    .offers-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .offers-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .offers-buttons {
+        flex-direction: column;
+    }
+}
