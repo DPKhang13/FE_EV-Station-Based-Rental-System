@@ -6,15 +6,13 @@ const Navbar = () => {
         <nav className="navbar">
             <div className="navbar-container">
                 <div className="navbar-logo">
-                    <span>YOUR</span>
-                    <span> 🏠 </span>
-                    <span>LOGO</span>
+                    <img src="src/assets/logo.jpg" alt="Logo" />
                 </div>
 
                 <div className="navbar-right">
                     <ul className="navbar-menu">
                         <li>
-                            <a href="#start" className="active">START</a>
+                            <a href="#start" className="active">HOME</a>
                         </li>
                         <li>
                             <a href="#reservation">RESERVATION</a>

@@ -22,6 +22,13 @@
     color: #1f2937;
 }
 
+.navbar-logo img {
+    width: 50px;
+    /* Adjust the width as needed */
+    height: auto;
+    /* Maintain aspect ratio */
+}
+
 .navbar-menu {
     display: flex;
     align-items: center;
