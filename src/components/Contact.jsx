@@ -21,14 +21,14 @@ const Contact = () => {
 
                         <div className="contact-details">
                             <div className="contact-item">
-                                <a href="mailto:contact@rentacar.com" className="contact-link">
-                                    contact@rentacar.com
+                                <a href="mailto:carrent.hcm@gmail.com" className="contact-link">
+                                    carrent.hcm@gmail.com
                                 </a>
                             </div>
 
                             <div className="contact-item">
-                                <a href="tel:123.456.7890" className="contact-link">
-                                    123.456.7890
+                                <a href="tel:0347 649 369" className="contact-link">
+                                    0347 649 369
                                 </a>
                             </div>
 
