@@ -111,3 +111,127 @@
         display: none;
     }
 }
+
+/* Dropdown container */
+.dropdown-container {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-arrow {
+    width: 12px;
+    height: 12px;
+    margin-left: 8px;
+    cursor: pointer;
+    transform: rotate(0deg);
+    transition: transform 0.3s ease;
+}
+
+.dropdown-container:hover .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+/* Main dropdown styling */
+.dropdown-list {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: white;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    list-style: none;
+    padding: 8px;
+    margin: 0;
+    z-index: 1000;
+    border-radius: 12px;
+    width: 200px;
+}
+
+.dropdown-container:hover .dropdown-list {
+    display: block;
+}
+
+.dropdown-item {
+    position: relative;
+    padding: 12px 16px;
+    font-size: 16px;
+    font-weight: 500;
+    color: #374151;
+    transition: background-color 0.3s ease;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dropdown-item:hover {
+    background-color: #f3f4f6;
+}
+
+.dropdown-item svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Sub dropdown panel styling */
+.sub-dropdown-panel {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 100%;
+    background-color: white;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    padding: 8px;
+    width: 180px;
+    z-index: 1001;
+}
+
+.dropdown-item:hover .sub-dropdown-panel {
+    display: block;
+}
+
+.sub-panel-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sub-panel-item {
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.sub-panel-item:hover {
+    transform: translateY(-2px);
+}
+
+.sub-panel-item.standard {
+    background-color: #374151;
+}
+
+.sub-panel-item.pro {
+    background-color: #dc2626;
+}
+
+.sub-panel-item.pro-plus {
+    background-color: #7c3aed;
+}
+
+.sub-panel-item.luxury {
+    background-color: #f59e0b;
+}
+
+.nav-selected {
+    color: #dc2626 !important;
+    font-weight: 700;
+    border-bottom: 3px solid #dc2626;
+    text-decoration: none !important;
+}

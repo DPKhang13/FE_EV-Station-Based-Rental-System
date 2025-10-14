@@ -3,10 +3,10 @@ import './Stats.css';
 
 const Stats = () => {
     const stats = [
-        { number: '150+', label: 'VEHICLES IN THE FLEET' },
-        { number: '5', label: 'OFFICE LOCATIONS' },
-        { number: '10+', label: 'PRIVATE DRIVERS' },
-        { number: '25+', label: 'YEARS EXPERIENCE' }
+        { number: '100+', label: 'VEHICLES IN THE FLEET' },
+        { number: '3', label: 'OFFICE LOCATIONS' },
+        { number: '1032+', label: 'ORDERED' },
+        { number: '10+', label: 'YEARS EXPERIENCE' }
     ];
 
     return (

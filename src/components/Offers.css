@@ -79,6 +79,42 @@
     margin-bottom: 40px;
 }
 
+/* Vertical layout for offer cards */
+.offers-grid.vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.offers-grid.vertical .offer-card.luxury {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    height: auto;
+    min-height: 500px;
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto;
+    padding-bottom: 32px;
+}
+
+.offers-grid.vertical .offer-card.luxury .offer-image {
+    height: 320px;
+    min-height: 320px;
+    max-height: 350px;
+    margin-bottom: 24px;
+}
+
+.offers-grid.vertical .offer-card.luxury .offer-title,
+.offers-grid.vertical .offer-card.luxury .offer-price,
+.offers-grid.vertical .offer-card.luxury .offer-description,
+.offers-grid.vertical .offer-card.luxury .rent-now-button {
+    position: static;
+    margin-bottom: 12px;
+    z-index: 1;
+}
+
 .offer-card {
     background: white;
     border-radius: 15px;
@@ -93,6 +129,7 @@
     position: relative;
     border: 1px solid rgba(255, 255, 255, 0.2);
     min-height: 400px;
+    height: 280px;
 }
 
 /* Standard Card - Black */
@@ -305,6 +342,7 @@
     grid-column: span 3;
     position: relative;
     box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
+    height: 280px;
 }
 
 .luxury::before {
@@ -404,4 +442,28 @@
     .category-title {
         font-size: 26px;
     }
+}
+
+.offers-grid.vertical .offer-card.luxury:nth-child(3) .offer-image {
+    margin-top: 24px;
+}
+
+/* Only show full image on hover for 4-seater cards */
+.offers-grid.vertical .offer-card.luxury[data-seater="4"] .offer-image:hover {
+    object-fit: contain;
+    background: inherit;
+    border: 4px solid #bfae4a;
+}
+
+/* For 7-seater cards, keep zoom effect only, never show full image */
+.offers-grid.vertical .offer-card.luxury[data-seater="7"] .offer-image,
+.offers-grid.vertical .offer-card.luxury[data-seater="7"] .offer-image:hover {
+    object-fit: cover !important;
+    background: none !important;
+    border: 3px solid rgba(255, 215, 0, 0.5);
+    transition: transform 0.3s;
+}
+
+.offers-grid.vertical .offer-card.luxury[data-seater="7"] .offer-image:hover {
+    transform: scale(1.08);
 }
