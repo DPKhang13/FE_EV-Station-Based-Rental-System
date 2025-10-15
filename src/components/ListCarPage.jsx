@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import CarFilter from './CarFilter';
 import '../App.css';
@@ -9,10 +9,15 @@ const ListCarPage = () => {
     const selectedBranch = queryParams.get('branch') || '';
 
     const branchNames = {
-        'q1': 'Chi nhánh Quận 1',
-        'q7': 'Chi nhánh Quận 7',
-        'td': 'Chi nhánh Thủ Đức',
+        '1': 'Chi nhánh Quận 1',
+        '2': 'Chi nhánh Quận 8',
+        '3': 'Chi nhánh Thủ Đức',
     };
+
+    // Scroll to top when component mounts
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, []);
 
     return (
         <div className="listcar-main" style={{ padding: '60px 0', textAlign: 'center' }}>

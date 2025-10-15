@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../App.css';
 
@@ -9,10 +9,15 @@ const LocationSelect = () => {
     const [loading, setLoading] = useState(false);
     const [selectedBranch, setSelectedBranch] = useState('');
 
+    // Scroll to top when component mounts
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, []);
+
     // 3 địa điểm giống Contact
     const locations = [
         {
-            id: 'q1',
+            id: '1',
             name: "Chi nhánh Quận 1",
             address: "123 Nguyễn Huệ, Bến Nghé, Quận 1, TP.HCM",
             lat: 10.7758,
@@ -20,15 +25,15 @@ const LocationSelect = () => {
             phone: "028 1234 5678",
         },
         {
-            id: 'q7',
-            name: "Chi nhánh Quận 7",
-            address: "456 Nguyễn Thị Thập, Tân Phú, Quận 7, TP.HCM",
+            id: '2',
+            name: "Chi nhánh Quận 8",
+            address: "456 Nguyễn Thị Thập, Tân Phú, Quận 8, TP.HCM",
             lat: 10.7292,
             lng: 106.7196,
             phone: "028 8765 4321",
         },
         {
-            id: 'td',
+            id: '3',
             name: "Chi nhánh Thủ Đức",
             address: "789 Võ Văn Ngân, Linh Chiểu, Thủ Đức, TP.HCM",
             lat: 10.8508,

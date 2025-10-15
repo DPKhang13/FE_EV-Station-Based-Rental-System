@@ -10,12 +10,10 @@ import Testimonials from './components/Testimonials'
 import Stats from './components/Stats'
 import Contact from './components/Contact'
 import Footer from './components/Footer'
-import Standard4Booking from './components/Standard4Booking'
-import Pro4Booking from './components/Pro4Booking'
-import ProPlus4Booking from './components/ProPlus4Booking'
-import Luxury4Booking from './components/Luxury4Booking'
 import ListCarPage from './components/ListCarPage';
 import LocationSelect from './components/LocationSelect';
+import Booking4Seater from './components/Booking4Seater';
+import Booking7Seater from './components/Booking7Seater';
 
 // Homepage Component
 const HomePage = () => (
@@ -57,10 +55,8 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/location-select" element={<LocationSelect />} />
           <Route path="/listcar" element={<ListCarPage />} />
-          <Route path="/booking/standard-4seat" element={<Standard4Booking />} />
-          <Route path="/booking/pro-4seat" element={<Pro4Booking />} />
-          <Route path="/booking/proplus-4seat" element={<ProPlus4Booking />} />
-          <Route path="/booking/luxury-4seat" element={<Luxury4Booking />} />
+          <Route path="/booking-4seater" element={<Booking4Seater />} />
+          <Route path="/booking-7seater" element={<Booking7Seater />} />
         </Routes>
         <Footer />
       </div>

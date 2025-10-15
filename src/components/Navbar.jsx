@@ -34,7 +34,8 @@ const Navbar = () => {
                                 onClick={e => {
                                     e.preventDefault();
                                     setActiveNav('offers');
-                                    setActiveCars('');
+                                    setActiveCars('4');
+                                    navigate('/?scroll=4-seater-cars');
                                 }}>
                                 OFFER
                                 <svg className="dropdown-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,7 +75,7 @@ const Navbar = () => {
                                     setActiveCars('');
                                     navigate('/location-select');
                                 }}>
-                                List Car
+                                LIST CAR
                             </a>
                         </li>
                         <li>

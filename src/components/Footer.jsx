@@ -1,7 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Footer.css';
 
 const Footer = () => {
+    const navigate = useNavigate();
+
     return (
         <footer className="footer">
             <div className="footer-container">
@@ -18,11 +21,47 @@ const Footer = () => {
                     <div>
                         <h3 className="footer-section-title">Quick Links</h3>
                         <ul className="footer-links">
-                            <li><a href="#start">Start</a></li>
-                            <li><a href="#reservation">Reservation</a></li>
-                            <li><a href="#fleet">Fleet</a></li>
-                            <li><a href="#locations">Locations</a></li>
-                            <li><a href="#contact">Contact Us</a></li>
+                            <li>
+                                <a href="/" onClick={e => {
+                                    e.preventDefault();
+                                    navigate('/');
+                                    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+                                }}>
+                                    Home
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#4-seater-cars" onClick={e => {
+                                    e.preventDefault();
+                                    navigate('/?scroll=4-seater-cars');
+                                }}>
+                                    4-Seater Cars
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#7-seater-cars" onClick={e => {
+                                    e.preventDefault();
+                                    navigate('/?scroll=7-seater-cars');
+                                }}>
+                                    7-Seater Cars
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/location-select" onClick={e => {
+                                    e.preventDefault();
+                                    navigate('/location-select');
+                                }}>
+                                    List Car
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#contact" onClick={e => {
+                                    e.preventDefault();
+                                    navigate('/?scroll=contact');
+                                }}>
+                                    Contact Us
+                                </a>
+                            </li>
                         </ul>
                     </div>
 
