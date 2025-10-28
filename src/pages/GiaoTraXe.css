@@ -1,0 +1,225 @@
+.giaoTraXe-container {
+  padding: 20px;
+  font-family: "Segoe UI", sans-serif;
+  background-color: #f6f8fb;
+  min-height: 100vh;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 16px;
+}
+
+.tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.tabs button {
+  border: none;
+  background: #e5e7eb;
+  color: #111827;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.tabs button:hover {
+  background-color: #cbd5e1;
+}
+
+.tabs .active {
+  background-color: #2563eb;
+  color: white;
+}
+
+.xe-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.xe-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  padding: 16px;
+  text-align: center;
+  transition: 0.2s;
+}
+
+.xe-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.xe-img {
+  width: 100%;
+  height: 140px;
+  object-fit: contain;
+  margin-bottom: 10px;
+}
+
+.xe-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 6px;
+}
+
+.xe-info {
+  font-size: 14px;
+  color: #475569;
+  margin: 2px 0;
+}
+
+.xe-status {
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.status-green {
+  color: #16a34a;
+}
+
+.status-yellow {
+  color: #ca8a04;
+}
+
+.status-blue {
+  color: #2563eb;
+}
+
+.xe-customer {
+  font-size: 13px;
+  color: #374151;
+  margin-top: 6px;
+}
+
+.btn-action {
+  margin-top: 12px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  padding: 10px;
+  width: 100%;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-action:hover {
+  background-color: #1d4ed8;
+}
+.xe-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.xe-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  padding: 16px;
+  text-align: center;
+  transition: 0.2s;
+  
+  /* 🟩 Thêm 3 dòng dưới để các card đều nhau và nút luôn ở cuối */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  min-height: 350px; /* bạn có thể điều chỉnh tùy kích thước mong muốn */
+}
+
+.xe-img {
+  width: 100%;
+  height: 160px; /* tăng chút cho đồng đều hình ảnh */
+  object-fit: cover; /* đổi từ contain sang cover cho đều khung */
+  margin-bottom: 10px;
+}
+
+.btn-action {
+  margin-top: auto; /* 🟩 giúp nút luôn nằm ở cuối card */
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  padding: 10px;
+  width: 100%;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-action:hover {
+  background-color: #1d4ed8;
+}
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.popup-content {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  width: 400px;
+  max-width: 90%;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.popup-content h2 {
+  margin-bottom: 12px;
+  font-size: 20px;
+  color: #1e293b;
+}
+
+.popup-content label {
+  display: block;
+  font-weight: 500;
+  margin-top: 10px;
+}
+
+.popup-content input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  margin-top: 4px;
+}
+
+.popup-buttons {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.popup-buttons button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.popup-buttons .btn-confirm {
+  background-color: #2563eb;
+  color: white;
+}
+

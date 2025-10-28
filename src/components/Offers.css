@@ -1,0 +1,469 @@
+.offers {
+    padding: 80px 0;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+}
+
+.offers-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.offers-header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.offers-divider {
+    width: 100px;
+    height: 4px;
+    background: linear-gradient(90deg, #ff6b6b, #ee5a24);
+    margin: 24px auto;
+    border-radius: 2px;
+}
+
+.offers-title {
+    font-size: 42px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 16px;
+    letter-spacing: 2px;
+}
+
+.offers-category {
+    margin-bottom: 60px;
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.category-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 16px;
+    text-align: center;
+    position: relative;
+}
+
+.category-title::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    margin: 10px auto;
+    border-radius: 2px;
+}
+
+.category-description {
+    font-size: 16px;
+    color: #718096;
+    margin-bottom: 40px;
+    text-align: center;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.offers-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+/* Vertical layout for offer cards */
+.offers-grid.vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.offers-grid.vertical .offer-card.luxury {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    height: auto;
+    min-height: 500px;
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto;
+    padding-bottom: 32px;
+}
+
+.offers-grid.vertical .offer-card.luxury .offer-image {
+    height: 320px;
+    min-height: 320px;
+    max-height: 350px;
+    margin-bottom: 24px;
+}
+
+.offers-grid.vertical .offer-card.luxury .offer-title,
+.offers-grid.vertical .offer-card.luxury .offer-price,
+.offers-grid.vertical .offer-card.luxury .offer-description,
+.offers-grid.vertical .offer-card.luxury .rent-now-button {
+    position: static;
+    margin-bottom: 12px;
+    z-index: 1;
+}
+
+.offer-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    text-align: center;
+    transition: all 0.4s ease;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    min-height: 400px;
+    height: 280px;
+}
+
+/* Standard Card - Black */
+.offer-card:nth-child(1) {
+    background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%);
+    color: white;
+}
+
+.offer-card:nth-child(1) .offer-title {
+    color: white;
+}
+
+.offer-card:nth-child(1) .offer-description {
+    color: #cccccc;
+}
+
+.offer-card:nth-child(1) .offer-price {
+    color: #ffffff;
+}
+
+.offer-card:nth-child(1) .offer-image {
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    filter: brightness(0.9) contrast(1.1);
+}
+
+.offer-card:nth-child(1) .offer-image:hover {
+    filter: brightness(1.1) contrast(1.2);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Pro Card - Black with Red */
+.offer-card:nth-child(2) {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d1b1b 50%, #4a1f1f 100%);
+    color: white;
+}
+
+.offer-card:nth-child(2) .offer-title {
+    color: white;
+    text-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
+}
+
+.offer-card:nth-child(2) .offer-description {
+    color: #ffcccc;
+}
+
+.offer-card:nth-child(2) .offer-price {
+    color: #ff6b6b;
+}
+
+.offer-card:nth-child(2)::before {
+    background: linear-gradient(90deg, #ff0000, #cc0000);
+}
+
+.offer-card:nth-child(2) .offer-image {
+    border: 2px solid rgba(255, 107, 107, 0.3);
+    filter: brightness(0.95) contrast(1.1) saturate(1.2);
+}
+
+.offer-card:nth-child(2) .offer-image:hover {
+    filter: brightness(1.1) contrast(1.2) saturate(1.3);
+    border-color: rgba(255, 107, 107, 0.6);
+    box-shadow: 0 8px 25px rgba(255, 0, 0, 0.2);
+}
+
+/* Pro Plus Card - Vibrant Colors */
+.offer-card:nth-child(3) {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    color: white;
+}
+
+.offer-card:nth-child(3) .offer-title {
+    color: white;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+}
+
+.offer-card:nth-child(3) .offer-description {
+    color: #f0f0ff;
+}
+
+.offer-card:nth-child(3) .offer-price {
+    color: #ffffff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+.offer-card:nth-child(3)::before {
+    background: linear-gradient(90deg, #f093fb, #f5576c);
+}
+
+.offer-card:nth-child(3) .offer-image {
+    border: 2px solid rgba(240, 147, 251, 0.4);
+    filter: brightness(1.05) contrast(1.15) saturate(1.3);
+}
+
+.offer-card:nth-child(3) .offer-image:hover {
+    filter: brightness(1.2) contrast(1.25) saturate(1.4);
+    border-color: rgba(240, 147, 251, 0.7);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.offer-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+}
+
+.offer-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.offer-card:hover::before {
+    opacity: 1;
+}
+
+.offer-image {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    object-position: center 60%;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    transition: all 0.4s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.offer-image:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.offer-image::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(0, 0, 0, 0.1) 0%, transparent 50%, rgba(255, 255, 255, 0.1) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.offer-image:hover::before {
+    opacity: 1;
+}
+
+.offer-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #2d3748;
+    margin: 16px 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.offer-price {
+    font-size: 18px;
+    color: #e53e3e;
+    margin: 12px 0;
+    font-weight: 600;
+}
+
+.offer-price span {
+    font-size: 24px;
+    font-weight: 800;
+}
+
+.offer-description {
+    font-size: 14px;
+    color: #718096;
+    margin: 16px 0;
+    line-height: 1.6;
+    flex-grow: 1;
+}
+
+.rent-now-button {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 14px 28px;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: auto;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+}
+
+.rent-now-button:hover {
+    background: linear-gradient(135deg, #ee5a24 0%, #ff6b6b 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+}
+
+.luxury {
+    background: linear-gradient(135deg, #ffd700 0%, #ffb347 25%, #ffa500 50%, #ff8c00 75%, #ff6347 100%);
+    grid-column: span 3;
+    position: relative;
+    box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
+    height: 280px;
+}
+
+.luxury::before {
+    content: '👑';
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 24px;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+}
+
+.luxury .offer-title {
+    color: #FFD700;
+    /* Gold color */
+    font-size: 28px;
+    font-weight: 900;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.6);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.luxury .offer-description {
+    color: #8b4513;
+    font-weight: 500;
+}
+
+.luxury .offer-price {
+    color: #8b4513;
+    font-weight: 800;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.luxury .offer-image {
+    border: 3px solid rgba(255, 215, 0, 0.5);
+    filter: brightness(1.1) contrast(1.2) saturate(1.4);
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.3);
+    height: 280px;
+    object-fit: cover;
+    object-position: center 70%;
+}
+
+.luxury .offer-image:hover {
+    filter: brightness(1.25) contrast(1.3) saturate(1.5);
+    border-color: rgba(255, 215, 0, 0.8);
+    box-shadow: 0 10px 30px rgba(255, 215, 0, 0.5);
+    transform: scale(1.08);
+}
+
+.luxury .rent-now-button {
+    background: linear-gradient(135deg, #8b4513 0%, #a0522d 50%, #cd853f 100%);
+    box-shadow: 0 4px 15px rgba(139, 69, 19, 0.4);
+}
+
+.luxury .rent-now-button:hover {
+    background: linear-gradient(135deg, #a0522d 0%, #cd853f 50%, #daa520 100%);
+    box-shadow: 0 6px 20px rgba(139, 69, 19, 0.6);
+}
+
+@media (max-width: 1024px) {
+    .offers-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    .luxury {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 768px) {
+    .offers {
+        padding: 60px 0;
+    }
+
+    .offers-container {
+        padding: 0 16px;
+    }
+
+    .offers-category {
+        padding: 20px;
+        margin-bottom: 40px;
+    }
+
+    .offers-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .luxury {
+        grid-column: span 1;
+    }
+
+    .offers-title {
+        font-size: 32px;
+    }
+
+    .category-title {
+        font-size: 26px;
+    }
+}
+
+.offers-grid.vertical .offer-card.luxury:nth-child(3) .offer-image {
+    margin-top: 24px;
+}
+
+/* Only show full image on hover for 4-seater cards */
+.offers-grid.vertical .offer-card.luxury[data-seater="4"] .offer-image:hover {
+    object-fit: contain;
+    background: inherit;
+    border: 4px solid #bfae4a;
+}
+
+/* For 7-seater cards, keep zoom effect only, never show full image */
+.offers-grid.vertical .offer-card.luxury[data-seater="7"] .offer-image,
+.offers-grid.vertical .offer-card.luxury[data-seater="7"] .offer-image:hover {
+    object-fit: cover !important;
+    background: none !important;
+    border: 3px solid rgba(255, 215, 0, 0.5);
+    transition: transform 0.3s;
+}
+
+.offers-grid.vertical .offer-card.luxury[data-seater="7"] .offer-image:hover {
+    transform: scale(1.08);
+}

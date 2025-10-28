@@ -1,0 +1,29 @@
+.staff-wrap {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f6f8fb;
+}
+
+/* 🟦 Sidebar cố định */
+.staff-wrap > .sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh; /* chiếm toàn bộ chiều cao màn hình */
+  width: 240px;  /* tùy theo thiết kế của bạn */
+  background-color: #0f172a; /* nền tối */
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* 🟩 Phần main có margin-left để không bị sidebar che */
+.staff-main {
+  flex: 1;
+  margin-left: 240px; /* bằng đúng chiều rộng sidebar */
+  padding: 20px;
+  overflow-y: auto;
+  background-color: #f6f8fb;
+  min-height: 100vh;
+}
