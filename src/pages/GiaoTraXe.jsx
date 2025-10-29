@@ -21,12 +21,10 @@ const GiaoTraXe = () => {
         setLoading(true);
         console.log("🚗 Đang tải danh sách xe từ API...");
 
-        // Gọi API
         const vehicles = await vehicleService.fetchAndTransformVehicles();
-
         console.log("✅ Tổng số xe từ API:", vehicles.length);
 
-        // 🔹 Lọc các xe có stationId = 1 (dù là số hay string)
+        // 🔹 Lọc xe theo trạm
         const filtered = vehicles.filter(
           (v) => Number(v.stationId) === STATION_ID
         );
@@ -133,11 +131,7 @@ const GiaoTraXe = () => {
               <h3 className="xe-name">{xe.ten}</h3>
               <p>Biển số: {xe.bienSo}</p>
               <p>Pin: {xe.pin}%</p>
-              <p>Màu: {xe.mau}</p>
               <p>Hãng: {xe.hang}</p>
-              <p>Năm SX: {xe.nam}</p>
-              <p>Dung lượng pin: {xe.congSuatPin}</p>
-              <p>Quãng đường: {xe.quangDuong} km</p>
               <p>Trạm: {xe.tram}</p>
 
               <p
@@ -152,13 +146,12 @@ const GiaoTraXe = () => {
                 {xe.trangThai}
               </p>
 
-              <button className="btn-action" onClick={() => handleAction(xe)}>
-                {xe.trangThai === "Có sẵn"
-                  ? "Cho thuê xe"
-                  : xe.trangThai === "Đang cho thuê"
-                  ? "Nhận xe trả"
-                  : "Kiểm tra bảo trì"}
-              </button>
+              {/* ✅ Chỉ hiển thị nút nếu xe “Đang cho thuê” */}
+              {xe.trangThai === "Đang cho thuê" && (
+                <button className="btn-action" onClick={() => handleAction(xe)}>
+                  Nhận xe trả
+                </button>
+              )}
             </div>
           ))}
         </div>
