@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useContext } from "react";
 import "./GiaoTraXe.css";
 import vehicleService from "../services/vehicleService";
 import PopupChoThue from "../components/staff/PopUpChoThue";
 import PopupXacThuc from "../components/staff/PopUpXacThuc";
 import PopupNhanXe from "../components/staff/PopUpNhanXe";
 import PopupDaXacThuc from "../components/staff/PopUpDaXacThuc";
+import { AuthContext } from "../context/AuthContext";
 
 const GiaoTraXe = () => {
+  const { user } = useContext(AuthContext);
   const [tab, setTab] = useState("tatca");
   const [popupType, setPopupType] = useState(null);
   const [selectedXe, setSelectedXe] = useState(null);
