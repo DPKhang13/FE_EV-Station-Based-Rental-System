@@ -6,7 +6,7 @@ import "./StaffPage.css";
 export default function StaffPage() {
   const navigate = useNavigate();
 
-  /*
+  
   useEffect(() => {
     const accessToken = localStorage.getItem("accessToken");
     
@@ -15,7 +15,7 @@ export default function StaffPage() {
     }
   }, [navigate]); 
   
-  */
+  
 
   return (
     <div className="staff-wrap">

@@ -10,8 +10,8 @@ export default function Sidebar() {
 
   const handleLogout = () => {
     // Xóa token đăng nhập (nếu có)
-    localStorage.removeItem("token");
-    sessionStorage.removeItem("token");
+    localStorage.removeItem("accessToken");
+    
     // Điều hướng về trang đăng nhập
     navigate("/login");
   };
