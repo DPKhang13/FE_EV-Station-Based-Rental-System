@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }) => {
       name: data.fullName,
       email: data.email,
       role: data.role,
+      station_id: data.station_id
     });
   };
 

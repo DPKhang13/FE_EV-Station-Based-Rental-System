@@ -19,10 +19,12 @@ export const transactionService = {
      * Tìm kiếm danh sách giao dịch theo userId
      * GET /api/transactions/search/list/{userId}
      */
-    searchByUserId: async (userId, searchParams) => {
-        const queryString = searchParams ? `?${new URLSearchParams(searchParams).toString()}` : '';
-        return await api.get(`/transactions/search/list/${userId}${queryString}`);
-    }
+   searchByUserId: async (userId, searchParams) => {
+  const queryString = searchParams ? `?${new URLSearchParams(searchParams).toString()}` : '';
+  const response = await api.get(`/transactions/search/list/${userId}${queryString}`);
+  return response.data; // ✅ chỉ trả về mảng data thôi
+}
+
 };
 
 export default transactionService;

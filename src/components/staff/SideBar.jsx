@@ -49,7 +49,7 @@ export default function Sidebar() {
             }
           >
             <FaCashRegister />
-            <span>Thanh toán</span>
+            <span>Tra cứu lịch sử giao dịch</span>
           </NavLink>
 
           <NavLink
