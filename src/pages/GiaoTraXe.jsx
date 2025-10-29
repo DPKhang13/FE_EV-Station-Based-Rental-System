@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import "./GiaoTraXe.css";
 import vehicleService from "../services/vehicleService";
 import PopupChoThue from "../components/staff/PopUpChoThue";
@@ -15,7 +15,7 @@ const GiaoTraXe = () => {
   const [danhSachXe, setDanhSachXe] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const STATION_ID = 1; // ✅ chỉ hiển thị xe của trạm ID = 1
+  const STATION_ID = 1;
 
   useEffect(() => {
     const loadData = async () => {
@@ -26,14 +26,10 @@ const GiaoTraXe = () => {
         const vehicles = await vehicleService.fetchAndTransformVehicles();
         console.log("✅ Tổng số xe từ API:", vehicles.length);
 
-        // 🔹 Lọc xe theo trạm
         const filtered = vehicles.filter(
           (v) => Number(v.stationId) === STATION_ID
         );
 
-        console.log(`📍 Số xe thuộc trạm ${STATION_ID}:`, filtered.length);
-
-        // 🔹 Chuẩn hóa dữ liệu cho UI
         const transformed = filtered.map((v) => ({
           id: v.id,
           ten: v.vehicle_name || v.name,
@@ -48,6 +44,8 @@ const GiaoTraXe = () => {
               ? "Đang cho thuê"
               : v.status === "Maintenance"
               ? "Bảo trì"
+              : v.status === "Reserved" // 🆕 Trạng thái mới
+              ? "Đã đặt trước"
               : "Không xác định",
           mau: v.color,
           hang: v.brand,
@@ -71,12 +69,13 @@ const GiaoTraXe = () => {
     loadData();
   }, []);
 
-  // Lọc theo trạng thái
+  // 🆕 Bổ sung điều kiện lọc "Đã đặt trước"
   const locXe = danhSachXe.filter((xe) => {
     if (tab === "tatca") return true;
     if (tab === "cosan") return xe.trangThai === "Có sẵn";
     if (tab === "dangchothue") return xe.trangThai === "Đang cho thuê";
     if (tab === "baotri") return xe.trangThai === "Bảo trì";
+    if (tab === "dadattruoc") return xe.trangThai === "Đã đặt trước";
     return true;
   });
 
@@ -91,13 +90,14 @@ const GiaoTraXe = () => {
     <div className="giaoTraXe-container">
       <h1 className="title">Quản lý giao - nhận xe (Trạm ID {STATION_ID})</h1>
 
-      {/* Tabs lọc trạng thái */}
+      {/* 🆕 Tabs thêm “Đã đặt trước” */}
       <div className="tabs">
         {[
           { key: "tatca", label: "Tất cả" },
           { key: "cosan", label: "Có sẵn" },
           { key: "dangchothue", label: "Đang cho thuê" },
           { key: "baotri", label: "Bảo trì" },
+          { key: "dadattruoc", label: "Đã đặt trước" }, // 🆕
         ].map((t) => (
           <button
             key={t.key}
@@ -142,13 +142,16 @@ const GiaoTraXe = () => {
                     ? "status-green"
                     : xe.trangThai === "Đang cho thuê"
                     ? "status-blue"
-                    : "status-yellow"
+                    : xe.trangThai === "Bảo trì"
+                    ? "status-yellow"
+                    : xe.trangThai === "Đã đặt trước"
+                    ? "status-orange" // 🆕 thêm màu riêng
+                    : ""
                 }`}
               >
                 {xe.trangThai}
               </p>
 
-              {/* ✅ Chỉ hiển thị nút nếu xe “Đang cho thuê” */}
               {xe.trangThai === "Đang cho thuê" && (
                 <button className="btn-action" onClick={() => handleAction(xe)}>
                   Nhận xe trả
