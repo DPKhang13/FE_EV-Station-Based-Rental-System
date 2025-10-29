@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import vehicleService from "../services/vehicleService";
+import maintenanceService from "../services/maintenanceService";
 import "./QuanLyXePage.css";
 
 const QuanLyXePage = () => {
@@ -12,12 +13,13 @@ const QuanLyXePage = () => {
 
   const STATION_ID = 1;
 
+  // 📦 Lấy danh sách xe từ API
   useEffect(() => {
     const loadData = async () => {
       try {
         const vehicles = await vehicleService.fetchAndTransformVehicles();
 
-        // Chỉ lấy xe có sẵn và bảo trì
+        // Chỉ lấy xe của trạm hiện tại
         const filtered = vehicles.filter(
           (v) =>
             Number(v.stationId) === STATION_ID &&
@@ -54,22 +56,67 @@ const QuanLyXePage = () => {
     loadData();
   }, []);
 
-  // Cập nhật pin
+  // ⚡ Cập nhật pin (chưa có API thật)
   const handleUpdatePin = () => {
+    if (!selectedXeId || !pinValue) {
+      alert("⚠️ Vui lòng chọn xe và nhập phần trăm pin!");
+      return;
+    }
     alert(`✅ Đã cập nhật pin xe ${selectedXeId} thành ${pinValue}%`);
     setPopupType(null);
+    setPinValue("");
+    setSelectedXeId("");
   };
 
-  // Báo cáo sự cố
-  const handleReportIssue = () => {
-    alert(`📩 Báo cáo sự cố cho xe ${selectedXeId}: ${issueText}`);
-    setPopupType(null);
+  // 🧰 Báo cáo sự cố - gọi API /maintanences/create
+  const handleReportIssue = async () => {
+    if (!selectedXeId || !issueText.trim()) {
+      alert("⚠️ Vui lòng chọn xe và nhập mô tả sự cố!");
+      return;
+    }
+
+    try {
+      const payload = {
+        vehicleId: selectedXeId,
+        description: issueText,
+        date: new Date().toISOString().split("T")[0],
+        cost: 0, // báo cáo sự cố chưa có chi phí
+      };
+
+      await maintenanceService.create(payload);
+      alert("📩 Báo cáo sự cố đã được gửi lên hệ thống!");
+      setPopupType(null);
+      setIssueText("");
+      setSelectedXeId("");
+    } catch (err) {
+      console.error("❌ Lỗi báo cáo sự cố:", err);
+      alert("Không thể gửi báo cáo, vui lòng thử lại!");
+    }
   };
 
-  // Đưa xe đi bảo trì
-  const handleSendMaintenance = () => {
-    alert(`🛠️ Xe ${selectedXeId} đã được chuyển sang trạng thái bảo trì!`);
-    setPopupType(null);
+  // 🛠️ Đưa xe đi bảo trì - gọi API /maintanences/create
+  const handleSendMaintenance = async () => {
+    if (!selectedXeId) {
+      alert("⚠️ Vui lòng chọn xe cần đem bảo trì!");
+      return;
+    }
+
+    try {
+      const payload = {
+        vehicleId: selectedXeId,
+        description: "Đưa xe đi bảo trì định kỳ",
+        date: new Date().toISOString().split("T")[0],
+        cost: 0,
+      };
+
+      await maintenanceService.create(payload);
+      alert(`🛠️ Xe ${selectedXeId} đã được đưa vào danh sách bảo trì!`);
+      setPopupType(null);
+      setSelectedXeId("");
+    } catch (err) {
+      console.error("❌ Lỗi đem xe bảo trì:", err);
+      alert("Không thể đưa xe vào bảo trì!");
+    }
   };
 
   return (
