@@ -1,30 +1,22 @@
-import api from './api';
+// /src/services/transactionService.js
+import api from "./api"; // nếu api.js ở /src/services/api.js
 
-/**
- * Transaction History Service
- * Lịch sử giao dịch
- */
+const transactionService = {
+  searchByUserId: async (userId, searchParams = {}) => {
+    if (!userId) throw new Error("Missing userId");
+    const qs = new URLSearchParams(searchParams).toString();
+    const endpoint =
+      `/transactions/search/list/${encodeURIComponent(userId)}` +
+      (qs ? `?${qs}` : "");
 
-export const transactionService = {
-    /**
-     * Sắp xếp giao dịch theo userId
-     * GET /api/transactions/sort/{userId}
-     */
-    sortByUserId: async (userId, sortParams) => {
-        const queryString = sortParams ? `?${new URLSearchParams(sortParams).toString()}` : '';
-        return await api.get(`/transactions/sort/${userId}${queryString}`);
-    },
+    // api.get của bạn nên trả về JSON đã parse (fetch wrapper)
+    const res = await api.get(endpoint);
 
-    /**
-     * Tìm kiếm danh sách giao dịch theo userId
-     * GET /api/transactions/search/list/{userId}
-     */
-   searchByUserId: async (userId, searchParams) => {
-  const queryString = searchParams ? `?${new URLSearchParams(searchParams).toString()}` : '';
-  const response = await api.get(`/transactions/search/list/${userId}${queryString}`);
-  return response.data; // ✅ chỉ trả về mảng data thôi
-}
-
+    // Chuẩn hóa kết quả về mảng
+    if (Array.isArray(res)) return res;
+    if (res && Array.isArray(res.data)) return res.data;
+    return [];
+  },
 };
 
 export default transactionService;

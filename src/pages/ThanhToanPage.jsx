@@ -1,6 +1,10 @@
+// pages/ThanhToanPage.jsx
 import React, { useState } from "react";
 import transactionService from "../services/transactionService";
 import "./ThanhToanPage.css";
+
+const formatVND = (n) =>
+  Number(n ?? 0).toLocaleString("vi-VN", { style: "currency", currency: "VND" });
 
 const ThanhToanPage = () => {
   const [userId, setUserId] = useState("");
@@ -13,17 +17,15 @@ const ThanhToanPage = () => {
       setError("Vui lòng nhập mã khách hàng!");
       return;
     }
-
     setError("");
     setLoading(true);
-
     try {
-      // GỌI SERVICE THAY VÌ FETCH TRỰC TIẾP
-     const response = await transactionService.searchByUserId(userId);
-setTransactions(response.data || []);
-
+      const res = await transactionService.searchByUserId(userId);
+      // ✅ res đã là array -> đổ thẳng vào state
+      setTransactions(Array.isArray(res) ? res : []);
     } catch (err) {
-      setError("Không tìm thấy dữ liệu giao dịch!");
+      console.error(err);
+      setError(err?.message || "Không tìm thấy dữ liệu giao dịch!");
       setTransactions([]);
     } finally {
       setLoading(false);
@@ -41,41 +43,48 @@ setTransactions(response.data || []);
             value={userId}
             onChange={(e) => setUserId(e.target.value)}
           />
-          <button onClick={handleSearch}>Tìm kiếm</button>
+          <button onClick={handleSearch} disabled={loading}>
+            {loading ? "Đang tìm..." : "Tìm kiếm"}
+          </button>
         </div>
         {error && <p className="error">{error}</p>}
       </div>
 
       {loading && <p className="loading">Đang tải dữ liệu...</p>}
 
-      {!loading && transactions.length > 0 && (
-        <table className="transaction-table">
-          <thead>
-            <tr>
-              <th>Mã giao dịch</th>
-              <th>Số tiền</th>
-              <th>Trạng thái</th>
-              <th>Loại</th>
-              <th>Thời gian</th>
-            </tr>
-          </thead>
-          <tbody>
-            {transactions.map((t) => (
+      {/* Luôn hiển thị bảng; nếu rỗng thì hiện 1 dòng thông báo */}
+      <table className="transaction-table">
+        <thead>
+          <tr>
+            <th>Mã giao dịch</th>
+            <th>Số tiền</th>
+            <th>Trạng thái</th>
+            <th>Loại</th>
+            <th>Thời gian</th>
+          </tr>
+        </thead>
+        <tbody>
+          {transactions.length > 0 ? (
+            transactions.map((t) => (
               <tr key={t.transactionId}>
                 <td>{t.transactionId}</td>
-                <td>{t.amount.toLocaleString()} ₫</td>
-                <td className={`status ${t.status.toLowerCase()}`}>{t.status}</td>
-                <td>{t.type}</td>
-                <td>{new Date(t.createdAt).toLocaleString("vi-VN")}</td>
+                <td>{formatVND(t.amount)}</td>
+                <td className={`status ${(t?.status || "").toLowerCase()}`}>
+                  {t?.status || "-"}
+                </td>
+                <td>{t?.type || "-"}</td>
+                <td>{t?.createdAt ? new Date(t.createdAt).toLocaleString("vi-VN") : "-"}</td>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      {!loading && !error && transactions.length === 0 && (
-        <p className="no-data">Không có dữ liệu giao dịch.</p>
-      )}
+            ))
+          ) : (
+            <tr>
+              <td colSpan={5} className="no-data-cell">
+                Không có dữ liệu giao dịch.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
     </div>
   );
 };
