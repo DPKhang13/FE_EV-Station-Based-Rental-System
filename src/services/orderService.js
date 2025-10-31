@@ -13,6 +13,9 @@ export const orderService = {
     create: async (orderData) => {
         return await api.post('/order/create', orderData);
     },
+    getPendingOrders: async () => {
+        return await api.get('/order/pending-verification');
+    },
 
     /**
      * Lấy tất cả đơn hàng
@@ -29,6 +32,7 @@ export const orderService = {
     getMyOrders: async () => {
         return await api.get('/order/get/my-orders');
     },
+    
 
     /**
      * Cập nhật đơn hàng

@@ -40,7 +40,7 @@ const GiaoTraXe = () => {
           trangThai:
             v.status === "Available"
               ? "Có sẵn"
-              : v.status === "Rented"
+              : v.status === "RENTAL"
               ? "Đang cho thuê"
               : v.status === "Maintenance"
               ? "Bảo trì"

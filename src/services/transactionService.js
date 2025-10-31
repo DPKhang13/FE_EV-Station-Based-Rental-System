@@ -2,11 +2,11 @@
 import api from "./api"; // nếu api.js ở /src/services/api.js
 
 const transactionService = {
-  searchByUserId: async (userId, searchParams = {}) => {
-    if (!userId) throw new Error("Missing userId");
+  searchByUserId: async (phone, searchParams = {}) => {
+    if (!phone) throw new Error("Missing phone number");
     const qs = new URLSearchParams(searchParams).toString();
     const endpoint =
-      `/transactions/search/list/${encodeURIComponent(userId)}` +
+      `/transactions/user/${phone}` +
       (qs ? `?${qs}` : "");
 
     // api.get của bạn nên trả về JSON đã parse (fetch wrapper)
@@ -16,6 +16,9 @@ const transactionService = {
     if (Array.isArray(res)) return res;
     if (res && Array.isArray(res.data)) return res.data;
     return [];
+  },
+  getAllTransactions: async () => {
+    return await api.get('/transactions/all');
   },
 };
 

@@ -7,12 +7,22 @@ const VerifyOtpPage = () => {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [message, setMessage] = useState("");
   const [countdown, setCountdown] = useState(null);
+  const [loading, setLoading] = useState(false);
   const inputsRef = useRef([]);
   const navigate = useNavigate();
   const location = useLocation();
   const type = location.state?.type || "REGISTER";
+  const email = location.state?.email;
 
-  // Hàm xử lý nhập OTP từng ô
+  // Nếu không có email thì quay lại trang đăng ký
+  useEffect(() => {
+    if (!email) {
+      navigate("/register");
+    }
+    inputsRef.current[0]?.focus();
+  }, [email, navigate]);
+
+  // Xử lý nhập từng ký tự OTP
   const handleChange = (value, index) => {
     if (/[^0-9]/.test(value)) return; // chỉ cho nhập số
 
@@ -25,7 +35,7 @@ const VerifyOtpPage = () => {
     }
   };
 
-  // Nhấn Backspace để lùi lại
+  // Nhấn Backspace để lùi lại ô trước
   const handleKeyDown = (e, index) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       inputsRef.current[index - 1].focus();
@@ -36,24 +46,44 @@ const VerifyOtpPage = () => {
     e.preventDefault();
     const otpCode = otp.join("");
 
-    try {
-      const res = await axios.post("http://localhost:8080/auth/verify-otp", {
-        otp: otpCode,
-        type,
-      });
-
-      const data = res.data;
-      setMessage(data.message);
-
-      if (data.redirect) {
-        setCountdown(data.delaySeconds || 3);
-        setTimeout(() => navigate(data.redirect), (data.delaySeconds || 3) * 1000);
-      }
-    } catch (err) {
-      setMessage(err.response?.data || "❌ Lỗi xác thực OTP, vui lòng thử lại!");
+    if (otpCode.length < 6) {
+      setMessage("⚠️ Vui lòng nhập đủ 6 số OTP.");
+      return;
     }
+
+    setLoading(true);
+    setMessage("");
+
+   try {
+  const res = await axios.post(
+    `http://localhost:8080/api/auth/verify?inputOtp=${otpCode}&email=${encodeURIComponent(email)}&type=${type}`
+  );
+
+  const data = res.data;
+  setMessage(data.message || "✅ Xác thực thành công!");
+
+  // ✅ Luôn tự động chuyển sang trang đăng nhập sau khi xác thực thành công
+  if (data.status === "SUCCESS" || data.message?.includes("thành công")) {
+    setCountdown(data.delaySeconds || 3);
+    setTimeout(() => navigate("/login"), (data.delaySeconds || 3) * 1000);
+  } else {
+    // Phòng khi backend không trả "SUCCESS" nhưng vẫn muốn redirect
+    navigate("/login");
+  }
+} catch (err) {
+  const backendMsg =
+    err.response?.data?.message ||
+    err.response?.data?.error ||
+    err.message ||
+    "❌ Lỗi xác thực OTP, vui lòng thử lại!";
+  setMessage(String(backendMsg));
+} finally {
+  setLoading(false);
+}
+
   };
 
+  // Countdown chuyển trang
   useEffect(() => {
     if (countdown === null) return;
     const interval = setInterval(() => {
@@ -84,14 +114,18 @@ const VerifyOtpPage = () => {
             ))}
           </div>
 
-          <button type="submit" className="otp-button">
-            Xác nhận
+          <button
+            type="submit"
+            className="otp-button"
+            disabled={loading || otp.join("").length < 6}
+          >
+            {loading ? "⏳ Đang xác thực..." : "Xác nhận"}
           </button>
         </form>
 
         {message && (
           <p className="otp-message">
-            {message}{" "}
+            {String(message)}{" "}
             {countdown !== null && countdown > 0 && (
               <span className="otp-countdown">(Chuyển sau {countdown}s)</span>
             )}

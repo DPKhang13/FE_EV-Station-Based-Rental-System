@@ -1,5 +1,5 @@
 // pages/ThanhToanPage.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect} from "react";
 import transactionService from "../services/transactionService";
 import "./ThanhToanPage.css";
 
@@ -11,16 +11,35 @@ const ThanhToanPage = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [phone, setPhone] = useState("");
+
+  useEffect(() => {
+    getAllTransactions();
+  }, []); 
+
+  const getAllTransactions = async () => {
+    setLoading(true);
+    try {
+      const res = await transactionService.getAllTransactions();
+      const arr = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+      setTransactions(arr);
+    } catch (err) {
+      console.error("❌ Error loading transactions:", err);
+      setTransactions([]);
+    } finally {
+      setLoading(false);
+    } 
+  }
 
   const handleSearch = async () => {
-    if (!userId.trim()) {
-      setError("Vui lòng nhập mã khách hàng!");
+    if (!phone.trim()) {
+      setError("Vui lòng nhập số điện thoại khách hàng!");
       return;
     }
     setError("");
     setLoading(true);
     try {
-      const res = await transactionService.searchByUserId(userId);
+      const res = await transactionService.searchByUserId(phone);
       // ✅ res đã là array -> đổ thẳng vào state
       setTransactions(Array.isArray(res) ? res : []);
     } catch (err) {
@@ -39,9 +58,9 @@ const ThanhToanPage = () => {
         <div className="search-form">
           <input
             type="text"
-            placeholder="Nhập mã khách hàng (userId)"
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
+            placeholder="Nhập mã số điện  thoại khách hàng"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
           />
           <button onClick={handleSearch} disabled={loading}>
             {loading ? "Đang tìm..." : "Tìm kiếm"}

@@ -15,25 +15,32 @@ const RegisterPage = () => {
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage("");
+  e.preventDefault();
+  setLoading(true);
+  setMessage("");
 
-    try {
-      console.log('🚀 Đang gọi authService.register...');
-      const res = await authService.register(fullName, email, phone, password);
+  try {
+    console.log("🚀 Đang gọi authService.register...");
+    const res = await authService.register({ fullName, email, phone, password });
 
-      console.log('✅ Register thành công:', res);
+    console.log("✅ Register thành công:", res);
+
+    // Nếu BE trả trạng thái NEED_OTP → điều hướng
+    if (res.status === "NEED_OTP" || res.status === 200) {
+      navigate("/verify-otp", { state: { email, type: "REGISTER" } });
+    } else {
       setMessage(res.message || "✅ Đăng ký thành công!");
       setSuccess(true);
-    } catch (err) {
-      console.error('❌ Register error:', err);
-      setMessage(err.message || "❌ Đăng ký thất bại, vui lòng thử lại!");
-      setSuccess(false);
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (err) {
+    console.error("❌ Register error:", err);
+    setMessage(err.message || "❌ Đăng ký thất bại, vui lòng thử lại!");
+    setSuccess(false);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="register-container">

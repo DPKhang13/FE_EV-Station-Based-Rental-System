@@ -23,6 +23,7 @@ import GiaoTraXe from './pages/GiaoTraXe.jsx';
 import XacThucKhachHangPage from './pages/XacThucKhachHangPage.jsx';
 import ThanhToanPage from './pages/ThanhToanPage.jsx';
 import QuanLyXePage from './pages/QuanLyXePage.jsx';
+import VerifyOtpPage from './pages/VerifyOtpPage.jsx';
 const HomePage = () => (
   <ScrollToSectionWrapper>
     <Hero />
@@ -55,7 +56,7 @@ function ScrollToSectionWrapper({ children }) {
 // ✅ Tạo wrapper để điều kiện hiển thị layout
 function LayoutWrapper({ children }) {
   const location = useLocation();
-  const hideLayout = (location.pathname === '/login') || (location.pathname === '/register') || (location.pathname.startsWith('/staff')); // 🔹 Kiểm tra nếu đang ở /login
+  const hideLayout = (location.pathname === '/login') || (location.pathname === '/register') || (location.pathname.startsWith('/staff')||(location.pathname.startsWith('/verify-otp'))); // 🔹 Kiểm tra nếu đang ở /login
 
   return (
     <>
@@ -90,7 +91,9 @@ function App() {
               <Route path="/staff/xacthuc" element={<XacThucKhachHangPage />} />
               <Route path="/staff/thanhtoan" element={<ThanhToanPage />} />
               <Route path="/staff/quanlyxe" element={<QuanLyXePage />} />
+            
             </Route>
+            <Route path="/verify-otp" element={<VerifyOtpPage />} />
 
 
           </Routes>

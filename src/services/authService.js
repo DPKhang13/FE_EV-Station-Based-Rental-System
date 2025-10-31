@@ -36,8 +36,8 @@ export const authService = {
      * Xác minh OTP khi đăng ký
      * POST /api/auth/verify
      */
-    verifyOTP: async (email, otp) => {
-        return await api.post('/auth/verify', { email, otp });
+    verifyOTP: async (otp,email) => {
+        return await api.post('/auth/verify', { otp, email });
     },
 
     /**
@@ -95,7 +95,14 @@ export const authService = {
             newPassword,
             confirmPassword
         });
-    }
+    },
+    getProfilePendingVerification: async () => {
+        return await api.get('/auth/verify-profile/pending');
+    },
+    verifyProfileByUserId: async (userId) => {
+    // PUT /api/auth/verify-profile/{userId}
+    return await api.put(`/auth/verify-profile/${userId}`);
+  }
 };
 
 export default authService;

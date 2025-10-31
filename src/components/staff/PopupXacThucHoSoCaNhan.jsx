@@ -1,80 +1,85 @@
 import React from "react";
 import "./PopupXacThucHoSoCaNhan.css";
 
-export default function PopupXacThucHoSoCaNhan({ row, onClose }) {
-  if (!row) return null; // tránh lỗi khi row chưa có dữ liệu
+export default function PopupXacThucHoSoCaNhan({
+  row, profile, loading, error, verifying, onVerify, onClose
+}) {
+  if (!row) return null;
 
   return (
     <div className="popup-overlay">
       <div className="popup">
         <div className="popup-header">
           <h2>Xác thực hồ sơ cá nhân</h2>
-          <button className="close-btn" onClick={onClose}>
-            ✖
-          </button>
+          <button className="close-btn" onClick={onClose}>✖</button>
         </div>
 
-        {/* Thông tin khách hàng */}
         <div className="section">
-          <h3>Thông tin khách hàng</h3>
+          <h3>Thông tin đơn</h3>
           <div className="info-grid">
-            <div className="info-item">
-              <strong>Họ tên:</strong> {row.ten}
-            </div>
-            <div className="info-item">
-              <strong>Số điện thoại:</strong> {row.sdt}
-            </div>
-            <div className="info-item">
-              <strong>Email:</strong> {row.email}
-            </div>
-            <div className="info-item">
-              <strong>Mã đơn:</strong> {row.id}
-            </div>
+            <div className="info-item"><strong>Mã đơn:</strong> {row.orderId}</div>
+            <div className="info-item"><strong>Khách hàng (đơn):</strong> {row.customerName}</div>
+            <div className="info-item"><strong>SĐT (đơn):</strong> {row.phone}</div>
+            <div className="info-item"><strong>Xe:</strong> {row.vehicleName} - {row.plateNumber}</div>
           </div>
         </div>
 
-        {/* Giấy tờ xác thực */}
-        <div className="section">
-          <div className="info-grid">
-            <div>
-              <label>
-                <strong>CMND/CCCD *</strong>
-              </label>
-              <div className="upload-area">📷 Chụp / Tải lên CMND/CCCD</div>
-              <input
-                type="text"
-                placeholder={`Số CMND/CCCD: ${row.cccd}`}
-                defaultValue={row.cccd}
-              />
-            </div>
-            <div>
-              <label>
-                <strong>Giấy phép lái xe *</strong>
-              </label>
-              <div className="upload-area">📷 Chụp / Tải lên GPLX</div>
-              <input
-                type="text"
-                placeholder={`Số GPLX: ${row.gplx}`}
-                defaultValue={row.gplx}
-              />
-            </div>
-          </div>
-        </div>
+        {loading && <p>Đang tải hồ sơ khách…</p>}
+        {error && <p className="error">{error}</p>}
 
-        {/* Ghi chú */}
-        <div className="section">
-          <label>
-            <strong>Ghi chú xác thực</strong>
-          </label>
-          <textarea placeholder="Ghi chú về quá trình xác thực (nếu có)..."></textarea>
-        </div>
+        {!loading && !error && (
+          profile ? (
+            <>
+              <div className="section">
+                <h3>Thông tin hồ sơ</h3>
+                <div className="info-grid">
+                  <div className="info-item"><strong>Họ tên:</strong> {profile.fullName || "—"}</div>
+                  <div className="info-item"><strong>SĐT:</strong> {profile.phone || "—"}</div>
+                  <div className="info-item"><strong>Email:</strong> {profile.email || "—"}</div>
+                  <div className="info-item">
+                    <strong>Trạng thái:</strong> {profile.status || "—"}
+                  </div>
+                </div>
+              </div>
 
-        {/* Nút hành động */}
+              <div className="section">
+                <h3>Giấy tờ xác thực</h3>
+                <div className="doc-grid">
+                  <div className="doc-card">
+                    <strong>CMND/CCCD</strong><br />
+                    {profile?.idCardUrl ? (
+                      <a href={profile.idCardUrl} target="_blank" rel="noreferrer">
+                        <img src={profile.idCardUrl} alt="Ảnh CMND/CCCD" className="doc-img" loading="lazy" />
+                      </a>
+                    ) : "Chưa cung cấp"}
+                  </div>
+
+                  <div className="doc-card">
+                    <strong>Giấy phép lái xe</strong><br />
+                    {profile?.driverLicenseUrl ? (
+                      <a href={profile.driverLicenseUrl} target="_blank" rel="noreferrer">
+                        <img src={profile.driverLicenseUrl} alt="Ảnh Giấy phép lái xe" className="doc-img" loading="lazy" />
+                      </a>
+                    ) : "Chưa cung cấp"}
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <p>Không tìm thấy hồ sơ chờ xác thực cho khách hàng này.</p>
+          )
+        )}
+
         <div className="button-group">
-          <button className="btn btn-cancel" onClick={onClose}>
-            Hủy
+          <button className="btn btn-cancel" onClick={onClose}>Hủy</button>
+          <button
+            className="btn btn-confirm"
+            onClick={onVerify}
+            disabled={verifying || !profile}
+            title={!profile ? "Không có hồ sơ để xác thực" : ""}
+          >
+            {verifying ? "Đang xác thực..." : "Xác nhận xác thực hồ sơ"}
           </button>
-          <button className="btn btn-confirm">Xác nhận xác thực hồ sơ</button>
         </div>
       </div>
     </div>
