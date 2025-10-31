@@ -16,7 +16,6 @@ import Booking7Seater from './components/Booking7Seater';
 import LoginPage from './pages/LoginPage.jsx';
 import { AuthProvider } from './context/AuthContext';
 import StaffPage from './pages/StaffPage.jsx';
-import APIStatusChecker from './components/APIStatusChecker';
 
 import RegisterPage from './pages/RegisterPage.jsx';
 import GiaoTraXe from './pages/GiaoTraXe.jsx';
@@ -24,6 +23,12 @@ import XacThucKhachHangPage from './pages/XacThucKhachHangPage.jsx';
 import ThanhToanPage from './pages/ThanhToanPage.jsx';
 import QuanLyXePage from './pages/QuanLyXePage.jsx';
 import VerifyOtpPage from './pages/VerifyOtpPage.jsx';
+import ConfirmBookingPage from './pages/ConfirmBookingPage.jsx';
+import MyBookingsPage from './pages/MyBookingsPage.jsx';
+import PaymentPage from './pages/PaymentPage.jsx';
+import ProfilePage from './pages/ProfilePage.jsx';
+import AboutPage from './pages/AboutPage.jsx';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
 const HomePage = () => (
   <ScrollToSectionWrapper>
     <Hero />
@@ -56,7 +61,7 @@ function ScrollToSectionWrapper({ children }) {
 // ✅ Tạo wrapper để điều kiện hiển thị layout
 function LayoutWrapper({ children }) {
   const location = useLocation();
-  const hideLayout = (location.pathname === '/login') || (location.pathname === '/register') || (location.pathname.startsWith('/staff')||(location.pathname.startsWith('/verify-otp'))); // 🔹 Kiểm tra nếu đang ở /login
+  const hideLayout = (location.pathname === '/login') || (location.pathname === '/register') || (location.pathname.startsWith('/staff') || (location.pathname.startsWith('/verify-otp'))); // 🔹 Kiểm tra nếu đang ở /login
 
   return (
     <>
@@ -74,16 +79,52 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <APIStatusChecker />
         <LayoutWrapper>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/location-select" element={<LocationSelect />} />
-            <Route path="/listcar" element={<ListCarPage />} />
-            <Route path="/booking-4seater" element={<Booking4Seater />} />
-            <Route path="/booking-7seater" element={<Booking7Seater />} />
+            <Route path="/location-select" element={
+              <ProtectedRoute>
+                <LocationSelect />
+              </ProtectedRoute>
+            } />
+            <Route path="/listcar" element={
+              <ProtectedRoute>
+                <ListCarPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/booking-4seater" element={
+              <ProtectedRoute>
+                <Booking4Seater />
+              </ProtectedRoute>
+            } />
+            <Route path="/booking-7seater" element={
+              <ProtectedRoute>
+                <Booking7Seater />
+              </ProtectedRoute>
+            } />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/confirm-booking" element={
+              <ProtectedRoute>
+                <ConfirmBookingPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/my-bookings" element={
+              <ProtectedRoute>
+                <MyBookingsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/payment/:orderId" element={
+              <ProtectedRoute>
+                <PaymentPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            } />
+            <Route path="/about" element={<AboutPage />} />
             <Route path="/staff" element={<StaffPage />} >
               {/* Các route con của StaffPage sẽ được định nghĩa ở đây */}
               <Route index element={<Navigate to="/staff/giaotraxe" replace={true} />} />
@@ -91,7 +132,7 @@ function App() {
               <Route path="/staff/xacthuc" element={<XacThucKhachHangPage />} />
               <Route path="/staff/thanhtoan" element={<ThanhToanPage />} />
               <Route path="/staff/quanlyxe" element={<QuanLyXePage />} />
-            
+
             </Route>
             <Route path="/verify-otp" element={<VerifyOtpPage />} />
 

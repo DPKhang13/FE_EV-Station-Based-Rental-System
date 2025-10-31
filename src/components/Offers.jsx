@@ -1,9 +1,20 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 import './Offers.css';
 
 const Offers = () => {
     const navigate = useNavigate();
+    const { user } = useContext(AuthContext);
+
+    const handleBooking = (path, gradeFilter) => {
+        if (!user) {
+            alert('Please login to book a vehicle!');
+            navigate('/login');
+            return;
+        }
+        navigate(path, { state: { gradeFilter } });
+    };
 
     return (
         <section className="offers">
@@ -19,13 +30,39 @@ const Offers = () => {
                     <p className="category-description">Perfect for small families or individual travelers looking for comfort and efficiency.</p>
                     <div className="offers-grid vertical">
                         <div className="offer-card luxury" data-seater="4">
-                            <img src="src/assets/4standard.jpg" alt="4-Seater" className="offer-image" />
-                            <h3 className="offer-title">4-SEATER RENTAL</h3>
+                            <img src="src/assets/4standard.jpg" alt="Air" className="offer-image" />
+                            <h3 className="offer-title">AIR</h3>
                             <p className="offer-price">Start from <span>$15</span> per day</p>
                             <p className="offer-description">Rent for a day and save big with our daily specials! Book Now and enjoy a stress-free drive today!</p>
                             <button
                                 className="rent-now-button"
-                                onClick={() => navigate('/booking-4seater')}
+                                onClick={() => handleBooking('/booking-4seater', 'Air')}
+                            >
+                                RENT NOW!
+                            </button>
+                        </div>
+
+                        <div className="offer-card luxury" data-seater="4">
+                            <img src="src/assets/4standard.jpg" alt="Plus" className="offer-image" />
+                            <h3 className="offer-title">PLUS</h3>
+                            <p className="offer-price">Start from <span>$35</span> per day</p>
+                            <p className="offer-description">Upgrade your experience with our Plus package, offering enhanced features and comfort.</p>
+                            <button
+                                className="rent-now-button"
+                                onClick={() => handleBooking('/booking-4seater', 'Plus')}
+                            >
+                                RENT NOW!
+                            </button>
+                        </div>
+
+                        <div className="offer-card luxury" data-seater="4">
+                            <img src="src/assets/4standard.jpg" alt="Pro" className="offer-image" />
+                            <h3 className="offer-title">PRO</h3>
+                            <p className="offer-price">Start from <span>$65</span> per day</p>
+                            <p className="offer-description">Enjoy premium features and top-notch comfort with our Pro package.</p>
+                            <button
+                                className="rent-now-button"
+                                onClick={() => handleBooking('/booking-4seater', 'Pro')}
                             >
                                 RENT NOW!
                             </button>
@@ -45,7 +82,7 @@ const Offers = () => {
                             <p className="offer-description">Rent for a day and save big with our daily specials! Book Now and enjoy a stress-free drive today!</p>
                             <button
                                 className="rent-now-button"
-                                onClick={() => navigate('/booking-7seater', { state: { gradeFilter: 'Air' } })}
+                                onClick={() => handleBooking('/booking-7seater', 'Air')}
                             >
                                 RENT NOW!
                             </button>
@@ -58,7 +95,7 @@ const Offers = () => {
                             <p className="offer-description">Upgrade your experience with our Plus package, offering enhanced features and comfort.</p>
                             <button
                                 className="rent-now-button"
-                                onClick={() => navigate('/booking-7seater', { state: { gradeFilter: 'Plus' } })}
+                                onClick={() => handleBooking('/booking-7seater', 'Plus')}
                             >
                                 RENT NOW!
                             </button>
@@ -71,7 +108,7 @@ const Offers = () => {
                             <p className="offer-description">Enjoy premium features and top-notch comfort with our Pro package.</p>
                             <button
                                 className="rent-now-button"
-                                onClick={() => navigate('/booking-7seater', { state: { gradeFilter: 'Pro' } })}
+                                onClick={() => handleBooking('/booking-7seater', 'Pro')}
                             >
                                 RENT NOW!
                             </button>

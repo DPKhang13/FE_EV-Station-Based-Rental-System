@@ -36,7 +36,14 @@ export default function LoginPage() {
 
       // First store the token and login
       login(data);
-      nav("/" + data.role, { replace: true });
+
+      // Navigate based on role
+      if (data.role === 'STAFF') {
+        nav("/staff", { replace: true });
+      } else {
+        // Customer goes to home page
+        nav("/", { replace: true });
+      }
     } catch (err) {
       console.error('❌ Login error:', err);
       const s = err.response?.status;

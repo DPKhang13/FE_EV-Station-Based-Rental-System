@@ -13,15 +13,34 @@ export const authService = {
     login: async (email, password) => {
         const response = await api.post('/auth/login', { email, password });
 
+        console.log('📥 API Login Response:', response);
+
         // Lưu token vào localStorage
-        if (response.accessToken) {
-            localStorage.setItem('accessToken', response.accessToken);
+        if (response.accessToken || response.jwtToken) {
+            const token = response.accessToken || response.jwtToken;
+            localStorage.setItem('accessToken', token);
         }
         if (response.refreshToken) {
             localStorage.setItem('refreshToken', response.refreshToken);
         }
 
-        return response;
+        // Normalize response format for AuthContext
+        const normalizedResponse = {
+            jwtToken: response.accessToken || response.jwtToken || response.token,
+            userId: response.userId || response.customerId || response.id,
+            fullName: response.fullName || response.username || response.name,
+            email: response.email,
+            role: response.role,
+            phone: response.phone || response.phoneNumber,
+            address: response.address,
+            dateOfBirth: response.dateOfBirth || response.dob,
+            needOtp: response.needOtp,
+            verifyUrl: response.verifyUrl
+        };
+
+        console.log('✅ Normalized Login Response:', normalizedResponse);
+
+        return normalizedResponse;
     },
 
     /**
@@ -36,7 +55,7 @@ export const authService = {
      * Xác minh OTP khi đăng ký
      * POST /api/auth/verify
      */
-    verifyOTP: async (otp,email) => {
+    verifyOTP: async (otp, email) => {
         return await api.post('/auth/verify', { otp, email });
     },
 
@@ -100,9 +119,9 @@ export const authService = {
         return await api.get('/auth/verify-profile/pending');
     },
     verifyProfileByUserId: async (userId) => {
-    // PUT /api/auth/verify-profile/{userId}
-    return await api.put(`/auth/verify-profile/${userId}`);
-  }
+        // PUT /api/auth/verify-profile/{userId}
+        return await api.put(`/auth/verify-profile/${userId}`);
+    }
 };
 
 export default authService;
