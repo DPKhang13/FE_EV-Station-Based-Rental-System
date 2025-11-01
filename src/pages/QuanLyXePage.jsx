@@ -43,8 +43,8 @@ const QuanLyXePage = () => {
           v.status === "Available"
             ? "Có sẵn"
             : v.status === "Maintenance"
-            ? "Bảo trì"
-            : "Không xác định",
+              ? "Bảo trì"
+              : "Không xác định",
         statusRaw: v.status, // 🆕 lưu lại raw status gốc
         hang: v.brand,
         tram: v.stationName,
@@ -74,9 +74,9 @@ const QuanLyXePage = () => {
     try {
       // 🧩 Gọi API cập nhật pin
       await rentalStationService.updateVehicleStatus(
-  selectedXe.id,
-  { status: selectedXe.statusRaw, battery: pinValue }
-);
+        selectedXe.id,
+        { status: selectedXe.statusRaw, battery: pinValue }
+      );
 
 
       alert(
@@ -148,6 +148,11 @@ const QuanLyXePage = () => {
       alert(
         `🛠️ Xe ${selectedXe.ten} (${selectedXe.bienSo}) đã được đưa vào bảo trì!`
       );
+      await rentalStationService.updateVehicleStatus(selectedXe.id, {
+        status: "Maintenance",
+        battery: `${selectedXe.pin}%`,
+      });
+
       await loadVehicles();
       setPopupType(null);
       setSelectedXe(null);
@@ -180,9 +185,8 @@ const QuanLyXePage = () => {
               <p>Pin: {xe.pin}%</p>
               <p>Hãng: {xe.hang}</p>
               <p
-                className={`status ${
-                  xe.trangThai === "Có sẵn" ? "green" : "yellow"
-                }`}
+                className={`status ${xe.trangThai === "Có sẵn" ? "green" : "yellow"
+                  }`}
               >
                 {xe.trangThai}
               </p>

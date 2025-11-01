@@ -1,20 +1,17 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { FaMotorcycle, FaCashRegister } from "react-icons/fa6";
-import { FaSignOutAlt } from "react-icons/fa";
+import { FaChartPie, FaUsers, FaSignOutAlt } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
-import { IoReturnDownBack } from "react-icons/io5";
-import "./SideBar.css";
+import "./SideBarAdmin.css";
 import React, { useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
 
-export default function Sidebar() {
+export default function SideBarAdmin() {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
 
-  // ✅ Đặt check user bên trong hàm
   if (!user) return <p>Đang tải dữ liệu người dùng...</p>;
 
-  const name = user.name || "Nhân viên";
+  const name = user.name || "Admin";
 
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
@@ -24,57 +21,47 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <div>
-        <div className="sidebar__title">Quản lý trạm</div>
+        <div className="sidebar__title">Bảng điều khiển</div>
 
-        <nav className="sidebar__nav" aria-label="Thanh điều hướng quản lý trạm">
+        <nav className="sidebar__nav" aria-label="Thanh điều hướng quản trị">
           <NavLink
-            to="/staff/giaotraxe"
+            to="/admin/dashboard"
             className={({ isActive }) =>
               isActive ? "sidebar__btn active" : "sidebar__btn"
             }
           >
-            <IoReturnDownBack />
-            <span>Quản lí giao và nhận xe</span>
+            <FaChartPie />
+            <span>Thống kê tổng quan</span>
           </NavLink>
 
           <NavLink
-            to="/staff/xacthuc"
+            to="/admin/users"
+            className={({ isActive }) =>
+              isActive ? "sidebar__btn active" : "sidebar__btn"
+            }
+          >
+            <FaUsers />
+            <span>Quản lý người dùng</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin/verify"
             className={({ isActive }) =>
               isActive ? "sidebar__btn active" : "sidebar__btn"
             }
           >
             <MdVerified />
-            <span>Thủ tục bàn giao </span>
-          </NavLink>
-
-          <NavLink
-            to="/staff/thanhtoan"
-            className={({ isActive }) =>
-              isActive ? "sidebar__btn active" : "sidebar__btn"
-            }
-          >
-            <FaCashRegister />
-            <span>Tra cứu lịch sử giao dịch</span>
-          </NavLink>
-
-          <NavLink
-            to="/staff/quanlyxe"
-            className={({ isActive }) =>
-              isActive ? "sidebar__btn active" : "sidebar__btn"
-            }
-          >
-            <FaMotorcycle />
-            <span>Quản lí xe tại trạm</span>
+            <span>Duyệt xác minh</span>
           </NavLink>
         </nav>
       </div>
 
       <div className="sidebar__footer">
         <div className="sidebar__user">
-          <div className="sidebar__avatar">S</div>
+          <div className="sidebar__avatar">A</div>
           <div>
             <p className="sidebar__user-name">{name}</p>
-            <p className="sidebar__user-role">Front Desk</p>
+            <p className="sidebar__user-role">Quản trị viên</p>
           </div>
         </div>
 

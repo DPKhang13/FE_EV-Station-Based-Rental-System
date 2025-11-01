@@ -1,13 +1,48 @@
 // pages/ThanhToanPage.jsx
-import React, { useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import transactionService from "../services/transactionService";
 import "./ThanhToanPage.css";
 
+// Định dạng tiền VND
 const formatVND = (n) =>
-  Number(n ?? 0).toLocaleString("vi-VN", { style: "currency", currency: "VND" });
+  Number(n ?? 0).toLocaleString("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  });
+
+// 🔤 Dịch trạng thái sang tiếng Việt
+const translateStatus = (status) => {
+  switch ((status || "").toUpperCase()) {
+    case "SUCCESS":
+      return "Thành công";
+    case "FAILED":
+      return "Thất bại";
+    case "PENDING":
+      return "Đang xử lý";
+    default:
+      return "Không xác định";
+  }
+};
+
+// 🔤 Dịch loại giao dịch sang tiếng Việt
+const translateType = (type) => {
+  switch ((type || "").toUpperCase()) {
+    case "DEPOSIT":
+      return "Đã cọc tiền";
+    case "WITHDRAW":
+      return "Rút tiền";
+    case "RENTAL_PAYMENT":
+      return "Thanh toán thuê xe";
+    case "REFUND":
+      return "Hoàn tiền";
+    case "TOP_UP":
+      return "Nạp tài khoản";
+    default:
+      return "Khác";
+  }
+};
 
 const ThanhToanPage = () => {
-  const [userId, setUserId] = useState("");
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -15,21 +50,25 @@ const ThanhToanPage = () => {
 
   useEffect(() => {
     getAllTransactions();
-  }, []); 
+  }, []);
 
   const getAllTransactions = async () => {
     setLoading(true);
     try {
       const res = await transactionService.getAllTransactions();
-      const arr = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+      const arr = Array.isArray(res?.data)
+        ? res.data
+        : Array.isArray(res)
+        ? res
+        : [];
       setTransactions(arr);
     } catch (err) {
-      console.error("❌ Error loading transactions:", err);
+      console.error("❌ Lỗi tải giao dịch:", err);
       setTransactions([]);
     } finally {
       setLoading(false);
-    } 
-  }
+    }
+  };
 
   const handleSearch = async () => {
     if (!phone.trim()) {
@@ -40,7 +79,6 @@ const ThanhToanPage = () => {
     setLoading(true);
     try {
       const res = await transactionService.searchByUserId(phone);
-      // ✅ res đã là array -> đổ thẳng vào state
       setTransactions(Array.isArray(res) ? res : []);
     } catch (err) {
       console.error(err);
@@ -58,7 +96,7 @@ const ThanhToanPage = () => {
         <div className="search-form">
           <input
             type="text"
-            placeholder="Nhập mã số điện  thoại khách hàng"
+            placeholder="Nhập số điện thoại khách hàng"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
           />
@@ -71,7 +109,6 @@ const ThanhToanPage = () => {
 
       {loading && <p className="loading">Đang tải dữ liệu...</p>}
 
-      {/* Luôn hiển thị bảng; nếu rỗng thì hiện 1 dòng thông báo */}
       <table className="transaction-table">
         <thead>
           <tr>
@@ -89,10 +126,16 @@ const ThanhToanPage = () => {
                 <td>{t.transactionId}</td>
                 <td>{formatVND(t.amount)}</td>
                 <td className={`status ${(t?.status || "").toLowerCase()}`}>
-                  {t?.status || "-"}
+                  {translateStatus(t.status)}
                 </td>
-                <td>{t?.type || "-"}</td>
-                <td>{t?.createdAt ? new Date(t.createdAt).toLocaleString("vi-VN") : "-"}</td>
+                <td>{translateType(t.type)}</td>
+                <td>
+                  {t?.createdAt
+                    ? new Date(t.createdAt).toLocaleString("vi-VN", {
+                        hour12: false,
+                      })
+                    : "-"}
+                </td>
               </tr>
             ))
           ) : (

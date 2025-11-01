@@ -24,6 +24,9 @@ import XacThucKhachHangPage from './pages/XacThucKhachHangPage.jsx';
 import ThanhToanPage from './pages/ThanhToanPage.jsx';
 import QuanLyXePage from './pages/QuanLyXePage.jsx';
 import VerifyOtpPage from './pages/VerifyOtpPage.jsx';
+import AdminDashBoardPage from './pages/AdminDashBoardPage.jsx';
+import AdminPage from './pages/AdminPage.jsx';
+  
 const HomePage = () => (
   <ScrollToSectionWrapper>
     <Hero />
@@ -56,7 +59,7 @@ function ScrollToSectionWrapper({ children }) {
 // ✅ Tạo wrapper để điều kiện hiển thị layout
 function LayoutWrapper({ children }) {
   const location = useLocation();
-  const hideLayout = (location.pathname === '/login') || (location.pathname === '/register') || (location.pathname.startsWith('/staff')||(location.pathname.startsWith('/verify-otp'))); // 🔹 Kiểm tra nếu đang ở /login
+  const hideLayout = (location.pathname === '/login') || (location.pathname === '/register') || (location.pathname.startsWith('/staff') || (location.pathname.startsWith('/verify-otp')) || (location.pathname.startsWith('/admin'))); // 🔹 Kiểm tra nếu đang ở /login
 
   return (
     <>
@@ -91,9 +94,14 @@ function App() {
               <Route path="/staff/xacthuc" element={<XacThucKhachHangPage />} />
               <Route path="/staff/thanhtoan" element={<ThanhToanPage />} />
               <Route path="/staff/quanlyxe" element={<QuanLyXePage />} />
-            
+
             </Route>
             <Route path="/verify-otp" element={<VerifyOtpPage />} />
+            <Route path="/admin" element={<AdminPage />}>
+              <Route index element={<Navigate to="/admin/dashboard" replace />} />
+              <Route path="dashboard" element={<AdminDashBoardPage />} />
+
+            </Route>
 
 
           </Routes>
