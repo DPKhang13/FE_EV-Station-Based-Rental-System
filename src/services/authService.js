@@ -10,19 +10,21 @@ export const authService = {
      * Đăng nhập tài khoản
      * POST /api/auth/login
      */
-    login: async (email, password) => {
-        const response = await api.post('/auth/login', { email, password });
+   login: async (email, password) => {
+  try {
+    const res = await api.post('/auth/login', { email, password });
 
-        // Lưu token vào localStorage
-        if (response.accessToken) {
-            localStorage.setItem('accessToken', response.accessToken);
-        }
-        if (response.refreshToken) {
-            localStorage.setItem('refreshToken', response.refreshToken);
-        }
+    // ⚙️ Một số backend trả res.data, không phải res
+    const data = res.data || res;
 
-        return response;
-    },
+    // ✅ Trả về dữ liệu thật để AuthContext nhận được
+    return data;
+  } catch (err) {
+    console.error("❌ Lỗi đăng nhập:", err);
+    throw err;
+  }
+},
+
 
     /**
      * Đăng ký tài khoản bằng email

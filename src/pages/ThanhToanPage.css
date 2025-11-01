@@ -172,3 +172,157 @@
   .transaction-table { font-size: 14px; }
   .transaction-table thead th, .transaction-table tbody td { padding: 10px 12px; }
 }
+
+/* ====== Container tổng ====== */
+.page-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  padding: 40px 20px;
+  background-color: #f8fafc;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ====== Box tìm kiếm ====== */
+.search-box {
+  text-align: center;
+  background: #fff;
+  padding: 24px 32px;
+  border-radius: 12px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 32px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.search-box h2 {
+  margin-bottom: 16px;
+  font-size: 22px;
+  color: #1e293b;
+}
+
+.search-form {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-form input {
+  flex: 1;
+  max-width: 350px;
+  padding: 10px 14px;
+  font-size: 15px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  outline: none;
+  transition: 0.2s;
+}
+
+.search-form input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.search-form button {
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.2s;
+}
+
+.search-form button:hover {
+  background-color: #4338ca;
+}
+
+.error {
+  color: #dc2626;
+  font-weight: 500;
+  margin-top: 12px;
+}
+
+/* ====== Table giao dịch ====== */
+.transaction-table {
+  width: 100%;
+  max-width: 950px;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+.transaction-table thead {
+  background-color: #f1f5f9;
+}
+
+.transaction-table th,
+.transaction-table td {
+  text-align: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 15px;
+}
+
+.transaction-table th {
+  color: #334155;
+  font-weight: 600;
+}
+
+.transaction-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.no-data-cell {
+  text-align: center;
+  padding: 20px;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* ====== Status màu sắc ====== */
+.status {
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 4px 10px;
+  display: inline-block;
+}
+
+.status.success {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.status.failed {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.status.pending {
+  background-color: #fef9c3;
+  color: #a16207;
+}
+
+/* ====== Responsive ====== */
+@media (max-width: 768px) {
+  .search-form {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .transaction-table th,
+  .transaction-table td {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .transaction-table {
+    font-size: 14px;
+  }
+}

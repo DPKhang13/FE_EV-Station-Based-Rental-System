@@ -192,3 +192,76 @@ h1 {
   margin-top: 10px;
   font-size: 14px;
 }
+.xe-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.xe-actions button {
+  flex: 1;
+  padding: 6px 0;
+  font-size: 13px;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-update {
+  background-color: #2563eb;
+}
+
+.btn-report {
+  background-color: #f59e0b;
+}
+
+.btn-maintain {
+  background-color: #16a34a;
+}
+
+.xe-actions button:hover {
+  opacity: 0.9;
+}
+.xe-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.xe-actions button {
+  flex: 1;
+  padding: 6px 0;
+  font-size: 13px;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-update {
+  background-color: #2563eb;
+}
+
+.btn-report {
+  background-color: #f59e0b;
+}
+
+.btn-maintain {
+  background-color: #16a34a;
+}
+
+/* 🔒 Nút bị disable */
+.xe-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.4);
+}
+
+.xe-actions button:hover:not(:disabled) {
+  opacity: 0.9;
+}

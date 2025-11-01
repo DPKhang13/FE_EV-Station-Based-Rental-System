@@ -4,15 +4,20 @@ import { FaSignOutAlt } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
 import { IoReturnDownBack } from "react-icons/io5";
 import "./SideBar.css";
+import React, { useContext } from "react";
+import { AuthContext } from "../../context/AuthContext";
 
 export default function Sidebar() {
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
+
+  // ✅ Đặt check user bên trong hàm
+  if (!user) return <p>Đang tải dữ liệu người dùng...</p>;
+
+  const name = user.name || "Nhân viên";
 
   const handleLogout = () => {
-    // Xóa token đăng nhập (nếu có)
     localStorage.removeItem("accessToken");
-    
-    // Điều hướng về trang đăng nhập
     navigate("/login");
   };
 
@@ -39,7 +44,7 @@ export default function Sidebar() {
             }
           >
             <MdVerified />
-            <span>Xác thực khách hàng</span>
+            <span>Thủ tục bàn giao</span>
           </NavLink>
 
           <NavLink
@@ -68,12 +73,11 @@ export default function Sidebar() {
         <div className="sidebar__user">
           <div className="sidebar__avatar">S</div>
           <div>
-            <p className="sidebar__user-name">Nguyễn Văn A</p>
+            <p className="sidebar__user-name">{name}</p>
             <p className="sidebar__user-role">Front Desk</p>
           </div>
         </div>
 
-        {/* 🔹 Nút đăng xuất */}
         <button className="sidebar__logout" onClick={handleLogout}>
           <FaSignOutAlt />
           <span>Đăng xuất</span>
