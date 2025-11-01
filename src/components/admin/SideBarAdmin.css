@@ -126,3 +126,11 @@
   background: var(--red-500);
   color: white;
 }
+.sidebar__section-title {
+  margin-top: 1.2rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #aaa;
+  text-transform: uppercase;
+  padding-left: 1rem;
+}

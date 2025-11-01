@@ -1,9 +1,9 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { FaChartPie, FaUsers, FaSignOutAlt } from "react-icons/fa";
+import { FaChartPie, FaUsers, FaSignOutAlt, FaCar, FaMapMarkerAlt, FaUserTie, FaClipboardList } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
-import "./SideBarAdmin.css";
 import React, { useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
+import "./SideBarAdmin.css";
 
 export default function SideBarAdmin() {
   const navigate = useNavigate();
@@ -23,42 +23,57 @@ export default function SideBarAdmin() {
       <div>
         <div className="sidebar__title">Bảng điều khiển</div>
 
-        <nav className="sidebar__nav" aria-label="Thanh điều hướng quản trị">
-          <NavLink
-            to="/admin/dashboard"
-            className={({ isActive }) =>
-              isActive ? "sidebar__btn active" : "sidebar__btn"
-            }
-          >
+        <nav className="sidebar__nav">
+          {/* --- Nhóm a. Quản lý đội xe & điểm thuê --- */}
+          <p className="sidebar__section-title">🚗 Đội xe & Điểm thuê</p>
+          <NavLink to="/admin/vehicles" className="sidebar__btn">
+            <FaCar />
+            <span>Quản lý xe</span>
+          </NavLink>
+          <NavLink to="/admin/locations" className="sidebar__btn">
+            <FaMapMarkerAlt />
+            <span>Điểm thuê</span>
+          </NavLink>
+
+          {/* --- Nhóm b. Quản lý khách hàng --- */}
+          <p className="sidebar__section-title">👥 Khách hàng</p>
+          <NavLink to="/admin/customers" className="sidebar__btn">
+            <FaUsers />
+            <span>Danh sách khách hàng</span>
+          </NavLink>
+          <NavLink to="/admin/risk-customers" className="sidebar__btn">
+            <MdVerified />
+            <span>Khách hàng rủi ro</span>
+          </NavLink>
+
+          {/* --- Nhóm c. Quản lý nhân viên --- */}
+          <p className="sidebar__section-title">🧑‍💼 Nhân viên</p>
+          <NavLink to="/admin/employees" className="sidebar__btn">
+            <FaUserTie />
+            <span>Danh sách nhân viên</span>
+          </NavLink>
+          <NavLink to="/admin/performance" className="sidebar__btn">
+            <FaClipboardList />
+            <span>Hiệu suất làm việc</span>
+          </NavLink>
+
+          {/* --- Nhóm d. Báo cáo & phân tích --- */}
+          <p className="sidebar__section-title">📊 Báo cáo & Phân tích</p>
+          <NavLink to="/admin/dashboard" className="sidebar__btn">
             <FaChartPie />
             <span>Thống kê tổng quan</span>
           </NavLink>
-
-          <NavLink
-            to="/admin/users"
-            className={({ isActive }) =>
-              isActive ? "sidebar__btn active" : "sidebar__btn"
-            }
-          >
-            <FaUsers />
-            <span>Quản lý người dùng</span>
-          </NavLink>
-
-          <NavLink
-            to="/admin/verify"
-            className={({ isActive }) =>
-              isActive ? "sidebar__btn active" : "sidebar__btn"
-            }
-          >
-            <MdVerified />
-            <span>Duyệt xác minh</span>
+          <NavLink to="/admin/ai-suggestions" className="sidebar__btn">
+            <FaChartPie />
+            <span>AI Gợi ý nâng cấp đội xe</span>
           </NavLink>
         </nav>
       </div>
 
+      {/* --- Footer --- */}
       <div className="sidebar__footer">
         <div className="sidebar__user">
-          <div className="sidebar__avatar">A</div>
+          <div className="sidebar__avatar">{name[0]}</div>
           <div>
             <p className="sidebar__user-name">{name}</p>
             <p className="sidebar__user-role">Quản trị viên</p>
