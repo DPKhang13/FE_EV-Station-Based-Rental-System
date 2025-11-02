@@ -37,7 +37,25 @@ export const rentalStationService = {
      */
     update: async (id, stationData) => {
         return await api.put(`/rentalstation/update/${id}`, stationData);
-    }
+    },
+
+   updateVehicleStatus: async (vehicle_id, {status,battery }) => {
+  try {
+    const body = {
+       // ✅ đúng key swagger (không dấu %)
+      status: status || undefined,
+      batteryStatus: `${battery}%`,
+    };
+
+    const res = await api.put(`/vehicles/updateStatus/${vehicle_id}`, body);
+    return res.data;
+  } catch (err) {
+    console.error("❌ Lỗi updateVehicleStatus:", err);
+    throw err;
+  }
+},
+
+
 };
 
 export default rentalStationService;

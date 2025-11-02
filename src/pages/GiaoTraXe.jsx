@@ -15,7 +15,8 @@ const GiaoTraXe = () => {
   const [danhSachXe, setDanhSachXe] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const STATION_ID = 1;
+ if (!user) return <p>Đang tải dữ liệu người dùng...</p>;
+const STATION_ID = user.stationId;
 
   useEffect(() => {
     const loadData = async () => {

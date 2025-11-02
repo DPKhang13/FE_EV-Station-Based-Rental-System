@@ -1,0 +1,13 @@
+.admin-wrap {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8fafc;
+  color: #1e293b;
+}
+
+.admin-main {
+  flex: 1;
+  padding: 30px;
+  background: #f9fafb;
+  overflow-y: auto;
+}
