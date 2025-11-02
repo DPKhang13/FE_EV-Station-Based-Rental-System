@@ -11,3 +11,41 @@
   background: #f9fafb;
   overflow-y: auto;
 }
+.admin-wrap {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8fafc;
+  color: #1e293b;
+}
+
+.admin-main {
+  flex: 1;
+  padding: 30px;
+  background: #f9fafb;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+/* Đảm bảo html và body chiếm full chiều cao màn hình */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-wrap {
+  display: flex;
+  height: 100vh; /* thay vì min-height */
+  background-color: #f8fafc;
+  color: #1e293b;
+  overflow: hidden; /* tránh thanh cuộn đôi */
+}
+
+.admin-main {
+  flex: 1;
+  padding: 30px;
+  background: #f9fafb;
+  overflow-y: auto;
+  height: 100vh; /* cho cuộn riêng trong vùng main */
+  box-sizing: border-box;
+}
+
