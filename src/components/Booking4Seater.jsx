@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useVehicles } from '../hooks/useVehicles';
 import { AuthContext } from '../context/AuthContext';
+import { validateVehicleForBooking } from '../utils/vehicleValidator';
 import './Booking4Seater.css';
 
 const Booking4Seater = () => {
@@ -32,7 +33,7 @@ const Booking4Seater = () => {
 
     // Scroll to top when component mounts
     useEffect(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'instant' });
     }, []);
 
     const handleChange = (e) => {
@@ -72,6 +73,24 @@ const Booking4Seater = () => {
             alert('Please enter number of hours to rent (minimum 1 hour).');
             return;
         }
+
+        // ✅ Validate vehicle has all required data for backend
+        console.log('🔍 [DEBUG] Selected car object:', selectedCar);
+        console.log('🔍 [DEBUG] Car fields:', Object.keys(selectedCar));
+
+        const validation = validateVehicleForBooking(selectedCar);
+
+        if (!validation.valid) {
+            console.error('❌ Vehicle validation failed:', validation.errors);
+            alert(
+                `❌ Xe này không thể đặt do thiếu thông tin:\n\n${validation.errors.join('\n')}\n\n` +
+                `Vui lòng chọn xe khác hoặc liên hệ hỗ trợ.\n\n` +
+                `Vehicle ID: ${selectedCar.id || selectedCar.vehicleId}`
+            );
+            return;
+        }
+
+        console.log('✅ Vehicle validation passed');
 
         // 3. Validate time logic
         const start = new Date(formData.startTime);
@@ -118,27 +137,46 @@ const Booking4Seater = () => {
         }
 
         // 6. Convert datetime to backend format (add seconds)
-        const startTimeFormatted = formData.startTime.length === 16
-            ? formData.startTime + ':00'
-            : formData.startTime;
+        const startTimeFormatted = formData.startTime
+            .replace('T', ' ')  // Đổi T thành dấu cách
+            + ':00';
+        const year = end.getFullYear();
+        const month = String(end.getMonth() + 1).padStart(2, '0');
+        const day = String(end.getDate()).padStart(2, '0');
+        const hours = String(end.getHours()).padStart(2, '0');
+        const minutes = String(end.getMinutes()).padStart(2, '0');
+        const seconds = String(end.getSeconds()).padStart(2, '0');
 
         // Format end time (calculated from startTime + plannedHours)
-        const endTimeFormatted = end.toISOString().slice(0, 19).replace('T', ' ').replace(' ', 'T');
-
+        const endTimeFormatted = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        console.log('📅 Formatted times:', {
+            start: startTimeFormatted,
+            end: endTimeFormatted,
+            plannedHours: plannedHours
+        });
         // 7. Prepare booking data
         const bookingData = {
             car: selectedCar,
             orderData: {
-                customerId: parseInt(customerId),
+                customerId: customerId,
                 vehicleId: selectedCar.id,
                 startTime: startTimeFormatted,
-                endTime: endTimeFormatted,
                 plannedHours: plannedHours,
                 couponCode: formData.couponCode || null,
                 actualHours: null
             },
-            plannedHours: plannedHours
+            plannedHours: plannedHours,
+            startTime: startTimeFormatted,
+            endTime: endTimeFormatted,
+            customerName: user?.fullname || user?.fullName || user?.username || user?.name || 'N/A',
+            customerPhone: user?.phonenumber || user?.phoneNumber || user?.phone || 'N/A'
         };
+
+        console.log('👤 Customer info being sent:', {
+            customerName: bookingData.customerName,
+            customerPhone: bookingData.customerPhone,
+            userObject: user
+        });
 
         console.log('📦 Navigating to confirm page with data:', bookingData);
 

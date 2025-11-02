@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useVehicles } from '../hooks/useVehicles';
 import { AuthContext } from '../context/AuthContext';
+import { validateVehicleForBooking } from '../utils/vehicleValidator';
 import './Booking7Seater.css';
 
 const Booking7Seater = () => {
@@ -73,6 +74,21 @@ const Booking7Seater = () => {
             return;
         }
 
+        // ✅ Validate vehicle has all required data for backend
+        const validation = validateVehicleForBooking(selectedCar);
+
+        if (!validation.valid) {
+            console.error('❌ Vehicle validation failed:', validation.errors);
+            alert(
+                `❌ Xe này không thể đặt do thiếu thông tin:\n\n${validation.errors.join('\n')}\n\n` +
+                `Vui lòng chọn xe khác hoặc liên hệ hỗ trợ.\n\n` +
+                `Vehicle ID: ${selectedCar.id || selectedCar.vehicleId}`
+            );
+            return;
+        }
+
+        console.log('✅ Vehicle validation passed');
+
         // 3. Validate time logic
         const start = new Date(formData.startTime);
         const now = new Date();
@@ -129,7 +145,7 @@ const Booking7Seater = () => {
         const bookingData = {
             car: selectedCar,
             orderData: {
-                customerId: parseInt(customerId),
+                customerId: customerId, // Keep as UUID string, don't parse to int!
                 vehicleId: selectedCar.id,
                 startTime: startTimeFormatted,
                 endTime: endTimeFormatted,
@@ -137,10 +153,19 @@ const Booking7Seater = () => {
                 couponCode: formData.couponCode || null,
                 actualHours: null
             },
-            plannedHours: plannedHours
+            plannedHours: plannedHours,
+            startTime: startTimeFormatted,
+            endTime: endTimeFormatted,
+            customerName: user?.fullname || user?.fullName || user?.username || user?.name || 'N/A',
+            customerPhone: user?.phonenumber || user?.phoneNumber || user?.phone || 'N/A'
         };
 
         console.log('📦 Navigating to confirm page with data:', bookingData);
+        console.log('👤 Customer info being sent:', {
+            customerName: bookingData.customerName,
+            customerPhone: bookingData.customerPhone,
+            userObject: user
+        });
 
         // 8. Navigate to Confirm Booking Page
         navigate('/confirm-booking', { state: { bookingData } });

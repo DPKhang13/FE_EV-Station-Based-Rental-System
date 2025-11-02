@@ -11,6 +11,16 @@ export const orderService = {
      * POST /api/order/create
      */
     create: async (orderData) => {
+        console.log('🚀 [orderService.create] Sending request to /api/order/create');
+        console.log('📦 [orderService.create] Payload:', JSON.stringify(orderData, null, 2));
+        console.log('🔍 [orderService.create] Field types:', {
+            customerId: typeof orderData.customerId,
+            vehicleId: typeof orderData.vehicleId,
+            startTime: typeof orderData.startTime,
+            endTime: typeof orderData.endTime,
+            plannedHours: typeof orderData.plannedHours,
+            couponCode: orderData.couponCode ? typeof orderData.couponCode : 'undefined'
+        });
         return await api.post('/order/create', orderData);
     },
     getPendingOrders: async () => {
@@ -32,7 +42,7 @@ export const orderService = {
     getMyOrders: async () => {
         return await api.get('/order/get/my-orders');
     },
-    
+
 
     /**
      * Cập nhật đơn hàng

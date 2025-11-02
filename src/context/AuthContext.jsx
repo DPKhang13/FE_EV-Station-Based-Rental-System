@@ -13,6 +13,16 @@ export const AuthProvider = ({ children }) => {
     const savedUser = localStorage.getItem("user");
     const savedToken = localStorage.getItem("accessToken");
 
+    // ⚠️ Important: If user data exists but no token, clear everything
+    if (savedUser && !savedToken) {
+      console.warn('⚠️ User data found but no token - clearing session');
+      localStorage.removeItem("user");
+      localStorage.removeItem("role");
+      setUser(null);
+      setToken(null);
+      return;
+    }
+
     if (savedUser && savedToken) {
       try {
         const parsedUser = JSON.parse(savedUser);
@@ -22,6 +32,8 @@ export const AuthProvider = ({ children }) => {
       } catch (e) {
         console.error('Failed to parse saved user:', e);
         localStorage.removeItem("user");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("role");
       }
     }
   }, []);

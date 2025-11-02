@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 import { orderService } from '../services';
 import './ConfirmBookingPage.css';
 
 const ConfirmBookingPage = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const { user } = useContext(AuthContext);
+
     const bookingData = location.state?.bookingData;
     const [loading, setLoading] = useState(false);
 
@@ -22,34 +25,71 @@ const ConfirmBookingPage = () => {
     const handleConfirmBooking = async () => {
         setLoading(true);
         try {
-            // Ensure all numeric fields are proper integers
+            // Get customerId as UUID string (don't parse to int!)
+            const customerId = bookingData.orderData.customerId;
+            const vehicleId = parseInt(bookingData.orderData.vehicleId);
+            const plannedHours = parseInt(bookingData.orderData.plannedHours);
+
+            // Validate required fields
+            // ✅ KHÔNG cần validate customerId - Backend lấy từ JWT token
+            if (!vehicleId || isNaN(vehicleId)) {
+                throw new Error('Invalid vehicle ID');
+            }
+            if (!plannedHours || isNaN(plannedHours) || plannedHours <= 0) {
+                throw new Error('Invalid planned hours');
+            }
+
+            // ⚠️ IMPORTANT: Backend KHÔNG cần customerId và endTime
+            // Backend lấy customerId từ JWT token
+            // Backend tự tính endTime = startTime + plannedHours
+
+            // ✅ FIX: Dùng startTime đã được format sẵn từ Booking4Seater
+            // Format: "2025-11-03 07:11:00" (có dấu SPACE, có giây)
+            const startTimeFormatted = bookingData.startTime || bookingData.orderData.startTime;
+
+            console.log('🕐 DateTime data:');
+            console.log('  bookingData.startTime:', bookingData.startTime);
+            console.log('  orderData.startTime:', bookingData.orderData.startTime);
+            console.log('  ✅ Using:', startTimeFormatted);
+
+            // ✅ PAYLOAD - Backend lấy customerId từ JWT token
             const cleanedOrderData = {
-                customerId: parseInt(bookingData.orderData.customerId),
-                vehicleId: parseInt(bookingData.orderData.vehicleId),
-                startTime: bookingData.orderData.startTime,
-                endTime: bookingData.orderData.endTime,
-                plannedHours: parseInt(bookingData.orderData.plannedHours),
-                couponCode: bookingData.orderData.couponCode || null,
-                actualHours: null
+                // ❌ KHÔNG gửi customerId - Backend tự lấy từ JWT
+                vehicleId: vehicleId,
+                startTime: startTimeFormatted,  // ✅ "2025-11-03 07:11:00" (dấu space)
+                plannedHours: plannedHours,
+                // ❌ KHÔNG gửi endTime - Backend tự tính
             };
 
+            // Only include couponCode if it has a value
+            if (bookingData.orderData.couponCode && bookingData.orderData.couponCode.trim() !== '') {
+                cleanedOrderData.couponCode = bookingData.orderData.couponCode.trim();
+            }
+
             console.log('📤 Creating order with cleaned data:');
-            console.log('  customerId:', cleanedOrderData.customerId, '(type:', typeof cleanedOrderData.customerId + ')');
             console.log('  vehicleId:', cleanedOrderData.vehicleId, '(type:', typeof cleanedOrderData.vehicleId + ')');
-            console.log('  startTime:', cleanedOrderData.startTime);
-            console.log('  endTime:', cleanedOrderData.endTime);
+            console.log('  startTime:', cleanedOrderData.startTime, '(format: YYYY-MM-DD HH:mm:ss)');
             console.log('  plannedHours:', cleanedOrderData.plannedHours, '(type:', typeof cleanedOrderData.plannedHours + ')');
-            console.log('  couponCode:', cleanedOrderData.couponCode);
-            console.log('  actualHours:', cleanedOrderData.actualHours);
+            console.log('  couponCode:', cleanedOrderData.couponCode || '(null)');
             console.log('Full JSON:', JSON.stringify(cleanedOrderData, null, 2));
+            console.log('✅ Backend sẽ tự động:');
+            console.log('  - Lấy customerId từ JWT token (SecurityContext)');
+            console.log('  - Tính endTime = startTime + plannedHours');
 
             const response = await orderService.create(cleanedOrderData);
-            console.log('✅ Order created:', response);
+            console.log('✅ Order created successfully:', response);
 
-            alert(`Booking confirmed successfully! 
-Order ID: ${response.orderId}
-Total Price: ${response.totalPrice ? response.totalPrice.toLocaleString() : 'N/A'} VND
-Status: ${response.status}`);
+            // Show success message with order details
+            const successMessage = `Booking confirmed successfully! 🎉
+
+Order ID: ${response.orderId || 'N/A'}
+Vehicle ID: ${response.vehicleId || vehicleId}
+Status: ${response.status || 'PENDING'}
+Total Price: ${response.totalPrice ? response.totalPrice.toLocaleString() + ' VND' : 'To be calculated'}
+
+You can view and manage your booking in "My Bookings" page.`;
+
+            alert(successMessage);
 
             // Navigate to My Bookings
             navigate('/my-bookings');
@@ -61,11 +101,26 @@ Status: ${response.status}`);
                 data: error.response?.data
             });
 
-            const errorMsg = error.response?.data?.message
-                || error.message
-                || 'Unknown error occurred';
+            let errorMsg = 'Failed to create booking. Please try again.';
 
-            alert(`Failed to create booking:\n\n${errorMsg}\n\nPlease check console for details.`);
+            // Extract meaningful error message
+            if (error.message?.includes('Invalid')) {
+                errorMsg = error.message;
+            } else if (error.message?.includes('HTTP 500')) {
+                errorMsg = `Server error occurred. This could be due to:
+- Customer ID (${bookingData.orderData.customerId}) not found in database
+- Vehicle ID (${bookingData.orderData.vehicleId}) not available
+- Invalid coupon code
+- Database connection issue
+
+Please contact support or try again later.`;
+            } else if (error.response?.data?.message) {
+                errorMsg = error.response.data.message;
+            } else if (error.message) {
+                errorMsg = error.message;
+            }
+
+            alert(`❌ ${errorMsg}\n\nPlease check the console for more details.`);
         } finally {
             setLoading(false);
         }
@@ -140,25 +195,13 @@ Status: ${response.status}`);
                             <div className="detail-item">
                                 <span className="label">Pick-up Date & Time:</span>
                                 <span className="value highlight">
-                                    {new Date(orderData.startTime).toLocaleString('vi-VN', {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                    })}
+                                    {bookingData.startTime || 'N/A'}
                                 </span>
                             </div>
                             <div className="detail-item">
                                 <span className="label">Return Date & Time:</span>
                                 <span className="value highlight">
-                                    {new Date(orderData.endTime).toLocaleString('vi-VN', {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                    })}
+                                    {bookingData.endTime || 'N/A'}
                                 </span>
                             </div>
                             <div className="detail-item">
@@ -179,12 +222,12 @@ Status: ${response.status}`);
                         <h2>👤 Customer Information</h2>
                         <div className="details-grid">
                             <div className="detail-item">
-                                <span className="label">Customer ID:</span>
-                                <span className="value">{orderData.customerId}</span>
+                                <span className="label">Customer Name:</span>
+                                <span className="value">{bookingData.customerName || user?.fullName || user?.username || 'N/A'}</span>
                             </div>
                             <div className="detail-item">
-                                <span className="label">Vehicle ID:</span>
-                                <span className="value">{orderData.vehicleId}</span>
+                                <span className="label">Phone Number:</span>
+                                <span className="value">{bookingData.customerPhone || user?.phoneNumber || user?.phone || 'N/A'}</span>
                             </div>
                         </div>
                     </div>

@@ -23,16 +23,18 @@ const PaymentPage = () => {
 
             // Get all user orders and find the specific one
             const orders = await orderService.getMyOrders();
-            const foundOrder = orders.find(o => o.orderId === parseInt(orderId));
+            // orderId is UUID string, compare directly
+            const foundOrder = orders.find(o => o.orderId === orderId || String(o.orderId) === String(orderId));
 
             if (!foundOrder) {
-                alert('Order not found!');
+                alert('❌ Không tìm thấy đơn hàng!');
                 navigate('/my-bookings');
                 return;
             }
 
+            // Check if order can be paid
             if (foundOrder.status !== 'PENDING') {
-                alert('This order cannot be paid. Status: ' + foundOrder.status);
+                alert(`⚠️ Đơn hàng này không thể thanh toán.\nTrạng thái: ${foundOrder.status}`);
                 navigate('/my-bookings');
                 return;
             }
@@ -41,7 +43,7 @@ const PaymentPage = () => {
             console.log('✅ Order loaded:', foundOrder);
         } catch (err) {
             console.error('❌ Error loading order:', err);
-            alert('Failed to load order details: ' + (err.message || 'Unknown error'));
+            alert('Không thể tải thông tin đơn hàng: ' + (err.message || 'Lỗi không xác định'));
             navigate('/my-bookings');
         } finally {
             setLoading(false);
@@ -50,45 +52,66 @@ const PaymentPage = () => {
 
     const handlePayment = async () => {
         if (!paymentMethod) {
-            alert('Vui lòng chọn phương thức thanh toán!');
+            alert('⚠️ Vui lòng chọn phương thức thanh toán!');
             return;
         }
 
         setProcessing(true);
         try {
-            console.log('💳 Processing payment:', {
-                orderId: parseInt(orderId),
-                method: paymentMethod,
-                paymentType: 1
-            });
+            // Prepare payment data
+            const paymentData = {
+                orderId: orderId, // Keep as UUID string
+                method: paymentMethod, // 'CASH' or 'VNPAY'
+                paymentType: 1 // 1 = Deposit payment (thanh toán đặt cọc)
+            };
+
+            console.log('💳 Processing payment:', paymentData);
 
             if (paymentMethod === 'CASH') {
-                // For cash payment, just show confirmation
-                alert('Thanh toán bằng tiền mặt sẽ được xử lý tại cửa hàng khi nhận xe!');
+                // For cash payment, call API to record payment method
+                console.log('💵 Cash payment selected');
+
+                alert(`✅ Đã chọn thanh toán bằng tiền mặt!
+
+📍 Vui lòng mang tiền đến cửa hàng khi nhận xe.
+💰 Số tiền cần thanh toán: ${order.totalPrice ? order.totalPrice.toLocaleString() : 'N/A'} VND
+
+Đơn hàng của bạn đã được xác nhận và đang chờ nhận xe.`);
+
                 navigate('/my-bookings');
+
             } else if (paymentMethod === 'VNPAY') {
                 // Call VNPay payment URL API
-                const paymentData = {
-                    orderId: parseInt(orderId),
-                    method: 'VNPAY',
-                    paymentType: 1
-                };
+                paymentData.method = 'VNPay'; // Backend expects 'VNPay' (capital P)
 
-                console.log('🔄 Calling payment API with:', paymentData);
+                console.log('🏦 Calling VNPay API with:', paymentData);
                 const response = await paymentService.createPaymentUrl(paymentData);
 
-                console.log('✅ Payment URL response:', response);
+                console.log('✅ VNPay URL response:', response);
 
-                if (response.paymentUrl || response.url) {
+                // Check for payment URL in response
+                const vnpayUrl = response.paymentUrl || response.url || response.vnpayUrl;
+
+                if (vnpayUrl) {
+                    console.log('🔄 Redirecting to VNPay:', vnpayUrl);
                     // Redirect to VNPay payment page
-                    window.location.href = response.paymentUrl || response.url;
+                    window.location.href = vnpayUrl;
                 } else {
-                    throw new Error('Payment URL not received from server');
+                    console.error('❌ No payment URL in response:', response);
+                    throw new Error('Không nhận được link thanh toán từ server');
                 }
             }
         } catch (err) {
             console.error('❌ Payment error:', err);
-            alert('Payment failed: ' + (err.message || 'Unknown error'));
+
+            let errorMsg = 'Thanh toán thất bại!';
+            if (err.message.includes('HTTP 500')) {
+                errorMsg = 'Lỗi server. Vui lòng thử lại sau hoặc liên hệ hỗ trợ.';
+            } else if (err.message) {
+                errorMsg = err.message;
+            }
+
+            alert(`❌ ${errorMsg}\n\nVui lòng thử lại hoặc chọn phương thức thanh toán khác.`);
         } finally {
             setProcessing(false);
         }

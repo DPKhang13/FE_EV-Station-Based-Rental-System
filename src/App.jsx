@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import './App.css';
 import Header from './components/Header';
@@ -16,6 +16,19 @@ import Booking7Seater from './components/Booking7Seater';
 import LoginPage from './pages/LoginPage.jsx';
 import { AuthProvider } from './context/AuthContext';
 import StaffPage from './pages/StaffPage.jsx';
+import { setAuthToken } from './services/api';
+
+// ✅ Restore cookie from localStorage on app initialization
+const initializeAuth = () => {
+  const token = localStorage.getItem('accessToken');
+  if (token) {
+    setAuthToken(token);
+    console.log('✅ Cookie restored from localStorage on app load');
+  }
+};
+
+// Run auth initialization immediately
+initializeAuth();
 
 import RegisterPage from './pages/RegisterPage.jsx';
 import GiaoTraXe from './pages/GiaoTraXe.jsx';
@@ -26,6 +39,7 @@ import VerifyOtpPage from './pages/VerifyOtpPage.jsx';
 import ConfirmBookingPage from './pages/ConfirmBookingPage.jsx';
 import MyBookingsPage from './pages/MyBookingsPage.jsx';
 import PaymentPage from './pages/PaymentPage.jsx';
+import PaymentCallbackPage from './pages/PaymentCallbackPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import AboutPage from './pages/AboutPage.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
@@ -119,6 +133,7 @@ function App() {
                 <PaymentPage />
               </ProtectedRoute>
             } />
+            <Route path="/payment-callback" element={<PaymentCallbackPage />} />
             <Route path="/profile" element={
               <ProtectedRoute>
                 <ProfilePage />
