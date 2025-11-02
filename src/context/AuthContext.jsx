@@ -5,13 +5,39 @@ import axios from "axios";
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  // 🧠 Đọc lại user & token từ localStorage (tránh mất khi F5)
-  const [user, setUser] = useState(
-    JSON.parse(localStorage.getItem("user")) || null
-  );
+  const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("accessToken") || null);
 
-  // Gắn token vào axios header
+  // Load user from localStorage on mount
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    const savedToken = localStorage.getItem("accessToken");
+
+    // ⚠️ Important: If user data exists but no token, clear everything
+    if (savedUser && !savedToken) {
+      console.warn('⚠️ User data found but no token - clearing session');
+      localStorage.removeItem("user");
+      localStorage.removeItem("role");
+      setUser(null);
+      setToken(null);
+      return;
+    }
+
+    if (savedUser && savedToken) {
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+        setToken(savedToken);
+        console.log('✅ Restored user session:', parsedUser);
+      } catch (e) {
+        console.error('Failed to parse saved user:', e);
+        localStorage.removeItem("user");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("role");
+      }
+    }
+  }, []);
+
   useEffect(() => {
     if (token) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -20,57 +46,34 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token]);
 
-  // 🚀 Khi reload trang, xác minh token & lấy lại thông tin user
-  useEffect(() => {
-    const fetchUser = async () => {
-      const token = localStorage.getItem("accessToken");
-      if (!token) return;
-
-      try {
-        const res = await axios.get("http://localhost:8080/api/auth/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setUser(res.data);
-        localStorage.setItem("user", JSON.stringify(res.data));
-      } catch (err) {
-        console.error("⚠️ Lỗi /auth/me:", err);
-        // Nếu backend lỗi, vẫn giữ cache user thay vì logout
-        const cached = JSON.parse(localStorage.getItem("user"));
-        if (cached) setUser(cached);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
-  // 🔑 Đăng nhập
   const login = (data) => {
-    const token = data.jwtToken || data.accessToken;
-
-    localStorage.setItem("accessToken", token);
-    localStorage.setItem("role", data.role);
-
-    const newUser = {
-      id: data.id,
-      name: data.fullName,
+    const userData = {
+      userId: data.userId || data.customerId || data.id,
+      name: data.fullName || data.username || data.name,
       email: data.email,
       role: data.role,
-      stationId: data.stationId,
+      phone: data.phone || data.phoneNumber,
+      address: data.address,
+      dateOfBirth: data.dateOfBirth || data.dob
     };
 
-    setToken(token);
-    setUser(newUser);
-    localStorage.setItem("user", JSON.stringify(newUser)); // ✅ cache user
+    localStorage.setItem("accessToken", data.jwtToken);
+    localStorage.setItem("role", data.role);
+    localStorage.setItem("user", JSON.stringify(userData));
+
+    setToken(data.jwtToken);
+    setUser(userData);
+
+    console.log('✅ User logged in:', userData);
   };
 
-  // 🚪 Đăng xuất
   const logout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("role");
     localStorage.removeItem("user");
     setToken(null);
     setUser(null);
+    console.log('✅ User logged out');
   };
 
   return (

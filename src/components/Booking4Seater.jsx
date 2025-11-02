@@ -1,32 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useVehicles } from '../hooks/useVehicles';
+import { AuthContext } from '../context/AuthContext';
+import { validateVehicleForBooking } from '../utils/vehicleValidator';
 import './Booking4Seater.css';
 
 const Booking4Seater = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const { user } = useContext(AuthContext);
     const { vehicles: cars, loading } = useVehicles();
     const preSelectedCar = location.state?.car;
+    const gradeFilter = location.state?.gradeFilter; // For filtering by grade from Offers
 
     const [selectedCarId, setSelectedCarId] = useState(preSelectedCar?.id || '');
     const [selectedCar, setSelectedCar] = useState(preSelectedCar || null);
+    const [submitting, setSubmitting] = useState(false);
 
     const [formData, setFormData] = useState({
-        pickupDate: '',
-        returnDate: '',
-        pickupLocation: '',
-        fullName: '',
-        email: '',
-        phone: ''
+        startTime: '',
+        plannedHours: '',
+        couponCode: ''
     });
 
-    // Filter only 4-seater available cars
-    const availableCars = cars.filter(car => car.type === '4-seater' && car.status === 'Available');
+    // Filter 4-seater available cars, optionally by grade
+    const availableCars = cars.filter(car => {
+        const isFourSeater = car.type === '4-seater';
+        const isAvailable = car.status === 'Available';
+        const matchesGrade = gradeFilter ? car.grade === gradeFilter : true;
+        return isFourSeater && isAvailable && matchesGrade;
+    });
 
     // Scroll to top when component mounts
     useEffect(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'instant' });
     }, []);
 
     const handleChange = (e) => {
@@ -49,13 +56,132 @@ const Booking4Seater = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        // 1. Validate car selection
         if (!selectedCar) {
             alert('Please select a car before confirming booking.');
             return;
         }
-        // Handle booking submission
-        console.log('Booking submitted:', { ...formData, car: selectedCar });
-        alert('Booking confirmed! We will contact you shortly.');
+
+        // 2. Validate dates and hours
+        if (!formData.startTime) {
+            alert('Please select pickup date and time.');
+            return;
+        }
+
+        if (!formData.plannedHours || formData.plannedHours < 1) {
+            alert('Please enter number of hours to rent (minimum 1 hour).');
+            return;
+        }
+
+        // ✅ Validate vehicle has all required data for backend
+        console.log('🔍 [DEBUG] Selected car object:', selectedCar);
+        console.log('🔍 [DEBUG] Car fields:', Object.keys(selectedCar));
+
+        const validation = validateVehicleForBooking(selectedCar);
+
+        if (!validation.valid) {
+            console.error('❌ Vehicle validation failed:', validation.errors);
+            alert(
+                `❌ Xe này không thể đặt do thiếu thông tin:\n\n${validation.errors.join('\n')}\n\n` +
+                `Vui lòng chọn xe khác hoặc liên hệ hỗ trợ.\n\n` +
+                `Vehicle ID: ${selectedCar.id || selectedCar.vehicleId}`
+            );
+            return;
+        }
+
+        console.log('✅ Vehicle validation passed');
+
+        // 3. Validate time logic
+        const start = new Date(formData.startTime);
+        const now = new Date();
+
+        if (start < now) {
+            alert('Pickup time must be in the future!');
+            return;
+        }
+
+        // 4. Calculate end time from start time + planned hours
+        const plannedHours = parseInt(formData.plannedHours);
+        const end = new Date(start.getTime() + (plannedHours * 60 * 60 * 1000));
+
+        // 5. Get user ID and token
+        const token = localStorage.getItem('accessToken');
+
+        let customerId = user?.userId;
+
+        // Fallback: try to get from localStorage if user context not available
+        if (!customerId) {
+            const savedUser = localStorage.getItem('user');
+            if (savedUser) {
+                try {
+                    const parsedUser = JSON.parse(savedUser);
+                    customerId = parsedUser.userId;
+                } catch (e) {
+                    console.error('Failed to parse user from localStorage:', e);
+                }
+            }
+        }
+
+        console.log('🔍 [Booking] Checking auth:', {
+            hasUser: !!user,
+            userId: user?.userId,
+            customerId: customerId,
+            hasToken: !!token
+        });
+
+        if (!customerId || !token) {
+            alert('Please login to continue!');
+            navigate('/login');
+            return;
+        }
+
+        // 6. Convert datetime to backend format (add seconds)
+        const startTimeFormatted = formData.startTime
+            .replace('T', ' ')  // Đổi T thành dấu cách
+            + ':00';
+        const year = end.getFullYear();
+        const month = String(end.getMonth() + 1).padStart(2, '0');
+        const day = String(end.getDate()).padStart(2, '0');
+        const hours = String(end.getHours()).padStart(2, '0');
+        const minutes = String(end.getMinutes()).padStart(2, '0');
+        const seconds = String(end.getSeconds()).padStart(2, '0');
+
+        // Format end time (calculated from startTime + plannedHours)
+        const endTimeFormatted = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        console.log('📅 Formatted times:', {
+            start: startTimeFormatted,
+            end: endTimeFormatted,
+            plannedHours: plannedHours
+        });
+        // 7. Prepare booking data
+        const bookingData = {
+            car: selectedCar,
+            orderData: {
+                customerId: customerId,
+                vehicleId: selectedCar.id,
+                startTime: startTimeFormatted,
+                plannedHours: plannedHours,
+                couponCode: formData.couponCode || null,
+                actualHours: null
+            },
+            plannedHours: plannedHours,
+            startTime: startTimeFormatted,
+            endTime: endTimeFormatted,
+            customerName: user?.fullname || user?.fullName || user?.username || user?.name || 'N/A',
+            customerPhone: user?.phonenumber || user?.phoneNumber || user?.phone || 'N/A'
+        };
+
+        console.log('👤 Customer info being sent:', {
+            customerName: bookingData.customerName,
+            customerPhone: bookingData.customerPhone,
+            userObject: user
+        });
+
+        console.log('📦 Navigating to confirm page with data:', bookingData);
+
+        // 8. Navigate to Confirm Booking Page
+        navigate('/confirm-booking', { state: { bookingData } });
     };
 
     // Show loading state
@@ -95,82 +221,52 @@ const Booking4Seater = () => {
                         </div>
 
                         <div className="form-group">
-                            <label htmlFor="pickupDate">Pick-up Date *</label>
+                            <label htmlFor="startTime">Pick-up Date & Time *</label>
                             <input
-                                type="date"
-                                id="pickupDate"
-                                name="pickupDate"
-                                value={formData.pickupDate}
+                                type="datetime-local"
+                                id="startTime"
+                                name="startTime"
+                                value={formData.startTime}
                                 onChange={handleChange}
+                                min={new Date().toISOString().slice(0, 16)}
                                 required
                             />
+                            <small style={{ color: '#666', fontSize: '12px', display: 'block', marginTop: '4px' }}>
+                                Select when you want to pick up the vehicle
+                            </small>
                         </div>
 
                         <div className="form-group">
-                            <label htmlFor="returnDate">Return Date *</label>
+                            <label htmlFor="plannedHours">Number of Hours to Rent *</label>
                             <input
-                                type="date"
-                                id="returnDate"
-                                name="returnDate"
-                                value={formData.returnDate}
+                                type="number"
+                                id="plannedHours"
+                                name="plannedHours"
+                                value={formData.plannedHours}
                                 onChange={handleChange}
+                                min="1"
+                                step="1"
+                                placeholder="Enter number of hours (e.g., 24)"
                                 required
                             />
+                            <small style={{ color: '#666', fontSize: '12px', display: 'block', marginTop: '4px' }}>
+                                Minimum rental period is 1 hour
+                            </small>
                         </div>
 
                         <div className="form-group">
-                            <label htmlFor="pickupLocation">Pick-up Location *</label>
-                            <select
-                                id="pickupLocation"
-                                name="pickupLocation"
-                                value={formData.pickupLocation}
-                                onChange={handleChange}
-                                required
-                            >
-                                <option value="">Select location</option>
-                                <option value="1">Chi nhánh Quận 1</option>
-                                <option value="2">Chi nhánh Quận 8</option>
-                                <option value="3">Chi nhánh Thủ Đức</option>
-                            </select>
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="fullName">Full Name *</label>
+                            <label htmlFor="couponCode">Coupon Code (Optional)</label>
                             <input
                                 type="text"
-                                id="fullName"
-                                name="fullName"
-                                value={formData.fullName}
+                                id="couponCode"
+                                name="couponCode"
+                                value={formData.couponCode}
                                 onChange={handleChange}
-                                placeholder="Enter your full name"
-                                required
+                                placeholder="Enter coupon code if you have one"
                             />
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="email">Email *</label>
-                            <input
-                                type="email"
-                                id="email"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                placeholder="Enter your email"
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="phone">Phone Number *</label>
-                            <input
-                                type="tel"
-                                id="phone"
-                                name="phone"
-                                value={formData.phone}
-                                onChange={handleChange}
-                                placeholder="Enter your phone number"
-                                required
-                            />
+                            <small style={{ color: '#666', fontSize: '12px', display: 'block', marginTop: '4px' }}>
+                                Leave blank if you don't have a coupon
+                            </small>
                         </div>
 
                         <button type="submit" className="submit-button">

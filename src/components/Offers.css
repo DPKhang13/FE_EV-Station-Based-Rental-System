@@ -10,6 +10,19 @@
     padding: 0 20px;
 }
 
+/* Two column row layout */
+.offers-row {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+.offers-category.half-width {
+    flex: 1;
+    min-width: 0;
+    /* Prevent flex items from overflowing */
+}
+
 .offers-header {
     text-align: center;
     margin-bottom: 60px;
@@ -421,9 +434,18 @@
         padding: 0 16px;
     }
 
+    .offers-row {
+        flex-direction: column;
+        gap: 40px;
+    }
+
     .offers-category {
         padding: 20px;
-        margin-bottom: 40px;
+        margin-bottom: 0;
+    }
+
+    .offers-category.half-width {
+        width: 100%;
     }
 
     .offers-grid {

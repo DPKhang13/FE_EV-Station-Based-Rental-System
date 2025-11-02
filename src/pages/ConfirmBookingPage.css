@@ -1,0 +1,238 @@
+.confirm-booking-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    padding: 80px 20px 60px;
+}
+
+.confirm-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.confirm-title {
+    font-size: 36px;
+    font-weight: 700;
+    text-align: center;
+    color: #1f2937;
+    margin-bottom: 10px;
+}
+
+.confirm-subtitle {
+    text-align: center;
+    font-size: 16px;
+    color: #6b7280;
+    margin-bottom: 40px;
+}
+
+.confirm-content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.confirm-section {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.confirm-section h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Car Details */
+.car-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 32px;
+    align-items: start;
+}
+
+.car-image {
+    width: 100%;
+    height: 280px;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.car-info h3 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #dc2626;
+    margin-bottom: 20px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-row .label {
+    font-weight: 600;
+    color: #374151;
+}
+
+.info-row .value {
+    color: #1f2937;
+    font-weight: 500;
+}
+
+/* Booking Details */
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.detail-item {
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 12px;
+    border-left: 4px solid #dc2626;
+}
+
+.detail-item .label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 8px;
+}
+
+.detail-item .value {
+    display: block;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.detail-item .value.highlight {
+    color: #dc2626;
+}
+
+.detail-item .value.coupon {
+    color: #10b981;
+    background: #d1fae5;
+    padding: 4px 12px;
+    border-radius: 6px;
+    display: inline-block;
+    font-family: monospace;
+}
+
+/* Summary */
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 16px 0;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 18px;
+}
+
+.summary-item .label {
+    font-weight: 600;
+    color: #374151;
+}
+
+.summary-item .value {
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.status-pending {
+    color: #f59e0b !important;
+    background: #fef3c7;
+    padding: 4px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+.summary-note {
+    margin-top: 20px;
+    padding: 16px;
+    background: #eff6ff;
+    border-left: 4px solid #3b82f6;
+    border-radius: 8px;
+    color: #1e40af;
+    line-height: 1.6;
+}
+
+/* Action Buttons */
+.confirm-actions {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 40px;
+}
+
+.btn-back,
+.btn-confirm {
+    padding: 16px 48px;
+    font-size: 18px;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-back {
+    background: #6b7280;
+    color: white;
+}
+
+.btn-back:hover:not(:disabled) {
+    background: #4b5563;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.btn-confirm {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.btn-confirm:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.btn-back:disabled,
+.btn-confirm:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .car-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .confirm-actions {
+        flex-direction: column;
+    }
+
+    .btn-back,
+    .btn-confirm {
+        width: 100%;
+    }
+}

@@ -2,12 +2,27 @@
 const API_BASE_URL = 'http://localhost:8080/api';
 
 /**
- * Get authorization header with token
+ * Set token as cookie
  */
-const getAuthHeader = () => {
+const setTokenCookie = (token) => {
+    if (token) {
+        // ✅ Set cookie với thời gian 15 phút (khớp với backend JWT_ACCESSEXPIRATION)
+        const expiryDate = new Date();
+        expiryDate.setTime(expiryDate.getTime() + 15 * 60 * 1000); // 15 phút = 900000ms
+        document.cookie = `AccessToken=${token}; path=/; expires=${expiryDate.toUTCString()}; SameSite=Lax; Secure`;
+        console.log('✅ Token set in cookie (expires in 15 minutes)');
+    }
+};
+
+/**
+ * Get token from localStorage and set cookie
+ */
+const ensureTokenCookie = () => {
     const token = localStorage.getItem('accessToken');
+    if (token) {
+        setTokenCookie(token);
+    }
     return {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
     };
 };
@@ -21,6 +36,17 @@ const handleResponse = async (response) => {
         throw new Error(`HTTP ${response.status}: ${error}`);
     }
 
+    // ✅ Extract new AccessToken from Set-Cookie header if present
+    const setCookieHeader = response.headers.get('set-cookie');
+    if (setCookieHeader && setCookieHeader.includes('AccessToken=')) {
+        const match = setCookieHeader.match(/AccessToken=([^;]+)/);
+        if (match && match[1]) {
+            const newToken = match[1];
+            localStorage.setItem('accessToken', newToken);
+            console.log('✅ New AccessToken extracted and saved to localStorage');
+        }
+    }
+
     // Check if response has content
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
@@ -30,23 +56,74 @@ const handleResponse = async (response) => {
     return response.text();
 };
 
+// ✅ Import authService để tránh circular dependency
+let refreshTokenPromise = null;
+
 /**
- * Base fetch wrapper
+ * Base fetch wrapper với auto-refresh token
  */
 export const apiFetch = async (endpoint, options = {}) => {
     try {
         const url = `${API_BASE_URL}${endpoint}`;
+
+        // ✅ Đảm bảo token được set vào cookie trước khi gọi API
+        const headers = ensureTokenCookie();
+
         const config = {
             ...options,
             headers: {
-                ...getAuthHeader(),
+                ...headers,
                 ...options.headers
-            }
+            },
+            credentials: 'include' // ✅ Quan trọng: Gửi cookie cùng request
         };
 
         console.log(`🚀 [API] ${options.method || 'GET'} ${url}`);
+        console.log(`🍪 [API] Sending with credentials (cookies)`);
 
-        const response = await fetch(url, config);
+        let response = await fetch(url, config);
+
+        // ✅ Nếu nhận 401/403 (token expired), tự động refresh
+        if ((response.status === 401 || response.status === 403) && endpoint !== '/auth/refresh' && endpoint !== '/auth/login') {
+            console.log('⚠️ Token expired, attempting refresh...');
+
+            // ✅ Tránh multiple refresh cùng lúc
+            if (!refreshTokenPromise) {
+                refreshTokenPromise = fetch(`${API_BASE_URL}/auth/refresh`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                }).then(async (refreshResponse) => {
+                    if (refreshResponse.ok) {
+                        // Extract new token from cookie
+                        const cookies = document.cookie.split(';');
+                        const accessTokenCookie = cookies.find(c => c.trim().startsWith('AccessToken='));
+                        if (accessTokenCookie) {
+                            const token = accessTokenCookie.split('=')[1];
+                            localStorage.setItem('accessToken', token);
+                            console.log('✅ Token refreshed successfully');
+                        }
+                        return true;
+                    } else {
+                        console.error('❌ Refresh token failed, redirecting to login...');
+                        localStorage.clear();
+                        window.location.href = '/login';
+                        return false;
+                    }
+                }).finally(() => {
+                    refreshTokenPromise = null;
+                });
+            }
+
+            const refreshSuccess = await refreshTokenPromise;
+
+            if (refreshSuccess) {
+                // Retry original request với token mới
+                console.log('🔄 Retrying original request with new token...');
+                response = await fetch(url, config);
+            }
+        }
+
         const data = await handleResponse(response);
 
         console.log(`✅ [API] Response:`, data);
@@ -74,6 +151,18 @@ export const api = {
     }),
 
     delete: (endpoint) => apiFetch(endpoint, { method: 'DELETE' })
+};
+
+// ✅ Export helper để set token cookie từ bên ngoài
+export const setAuthToken = (token) => {
+    if (token) {
+        localStorage.setItem('accessToken', token);
+        // Set cookie với thời gian 15 phút (khớp với backend JWT_ACCESSEXPIRATION=900000ms)
+        const expiryDate = new Date();
+        expiryDate.setTime(expiryDate.getTime() + 15 * 60 * 1000); // 15 phút
+        document.cookie = `AccessToken=${token}; path=/; expires=${expiryDate.toUTCString()}; SameSite=Lax; Secure`;
+        console.log('✅ Token saved to localStorage and cookie (15 minutes)');
+    }
 };
 
 export default api;
