@@ -1,77 +1,104 @@
-import React from "react";
+import React, { useState } from "react";
 import "./EmployeesPage.css";
 
 const EmployeesPage = () => {
-  const employees = [
+  const [employees, setEmployees] = useState([
     {
       name: "Lê Thị Mai",
       email: "lopezmichellefdgbw2500@gmail.com",
-      position: "Nhân viên giao nhận",
+      position: "Nhân viên",
       location: "Điểm A - Quận 1",
       performance: "Tốt",
-      rating: 4.7,
       deliveries: 142,
       status: "Đang làm việc",
+      rating: 4.7,
     },
     {
       name: "Nguyễn Thị Hoa",
       email: "taylorbettytjvc4233@gmail.com",
-      position: "Trưởng điểm",
+      position: "Nhân viên",
       location: "Điểm B - Quận 3",
       performance: "Trung bình",
-      rating: 4.9,
       deliveries: 98,
       status: "Đang làm việc",
+      rating: 4.5,
     },
     {
       name: "Trần Văn Minh",
       email: "jonesjosephltgsg1493@gmail.com",
-      position: "Nhân viên giao nhận",
+      position: "Nhân viên",
       location: "Điểm C - Quận 7",
       performance: "Xuất sắc",
-      rating: 4.8,
       deliveries: 156,
       status: "Đang làm việc",
+      rating: 4.9,
     },
     {
       name: "Phạm Quốc Huy",
       email: "swp391@gmail.com",
-      position: "Nhân viên kỹ thuật",
+      position: "Nhân viên",
       location: "Điểm A - Quận 1",
       performance: "Trung bình",
-      rating: 4.6,
       deliveries: 89,
       status: "Đang làm việc",
+      rating: 4.6,
     },
-  ];
+  ]);
 
-  const topEmployees = employees
-    .sort((a, b) => b.rating - a.rating)
+  // ➕ Thêm nhân viên mới
+  const handleAddEmployee = () => {
+    const newEmployee = {
+      name: "Nhân viên mới",
+      email: "newemployee@example.com",
+      position: "Nhân viên",
+      location: "Điểm D - Quận 10",
+      performance: "Mới",
+      deliveries: 0,
+      status: "Đang làm việc",
+      rating: 4.0,
+    };
+    setEmployees([...employees, newEmployee]);
+  };
+
+  // 🗑️ Xóa nhân viên
+  const handleDelete = (index) => {
+    if (window.confirm("Bạn có chắc muốn xóa nhân viên này không?")) {
+      setEmployees(employees.filter((_, i) => i !== index));
+    }
+  };
+
+  const topEmployees = [...employees]
+    .sort((a, b) => b.deliveries - a.deliveries)
     .slice(0, 3);
 
   return (
     <div className="container">
       <h2>Quản lý nhân viên</h2>
 
+      {/* 🔘 Nút thêm nhân viên */}
+      <div className="actions">
+        <button className="add-btn" onClick={handleAddEmployee}>
+          ➕ Thêm nhân viên
+        </button>
+      </div>
+
+      {/* 📊 Thống kê tổng quan */}
       <div className="stats-grid">
         <div className="stat-card">
           <p>Tổng nhân viên</p>
-          <h3>4</h3>
+          <h3>{employees.length}</h3>
         </div>
         <div className="stat-card">
           <p>Đang làm việc</p>
-          <h3>4</h3>
-        </div>
-        <div className="stat-card">
-          <p>Đánh giá TB</p>
-          <h3>4.8</h3>
+          <h3>{employees.filter(e => e.status === "Đang làm việc").length}</h3>
         </div>
         <div className="stat-card">
           <p>Tổng giao nhận</p>
-          <h3>485</h3>
+          <h3>{employees.reduce((a, b) => a + b.deliveries, 0)}</h3>
         </div>
       </div>
 
+      {/* 📋 Bảng danh sách nhân viên */}
       <div className="employee-table">
         <h3>Danh sách nhân viên</h3>
         <table>
@@ -81,9 +108,8 @@ const EmployeesPage = () => {
               <th>Vị trí</th>
               <th>Điểm làm việc</th>
               <th>Hiệu suất</th>
-              <th>Đánh giá KH</th>
               <th>Trạng thái</th>
-              <th>Thao tác</th> {/* 🆕 thêm cột thao tác */}
+              <th>Thao tác</th>
             </tr>
           </thead>
           <tbody>
@@ -104,12 +130,15 @@ const EmployeesPage = () => {
                   <span className="tag">{e.performance}</span>
                   <p className="small-text">{e.deliveries} lần giao nhận</p>
                 </td>
-                <td>⭐ {e.rating}</td>
                 <td>
                   <span className="status active">{e.status}</span>
                 </td>
                 <td>
-                  <button className="delete-btn" title="Xóa nhân viên">
+                  <button
+                    className="delete-btn"
+                    title="Xóa nhân viên"
+                    onClick={() => handleDelete(index)}
+                  >
                     🗑️
                   </button>
                 </td>
@@ -119,13 +148,14 @@ const EmployeesPage = () => {
         </table>
       </div>
 
+      {/* 🔹 Giữ lại hai mục dưới */}
       <div className="bottom-section">
         <div className="performance-card">
           <h3>Hiệu suất theo điểm</h3>
           <ul>
-            <li>Điểm A - Quận 1: ⭐ 4.7 | 231 giao nhận | 2 nhân viên</li>
-            <li>Điểm B - Quận 3: ⭐ 4.9 | 98 giao nhận | 1 nhân viên</li>
-            <li>Điểm C - Quận 7: ⭐ 4.8 | 156 giao nhận | 1 nhân viên</li>
+            <li>Điểm A - Quận 1: 231 giao nhận | 2 nhân viên</li>
+            <li>Điểm B - Quận 3: 98 giao nhận | 1 nhân viên</li>
+            <li>Điểm C - Quận 7: 156 giao nhận | 1 nhân viên</li>
           </ul>
         </div>
 
@@ -134,7 +164,7 @@ const EmployeesPage = () => {
           <ol>
             {topEmployees.map((e, index) => (
               <li key={index}>
-                <span className="rank">#{index + 1}</span> {e.name} – {e.location} ⭐ {e.rating}
+                <span className="rank">#{index + 1}</span> {e.name} – {e.location} ({e.deliveries} lần giao)
               </li>
             ))}
           </ol>

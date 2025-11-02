@@ -56,10 +56,7 @@ export default function SideBarAdmin() {
             <FaUserTie />
             <span>Danh sách nhân viên</span>
           </NavLink>
-          <NavLink to="/admin/performance" className="sidebar__btn">
-            <FaClipboardList />
-            <span>Hiệu suất làm việc</span>
-          </NavLink>
+          
 
           {/* --- Nhóm d. Báo cáo & phân tích --- */}
           <p className="sidebar__section-title">📊 Báo cáo & Phân tích</p>
