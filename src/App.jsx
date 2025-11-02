@@ -17,6 +17,13 @@ import LoginPage from './pages/LoginPage.jsx';
 import { AuthProvider } from './context/AuthContext';
 import StaffPage from './pages/StaffPage.jsx';
 import { setAuthToken } from './services/api';
+import ProtectedRoute from './components/ProtectedRoute';
+import ConfirmBookingPage from './pages/ConfirmBookingPage';
+import MyBookingsPage from './pages/MyBookingsPage';
+import PaymentPage from './pages/PaymentPage';
+import PaymentCallbackPage from './pages/PaymentCallbackPage';
+import ProfilePage from './pages/ProfilePage';
+import AboutPage from './pages/AboutPage';  
 
 // ✅ Restore cookie from localStorage on app initialization
 const initializeAuth = () => {
