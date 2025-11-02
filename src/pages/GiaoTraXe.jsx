@@ -15,28 +15,26 @@ const GiaoTraXe = () => {
   const [danhSachXe, setDanhSachXe] = useState([]);
   const [loading, setLoading] = useState(true);
 
- if (!user) return <p>Đang tải dữ liệu người dùng...</p>;
-const STATION_ID = user.stationId;
-
+  // ✅ Luôn gọi useEffect, không return trước nó
   useEffect(() => {
+    if (!user) return; // chỉ skip, KHÔNG return toàn component
+
     const loadData = async () => {
       try {
         setLoading(true);
-        console.log("🚗 Đang tải danh sách xe từ API...");
-
         const vehicles = await vehicleService.fetchAndTransformVehicles();
-        console.log("✅ Tổng số xe từ API:", vehicles.length);
 
+        const STATION_ID = user?.stationId || 1;
         const filtered = vehicles.filter(
-          (v) => Number(v.stationId) === STATION_ID
+          (v) => Number(v.stationId) === Number(STATION_ID)
         );
 
         const transformed = filtered.map((v) => ({
-          id: v.id,
-          ten: v.vehicle_name || v.name,
-          bienSo: v.plate_number,
-          pin: v.battery_status
-            ? parseInt(v.battery_status.replace("%", ""))
+          id: v.vehicleId,
+          ten: v.vehicleName,
+          bienSo: v.plateNumber,
+          pin: v.batteryStatus
+            ? parseInt(v.batteryStatus.replace("%", ""))
             : 100,
           trangThai:
             v.status === "Available"
@@ -45,15 +43,15 @@ const STATION_ID = user.stationId;
               ? "Đang cho thuê"
               : v.status === "Maintenance"
               ? "Bảo trì"
-              : v.status === "Reserved" // 🆕 Trạng thái mới
+              : v.status === "Reserved"
               ? "Đã đặt trước"
               : "Không xác định",
           mau: v.color,
           hang: v.brand,
-          nam: v.year_of_manufacture,
+          nam: v.year,
           bienThe: v.variant,
-          congSuatPin: v.battery_capacity,
-          quangDuong: v.range_km,
+          congSuatPin: v.batteryCapacity,
+          quangDuong: v.rangeKm,
           tram: v.stationName,
           hinhAnh: v.image,
         }));
@@ -68,9 +66,25 @@ const STATION_ID = user.stationId;
     };
 
     loadData();
-  }, []);
+  }, [user]);
 
-  // 🆕 Bổ sung điều kiện lọc "Đã đặt trước"
+  const handleAction = (xe) => {
+    setSelectedXe(xe);
+    if (xe.trangThai === "Có sẵn") setPopupType("chothue");
+    else if (xe.trangThai === "Đang cho thuê") setPopupType("nhanxe");
+    else if (xe.trangThai === "Bảo trì") setPopupType("xacthuc");
+  };
+
+  // ✅ Di chuyển return về cuối — sau tất cả hook
+  if (!user) {
+    return (
+      <div style={{ textAlign: "center", padding: "40px" }}>
+        <p>Đang tải dữ liệu người dùng...</p>
+      </div>
+    );
+  }
+
+  const STATION_ID = user?.stationId || 1;
   const locXe = danhSachXe.filter((xe) => {
     if (tab === "tatca") return true;
     if (tab === "cosan") return xe.trangThai === "Có sẵn";
@@ -80,25 +94,17 @@ const STATION_ID = user.stationId;
     return true;
   });
 
-  const handleAction = (xe) => {
-    setSelectedXe(xe);
-    if (xe.trangThai === "Có sẵn") setPopupType("chothue");
-    else if (xe.trangThai === "Đang cho thuê") setPopupType("nhanxe");
-    else if (xe.trangThai === "Bảo trì") setPopupType("xacthuc");
-  };
-
   return (
     <div className="giaoTraXe-container">
       <h1 className="title">Quản lý giao - nhận xe (Trạm ID {STATION_ID})</h1>
 
-      {/* 🆕 Tabs thêm “Đã đặt trước” */}
       <div className="tabs">
         {[
           { key: "tatca", label: "Tất cả" },
           { key: "cosan", label: "Có sẵn" },
           { key: "dangchothue", label: "Đang cho thuê" },
           { key: "baotri", label: "Bảo trì" },
-          { key: "dadattruoc", label: "Đã đặt trước" }, // 🆕
+          { key: "dadattruoc", label: "Đã đặt trước" },
         ].map((t) => (
           <button
             key={t.key}
@@ -110,7 +116,6 @@ const STATION_ID = user.stationId;
         ))}
       </div>
 
-      {/* Nội dung */}
       {loading ? (
         <div style={{ textAlign: "center", padding: "40px" }}>
           <p>Đang tải dữ liệu xe...</p>
@@ -146,7 +151,7 @@ const STATION_ID = user.stationId;
                     : xe.trangThai === "Bảo trì"
                     ? "status-yellow"
                     : xe.trangThai === "Đã đặt trước"
-                    ? "status-orange" // 🆕 thêm màu riêng
+                    ? "status-orange"
                     : ""
                 }`}
               >
@@ -163,7 +168,6 @@ const STATION_ID = user.stationId;
         </div>
       )}
 
-      {/* Popup */}
       {popupType === "chothue" && (
         <PopupChoThue xe={selectedXe} onClose={() => setPopupType(null)} />
       )}

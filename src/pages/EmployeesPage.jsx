@@ -7,7 +7,7 @@ const EmployeesPage = () => {
       name: "Lê Thị Mai",
       email: "lopezmichellefdgbw2500@gmail.com",
       position: "Nhân viên",
-      location: "Điểm A - Quận 1",
+      location: "Quận 1",
       performance: "Tốt",
       deliveries: 142,
       status: "Đang làm việc",
@@ -17,7 +17,7 @@ const EmployeesPage = () => {
       name: "Nguyễn Thị Hoa",
       email: "taylorbettytjvc4233@gmail.com",
       position: "Nhân viên",
-      location: "Điểm B - Quận 3",
+      location: "Quận 3",
       performance: "Trung bình",
       deliveries: 98,
       status: "Đang làm việc",
@@ -27,7 +27,7 @@ const EmployeesPage = () => {
       name: "Trần Văn Minh",
       email: "jonesjosephltgsg1493@gmail.com",
       position: "Nhân viên",
-      location: "Điểm C - Quận 7",
+      location: "Quận 7",
       performance: "Xuất sắc",
       deliveries: 156,
       status: "Đang làm việc",
@@ -37,7 +37,7 @@ const EmployeesPage = () => {
       name: "Phạm Quốc Huy",
       email: "swp391@gmail.com",
       position: "Nhân viên",
-      location: "Điểm A - Quận 1",
+      location: "Quận 1",
       performance: "Trung bình",
       deliveries: 89,
       status: "Đang làm việc",
@@ -51,7 +51,7 @@ const EmployeesPage = () => {
       name: "Nhân viên mới",
       email: "newemployee@example.com",
       position: "Nhân viên",
-      location: "Điểm D - Quận 10",
+      location: "Quận 10",
       performance: "Mới",
       deliveries: 0,
       status: "Đang làm việc",
@@ -149,13 +149,14 @@ const EmployeesPage = () => {
       </div>
 
       {/* 🔹 Giữ lại hai mục dưới */}
+      
       <div className="bottom-section">
         <div className="performance-card">
           <h3>Hiệu suất theo điểm</h3>
           <ul>
-            <li>Điểm A - Quận 1: 231 giao nhận | 2 nhân viên</li>
-            <li>Điểm B - Quận 3: 98 giao nhận | 1 nhân viên</li>
-            <li>Điểm C - Quận 7: 156 giao nhận | 1 nhân viên</li>
+            <li>Quận 1: 231 giao nhận | 2 nhân viên</li>
+            <li>Quận 3: 98 giao nhận | 1 nhân viên</li>
+            <li>Quận 7: 156 giao nhận | 1 nhân viên</li>
           </ul>
         </div>
 

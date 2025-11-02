@@ -64,10 +64,7 @@ export default function SideBarAdmin() {
             <FaChartPie />
             <span>Thống kê tổng quan</span>
           </NavLink>
-          <NavLink to="/admin/ai-suggestions" className="sidebar__btn">
-            <FaChartPie />
-            <span>AI Gợi ý nâng cấp đội xe</span>
-          </NavLink>
+        
         </nav>
       </div>
 
