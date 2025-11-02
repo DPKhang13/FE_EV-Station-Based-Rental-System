@@ -26,6 +26,7 @@ import QuanLyXePage from './pages/QuanLyXePage.jsx';
 import VerifyOtpPage from './pages/VerifyOtpPage.jsx';
 import AdminDashBoardPage from './pages/AdminDashBoardPage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
+import EmployeesPage from './pages/EmployeesPage.jsx';
   
 const HomePage = () => (
   <ScrollToSectionWrapper>
@@ -100,6 +101,7 @@ function App() {
             <Route path="/admin" element={<AdminPage />}>
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="dashboard" element={<AdminDashBoardPage />} />
+              <Route path="employees" element={<EmployeesPage/>} />
 
             </Route>
 

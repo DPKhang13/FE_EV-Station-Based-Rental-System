@@ -134,3 +134,25 @@
   text-transform: uppercase;
   padding-left: 1rem;
 }
+.sidebar-admin {
+  width: 260px;
+  min-height: 100vh;
+  background-color: #0f172a;
+  color: white;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+.sidebar-admin {
+  width: 260px;
+  height: 100vh; /* ⚡ bắt buộc để bằng chiều cao màn hình */
+  background-color: #0f172a;
+  color: white;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow-y: auto; /* nếu menu dài thì scroll */
+}
+
+
