@@ -1,0 +1,151 @@
+.vehicle-management {
+    padding: 30px;
+    background: #f5f7fa;
+    min-height: 100vh;
+}
+
+.vehicle-management .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.vehicle-management h1 {
+    font-size: 28px;
+    color: #1a2332;
+    margin: 0;
+}
+
+.btn-add {
+    background: #10b981;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-add:hover {
+    background: #059669;
+    transform: translateY(-2px);
+}
+
+.search-bar {
+    margin-bottom: 20px;
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 12px 20px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+.search-bar input:focus {
+    outline: none;
+    border-color: #10b981;
+}
+
+.vehicle-table {
+    width: 100%;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.vehicle-table thead {
+    background: #f9fafb;
+}
+
+.vehicle-table th {
+    padding: 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.vehicle-table td {
+    padding: 16px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.vehicle-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.vehicle-table img {
+    width: 100px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.status-badge.AVAILABLE {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-badge.RESERVED {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-badge.IN_USE {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-badge.MAINTENANCE {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.btn-edit,
+.btn-delete {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-right: 8px;
+    transition: all 0.3s;
+}
+
+.btn-edit {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-edit:hover {
+    background: #2563eb;
+}
+
+.btn-delete {
+    background: #ef4444;
+    color: white;
+}
+
+.btn-delete:hover {
+    background: #dc2626;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px;
+    font-size: 18px;
+    color: #6b7280;
+}

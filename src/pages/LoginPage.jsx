@@ -36,14 +36,7 @@ export default function LoginPage() {
 
       // First store the token and login
       login(data);
-
-      // Navigate based on role
-      if (data.role === 'STAFF') {
-        nav("/staff", { replace: true });
-      } else {
-        // Customer goes to home page
-        nav("/", { replace: true });
-      }
+      nav("/" + data.role, { replace: true });
     } catch (err) {
       console.error('❌ Login error:', err);
       const s = err.response?.status;
@@ -93,5 +86,4 @@ export default function LoginPage() {
       </form>
     </div>
   );
-
 }

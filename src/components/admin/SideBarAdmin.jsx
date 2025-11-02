@@ -12,6 +12,10 @@ export default function SideBarAdmin() {
   if (!user) return <p>Đang tải dữ liệu người dùng...</p>;
 
   const name = user.name || "Admin";
+  const handleNavigateToVehicles = () => {
+    console.log('🚗 Navigating to Vehicle Management');
+    navigate('/admin/vehicles');
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("accessToken");

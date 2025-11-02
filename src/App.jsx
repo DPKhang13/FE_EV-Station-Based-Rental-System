@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import './App.css';
 import Header from './components/Header';
@@ -16,33 +16,16 @@ import Booking7Seater from './components/Booking7Seater';
 import LoginPage from './pages/LoginPage.jsx';
 import { AuthProvider } from './context/AuthContext';
 import StaffPage from './pages/StaffPage.jsx';
-import { setAuthToken } from './services/api';
-
-// ✅ Restore cookie from localStorage on app initialization
-const initializeAuth = () => {
-  const token = localStorage.getItem('accessToken');
-  if (token) {
-    setAuthToken(token);
-    console.log('✅ Cookie restored from localStorage on app load');
-  }
-};
-
-// Run auth initialization immediately
-initializeAuth();
-
 import RegisterPage from './pages/RegisterPage.jsx';
 import GiaoTraXe from './pages/GiaoTraXe.jsx';
 import XacThucKhachHangPage from './pages/XacThucKhachHangPage.jsx';
 import ThanhToanPage from './pages/ThanhToanPage.jsx';
 import QuanLyXePage from './pages/QuanLyXePage.jsx';
 import VerifyOtpPage from './pages/VerifyOtpPage.jsx';
-import ConfirmBookingPage from './pages/ConfirmBookingPage.jsx';
-import MyBookingsPage from './pages/MyBookingsPage.jsx';
-import PaymentPage from './pages/PaymentPage.jsx';
-import PaymentCallbackPage from './pages/PaymentCallbackPage.jsx';
-import ProfilePage from './pages/ProfilePage.jsx';
-import AboutPage from './pages/AboutPage.jsx';
-import ProtectedRoute from './components/ProtectedRoute.jsx';
+import AdminDashBoardPage from './pages/AdminDashBoardPage.jsx';
+import AdminPage from './pages/AdminPage.jsx';
+import EmployeesPage from './pages/EmployeesPage.jsx';
+
 const HomePage = () => (
   <ScrollToSectionWrapper>
     <Hero />
@@ -75,7 +58,7 @@ function ScrollToSectionWrapper({ children }) {
 // ✅ Tạo wrapper để điều kiện hiển thị layout
 function LayoutWrapper({ children }) {
   const location = useLocation();
-  const hideLayout = (location.pathname === '/login') || (location.pathname === '/register') || (location.pathname.startsWith('/staff') || (location.pathname.startsWith('/verify-otp'))); // 🔹 Kiểm tra nếu đang ở /login
+  const hideLayout = (location.pathname === '/login') || (location.pathname === '/register') || (location.pathname.startsWith('/staff') || (location.pathname.startsWith('/verify-otp')) || (location.pathname.startsWith('/admin'))); // 🔹 Kiểm tra nếu đang ở /login
 
   return (
     <>
@@ -96,50 +79,12 @@ function App() {
         <LayoutWrapper>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/location-select" element={
-              <ProtectedRoute>
-                <LocationSelect />
-              </ProtectedRoute>
-            } />
-            <Route path="/listcar" element={
-              <ProtectedRoute>
-                <ListCarPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/booking-4seater" element={
-              <ProtectedRoute>
-                <Booking4Seater />
-              </ProtectedRoute>
-            } />
-            <Route path="/booking-7seater" element={
-              <ProtectedRoute>
-                <Booking7Seater />
-              </ProtectedRoute>
-            } />
+            <Route path="/location-select" element={<LocationSelect />} />
+            <Route path="/listcar" element={<ListCarPage />} />
+            <Route path="/booking-4seater" element={<Booking4Seater />} />
+            <Route path="/booking-7seater" element={<Booking7Seater />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/confirm-booking" element={
-              <ProtectedRoute>
-                <ConfirmBookingPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/my-bookings" element={
-              <ProtectedRoute>
-                <MyBookingsPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/payment/:orderId" element={
-              <ProtectedRoute>
-                <PaymentPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/payment-callback" element={<PaymentCallbackPage />} />
-            <Route path="/profile" element={
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            } />
-            <Route path="/about" element={<AboutPage />} />
             <Route path="/staff" element={<StaffPage />} >
               {/* Các route con của StaffPage sẽ được định nghĩa ở đây */}
               <Route index element={<Navigate to="/staff/giaotraxe" replace={true} />} />
@@ -150,6 +95,12 @@ function App() {
 
             </Route>
             <Route path="/verify-otp" element={<VerifyOtpPage />} />
+            <Route path="/admin" element={<AdminPage />}>
+              <Route index element={<Navigate to="/admin/dashboard" replace />} />
+              <Route path="dashboard" element={<AdminDashBoardPage />} />
+              <Route path="employees" element={<EmployeesPage />} />
+
+            </Route>
 
 
           </Routes>
