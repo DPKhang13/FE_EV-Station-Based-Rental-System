@@ -1,19 +1,21 @@
-import React, { useEffect } from "react";
+import React, { useEffect,useContext } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import Sidebar from "../components/staff/SideBar";
 import "./StaffPage.css";
+import { AuthContext } from "../context/AuthContext";
 
 export default function StaffPage() {
   const navigate = useNavigate();
-
+ const {user,loading} = useContext(AuthContext)
   
   useEffect(() => {
+    if(loading) return;
     const accessToken = localStorage.getItem("accessToken");
     
-    if (!accessToken) {
+    if (!accessToken|| user?.role !== "staff") {
       navigate("/login", { replace: true });
     }
-  }, [navigate]); 
+  }, [navigate,user,loading]); 
   
   
 

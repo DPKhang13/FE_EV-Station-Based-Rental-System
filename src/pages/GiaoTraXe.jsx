@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import "./GiaoTraXe.css";
 import vehicleService from "../services/vehicleService";
-import PopupChoThue from "../components/staff/PopUpChoThue";
+
 import PopupXacThuc from "../components/staff/PopUpXacThuc";
 import PopupNhanXe from "../components/staff/PopUpNhanXe";
 import PopupDaXacThuc from "../components/staff/PopUpDaXacThuc";
