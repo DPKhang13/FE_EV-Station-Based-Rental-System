@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import "./GiaoTraXe.css";
 import vehicleService from "../services/vehicleService";
+import { orderService } from "../services";
 
 import PopupXacThuc from "../components/staff/PopUpXacThuc";
 import PopupNhanXe from "../components/staff/PopUpNhanXe";
@@ -13,33 +14,35 @@ const GiaoTraXe = () => {
   const [popupType, setPopupType] = useState(null);
   const [selectedXe, setSelectedXe] = useState(null);
   const [danhSachXe, setDanhSachXe] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Luôn gọi useEffect, không return trước nó
+  // 🌀 Load dữ liệu khi có user
   useEffect(() => {
-    if (!user) return; // chỉ skip, KHÔNG return toàn component
+    if (!user) return;
 
     const loadData = async () => {
       try {
         setLoading(true);
-        const vehicles = await vehicleService.fetchAndTransformVehicles();
 
+        // 🚗 Lấy danh sách xe
+        const vehicles = await vehicleService.fetchAndTransformVehicles();
         const STATION_ID = user?.stationId || 1;
         const filtered = vehicles.filter(
           (v) => Number(v.stationId) === Number(STATION_ID)
         );
 
         const transformed = filtered.map((v) => ({
-          id: v.vehicleId,
-          ten: v.vehicleName,
-          bienSo: v.plateNumber,
-          pin: v.batteryStatus
-            ? parseInt(v.batteryStatus.replace("%", ""))
+          id: v.id || v.vehicleId,
+          ten: v.vehicle_name || v.vehicleName,
+          bienSo: v.plate_number || v.plateNumber,
+          pin: v.battery_status
+            ? parseInt(v.battery_status.replace("%", ""))
             : 100,
           trangThai:
             v.status === "Available"
               ? "Có sẵn"
-              : v.status === "RENTAL"
+              : v.status === "Rented" || v.status === "RENTAL"
               ? "Đang cho thuê"
               : v.status === "Maintenance"
               ? "Bảo trì"
@@ -48,18 +51,29 @@ const GiaoTraXe = () => {
               : "Không xác định",
           mau: v.color,
           hang: v.brand,
-          nam: v.year,
+          nam: v.year_of_manufacture || v.year,
           bienThe: v.variant,
-          congSuatPin: v.batteryCapacity,
-          quangDuong: v.rangeKm,
+          congSuatPin: v.battery_capacity || v.batteryCapacity,
+          quangDuong: v.range_km || v.rangeKm,
           tram: v.stationName,
           hinhAnh: v.image,
         }));
 
         setDanhSachXe(transformed);
+
+        // 📦 Lấy danh sách order
+        const res = await orderService.getAll();
+        console.log("🧾 Kết quả orderService.getAll():", res);
+        const data = res?.data || res;
+        if (Array.isArray(data)) {
+          setOrders(data);
+        } else {
+          console.error("⚠️ Dữ liệu trả về không phải là mảng:", data);
+        }
       } catch (error) {
-        console.error("❌ Lỗi khi load dữ liệu xe:", error);
+        console.error("❌ Lỗi khi load dữ liệu:", error);
         setDanhSachXe([]);
+        setOrders([]);
       } finally {
         setLoading(false);
       }
@@ -68,14 +82,27 @@ const GiaoTraXe = () => {
     loadData();
   }, [user]);
 
+  // 🧭 Khi nhấn nút hành động
   const handleAction = (xe) => {
-    setSelectedXe(xe);
-    if (xe.trangThai === "Có sẵn") setPopupType("chothue");
-    else if (xe.trangThai === "Đang cho thuê") setPopupType("nhanxe");
-    else if (xe.trangThai === "Bảo trì") setPopupType("xacthuc");
+    if (xe.trangThai === "Có sẵn") {
+      setSelectedXe(xe);
+      setPopupType("chothue");
+    } else if (xe.trangThai === "Đang cho thuê") {
+      // 🔍 Tìm order có vehicleId trùng với xe
+      const order = orders.find((o) => (Number(o.vehicleId) === Number(xe.id)&& o.status==="RENTAL"));
+      if (order) {
+        console.log("✅ Order tìm thấy:", order);
+        setSelectedXe({ ...xe, order }); // Gộp order vào dữ liệu xe
+        setPopupType("nhanxe");
+      } else {
+        alert("⚠️ Không tìm thấy đơn thuê xe tương ứng!");
+      }
+    } else if (xe.trangThai === "Bảo trì") {
+      setSelectedXe(xe);
+      setPopupType("xacthuc");
+    }
   };
 
-  // ✅ Di chuyển return về cuối — sau tất cả hook
   if (!user) {
     return (
       <div style={{ textAlign: "center", padding: "40px" }}>
@@ -84,6 +111,7 @@ const GiaoTraXe = () => {
     );
   }
 
+  // ⚙️ Lọc xe theo tab
   const STATION_ID = user?.stationId || 1;
   const locXe = danhSachXe.filter((xe) => {
     if (tab === "tatca") return true;
@@ -98,6 +126,7 @@ const GiaoTraXe = () => {
     <div className="giaoTraXe-container">
       <h1 className="title">Quản lý giao - nhận xe (Trạm ID {STATION_ID})</h1>
 
+      {/* Tabs */}
       <div className="tabs">
         {[
           { key: "tatca", label: "Tất cả" },
@@ -116,6 +145,7 @@ const GiaoTraXe = () => {
         ))}
       </div>
 
+      {/* Danh sách xe */}
       {loading ? (
         <div style={{ textAlign: "center", padding: "40px" }}>
           <p>Đang tải dữ liệu xe...</p>
@@ -168,6 +198,7 @@ const GiaoTraXe = () => {
         </div>
       )}
 
+      {/* Popup */}
       {popupType === "chothue" && (
         <PopupChoThue xe={selectedXe} onClose={() => setPopupType(null)} />
       )}

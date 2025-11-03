@@ -1,141 +1,135 @@
-import React, { useState } from "react";
-import maintenanceService from "../../services/maintenanceService";
-import vehicleService from "../../services/vehicleService";
+import { useState } from "react";
+import orderService from "../../services/orderService";
 import "./PopupNhanXe.css";
 
 const PopupNhanXe = ({ xe, onClose }) => {
-  const maintenanceOptions = [
-    { id: 1, description: "Kiểm tra hệ thống pin", cost: 500000 },
-    { id: 2, description: "Bảo dưỡng phanh", cost: 350000 },
-    { id: 3, description: "Thay lốp", cost: 800000 },
-    { id: 4, description: "Hiệu chỉnh động cơ điện", cost: 600000 },
-    { id: 5, description: "Vệ sinh cổng sạc", cost: 200000 },
-    { id: 6, description: "Vệ sinh nội thất", cost: 150000 },
-    { id: 7, description: "Cập nhật phần mềm", cost: 100000 },
-    { id: 8, description: "Kiểm tra hệ thống treo", cost: 450000 },
-    { id: 9, description: "Thay đèn pha", cost: 700000 },
-    { id: 10, description: "Kiểm tra tổng thể", cost: 900000 },
-  ];
-
-  const [selectedItems, setSelectedItems] = useState([]);
-  const [isPaid, setIsPaid] = useState(false); // ✅ trạng thái đã thanh toán
+  const [orderInfo, setOrderInfo] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isPaid, setIsPaid] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
 
-  const handleToggle = (id) => {
-    setSelectedItems((prev) =>
-      prev.includes(id)
-        ? prev.filter((item) => item !== id)
-        : [...prev, id]
-    );
-  };
-
-  const totalCost = selectedItems
-    .map((id) => maintenanceOptions.find((m) => m.id === id)?.cost || 0)
-    .reduce((a, b) => a + b, 0);
-
-  const handleConfirm = async () => {
+  // 💳 Thanh toán (giả lập)
+  const handlePayment = async () => {
     try {
-      setLoading(true);
-
-      // Nếu chưa thanh toán, không cho xác nhận
-      if (!isPaid) {
-        alert("⚠️ Vui lòng xác nhận rằng khách hàng đã thanh toán trước khi hoàn tất!");
-        return;
-      }
-
-      // 🟢 Không tick gì -> chỉ cập nhật trạng thái Available
-      if (selectedItems.length === 0) {
-        await vehicleService.updateStatus(xe.id, { status: "Available" });
-        alert(`✅ Xe ${xe.ten} đã được cập nhật trạng thái thành "Có sẵn".`);
-        onClose();
-        return;
-      }
-
-      // 🔵 Có tick -> tạo đơn bảo trì + chuyển sang "Maintenance"
-      for (const id of selectedItems) {
-        const option = maintenanceOptions.find((m) => m.id === id);
-        const payload = {
-          vehicleId: xe.id,
-          description: option.description,
-          date: new Date().toISOString().split("T")[0],
-          cost: option.cost,
-        };
-
-        await maintenanceService.create(payload);
-        console.log("Đã tạo đơn:", payload);
-      }
-
-      await vehicleService.updateStatus(xe.id, { status: "Maintenance" });
-
-      alert(
-        `🛠️ Đã tạo ${selectedItems.length} đơn bảo trì cho xe ${xe.ten}.\n` +
-          `Tổng phí phát sinh: ${totalCost.toLocaleString()} ₫\n` +
-          `Trạng thái xe đã chuyển thành "Bảo trì".`
-      );
-      onClose();
+      setPaymentLoading(true);
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+      setIsPaid(true);
+      alert("💳 Thanh toán thành công!");
     } catch (error) {
-      console.error("❌ Lỗi khi xử lý nhận xe:", error);
-      alert("Không thể cập nhật dữ liệu, vui lòng thử lại!");
+      console.error("❌ Lỗi thanh toán:", error);
+      alert("Không thể thực hiện thanh toán!");
     } finally {
-      setLoading(false);
+      setPaymentLoading(false);
     }
   };
+
+  // 📦 Gọi API lấy thông tin đơn trả xe
+const handleGetReturnInfo = async () => {
+  try {
+    setLoading(true);
+    const res = await orderService.get(xe.order.orderId);
+    const data = res?.data ?? res;
+    console.log("✅ Dữ liệu API:", data);
+
+    if (!data || Object.keys(data).length === 0) {
+      alert("⚠️ API không trả về dữ liệu!");
+      return;
+    }
+
+    setOrderInfo(data);
+  } catch (error) {
+    console.error("❌ Lỗi khi gọi API trả xe:", error);
+    alert("Không thể lấy thông tin trả xe!");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="popup-overlay">
       <div className="popup-content popup-maintenance">
         <h2>🚗 Nhận xe trả: {xe.ten}</h2>
-        <p>Biển số: <strong>{xe.bienSo}</strong></p>
-        <p>Hãng: <strong>{xe.hang}</strong></p>
+        <p>
+          Biển số: <strong>{xe.bienSo}</strong>
+        </p>
+        <p>
+          Hãng: <strong>{xe.hang}</strong>
+        </p>
         <hr />
 
-        <h3>🧾 Chọn hạng mục bảo trì cần tạo (nếu có)</h3>
+        {/* 📋 Nút lấy thông tin đơn trả xe */}
+        <button
+          onClick={handleGetReturnInfo}
+          className="btn-info"
+          disabled={loading}
+        >
+          {loading ? "Đang tải..." : "📋 Lấy thông tin đơn trả xe"}
+        </button>
 
-        <div className="checklist-container">
-          {maintenanceOptions.map((item) => (
-            <label
-              key={item.id}
-              className={`check-item ${
-                selectedItems.includes(item.id) ? "checked" : ""
-              }`}
-            >
-              <input
-                type="checkbox"
-                checked={selectedItems.includes(item.id)}
-                onChange={() => handleToggle(item.id)}
-              />
-              <span>{item.description}</span>
-              <span className="cost">{item.cost.toLocaleString()} ₫</span>
-            </label>
-          ))}
-        </div>
+        {/* Hiển thị thông tin đơn hàng */}
+      {orderInfo && (
+  <div className="order-info">
+    <h3>📦 Thông tin đơn trả xe (chi tiết)</h3>
 
-        <div className="total">
-          <strong>Tổng chi phí phát sinh:</strong>{" "}
-          <span className="cost">{totalCost.toLocaleString()} ₫</span>
-        </div>
+    {/* Cách 1: hiển thị rõ ràng từng trường chính */}
+    <ul>
+      <li><strong>Mã đơn:</strong> {orderInfo.orderId}</li>
+      <li><strong>Xe ID:</strong> {orderInfo.vehicleId}</li>
+      <li><strong>Thời gian bắt đầu:</strong> {orderInfo.startTime}</li>
+      <li><strong>Thời gian kết thúc:</strong> {orderInfo.endTime}</li>
+      <li><strong>Ngày tạo:</strong> {orderInfo.createdAt}</li>
+      <li><strong>Trạng thái:</strong> {orderInfo.status}</li>
+      <li><strong>Tổng tiền:</strong> {orderInfo.totalPrice?.toLocaleString()}₫</li>
+      <li><strong>Phí phạt:</strong> {orderInfo.penaltyFee?.toLocaleString()}₫</li>
+      <li><strong>Tiền cọc:</strong> {orderInfo.depositAmount?.toLocaleString()}₫</li>
+      <li><strong>Thời gian dự kiến:</strong> {orderInfo.plannedHours} giờ</li>
+      <li><strong>Thời gian thực tế:</strong> {orderInfo.actualHours} giờ</li>
+      <li><strong>Mã giảm giá:</strong> {orderInfo.couponCode || "Không có"}</li>
+      <li>
+        <strong>Còn lại phải trả:</strong>{" "}
+        <span style={{ color: "red" }}>
+          {orderInfo.remainingAmount?.toLocaleString()}₫
+        </span>
+      </li>
+    </ul>
 
-        <div className="payment-confirm">
-          <label>
-            <input
-              type="checkbox"
-              checked={isPaid}
-              onChange={(e) => setIsPaid(e.target.checked)}
-            />
-            ✅ Xác nhận khách hàng đã thanh toán
-          </label>
-        </div>
+    {/* Cách 2: nếu muốn xem toàn bộ JSON */}
+    <pre style={{
+      background: "#f6f8fa",
+      padding: "12px",
+      borderRadius: "8px",
+      overflowX: "auto",
+      fontSize: "13px"
+    }}>
+      {JSON.stringify(orderInfo, null, 2)}
+    </pre>
+
+    {/* 💳 Nút thanh toán */}
+    <button
+      onClick={handlePayment}
+      className={`btn-pay ${isPaid ? "paid" : ""}`}
+      disabled={paymentLoading || isPaid}
+    >
+      {isPaid
+        ? "✅ Đã thanh toán"
+        : paymentLoading
+        ? "Đang thanh toán..."
+        : "💳 Thanh toán phần còn lại"}
+    </button>
+
+    {isPaid && (
+      <p style={{ color: "green", marginTop: "10px" }}>
+        ✅ Thanh toán hoàn tất!
+      </p>
+    )}
+  </div>
+)}
+
 
         <div className="popup-buttons">
           <button onClick={onClose} className="btn-cancel">
-            Hủy
-          </button>
-          <button
-            className="btn-confirm"
-            onClick={handleConfirm}
-            disabled={loading || !isPaid} // 🔒 Chỉ bật khi đã thanh toán
-          >
-            {loading ? "Đang xử lý..." : "Hoàn tất nhận xe"}
+            Đóng
           </button>
         </div>
       </div>

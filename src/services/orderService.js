@@ -72,9 +72,31 @@ export const orderService = {
      * Return - Trả xe
      * POST /api/order/{orderId}/return
      */
-    return: async (orderId, returnData) => {
-        return await api.post(`/order/${orderId}/return`, returnData);
+  return: async (orderId, returnData) => {
+  try {
+    const res = await api.post(`/order/${orderId}/return`, returnData);
+    // ✅ Nếu axios đã có interceptor, res là data thật
+    // ✅ Nếu không có interceptor, lấy res.data
+    const data = res?.data ?? res;
+    console.log("✅ [orderService.return] Kết quả API:", data);
+    return data;
+  } catch (error) {
+    console.error("❌ [orderService.return] Lỗi:", error);
+    throw error;
+  }
+},
+ get: async (orderId) => {
+    try {
+          const res= await api.get(`/order/${orderId}/preview-return`);
+        const data = res?.data ?? res;
+        console.log("✅ [orderService.get] Kết quả API:", data);
+        return data;    
+    } catch (error) {
+        console.error("❌ [orderService.get] Lỗi:", error);
+        throw error;
     }
+    },
+
 };
 
 export default orderService;
