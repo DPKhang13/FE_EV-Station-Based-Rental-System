@@ -25,6 +25,7 @@ import VerifyOtpPage from './pages/VerifyOtpPage.jsx';
 import AdminDashBoardPage from './pages/AdminDashBoardPage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
 import EmployeesPage from './pages/EmployeesPage.jsx';
+import ConfirmBookingPage from './pages/ConfirmBookingPage';
 
 const HomePage = () => (
   <ScrollToSectionWrapper>
@@ -83,6 +84,7 @@ function App() {
             <Route path="/listcar" element={<ListCarPage />} />
             <Route path="/booking-4seater" element={<Booking4Seater />} />
             <Route path="/booking-7seater" element={<Booking7Seater />} />
+            <Route path="/confirm-booking"  element={<ConfirmBookingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/staff" element={<StaffPage />} >

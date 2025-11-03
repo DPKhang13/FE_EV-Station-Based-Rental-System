@@ -261,7 +261,79 @@ const QuanLyXePage = () => {
         </div>
       )}
 
-      {/* ... các popup khác giữ nguyên */}
+      {/* Popup báo cáo sự cố */}
+{popupType === "issue" && selectedXe && (
+  <div className="popup-overlay">
+    <div className="popup-content">
+      <h2>🧰 Báo cáo sự cố</h2>
+      <p>
+        <strong>{selectedXe.ten}</strong> ({selectedXe.bienSo})
+      </p>
+
+      <label>Loại sự cố:</label>
+      <select
+        value={incidentType}
+        onChange={(e) => setIncidentType(e.target.value)}
+      >
+        <option value="">-- Chọn loại --</option>
+        <option value="mechanical">Cơ khí</option>
+        <option value="software">Phần mềm</option>
+        <option value="accident">Tai nạn</option>
+        <option value="battery">Pin</option>
+        <option value="other">Khác</option>
+      </select>
+
+      <label>Mức độ hư tổn:</label>
+      <select
+        value={severity}
+        onChange={(e) => setSeverity(e.target.value)}
+      >
+        <option value="">-- Chọn mức độ --</option>
+        <option value="low">Thấp</option>
+        <option value="medium">Trung bình</option>
+        <option value="high">Cao</option>
+        <option value="critical">Nghiêm trọng</option>
+      </select>
+
+      <label>Mô tả sự cố:</label>
+      <textarea
+        rows="3"
+        placeholder="Nhập mô tả chi tiết..."
+        value={issueText}
+        onChange={(e) => setIssueText(e.target.value)}
+      ></textarea>
+
+      <div className="popup-buttons">
+        <button onClick={() => setPopupType(null)}>Hủy</button>
+        <button className="btn-confirm" onClick={handleReportIssue}>
+          Gửi báo cáo
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+{/* Popup đem xe bảo trì */}
+{popupType === "maintain" && selectedXe && (
+  <div className="popup-overlay">
+    <div className="popup-content">
+      <h2>🛠️ Đưa xe đi bảo trì</h2>
+      <p>
+        <strong>{selectedXe.ten}</strong> ({selectedXe.bienSo})
+      </p>
+      <p className="warning-text">
+        ⚠️ Xe sau khi chuyển sang “Bảo trì” sẽ không thể cho thuê!
+      </p>
+
+      <div className="popup-buttons">
+        <button onClick={() => setPopupType(null)}>Hủy</button>
+        <button className="btn-confirm" onClick={handleSendMaintenance}>
+          Xác nhận đem bảo trì
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };
