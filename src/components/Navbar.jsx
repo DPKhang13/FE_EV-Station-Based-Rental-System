@@ -125,61 +125,81 @@ const Navbar = () => {
                     </ul>
 
                     <div className="navbar-buttons">
-                        {user ? (
-                            // User logged in - show user menu
-                            <div className="user-menu">
-                                <button
-                                    className="user-button"
-                                    onClick={() => setShowDropdown(!showDropdown)}
-                                >
-                                    <span className="user-avatar">👤</span>
-                                    <span className="user-name">{user.name || 'User'}</span>
-                                    <svg className="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: '16px', height: '16px' }}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </button>
+                       {user ? (
+    user.role === "customer" ? (
+        // ✅ Chỉ render nếu role là customer
+        <div className="user-menu">
+            <button
+                className="user-button"
+                onClick={() => setShowDropdown(!showDropdown)}
+            >
+                <span className="user-avatar">👤</span>
+                <span className="user-name">{user.name || "User"}</span>
+                <svg
+                    className="dropdown-icon"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    style={{ width: "16px", height: "16px" }}
+                >
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                    />
+                </svg>
+            </button>
 
-                                {showDropdown && (
-                                    <div className="user-dropdown">
-                                        <button
-                                            onClick={() => {
-                                                setShowDropdown(false);
-                                                navigate('/profile');
-                                            }}
-                                            className="dropdown-item"
-                                        >
-                                            👤 My Profile
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                setShowDropdown(false);
-                                                navigate('/my-bookings');
-                                            }}
-                                            className="dropdown-item"
-                                        >
-                                            � My Bookings
-                                        </button>
-                                        <div className="dropdown-divider"></div>
-                                        <button
-                                            onClick={() => {
-                                                setShowDropdown(false);
-                                                logout();
-                                                navigate('/');
-                                            }}
-                                            className="dropdown-item logout"
-                                        >
-                                            🚪 Logout
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            // User not logged in - show login/register buttons
-                            <>
-                                <Link to="/login" className="login-button">Login</Link>
-                                <Link to="/register" className="register-button">Register</Link>
-                            </>
-                        )}
+            {showDropdown && (
+                <div className="user-dropdown">
+                    <button
+                        onClick={() => {
+                            setShowDropdown(false);
+                            navigate("/profile");
+                        }}
+                        className="dropdown-item"
+                    >
+                        👤 My Profile
+                    </button>
+                    <button
+                        onClick={() => {
+                            setShowDropdown(false);
+                            navigate("/my-bookings");
+                        }}
+                        className="dropdown-item"
+                    >
+                        📘 My Bookings
+                    </button>
+                    <div className="dropdown-divider"></div>
+                    <button
+                        onClick={() => {
+                            setShowDropdown(false);
+                            logout();
+                            navigate("/");
+                        }}
+                        className="dropdown-item logout"
+                    >
+                        🚪 Logout
+                    </button>
+                </div>
+            )}
+        </div>
+    ) : (
+        // ❌ Nếu user không phải customer
+        <>
+            {/* Bạn có thể ẩn hết hoặc render gì khác nếu muốn */}
+            <Link to="/login" className="login-button">Login</Link>
+        </>
+    )
+) : (
+    // User chưa đăng nhập
+    <>
+        <Link to="/login" className="login-button">Login</Link>
+        <Link to="/register" className="register-button">Register</Link>
+    </>
+)}
+
                     </div>
                 </div>
             </div>
