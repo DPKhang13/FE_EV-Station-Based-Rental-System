@@ -1,67 +1,53 @@
 import React, { useState, useEffect, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import "./GiaoTraXe.css";
 
 import vehicleService from "../services/vehicleService";
 import { orderService } from "../services";
-
-import PopupXacThuc from "../components/staff/PopUpXacThuc";
-import PopupNhanXe from "../components/staff/PopUpNhanXe";
-import PopupDaXacThuc from "../components/staff/PopUpDaXacThuc";
 import { AuthContext } from "../context/AuthContext";
 
-/**
- * 🧭 Component: GiaoTraXe
- * Quản lý xe theo từng trạm:
- *  - Xem danh sách xe tại trạm
- *  - Lọc theo trạng thái (Có sẵn, Bảo trì, Đang cho thuê,...)
- *  - Tìm kiếm theo biển số
- *  - Giao/nhận xe & xác thực
- */
+// Popups
+import PopupDatTruoc from "../components/staff/PopupDatTruoc";
+import PopupNhanXe from "../components/staff/PopUpNhanXe";
+import PopupXacThuc from "../components/staff/PopUpXacThuc";
+import PopupDaXacThuc from "../components/staff/PopUpDaXacThuc";
+
 const GiaoTraXe = () => {
   const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
 
-  // State giao diện
+  // 🔹 State
   const [currentTab, setCurrentTab] = useState("tatca");
   const [searchTerm, setSearchTerm] = useState("");
+  const [vehicleList, setVehicleList] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Dữ liệu chính
-  const [vehicleList, setVehicleList] = useState([]); // danh sách xe của trạm
-  const [orders, setOrders] = useState([]);           // danh sách đơn thuê xe
-
-  // Quản lý popup
   const [popupType, setPopupType] = useState(null);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
-
-  // Trạng thái tải
-  const [loading, setLoading] = useState(true);
 
   /** ================================
    * 🚀 Lấy dữ liệu khi có user đăng nhập
    * ================================ */
   useEffect(() => {
     if (!user) return;
+    const stationId = user.stationId || 1;
 
     const fetchData = async () => {
       try {
         setLoading(true);
-        const stationId = user.stationId || 1;
 
-        // 1️⃣ Lấy danh sách xe
         const vehicles = await vehicleService.fetchAndTransformVehicles();
-        const vehiclesAtStation = vehicles.filter(
-          (v) => Number(v.stationId) === Number(stationId)
-        );
+        const ordersRes = await orderService.getAll();
 
-        // 2️⃣ Chuẩn hoá dữ liệu xe
-        const formattedVehicles = vehiclesAtStation
+        const vehiclesAtStation = vehicles
+          .filter((v) => Number(v.stationId) === Number(stationId))
           .map((v) => ({
             id: v.id || v.vehicleId,
             ten: v.vehicle_name || v.vehicleName,
             bienSo: v.plate_number || v.plateNumber,
-            pin: v.battery_status
-              ? parseInt(v.battery_status.replace("%", ""))
-              : 100,
-            trangThai: formatVehicleStatus(v.status),
+            pin: parseInt(v.battery_status?.replace("%", "") || "100"),
+            trangThai: formatStatus(v.status),
             mau: v.color,
             hang: v.brand,
             nam: v.year_of_manufacture || v.year,
@@ -70,16 +56,10 @@ const GiaoTraXe = () => {
           }))
           .sort((a, b) => a.id - b.id);
 
-        setVehicleList(formattedVehicles);
-
-        // 3️⃣ Lấy danh sách đơn thuê xe
-        const orderRes = await orderService.getAll();
-        const data = orderRes?.data || orderRes;
-        setOrders(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("❌ Lỗi khi tải dữ liệu:", error);
-        setVehicleList([]);
-        setOrders([]);
+        setVehicleList(vehiclesAtStation);
+        setOrders(Array.isArray(ordersRes?.data) ? ordersRes.data : ordersRes);
+      } catch (err) {
+        console.error("❌ Lỗi khi tải dữ liệu:", err);
       } finally {
         setLoading(false);
       }
@@ -89,40 +69,55 @@ const GiaoTraXe = () => {
   }, [user]);
 
   /** ================================
-   * 🧾 Xử lý trạng thái xe hiển thị tiếng Việt
+   * 🧾 Chuyển trạng thái xe sang tiếng Việt
    * ================================ */
-  const formatVehicleStatus = (status) => {
-    switch (status) {
-      case "Available":
-        return "Có sẵn";
-      case "Rented":
-      case "RENTAL":
-        return "Đang cho thuê";
-      case "Maintenance":
-        return "Bảo trì";
-      case "Checking":
-      case "CHECKING":
-        return "Đang kiểm tra";
-      case "Reserved":
-        return "Đã đặt trước";
-      default:
-        return "Không xác định";
-    }
+  const formatStatus = (status) => {
+    const map = {
+      Available: "Có sẵn",
+      Rented: "Đang cho thuê",
+      RENTAL: "Đang cho thuê",
+      Maintenance: "Bảo trì",
+      Checking: "Đang kiểm tra",
+      CHECKING: "Đang kiểm tra",
+      Reserved: "Đã đặt trước",
+    };
+    return map[status] || "Không xác định";
   };
 
   /** ================================
-   * 🎬 Xử lý khi nhấn nút hành động trên thẻ xe
+   * 🎨 Màu trạng thái
+   * ================================ */
+  const getStatusColor = (status) => {
+    const colorMap = {
+      "Có sẵn": "green",
+      "Đang cho thuê": "blue",
+      "Bảo trì": "yellow",
+      "Đang kiểm tra": "purple",
+      "Đã đặt trước": "orange",
+    };
+    return colorMap[status] || "";
+  };
+
+  /** ================================
+   * 🎬 Hành động theo trạng thái xe
    * ================================ */
   const handleVehicleAction = (xe) => {
     switch (xe.trangThai) {
       case "Có sẵn":
         setSelectedVehicle(xe);
-        setPopupType("chothue");
+        setPopupType("xacthuc"); // có thể là popup cho thuê hoặc xác thực giao
+        break;
+
+      case "Đã đặt trước":
+        setSelectedVehicle(xe);
+        setPopupType("datTruoc");
         break;
 
       case "Đang cho thuê": {
         const rentalOrder = orders.find(
-          (o) => Number(o.vehicleId) === Number(xe.id) && o.status === "RENTAL"
+          (o) =>
+            Number(o.vehicleId) === Number(xe.id) &&
+            ["RENTAL", "Rented", "ON_RENT", "IN_USE"].includes(o.status)
         );
         if (rentalOrder) {
           setSelectedVehicle({ ...xe, order: rentalOrder });
@@ -135,7 +130,7 @@ const GiaoTraXe = () => {
 
       case "Bảo trì":
         setSelectedVehicle(xe);
-        setPopupType("xacthuc");
+        setPopupType("daXacThuc");
         break;
 
       case "Đang kiểm tra":
@@ -148,7 +143,7 @@ const GiaoTraXe = () => {
   };
 
   /** ================================
-   * 🔍 Lọc xe theo tab + tìm kiếm biển số
+   * 🔍 Lọc xe theo tab + tìm kiếm
    * ================================ */
   const stationId = user?.stationId || 1;
   const filteredVehicles = vehicleList.filter((xe) => {
@@ -174,18 +169,18 @@ const GiaoTraXe = () => {
     <div className="giaoTraXe-container">
       <h1 className="title">Quản lý giao - nhận xe (Trạm ID {stationId})</h1>
 
-      {/* Ô tìm kiếm */}
+      {/* Tìm kiếm */}
       <div className="search-bar">
         <input
           type="text"
-          placeholder="Tìm theo biển số..."
+          placeholder="🔍 Tìm theo biển số..."
           className="search-input"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
-      {/* Tabs lọc xe */}
+      {/* Tabs */}
       <div className="tabs">
         {[
           { key: "tatca", label: "Tất cả" },
@@ -194,26 +189,22 @@ const GiaoTraXe = () => {
           { key: "baotri", label: "Bảo trì" },
           { key: "dangkiemtra", label: "Đang kiểm tra" },
           { key: "dadattruoc", label: "Đã đặt trước" },
-        ].map((t) => (
+        ].map((tab) => (
           <button
-            key={t.key}
-            className={currentTab === t.key ? "active" : ""}
-            onClick={() => setCurrentTab(t.key)}
+            key={tab.key}
+            className={currentTab === tab.key ? "active" : ""}
+            onClick={() => setCurrentTab(tab.key)}
           >
-            {t.label}
+            {tab.label}
           </button>
         ))}
       </div>
 
       {/* Danh sách xe */}
       {loading ? (
-        <div style={{ textAlign: "center", padding: "40px" }}>
-          <p>Đang tải dữ liệu xe...</p>
-        </div>
+        <div className="loading">Đang tải dữ liệu xe...</div>
       ) : filteredVehicles.length === 0 ? (
-        <p style={{ textAlign: "center", padding: "40px" }}>
-          Không có xe phù hợp.
-        </p>
+        <p className="empty">Không có xe phù hợp.</p>
       ) : (
         <div className="xe-grid">
           {filteredVehicles.map((xe) => (
@@ -226,7 +217,7 @@ const GiaoTraXe = () => {
                 alt={xe.ten}
                 className="xe-img"
               />
-              <h3 className="xe-name">{xe.ten}</h3>
+              <h3>{xe.ten}</h3>
               <p>Biển số: {xe.bienSo}</p>
               <p>Pin: {xe.pin}%</p>
               <p>Hãng: {xe.hang}</p>
@@ -236,35 +227,33 @@ const GiaoTraXe = () => {
                 {xe.trangThai}
               </p>
 
-              {/* Nút hành động */}
-              {xe.trangThai === "Đang cho thuê" && (
-                <button
-                  className="btn-action"
-                  onClick={() => handleVehicleAction(xe)}
-                >
-                  Nhận xe trả
-                </button>
-              )}
+         {/* Nút hành động */}
+{xe.trangThai === "Đang cho thuê" && (
+  <button className="btn-action" onClick={() => handleVehicleAction(xe)}>
+    Nhận xe trả
+  </button>
+)}
 
-              {xe.trangThai === "Đang kiểm tra" && (
-                <button className="btn-disabled" disabled>
-                  🔧 Đang kiểm tra
-                </button>
-              )}
+{xe.trangThai === "Đã đặt trước" && (
+  <button className="btn-action" onClick={() => handleVehicleAction(xe)}>
+    Đang chờ bàn giao
+  </button>
+)}
+
             </div>
           ))}
         </div>
       )}
 
       {/* Popups */}
-      {popupType === "chothue" && (
-        <PopupChoThue xe={selectedVehicle} onClose={() => setPopupType(null)} />
-      )}
-      {popupType === "xacthuc" && (
-        <PopupXacThuc xe={selectedVehicle} onClose={() => setPopupType(null)} />
+      {popupType === "datTruoc" && (
+        <PopupDatTruoc xe={selectedVehicle} onClose={() => setPopupType(null)} />
       )}
       {popupType === "nhanxe" && (
         <PopupNhanXe xe={selectedVehicle} onClose={() => setPopupType(null)} />
+      )}
+      {popupType === "xacthuc" && (
+        <PopupXacThuc xe={selectedVehicle} onClose={() => setPopupType(null)} />
       )}
       {popupType === "daXacThuc" && (
         <PopupDaXacThuc
@@ -274,16 +263,6 @@ const GiaoTraXe = () => {
       )}
     </div>
   );
-};
-
-/** Helper: chuyển trạng thái sang class màu */
-const getStatusColor = (status) => {
-  if (status === "Có sẵn") return "green";
-  if (status === "Đang cho thuê") return "blue";
-  if (status === "Bảo trì") return "yellow";
-  if (status === "Đang kiểm tra") return "purple";
-  if (status === "Đã đặt trước") return "orange";
-  return "";
 };
 
 export default GiaoTraXe;

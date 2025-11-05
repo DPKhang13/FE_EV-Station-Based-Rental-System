@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState ,useEffect} from "react";
 import "./EmployeesPage.css";
+import {adminService} from "../services/adminService";
 
 const EmployeesPage = () => {
-  const [employees, setEmployees] = useState([
+  /*const [employees, setEmployees] = useState([
     {
       name: "Lê Thị Mai",
       email: "lopezmichellefdgbw2500@gmail.com",
@@ -43,8 +44,28 @@ const EmployeesPage = () => {
       status: "Đang làm việc",
       rating: 4.6,
     },
-  ]);
+  ]);*/
 
+  const [employees, setEmployees] = useState([]);
+ 
+  useEffect(() => {
+    // gọi api Lấy danh sách nhân viên 
+   getEmployees();
+
+  }, []);
+
+
+
+  const getEmployees = async () => {
+       try {
+        const res= await adminService.getStaffs();
+        const data = Array.isArray(res?.data) ? res.data : res;
+        setEmployees(data || []);
+       } catch (error) {
+        error.log("❌ Lỗi tải nhân viên:", error);
+        setEmployees([]);
+       }
+  };
   // ➕ Thêm nhân viên mới
   const handleAddEmployee = () => {
     const newEmployee = {
@@ -66,9 +87,16 @@ const EmployeesPage = () => {
       setEmployees(employees.filter((_, i) => i !== index));
     }
   };
+  // 🏆 Đánh giá hiệu suất nhân viên
+  const danhGia = (employee) => {
+    const totalDeliveries = employee.pickupCount + employee.returnCount;
+    if (totalDeliveries >= 1) return "Xuất sắc";
+    if (totalDeliveries === 0) return "Tốt";
+    return "Trung bình";
+  }
 
   const topEmployees = [...employees]
-    .sort((a, b) => b.deliveries - a.deliveries)
+    .sort((a, b) => ((b.pickupCount+b.returnCount) - (a.pickupCount+a.returnCount)))
     .slice(0, 3);
 
   return (
@@ -90,11 +118,11 @@ const EmployeesPage = () => {
         </div>
         <div className="stat-card">
           <p>Đang làm việc</p>
-          <h3>{employees.filter(e => e.status === "Đang làm việc").length}</h3>
+          <h3>{employees.filter(e => e.status === "ACTIVE").length}</h3>
         </div>
         <div className="stat-card">
           <p>Tổng giao nhận</p>
-          <h3>{employees.reduce((a, b) => a + b.deliveries, 0)}</h3>
+          <h3>{employees.reduce((a, b) => a + b.pickupCount + b.returnCount, 0)}</h3>
         </div>
       </div>
 
@@ -117,18 +145,18 @@ const EmployeesPage = () => {
               <tr key={index}>
                 <td>
                   <div className="employee-info">
-                    <div className="avatar">{e.name[0]}</div>
+                    <div className="avatar">{e.staffName[0]}</div>
                     <div>
-                      <strong>{e.name}</strong>
-                      <p className="email">{e.email}</p>
+                      <strong>{e.staffName}</strong>
+                      <p className="email">{e.staffEmail}</p>
                     </div>
                   </div>
                 </td>
-                <td>{e.position}</td>
-                <td>{e.location}</td>
+                <td>{e.role}</td>
+                <td>{e.stationName}</td>
                 <td>
-                  <span className="tag">{e.performance}</span>
-                  <p className="small-text">{e.deliveries} lần giao nhận</p>
+                  <span className="tag">{danhGia(e)}</span>
+                  <p className="small-text">{e.pickupCount+e.returnCount} lần giao nhận</p>
                 </td>
                 <td>
                   <span className="status active">{e.status}</span>
@@ -154,10 +182,22 @@ const EmployeesPage = () => {
         <div className="performance-card">
           <h3>Hiệu suất theo điểm</h3>
           <ul>
-            <li>Quận 1: 231 giao nhận | 2 nhân viên</li>
-            <li>Quận 3: 98 giao nhận | 1 nhân viên</li>
-            <li>Quận 7: 156 giao nhận | 1 nhân viên</li>
-          </ul>
+  {Object.entries(
+    employees.reduce((acc, e) => {
+      const station = e.stationName || "Không rõ trạm";
+      const total = (e.pickupCount || 0) + (e.returnCount || 0);
+      if (!acc[station]) acc[station] = { deliveries: 0, staffCount: 0 };
+      acc[station].deliveries += total;
+      acc[station].staffCount += 1;
+      return acc;
+    }, {})
+  ).map(([station, stats]) => (
+    <li key={station}>
+      {station}: {stats.deliveries} giao nhận | {stats.staffCount} nhân viên
+    </li>
+  ))}
+</ul>
+
         </div>
 
         <div className="top-employee-card">
@@ -165,7 +205,7 @@ const EmployeesPage = () => {
           <ol>
             {topEmployees.map((e, index) => (
               <li key={index}>
-                <span className="rank">#{index + 1}</span> {e.name} – {e.location} ({e.deliveries} lần giao)
+                <span className="rank">#{index + 1}</span> {e.staffName} – {e.stationName} ({e.pickupCount+e.returnCount} lần giao)
               </li>
             ))}
           </ol>
