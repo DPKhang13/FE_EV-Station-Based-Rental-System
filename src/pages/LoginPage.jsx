@@ -37,7 +37,12 @@ export default function LoginPage() {
       // Store token and login
       login(data);
 
-    nav("/"+data.role.toLowerCase());
+      // Navigate based on role
+      if (data.role.toLowerCase() === 'customer') {
+        nav("/"); // Customer goes to home page
+      } else {
+        nav("/" + data.role.toLowerCase()); // Admin/Staff go to their dashboard
+      }
     } catch (err) {
       console.error('❌ Login error:', err);
       const s = err.response?.status;
