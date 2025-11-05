@@ -24,28 +24,34 @@ const XacThucKhachHangPage = () => {
   const [verifyLoading, setVerifyLoading] = useState(false);
 
   const loadOrders = async () => {
-  try {
-    setLoading(true);
-    const res = await orderService.getPendingOrders();
-    const arr = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
-    setHoSoDatXe(arr);
-  } catch (error) {
-    console.error("❌ Error loading orders:", error);
-    setHoSoDatXe([]);
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      setLoading(true);
+      const res = await orderService.getPendingOrders();
+      const arr = Array.isArray(res?.data)
+        ? res.data
+        : Array.isArray(res)
+        ? res
+        : [];
+      setHoSoDatXe(arr);
+    } catch (error) {
+      console.error("❌ Error loading orders:", error);
+      setHoSoDatXe([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-useEffect(() => {
-  loadOrders();
-}, []);
+  useEffect(() => {
+    loadOrders();
+  }, []);
 
-
-  const filteredDatXe = hoSoDatXe.filter((item) =>
-    (item.customerName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (item.phone || "").includes(searchTerm) ||
-    (item.orderId || "").toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredDatXe = hoSoDatXe.filter(
+    (item) =>
+      (item.customerName || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      (item.phone || "").includes(searchTerm) ||
+      (item.orderId || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // mở popup + tải hồ sơ chờ xác thực theo userId
@@ -58,7 +64,7 @@ useEffect(() => {
 
     try {
       const raw = await authService.getProfilePendingVerification();
-      const list = Array.isArray(raw) ? raw : (raw?.data || raw?.items || []);
+      const list = Array.isArray(raw) ? raw : raw?.data || raw?.items || [];
       const profile = list.find((p) => p.userId === row.userId) || null;
       setSelectedProfile(profile);
     } catch (err) {
@@ -68,42 +74,41 @@ useEffect(() => {
       setProfileLoading(false);
     }
   };
+
   // 🚗 Bàn giao xe (pickup)
-const handleBanGiaoXe = async (row) => {
-  if (!row?.orderId) return;
+  const handleBanGiaoXe = async (row) => {
+    if (!row?.orderId) return;
 
-  if (!window.confirm(`Xác nhận bàn giao xe cho khách hàng ${row.customerName}?`)) {
-    return;
-  }
+    if (
+      !window.confirm(`Xác nhận bàn giao xe cho khách hàng ${row.customerName}?`)
+    ) {
+      return;
+    }
 
-  try {
-    // Gọi API pickup
-    await orderService.pickup(row.orderId, {
-      note: "Bàn giao xe cho khách hàng", // bạn có thể truyền thêm dữ liệu nếu backend yêu cầu
-    });
+    try {
+      await orderService.pickup(row.orderId, {
+        note: "Bàn giao xe cho khách hàng",
+      });
 
-    // ✅ Cập nhật lại trạng thái trong FE
-    setHoSoDatXe((prev) =>
-      prev.map((r) =>
-        r.orderId === row.orderId
-          ? {
-              ...r,
-              status: "RENTAL",
-              pickedUpAt: new Date().toISOString(), // để hiển thị "Đã bàn giao"
-            }
-          : r
-      )
-    );
+      setHoSoDatXe((prev) =>
+        prev.map((r) =>
+          r.orderId === row.orderId
+            ? {
+                ...r,
+                status: "RENTAL",
+                pickedUpAt: new Date().toISOString(),
+              }
+            : r
+        )
+      );
 
-    alert(`🚗 Đã bàn giao xe cho ${row.customerName}`);
-  } catch (err) {
-    console.error("❌ Lỗi khi bàn giao xe:", err);
-    alert("Không thể bàn giao xe. Vui lòng thử lại.");
-  }
-};
+      alert(`🚗 Đã bàn giao xe cho ${row.customerName}`);
+    } catch (err) {
+      console.error("❌ Lỗi khi bàn giao xe:", err);
+      alert("Không thể bàn giao xe. Vui lòng thử lại.");
+    }
+  };
 
-
-  // Xác nhận xác thực hồ sơ: PUT /auth/verify-profile/{userId}
   const handleVerifyProfile = async () => {
     if (!selectedRow?.userId) return;
     setVerifyLoading(true);
@@ -112,31 +117,26 @@ const handleBanGiaoXe = async (row) => {
       const updated = await authService.verifyProfileByUserId(selectedRow.userId);
       const updatedObj = Array.isArray(updated) ? updated[0] : updated;
 
-      // 1) Cập nhật trạng thái hiển thị trong bảng để hiện nút "Bàn giao xe"
       setHoSoDatXe((prev) =>
-      prev.map((r) =>
-        r.userId === selectedRow.userId
-          ? {
-              ...r,
-              profileVerified: true,
-              userStatus: "ĐÃ XÁC THỰC (HỒ SƠ)", // 🔥 cập nhật trạng thái ngay
-            }
-          : r
-      )
-    );
+        prev.map((r) =>
+          r.userId === selectedRow.userId
+            ? {
+                ...r,
+                profileVerified: true,
+                userStatus: "ĐÃ XÁC THỰC (HỒ SƠ)",
+              }
+            : r
+        )
+      );
 
-      // 2) (tuỳ chọn) nếu vẫn muốn cập nhật trạng thái trong popup trước khi đóng
       setSelectedProfile((prev) => ({
         ...(prev || {}),
         ...(updatedObj || {}),
-        status: updatedObj?.status || "ACTIVE", // backend của bạn trả "ACTIVE"
+        status: updatedObj?.status || "ACTIVE",
       }));
 
-      // 3) Đóng popup
       setPopupType(null);
       setSelectedRow(null);
-
-      // 4) Thông báo
       alert("Đã xác thực hồ sơ khách hàng.");
     } catch (err) {
       console.error("❌ Xác thực hồ sơ thất bại:", err);
@@ -163,9 +163,10 @@ const handleBanGiaoXe = async (row) => {
         <h1 className="title">Xác thực khách hàng</h1>
         <p className="subtitle">Kiểm tra giấy tờ và xử lý hồ sơ đặt xe</p>
 
+        {/* 🔍 Đã bỏ icon trong placeholder */}
         <input
           type="text"
-          placeholder="🔍 Tìm kiếm theo họ tên, SĐT, mã đơn..."
+          placeholder="Tìm kiếm theo họ tên, SĐT, mã đơn..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="search-box"
@@ -187,11 +188,12 @@ const handleBanGiaoXe = async (row) => {
             </thead>
             <tbody>
               {filteredDatXe.map((row) => {
-                // ✅ ĐÃ SỬA: coi như "đã xác thực" nếu profileVerified = true
                 const isProfileVerified =
-  row.profileVerified === true ||
-  row.userStatus?.includes("ĐÃ XÁC THỰC");
-                const isVerified = isProfileVerified || ["COMPLETED", "RENTAL"].includes(row.status);
+                  row.profileVerified === true ||
+                  row.userStatus?.includes("ĐÃ XÁC THỰC");
+                const isVerified =
+                  isProfileVerified ||
+                  ["COMPLETED", "RENTAL"].includes(row.status);
 
                 const deposit =
                   typeof row.depositAmount === "number" && !isNaN(row.depositAmount)
@@ -216,69 +218,64 @@ const handleBanGiaoXe = async (row) => {
                       <small>Cọc: {deposit.toLocaleString("vi-VN")} VND</small>
                     </td>
                     <td>
-  <span
-    className={`status ${
-      row.userStatus?.includes("ĐÃ XÁC THỰC") ? "success" : "warning"
-    }`}
-  >
-    {row.userStatus || "Không xác định"}
-  </span>
+                      <span
+                        className={`status ${
+                          row.userStatus?.includes("ĐÃ XÁC THỰC")
+                            ? "success"
+                            : "warning"
+                        }`}
+                      >
+                        {row.userStatus || "Không xác định"}
+                      </span>
 
-  {row.confirmedAt && (
-    <>
-      <br />
-      <small>{fmtVN(row.confirmedAt)}</small>
-    </>
-  )}
-  {row.pickedUpAt && (
-    <>
-      <br />
-      <small>Đã bàn giao: {fmtVN(row.pickedUpAt)}</small>
-    </>
-  )}
-</td>
+                      {row.confirmedAt && (
+                        <>
+                          <br />
+                          <small>{fmtVN(row.confirmedAt)}</small>
+                        </>
+                      )}
+                      {row.pickedUpAt && (
+                        <>
+                          <br />
+                          <small>Đã bàn giao: {fmtVN(row.pickedUpAt)}</small>
+                        </>
+                      )}
+                    </td>
 
-                   <td>
-  {/* Nếu đã bàn giao rồi → chỉ hiện "Đã bàn giao" */}
-  {row.status === "RENTAL" ? (
-    <button className="btn-secondary" disabled>
-      Đã bàn giao
-    </button>
-  ) : (
-    <>
-      {/* Nếu chưa xác thực → hiện nút xác thực */}
-      {!isVerified && (
-        <button
-          className="btn-primary"
-          onClick={() => handleOpenXacThuc(row)}
-        >
-          Xác thực hồ sơ
-        </button>
-      )}
-
-      {/* Nếu đã xác thực hồ sơ → hiện nút bàn giao */}
-      {isVerified && (
-        <button
-          className="btn-success"
-          onClick={() => handleBanGiaoXe(row)}
-          style={{ marginLeft: 8 }}
-        >
-          Bàn giao xe
-        </button>
-      )}
-
-      {/* Nút từ chối bàn giao (luôn có nếu chưa PICKED_UP) */}
-      <button
-        className="btn-danger"
-        onClick={() => handleTuChoiBanGiao(row)}
-        style={{ marginLeft: 8 }}
-      >
-        Từ chối bàn giao
-      </button>
-    </>
-  )}
-</td>
-
+                    <td>
+                      {row.status === "RENTAL" ? (
+                        <button className="btn-secondary" disabled>
+                          Đã bàn giao
+                        </button>
+                      ) : (
+                        <>
+                          {!isVerified && (
+                            <button
+                              className="btn-primary"
+                              onClick={() => handleOpenXacThuc(row)}
+                            >
+                              Xác thực hồ sơ
+                            </button>
+                          )}
+                          {isVerified && (
+                            <button
+                              className="btn-success"
+                              onClick={() => handleBanGiaoXe(row)}
+                              style={{ marginLeft: 8 }}
+                            >
+                              Bàn giao xe
+                            </button>
+                          )}
+                          <button
+                            className="btn-danger"
+                            onClick={() => handleTuChoiBanGiao(row)}
+                            style={{ marginLeft: 8 }}
+                          >
+                            Từ chối bàn giao
+                          </button>
+                        </>
+                      )}
+                    </td>
                   </tr>
                 );
               })}

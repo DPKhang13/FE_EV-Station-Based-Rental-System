@@ -1,175 +1,170 @@
-/* /src/pages/ThanhToanPage.css */
-:root{
-  --bg: #f6f8fc;
-  --card-bg: #fff;
-  --border: #e7eef5;
-  --text: #1f2937;
-  --muted: #64748b;
-  --head-bg: #f3f6fb;
-
-  --success-bg: #e8f5ec;
-  --success-bd: #cbead6;
-  --success-tx: #1b7a4a;
-
-  --pending-bg: #fff6db;
-  --pending-bd: #fde8ae;
-  --pending-tx: #8a6d3b;
-
-  --failed-bg: #fde8e8;
-  --failed-bd: #f6c6c6;
-  --failed-tx: #9b2c2c;
-
-  --primary: #1677ff;
-  --primary-hover: #1a6af0;
-}
-
-/* Layout */
+/* Toàn trang */
 .page-container {
-  max-width: 980px;
-  margin: 0 auto;
-  padding: 24px;
-  background: var(--bg);
-  color: var(--text);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  background-color: #f8fafc;
+  min-height: 100vh;
+  padding: 60px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: "Inter", sans-serif;
 }
 
-/* Search box card */
+/* Hộp tìm kiếm chính */
 .search-box {
-  margin: 0 auto 20px;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
+  background-color: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  padding: 30px 40px;
   text-align: center;
-  box-shadow: 0 6px 16px rgba(23, 43, 77, .06);
+  margin-bottom: 40px;
+  width: 100%;
+  max-width: 700px;
 }
+
+/* Tiêu đề */
 .search-box h2 {
-  margin: 0 0 16px;
+  margin-bottom: 20px;
   font-size: 24px;
   font-weight: 700;
-  letter-spacing: .2px;
   color: #0f172a;
 }
+
+/* Form tìm kiếm */
 .search-form {
-  display: inline-flex;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   gap: 10px;
 }
+
 .search-form input {
-  width: 440px;
-  max-width: 70vw;
-  height: 40px;
-  padding: 0 14px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  outline: none;
-  transition: border-color .2s, box-shadow .2s;
-  background: #fff;
+  width: 400px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1.5px solid #d0d7de;
+  font-size: 15px;
+  transition: all 0.3s ease;
 }
+
 .search-form input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(22,119,255,.15);
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 6px rgba(0, 123, 255, 0.3);
 }
+
+/* Nút tìm kiếm */
 .search-form button {
-  height: 40px;
-  padding: 0 16px;
-  border: none;
-  border-radius: 8px;
-  background: var(--primary);
-  color: #fff;
+  background-color: #007bff;
+  color: white;
   font-weight: 600;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: background .15s, transform .02s;
-}
-.search-form button:hover { background: var(--primary-hover); }
-.search-form button:disabled { opacity: .6; cursor: not-allowed; }
-.search-form button:active { transform: translateY(1px); }
-
-.error { margin-top: 10px; color: #c53030; }
-.loading { margin: 10px 0; color: var(--muted); }
-
-/* Table */
-.transaction-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden; /* clip corners */
-  box-shadow: 0 6px 16px rgba(23, 43, 77, .04);
+  transition: background-color 0.3s ease;
 }
 
-.transaction-table thead th {
-  background: var(--head-bg);
+.search-form button:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.search-form button:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
+}
+
+/* Thông báo lỗi */
+.error {
+  margin-top: 10px;
+  color: #dc2626;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Loading text */
+.loading {
+  text-align: center;
   color: #475569;
-  font-weight: 700;
-  text-align: left;
-  letter-spacing: .3px;
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
+  font-size: 15px;
+  margin-bottom: 10px;
 }
 
-.transaction-table tbody td {
-  padding: 14px 16px;
-  border-bottom: 1px solid #eff3f8;
-  vertical-align: middle;
+/* Bảng giao dịch */
+.transaction-table {
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 900px;
+  background-color: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Header bảng */
+.transaction-table th {
+  background-color: #f1f5f9;
   color: #334155;
+  font-weight: 600;
+  text-align: left;
+  padding: 14px 16px;
+  font-size: 15px;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-/* zebra + hover */
-.transaction-table tbody tr:nth-child(even) td { background: #fafcff; }
-.transaction-table tbody tr:hover td { background: #f6faff; }
-
-/* Column alignment */
-.transaction-table th:nth-child(2),
-.transaction-table td:nth-child(2) { text-align: right; white-space: nowrap; } /* tiền */
-.transaction-table th:nth-child(3),
-.transaction-table td:nth-child(3) { text-align: center; } /* trạng thái */
-.transaction-table td:nth-child(1) {
-  word-break: break-all;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  color: #374151;
+/* Dòng dữ liệu */
+.transaction-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
+  font-size: 15px;
 }
+
+/* Dòng cuối không có border */
+.transaction-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Hàng xen kẽ màu */
+.transaction-table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+/* Trạng thái màu sắc */
+.status.success {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.status.failed {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.status.pending {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+/* Không có dữ liệu */
 .no-data-cell {
   text-align: center;
   color: #64748b;
-  padding: 28px 0;
+  font-style: italic;
+  padding: 20px;
 }
 
-/* Status badges */
-.status {
-  display: inline-block;
-  padding: 8px 12px;
-  font-size: 13px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: .4px;
-  border-radius: 10px;
-  border: 1px solid transparent;
-  min-width: 96px;
-}
-.status.success {
-  background: var(--success-bg);
-  border-color: var(--success-bd);
-  color: var(--success-tx);
-}
-.status.pending {
-  background: var(--pending-bg);
-  border-color: var(--pending-bd);
-  color: var(--pending-tx);
-}
-.status.failed {
-  background: var(--failed-bg);
-  border-color: var(--failed-bd);
-  color: var(--failed-tx);
-}
+/* Responsive cho màn nhỏ */
+@media (max-width: 768px) {
+  .search-form {
+    flex-direction: column;
+    gap: 12px;
+  }
 
-/* Responsive */
-@media (max-width: 640px) {
-  .search-form { display: grid; grid-template-columns: 1fr; }
-  .search-form input, .search-form button { width: 100%; }
-  .transaction-table { font-size: 14px; }
-  .transaction-table thead th, .transaction-table tbody td { padding: 10px 12px; }
-}
+  .search-form input {
+    width: 100%;
+  }
 
+  .transaction-table {
+    font-size: 14px;
+  }
+}
