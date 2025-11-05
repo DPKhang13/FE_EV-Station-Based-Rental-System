@@ -35,6 +35,7 @@ import ProfilePage from './pages/ProfilePage.jsx';
 import AboutPage from './pages/AboutPage.jsx';
 import PaymentSuccessPage from './pages/PaymentSuccess.jsx';
 import PaymentFailedPage from './pages/PaymentFailedPage.jsx';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
 
 const HomePage = () => (
   <ScrollToSectionWrapper>
@@ -101,18 +102,44 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/location-select" element={<LocationSelect />} />
             <Route path="/listcar" element={<ListCarPage />} />
-            <Route path="/booking-4seater" element={<Booking4Seater />} />
-            <Route path="/booking-7seater" element={<Booking7Seater />} />
-            <Route path="/confirm-booking" element={<ConfirmBookingPage />} />
-            <Route path="/my-bookings" element={<MyBookingsPage />} />
-            <Route path="/payment/:orderId" element={<PaymentPage />} />
+
+            {/* 🔒 Protected Booking Routes - Require login */}
+            <Route path="/booking-4seater" element={
+              <ProtectedRoute>
+                <Booking4Seater />
+              </ProtectedRoute>
+            } />
+            <Route path="/booking-7seater" element={
+              <ProtectedRoute>
+                <Booking7Seater />
+              </ProtectedRoute>
+            } />
+            <Route path="/confirm-booking" element={
+              <ProtectedRoute>
+                <ConfirmBookingPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/my-bookings" element={
+              <ProtectedRoute>
+                <MyBookingsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/payment/:orderId" element={
+              <ProtectedRoute>
+                <PaymentPage />
+              </ProtectedRoute>
+            } />
 
             {/* ✅ Payment routes */}
             <Route path="/payment-callback" element={<PaymentCallbackPage />} />
             <Route path="/payment-success" element={<PaymentSuccessPage />} />
             <Route path="/payment-failed" element={<PaymentFailedPage />} />
 
-            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            } />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />

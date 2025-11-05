@@ -6,7 +6,7 @@ const ProtectedRoute = ({ children }) => {
     const { user } = useContext(AuthContext);
 
     if (!user) {
-        alert('Please login to access this page!');
+        alert('Vui lòng đăng nhập để truy cập trang này!');
         return <Navigate to="/login" replace />;
     }
 
