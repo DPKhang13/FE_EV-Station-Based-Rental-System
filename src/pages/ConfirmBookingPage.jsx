@@ -4,6 +4,13 @@ import { AuthContext } from '../context/AuthContext';
 import { orderService } from '../services';
 import './ConfirmBookingPage.css';
 
+// Import car images by color
+import car4SeatBlack from '../assets/4seatblack.png';
+import car4SeatBlue from '../assets/4seatblue.png';
+import car4SeatRed from '../assets/4seatred.png';
+import car4SeatSilver from '../assets/4seatsilver.png';
+import car4SeatWhite from '../assets/4seatwhite.png';
+
 const ConfirmBookingPage = () => {
     const location = useLocation();
     const navigate = useNavigate();
@@ -11,6 +18,26 @@ const ConfirmBookingPage = () => {
 
     const bookingData = location.state?.bookingData;
     const [loading, setLoading] = useState(false);
+
+    // Function to get car image based on color
+    const getCarImageByColor = (color, seatCount) => {
+        if (!color || seatCount !== 4) return null; // Only apply for 4-seater
+
+        const colorLower = color.toLowerCase();
+
+        if (colorLower.includes('black') || colorLower.includes('đen')) {
+            return car4SeatBlack;
+        } else if (colorLower.includes('blue') || colorLower.includes('xanh')) {
+            return car4SeatBlue;
+        } else if (colorLower.includes('red') || colorLower.includes('đỏ')) {
+            return car4SeatRed;
+        } else if (colorLower.includes('silver') || colorLower.includes('bạc')) {
+            return car4SeatSilver;
+        } else if (colorLower.includes('white') || colorLower.includes('trắng')) {
+            return car4SeatWhite;
+        }
+        return null; // Use default car.image if no match
+    };
 
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -99,12 +126,6 @@ const ConfirmBookingPage = () => {
             console.log('  - Vehicle Status:', bookingData.car.status);
             console.log('  - Plate Number:', bookingData.car.plate_number);
 
-            // ⚠️ IMPORTANT: Backend KHÔNG cần customerId và endTime
-            // Backend lấy customerId từ JWT token
-            // Backend tự tính endTime = startTime + plannedHours
-
-            // ✅ FIX: Dùng startTime đã được format sẵn từ Booking4Seater/Booking7Seater
-            // Format: "2025-11-03 07:11:00" (có dấu SPACE, có giây)
             let startTimeFormatted = startTimeRaw;
 
             // ✅ SAFETY: Nếu vẫn còn 'T' trong string, tự động fix
@@ -122,12 +143,10 @@ const ConfirmBookingPage = () => {
             console.log('  Raw:', startTimeRaw);
             console.log('  ✅ Formatted:', startTimeFormatted);
 
-            // ✅ FIX: KHÔNG gửi customerId - backend lấy từ JWT token
-            // Backend sẽ tự extract customerId từ @AuthenticationPrincipal
             const cleanedOrderData = {
-                vehicleId: vehicleId,           // ✅ NUMBER
-                startTime: startTimeFormatted,  // ✅ STRING "2025-11-03 07:11:00"
-                plannedHours: plannedHours,     // ✅ NUMBER
+                vehicleId: vehicleId,
+                startTime: startTimeFormatted,
+                plannedHours: plannedHours  // ✅ FIX: Thêm plannedHours vào payload
             };
 
             // Only include couponCode if it has a value
@@ -265,7 +284,11 @@ ${backendError?.message === 'Unexpected error' ? `
                     <div className="confirm-section car-details">
                         <h2>🚗 Thông Tin Xe</h2>
                         <div className="car-info-grid">
-                            <img src={car.image} alt={car.vehicle_name} className="car-image" />
+                            <img
+                                src={getCarImageByColor(car.color, car.seat_count) || car.image}
+                                alt={car.vehicle_name}
+                                className="car-image"
+                            />
                             <div className="car-info">
                                 <h3>{car.vehicle_name}</h3>
                                 <div className="info-row">

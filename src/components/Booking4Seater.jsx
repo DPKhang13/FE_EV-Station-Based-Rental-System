@@ -5,6 +5,13 @@ import { AuthContext } from '../context/AuthContext';
 import { validateVehicleForBooking } from '../utils/vehicleValidator';
 import './Booking4Seater.css';
 
+// Import car images by color
+import car4SeatBlack from '../assets/4seatblack.png';
+import car4SeatBlue from '../assets/4seatblue.png';
+import car4SeatRed from '../assets/4seatred.png';
+import car4SeatSilver from '../assets/4seatsilver.png';
+import car4SeatWhite from '../assets/4seatwhite.png';
+
 const Booking4Seater = () => {
     const location = useLocation();
     const navigate = useNavigate();
@@ -12,6 +19,27 @@ const Booking4Seater = () => {
     const { vehicles: cars, loading } = useVehicles();
     const preSelectedCar = location.state?.car;
     const gradeFilter = location.state?.gradeFilter; // For filtering by grade from Offers
+
+    // Function to get car image based on color
+    const getCarImageByColor = (color) => {
+        if (!color) return car4SeatSilver; // Default image
+
+        const colorLower = color.toLowerCase();
+
+        if (colorLower.includes('black') || colorLower.includes('đen')) {
+            return car4SeatBlack;
+        } else if (colorLower.includes('blue') || colorLower.includes('xanh')) {
+            return car4SeatBlue;
+        } else if (colorLower.includes('red') || colorLower.includes('đỏ')) {
+            return car4SeatRed;
+        } else if (colorLower.includes('silver') || colorLower.includes('bạc')) {
+            return car4SeatSilver;
+        } else if (colorLower.includes('white') || colorLower.includes('trắng')) {
+            return car4SeatWhite;
+        } else {
+            return car4SeatSilver; // Default fallback
+        }
+    };
 
     const [selectedCarId, setSelectedCarId] = useState(preSelectedCar?.id || '');
     const [selectedCar, setSelectedCar] = useState(preSelectedCar || null);
@@ -393,7 +421,7 @@ const Booking4Seater = () => {
                     ) : (
                         <>
                             <img
-                                src={selectedCar.image}
+                                src={getCarImageByColor(selectedCar.color)}
                                 alt={selectedCar.vehicle_name}
                                 className="car-display-image"
                             />

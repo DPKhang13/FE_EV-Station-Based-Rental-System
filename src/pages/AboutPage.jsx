@@ -14,7 +14,7 @@ const AboutPage = () => {
             <div className="about-hero">
                 <div className="hero-overlay"></div>
                 <div className="hero-content">
-                    <h1>🚗 About Our Company</h1>
+                    <h1>About Our Company</h1>
                     <p className="hero-subtitle">Leading EV Rental Service in Vietnam</p>
                 </div>
             </div>
@@ -40,17 +40,17 @@ const AboutPage = () => {
                     </div>
                     <div className="mission-grid">
                         <div className="mission-card">
-                            <div className="mission-icon">🌱</div>
+                            <div className="mission-icon"></div>
                             <h3>Sustainability</h3>
                             <p>Promoting green transportation to reduce carbon emissions and protect our environment for future generations.</p>
                         </div>
                         <div className="mission-card">
-                            <div className="mission-icon">⚡</div>
+                            <div className="mission-icon"></div>
                             <h3>Innovation</h3>
                             <p>Leveraging cutting-edge electric vehicle technology to provide the best driving experience.</p>
                         </div>
                         <div className="mission-card">
-                            <div className="mission-icon">🤝</div>
+                            <div className="mission-icon"></div>
                             <h3>Customer First</h3>
                             <p>Delivering exceptional service with convenient booking, competitive pricing, and 24/7 support.</p>
                         </div>
@@ -70,27 +70,27 @@ const AboutPage = () => {
                             <p>Choose from our extensive fleet of 4-seater and 7-seater electric vehicles, ranging from Air to Plus and Pro grades to match your needs and budget.</p>
                         </div>
                         <div className="feature-item">
-                            <div className="feature-icon">📍</div>
+                            <div className="feature-icon"></div>
                             <h3>Strategic Locations</h3>
                             <p>Multiple rental stations conveniently located across major cities, making it easy to pick up and drop off your vehicle.</p>
                         </div>
                         <div className="feature-item">
-                            <div className="feature-icon">💰</div>
+                            <div className="feature-icon"></div>
                             <h3>Transparent Pricing</h3>
                             <p>No hidden fees! Our pricing is clear and competitive, with special discounts and coupon codes available for loyal customers.</p>
                         </div>
                         <div className="feature-item">
-                            <div className="feature-icon">🔋</div>
+                            <div className="feature-icon"></div>
                             <h3>Fully Charged EVs</h3>
                             <p>All our vehicles are fully charged and ready to go, with excellent range capabilities for your journey.</p>
                         </div>
                         <div className="feature-item">
-                            <div className="feature-icon">📱</div>
+                            <div className="feature-icon"></div>
                             <h3>Easy Online Booking</h3>
                             <p>Book your vehicle in minutes through our user-friendly platform with real-time availability and instant confirmation.</p>
                         </div>
                         <div className="feature-item">
-                            <div className="feature-icon">✅</div>
+                            <div className="feature-icon"></div>
                             <h3>Quality Assurance</h3>
                             <p>Every vehicle undergoes rigorous maintenance and safety checks to ensure your peace of mind on the road.</p>
                         </div>
@@ -105,7 +105,7 @@ const AboutPage = () => {
                     </div>
                     <div className="why-ev-content">
                         <div className="why-ev-image">
-                            <div className="ev-placeholder">🔌⚡🚗</div>
+                            <div className="ev-placeholder"></div>
                         </div>
                         <div className="why-ev-text">
                             <ul className="benefits-list">

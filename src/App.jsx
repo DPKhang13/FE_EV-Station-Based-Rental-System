@@ -26,6 +26,7 @@ import AdminDashBoardPage from './pages/AdminDashBoardPage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
 import EmployeesPage from './pages/EmployeesPage.jsx';
 import VehicleManagement from './components/admin/VehicleManagement.jsx';
+import StationManagement from './components/admin/StationManagement.jsx';
 import ConfirmBookingPage from './pages/ConfirmBookingPage.jsx';
 import MyBookingsPage from './pages/MyBookingsPage.jsx';
 import PaymentPage from './pages/PaymentPage.jsx';
@@ -132,8 +133,7 @@ function App() {
               <Route path="dashboard" element={<AdminDashBoardPage />} />
               <Route path="employees" element={<EmployeesPage />} />
               <Route path="vehicles" element={<VehicleManagement />} />
-              {/* ❌ XÓA dòng này: */}
-              {/* <Route path="/PaymentSuccess" element={<PaymentCallbackPage />} /> */}
+              <Route path="locations" element={<StationManagement />} />
             </Route>
           </Routes >
         </LayoutWrapper >

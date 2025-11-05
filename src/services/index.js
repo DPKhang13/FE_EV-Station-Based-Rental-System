@@ -23,6 +23,9 @@ export { default as orderService } from './orderService';
 // Rental Station
 export { default as rentalStationService } from './rentalStationService';
 
+// Station (Admin)
+export { default as stationService } from './stationService';
+
 // Pricing Rule
 export { default as pricingRuleService } from './pricingRuleService';
 

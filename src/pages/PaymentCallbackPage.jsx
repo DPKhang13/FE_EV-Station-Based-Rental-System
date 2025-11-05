@@ -43,7 +43,7 @@ const PaymentCallbackPage = () => {
             // ✅ CHECK: Nếu không có responseCode → redirect failed
             if (!responseCode) {
                 console.error('❌ [PaymentCallback] NO RESPONSE CODE - Redirect to failed');
-                navigate('/payment-failed?error=no-response-code', { replace: true });
+                window.location.href = '/payment-failed?error=no-response-code';
                 return;
             }
 
@@ -59,7 +59,8 @@ const PaymentCallbackPage = () => {
                     responseCode: responseCode
                 }).toString();
 
-                navigate(`/payment-success?${queryParams}`, { replace: true });
+                // ✅ Use window.location.href to avoid CORS/secure context issues
+                window.location.href = `/payment-success?${queryParams}`;
             } else {
                 // ❌ Thanh toán thất bại
                 console.log('❌❌❌ [PaymentCallback] CODE ' + responseCode + ' - GOING TO FAILED');
@@ -70,7 +71,8 @@ const PaymentCallbackPage = () => {
                     txnRef: vnpParams.vnp_TxnRef
                 }).toString();
 
-                navigate(`/payment-failed?${queryParams}`, { replace: true });
+                // ✅ Use window.location.href to avoid CORS/secure context issues
+                window.location.href = `/payment-failed?${queryParams}`;
             }
 
         } catch (err) {
