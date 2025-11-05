@@ -54,7 +54,7 @@ const Navbar = () => {
                                             setActiveCars('4');
                                             navigate('/?scroll=4-seater-cars');
                                         }}>
-                                        Xe 4 Chỗ
+                                        XE 4 CHỖ
                                     </a>
                                 </li>
                                 <li className="dropdown-item" data-seater="7">
@@ -65,7 +65,7 @@ const Navbar = () => {
                                             setActiveCars('7');
                                             navigate('/?scroll=7-seater-cars');
                                         }}>
-                                        Xe 7 Chỗ
+                                        XE 7 CHỖ
                                     </a>
                                 </li>
                             </ul>

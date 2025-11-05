@@ -14,12 +14,12 @@ const Footer = () => {
                             <img src="src/assets/logo.jpg" alt="Your Logo" className="footer-logo-image" />
                         </div>
                         <p className="footer-description">
-                            Where quality meets convenience: Rent with us and enjoy the journey
+                            Nơi những chiếc xe hơi điện không làm nên mùa xuân nhưng đảm bảo bạn có chuyến đi du lịch mùa hè thoải mái con gà tre.
                         </p>
                     </div>
 
                     <div>
-                        <h3 className="footer-section-title">Quick Links</h3>
+                        <h3 className="footer-section-title">Di chuyển nhanh</h3>
                         <ul className="footer-links">
                             <li>
                                 <a href="/" onClick={e => {
@@ -35,7 +35,7 @@ const Footer = () => {
                                     e.preventDefault();
                                     navigate('/?scroll=4-seater-cars');
                                 }}>
-                                    4-Seater Cars
+                                    XE 4 CHỖ
                                 </a>
                             </li>
                             <li>
@@ -43,7 +43,7 @@ const Footer = () => {
                                     e.preventDefault();
                                     navigate('/?scroll=7-seater-cars');
                                 }}>
-                                    7-Seater Cars
+                                    XE 7 CHỖ
                                 </a>
                             </li>
                             <li>
@@ -51,7 +51,7 @@ const Footer = () => {
                                     e.preventDefault();
                                     navigate('/location-select');
                                 }}>
-                                    List Car
+                                    DANH SÁCH XE
                                 </a>
                             </li>
                             <li>
@@ -59,7 +59,7 @@ const Footer = () => {
                                     e.preventDefault();
                                     navigate('/?scroll=contact');
                                 }}>
-                                    Contact Us
+                                    LIÊN HỆ VỚI CHÚNG TÔI
                                 </a>
                             </li>
                         </ul>

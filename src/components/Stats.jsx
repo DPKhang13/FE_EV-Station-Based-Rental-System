@@ -3,10 +3,10 @@ import './Stats.css';
 
 const Stats = () => {
     const stats = [
-        { number: '120', label: 'VEHICLES IN THE FLEET' },
-        { number: '3', label: 'OFFICE LOCATIONS' },
-        { number: '1000+', label: 'ORDERED' },
-        { number: '1+', label: 'YEARS EXPERIENCE' }
+        { number: '120', label: 'XE TRONG ĐỘI XE' },
+        { number: '3', label: 'CHI NHÁNH TRÊN TOÀN QUỐC' },
+        { number: '1000+', label: 'ĐƠN HÀNG ĐÃ HOÀN THÀNH' },
+        { number: '1+', label: 'TRÊN 1 NĂM KINH NGHIỆM' }
     ];
 
     return (

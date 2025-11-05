@@ -62,8 +62,36 @@
     max-width: 8000px;
     margin: 0 auto;
     line-height: 1.6;
-    margin-bottom: 150px;
+    margin-bottom: 20px;
+}
 
+.sigma-highlight {
+    color: #dc2626;
+    font-weight: 700;
+    font-size: 1.2em;
+    text-shadow: 2px 2px 8px rgba(220, 38, 38, 0.5);
+}
+
+.sigma-list {
+    list-style: disc;
+    color: white;
+    margin: 0 auto 150px auto;
+    line-height: 2;
+    max-width: 600px;
+    text-align: left;
+    font-size: 18px;
+    padding-left: 40px;
+}
+
+.sigma-list li {
+    margin-bottom: 8px;
+}
+
+.highlight-letter {
+    color: #dc2626;
+    font-weight: 700;
+    font-size: 1.15em;
+    text-shadow: 1px 1px 4px rgba(220, 38, 38, 0.4);
 }
 
 .hero-form {
