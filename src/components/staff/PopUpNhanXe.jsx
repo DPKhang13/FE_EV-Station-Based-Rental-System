@@ -72,7 +72,7 @@ const handleGetReturnInfo = async () => {
   <div className="order-info">
     <h3>📦 Thông tin đơn trả xe (chi tiết)</h3>
 
-    {/* Cách 1: hiển thị rõ ràng từng trường chính */}
+   
     <ul>
       <li><strong>Mã đơn:</strong> {orderInfo.orderId}</li>
       <li><strong>Xe ID:</strong> {orderInfo.vehicleId}</li>
@@ -94,16 +94,7 @@ const handleGetReturnInfo = async () => {
       </li>
     </ul>
 
-    {/* Cách 2: nếu muốn xem toàn bộ JSON */}
-    <pre style={{
-      background: "#f6f8fa",
-      padding: "12px",
-      borderRadius: "8px",
-      overflowX: "auto",
-      fontSize: "13px"
-    }}>
-      {JSON.stringify(orderInfo, null, 2)}
-    </pre>
+    
 
     {/* 💳 Nút thanh toán */}
     <button

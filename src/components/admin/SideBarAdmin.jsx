@@ -45,10 +45,7 @@ export default function SideBarAdmin() {
             <FaUsers />
             <span>Danh sách khách hàng</span>
           </NavLink>
-          <NavLink to="/admin/risk-customers" className="sidebar__btn">
-            <MdVerified />
-            <span>Khách hàng rủi ro</span>
-          </NavLink>
+         
 
           {/* --- Nhóm c. Quản lý nhân viên --- */}
           <p className="sidebar__section-title">🧑‍💼 Nhân viên</p>

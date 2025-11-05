@@ -22,14 +22,17 @@ export const maintenanceService = {
         return await api.get(`/maintanences/getById/${maintenanceId}`);
     },
 
-    /**
-     * Tạo bảo trì mới
-     * POST /api/maintanences/create
-     */
-    create: async (maintenanceData) => {
-        return await api.post('/maintanences/create', maintenanceData);
-    },
+     createIncident: async (incidentData) => {
+    return await api.post('/incidents/create', incidentData);
+  },
 
+  /**
+   * 🛠️ Tạo mới yêu cầu bảo trì (maintenance)
+   * POST /api/maintenances/create
+   */
+  createMaintenance: async (maintenanceData) => {
+    return await api.post('/maintenances/create', maintenanceData);
+  },
     /**
      * Cập nhật bảo trì
      * PUT /api/maintanences/update/{maintenanceId}
@@ -45,6 +48,7 @@ export const maintenanceService = {
     delete: async (maintenanceId) => {
         return await api.delete(`/maintanences/delete/${maintenanceId}`);
     }
+
 };
 
 export default maintenanceService;

@@ -265,3 +265,81 @@ h1 {
 .xe-actions button:hover:not(:disabled) {
   opacity: 0.9;
 }
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.popup-content {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  width: 420px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+  animation: slideIn 0.3s ease-in-out;
+}
+
+.popup-section {
+  margin-bottom: 12px;
+  font-size: 15px;
+  color: #333;
+}
+
+.popup-select,
+.popup-textarea,
+.popup-content input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.popup-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn-confirm {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-cancel {
+  background-color: #e0e0e0;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-confirm:hover {
+  background-color: #0056b3;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+

@@ -13,7 +13,6 @@ const QuanLyXePage = () => {
   const [selectedXe, setSelectedXe] = useState(null);
   const [pinValue, setPinValue] = useState("");
   const [issueText, setIssueText] = useState("");
-  const [incidentType, setIncidentType] = useState("");
   const [severity, setSeverity] = useState("");
 
   // ⚙️ Nếu user chưa có, không return ở đây nữa — chỉ báo loading phía dưới
@@ -21,7 +20,7 @@ const QuanLyXePage = () => {
 
   // 📦 Lấy danh sách xe
   const loadVehicles = async () => {
-    if (!user) return; // skip nếu user chưa sẵn sàng
+    if (!user) return;
 
     try {
       setLoading(true);
@@ -63,7 +62,7 @@ const QuanLyXePage = () => {
 
   useEffect(() => {
     loadVehicles();
-  }, [STATION_ID, user]); // thêm user vào dependency
+  }, [STATION_ID, user]);
 
   // ⚡ Cập nhật pin
   const handleUpdatePin = async () => {
@@ -95,30 +94,33 @@ const QuanLyXePage = () => {
 
   // 🧰 Báo cáo sự cố
   const handleReportIssue = async () => {
-    if (!selectedXe || !incidentType || !severity || !issueText.trim()) {
+    if (!selectedXe || !severity || !issueText.trim()) {
       alert("⚠️ Vui lòng điền đầy đủ thông tin sự cố!");
       return;
     }
 
     try {
-      const payload = {
-        vehicleId: selectedXe.id,
-        reportedBy: user?.id,
-        stationId: STATION_ID,
-        incidentType,
-        severity,
-        description: issueText,
-        status: "open",
-        reportedAt: new Date().toISOString(),
-      };
+     const payload = {
+  vehicleId: Number(selectedXe.id),
+  stationId: Number(STATION_ID),
+  description: issueText,
+  severity: severity.toUpperCase(),
+  status: "OPEN",
+  occurredOn: new Date().toISOString(), // 👈 full ISO format
+  cost: 0,
+  reportedBy: user?.userId?.toString() || "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+};
 
-      await maintenanceService.create(payload);
+console.log("📦 Incident Payload:", payload);
+await maintenanceService.createIncident(payload);
+
+
       alert(
         `📩 Đã gửi báo cáo sự cố cho xe ${selectedXe.ten} (${selectedXe.bienSo})`
       );
+
       setPopupType(null);
       setIssueText("");
-      setIncidentType("");
       setSeverity("");
       setSelectedXe(null);
     } catch (err) {
@@ -234,7 +236,7 @@ const QuanLyXePage = () => {
         </div>
       )}
 
-      {/* Popups giữ nguyên như bạn có */}
+      {/* ⚡ Popup Cập nhật pin */}
       {popupType === "pin" && selectedXe && (
         <div className="popup-overlay">
           <div className="popup-content">
@@ -261,79 +263,82 @@ const QuanLyXePage = () => {
         </div>
       )}
 
-      {/* Popup báo cáo sự cố */}
-{popupType === "issue" && selectedXe && (
-  <div className="popup-overlay">
-    <div className="popup-content">
-      <h2>🧰 Báo cáo sự cố</h2>
-      <p>
-        <strong>{selectedXe.ten}</strong> ({selectedXe.bienSo})
-      </p>
+      {/* 🧰 Popup Báo cáo sự cố */}
+      {popupType === "issue" && selectedXe && (
+        <div className="popup-overlay">
+          <div className="popup-content">
+            <h2>🧰 Báo cáo sự cố xe</h2>
 
-      <label>Loại sự cố:</label>
-      <select
-        value={incidentType}
-        onChange={(e) => setIncidentType(e.target.value)}
-      >
-        <option value="">-- Chọn loại --</option>
-        <option value="mechanical">Cơ khí</option>
-        <option value="software">Phần mềm</option>
-        <option value="accident">Tai nạn</option>
-        <option value="battery">Pin</option>
-        <option value="other">Khác</option>
-      </select>
+            <div className="popup-section">
+              <p>
+                <strong>{selectedXe.ten}</strong> ({selectedXe.bienSo})
+              </p>
+              <p>Hãng: {selectedXe.hang}</p>
+              <p>Trạm: {selectedXe.tram}</p>
+              <p>Pin hiện tại: {selectedXe.pin}%</p>
+            </div>
 
-      <label>Mức độ hư tổn:</label>
-      <select
-        value={severity}
-        onChange={(e) => setSeverity(e.target.value)}
-      >
-        <option value="">-- Chọn mức độ --</option>
-        <option value="low">Thấp</option>
-        <option value="medium">Trung bình</option>
-        <option value="high">Cao</option>
-        <option value="critical">Nghiêm trọng</option>
-      </select>
+            <hr />
 
-      <label>Mô tả sự cố:</label>
-      <textarea
-        rows="3"
-        placeholder="Nhập mô tả chi tiết..."
-        value={issueText}
-        onChange={(e) => setIssueText(e.target.value)}
-      ></textarea>
+            <label>Mức độ hư tổn:</label>
+            <select
+              value={severity}
+              onChange={(e) => setSeverity(e.target.value)}
+              className="popup-select"
+            >
+              <option value="">-- Chọn mức độ --</option>
+              <option value="low">🟢 Thấp</option>
+              <option value="medium">🟡 Trung bình</option>
+              <option value="high">🟠 Cao</option>
+              <option value="critical">🔴 Nghiêm trọng</option>
+            </select>
 
-      <div className="popup-buttons">
-        <button onClick={() => setPopupType(null)}>Hủy</button>
-        <button className="btn-confirm" onClick={handleReportIssue}>
-          Gửi báo cáo
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-{/* Popup đem xe bảo trì */}
-{popupType === "maintain" && selectedXe && (
-  <div className="popup-overlay">
-    <div className="popup-content">
-      <h2>🛠️ Đưa xe đi bảo trì</h2>
-      <p>
-        <strong>{selectedXe.ten}</strong> ({selectedXe.bienSo})
-      </p>
-      <p className="warning-text">
-        ⚠️ Xe sau khi chuyển sang “Bảo trì” sẽ không thể cho thuê!
-      </p>
+            <label>Mô tả chi tiết:</label>
+            <textarea
+              rows="4"
+              className="popup-textarea"
+              placeholder="Nhập mô tả chi tiết về sự cố..."
+              value={issueText}
+              onChange={(e) => setIssueText(e.target.value)}
+            ></textarea>
 
-      <div className="popup-buttons">
-        <button onClick={() => setPopupType(null)}>Hủy</button>
-        <button className="btn-confirm" onClick={handleSendMaintenance}>
-          Xác nhận đem bảo trì
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+            <div className="popup-buttons">
+              <button className="btn-cancel" onClick={() => setPopupType(null)}>
+                ❌ Hủy
+              </button>
+              <button
+                className="btn-confirm"
+                onClick={handleReportIssue}
+                disabled={!severity || !issueText.trim()}
+              >
+                📩 Gửi báo cáo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
+      {/* 🛠️ Popup Đưa xe đi bảo trì */}
+      {popupType === "maintain" && selectedXe && (
+        <div className="popup-overlay">
+          <div className="popup-content">
+            <h2>🛠️ Đưa xe đi bảo trì</h2>
+            <p>
+              <strong>{selectedXe.ten}</strong> ({selectedXe.bienSo})
+            </p>
+            <p className="warning-text">
+              ⚠️ Xe sau khi chuyển sang “Bảo trì” sẽ không thể cho thuê!
+            </p>
+
+            <div className="popup-buttons">
+              <button onClick={() => setPopupType(null)}>Hủy</button>
+              <button className="btn-confirm" onClick={handleSendMaintenance}>
+                Xác nhận đem bảo trì
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
