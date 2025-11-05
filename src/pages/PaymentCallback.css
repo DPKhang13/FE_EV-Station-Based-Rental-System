@@ -4,7 +4,7 @@
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 20px;
+    padding: 40px 20px;
 }
 
 .callback-container {
@@ -14,7 +14,7 @@
 
 .status-card {
     background: white;
-    border-radius: 20px;
+    border-radius: 24px;
     padding: 60px 40px;
     text-align: center;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -85,9 +85,9 @@
 }
 
 .spinner {
-    width: 50px;
-    height: 50px;
-    border: 5px solid #f3f4f6;
+    width: 60px;
+    height: 60px;
+    border: 6px solid #e5e7eb;
     border-top-color: #667eea;
     border-radius: 50%;
     margin: 30px auto;
@@ -101,6 +101,84 @@
 }
 
 .success-content,
+.failed-content {
+    margin: 30px 0;
+}
+
+.success-content p,
+.failed-content p {
+    font-size: 16px;
+    color: #6b7280;
+    margin: 10px 0;
+    line-height: 1.6;
+}
+
+.error-icon {
+    font-size: 80px;
+    margin-bottom: 20px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 40px;
+}
+
+.btn-primary,
+.btn-secondary {
+    padding: 14px 32px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.btn-secondary:hover {
+    background: #e5e7eb;
+}
+
+/* Mobile Responsive */
+@media (max-width: 640px) {
+    .status-card {
+        padding: 40px 20px;
+    }
+
+    .status-icon {
+        font-size: 60px;
+    }
+
+    .status-title {
+        font-size: 22px;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        width: 100%;
+    }
+}
+
 .failed-content {
     margin: 30px 0;
 }

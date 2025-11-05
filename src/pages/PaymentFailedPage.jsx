@@ -57,7 +57,7 @@ const PaymentFailedPage = () => {
                 </p>
 
                 {/* Error Details */}
-<div className="error-details">
+                <div className="error-details">
                     <div className="error-message">
                         <span className="error-icon">⚠️</span>
                         <p>{getErrorMessage(responseCode || error)}</p>
@@ -122,7 +122,7 @@ const PaymentFailedPage = () => {
                         </button>
                     )}
                     {orderId && (
-<button
+                        <button
                             onClick={() => navigate(`/payment/${orderId}`)}
                             className="btn-retry"
                         >

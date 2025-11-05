@@ -70,7 +70,7 @@ const PaymentSuccessPage = () => {
                     </div>
                     <div className="detail-item">
                         <span className="detail-label">Số tiền:</span>
-<span className="detail-value price">
+                        <span className="detail-value price">
                             {amountVND.toLocaleString('vi-VN')} VNĐ
                         </span>
                     </div>
