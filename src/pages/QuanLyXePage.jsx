@@ -14,14 +14,15 @@ const QuanLyXePage = () => {
   const [pinValue, setPinValue] = useState("");
   const [issueText, setIssueText] = useState("");
   const [severity, setSeverity] = useState("");
+  const [newStatus, setNewStatus] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterTab, setFilterTab] = useState("tatca");
 
-  // ⚙️ Nếu user chưa có, không return ở đây nữa — chỉ báo loading phía dưới
   const STATION_ID = user?.stationId || 1;
 
   // 📦 Lấy danh sách xe
   const loadVehicles = async () => {
     if (!user) return;
-
     try {
       setLoading(true);
       const vehicles = await vehicleService.fetchAndTransformVehicles();
@@ -29,27 +30,39 @@ const QuanLyXePage = () => {
       const filtered = vehicles.filter(
         (v) =>
           Number(v.stationId) === Number(STATION_ID) &&
-          (v.status === "Available" || v.status === "Maintenance")
+          ["AVAILABLE", "MAINTENANCE", "CHECKING"].includes(
+            v.status?.toUpperCase()
+          )
       );
 
-      const transformed = filtered.map((v) => ({
-        id: v.id,
-        ten: v.vehicle_name || v.name,
-        bienSo: v.plate_number,
-        pin: v.battery_status
-          ? parseInt(v.battery_status.replace("%", ""))
-          : 100,
-        trangThai:
-          v.status === "Available"
-            ? "Có sẵn"
-            : v.status === "Maintenance"
-            ? "Bảo trì"
-            : "Không xác định",
-        statusRaw: v.status,
-        hang: v.brand,
-        tram: v.stationName,
-        hinhAnh: v.image,
-      }));
+      const transformed = filtered
+  .map((v) => {
+    const statusUpper = v.status?.toUpperCase() || "";
+    return {
+      id: v.id,
+      ten: v.vehicle_name || v.name,
+      bienSo: v.plate_number,
+      pin: v.battery_status
+        ? parseInt(v.battery_status.replace("%", ""))
+        : 100,
+      trangThai:
+        statusUpper === "AVAILABLE"
+          ? "Có sẵn"
+          : statusUpper === "MAINTENANCE"
+          ? "Bảo trì"
+          : statusUpper === "CHECKING"
+          ? "Đang kiểm tra"
+          : "Không xác định",
+      statusRaw: statusUpper,
+      hang: v.brand,
+      tram: v.stationName,
+      hinhAnh: v.image,
+    };
+  })
+  .sort((a, b) => a.id - b.id); // 🧩 Sắp xếp tăng dần theo id
+
+
+
 
       setDanhSachXe(transformed);
     } catch (err) {
@@ -67,26 +80,20 @@ const QuanLyXePage = () => {
   // ⚡ Cập nhật pin
   const handleUpdatePin = async () => {
     if (!selectedXe || !pinValue) {
-      alert("⚠️ Vui lòng nhập phần trăm pin!");
+      alert("Vui lòng nhập phần trăm pin!");
       return;
     }
-
     try {
       await rentalStationService.updateVehicleStatus(selectedXe.id, {
         status: selectedXe.statusRaw,
         battery: pinValue,
       });
-
-      alert(
-        `✅ Đã cập nhật pin cho xe ${selectedXe.ten} (${selectedXe.bienSo}) thành ${pinValue}%`
-      );
-
+      alert(`✅ Đã cập nhật pin cho xe ${selectedXe.ten} (${selectedXe.bienSo}) thành ${pinValue}%`);
       await loadVehicles();
     } catch (err) {
       console.error("❌ Lỗi khi cập nhật pin:", err);
       alert("Không thể cập nhật pin xe, vui lòng thử lại!");
     }
-
     setPopupType(null);
     setPinValue("");
     setSelectedXe(null);
@@ -95,30 +102,22 @@ const QuanLyXePage = () => {
   // 🧰 Báo cáo sự cố
   const handleReportIssue = async () => {
     if (!selectedXe || !severity || !issueText.trim()) {
-      alert("⚠️ Vui lòng điền đầy đủ thông tin sự cố!");
+      alert("Vui lòng điền đầy đủ thông tin sự cố!");
       return;
     }
-
     try {
-     const payload = {
-  vehicleId: Number(selectedXe.id),
-  stationId: Number(STATION_ID),
-  description: issueText,
-  severity: severity.toUpperCase(),
-  status: "OPEN",
-  occurredOn: new Date().toISOString(), // 👈 full ISO format
-  cost: 0,
-  reportedBy: user?.userId?.toString() || "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-};
-
-console.log("📦 Incident Payload:", payload);
-await maintenanceService.createIncident(payload);
-
-
-      alert(
-        `📩 Đã gửi báo cáo sự cố cho xe ${selectedXe.ten} (${selectedXe.bienSo})`
-      );
-
+      const payload = {
+        vehicleId: Number(selectedXe.id),
+        stationId: Number(STATION_ID),
+        description: issueText,
+        severity: severity.toUpperCase(),
+        status: "OPEN",
+        occurredOn: new Date().toISOString(),
+        cost: 0,
+        reportedBy: user?.userId?.toString() || "system",
+      };
+      await maintenanceService.createIncident(payload);
+      alert(`✅ Đã gửi báo cáo sự cố cho xe ${selectedXe.ten} (${selectedXe.bienSo})`);
       setPopupType(null);
       setIssueText("");
       setSeverity("");
@@ -132,10 +131,9 @@ await maintenanceService.createIncident(payload);
   // 🛠️ Đưa xe đi bảo trì
   const handleSendMaintenance = async () => {
     if (!selectedXe) {
-      alert("⚠️ Không tìm thấy xe cần bảo trì!");
+      alert("Không tìm thấy xe cần bảo trì!");
       return;
     }
-
     try {
       const payload = {
         vehicleId: selectedXe.id,
@@ -143,49 +141,113 @@ await maintenanceService.createIncident(payload);
         date: new Date().toISOString().split("T")[0],
         cost: 0,
       };
-
-      await maintenanceService.create(payload);
-      alert(
-        `🛠️ Xe ${selectedXe.ten} (${selectedXe.bienSo}) đã được đưa vào bảo trì!`
-      );
+      await maintenanceService.createIncident(payload);
       await rentalStationService.updateVehicleStatus(selectedXe.id, {
-        status: "Maintenance",
+        status: "MAINTENANCE",
         battery: `${selectedXe.pin}%`,
       });
-
+      alert(`🛠️ Xe ${selectedXe.ten} (${selectedXe.bienSo}) đã được đưa vào bảo trì!`);
       await loadVehicles();
-      setPopupType(null);
-      setSelectedXe(null);
     } catch (err) {
       console.error("❌ Lỗi đem xe bảo trì:", err);
       alert("Không thể đưa xe vào bảo trì!");
     }
+    setPopupType(null);
+    setSelectedXe(null);
   };
 
-  // 🧠 Render
+  // ⚙️ Cập nhật khi đang kiểm tra
+  const handleFinishChecking = async () => {
+    if (!selectedXe) return;
+    const finalPin = pinValue || selectedXe.pin;
+    const finalStatus = newStatus || selectedXe.statusRaw;
+    try {
+      await rentalStationService.updateVehicleStatus(selectedXe.id, {
+        status: finalStatus,
+        battery: finalPin,
+      });
+      alert(
+        `🔄 Xe ${selectedXe.ten} (${selectedXe.bienSo}) đã được cập nhật:\n• Pin: ${finalPin}%\n• Trạng thái: ${
+          finalStatus === "AVAILABLE"
+            ? "Có sẵn"
+            : finalStatus === "MAINTENANCE"
+            ? "Bảo trì"
+            : "Đang kiểm tra"
+        }`
+      );
+      await loadVehicles();
+    } catch (err) {
+      console.error("❌ Lỗi cập nhật trạng thái kiểm tra:", err);
+      alert("Không thể cập nhật xe, vui lòng thử lại!");
+    }
+    setPopupType(null);
+    setPinValue("");
+    setNewStatus("");
+    setSelectedXe(null);
+  };
+
+  // Bộ lọc & tìm kiếm
+  const filteredXe = danhSachXe.filter((xe) => {
+    const matchSearch = xe.bienSo.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchTab =
+      filterTab === "tatca"
+        ? true
+        : filterTab === "cosan"
+        ? xe.trangThai === "Có sẵn"
+        : filterTab === "baotri"
+        ? xe.trangThai === "Bảo trì"
+        : filterTab === "kiemtra"
+        ? xe.trangThai === "Đang kiểm tra"
+        : true;
+    return matchSearch && matchTab;
+  });
+
   if (!user) {
-    return (
-      <div className="quanlyxe-container">
-        <p className="loading">Đang tải dữ liệu người dùng...</p>
-      </div>
-    );
+    return <p className="loading">Đang tải dữ liệu người dùng...</p>;
   }
 
   return (
     <div className="quanlyxe-container">
       <h1>Quản lý xe tại trạm</h1>
 
+      {/* 🔍 Thanh tìm kiếm */}
+      <input
+        type="text"
+        placeholder="Tìm theo biển số..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="search-input"
+      />
+
+      {/* 🧩 Tabs lọc */}
+      <div className="tabs">
+        {[
+          { key: "tatca", label: "Tất cả" },
+          { key: "cosan", label: "Có sẵn" },
+          { key: "kiemtra", label: "Đang kiểm tra" },
+          { key: "baotri", label: "Bảo trì" },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            className={filterTab === tab.key ? "active" : ""}
+            onClick={() => setFilterTab(tab.key)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* 🚗 Danh sách xe */}
       {loading ? (
         <p className="loading">Đang tải danh sách xe...</p>
+      ) : filteredXe.length === 0 ? (
+        <p className="no-data">Không có xe nào phù hợp.</p>
       ) : (
         <div className="xe-grid">
-          {danhSachXe.map((xe) => (
+          {filteredXe.map((xe) => (
             <div className="xe-card" key={xe.id}>
               <img
-                src={
-                  xe.hinhAnh ||
-                  "https://live.staticflickr.com/65535/49932658111_30214a4229_b.jpg"
-                }
+                src={xe.hinhAnh || "https://live.staticflickr.com/65535/49932658111_30214a4229_b.jpg"}
                 alt={xe.ten}
                 className="xe-img"
               />
@@ -193,148 +255,115 @@ await maintenanceService.createIncident(payload);
               <p>Biển số: {xe.bienSo}</p>
               <p>Pin: {xe.pin}%</p>
               <p>Hãng: {xe.hang}</p>
-              <p
-                className={`status ${
-                  xe.trangThai === "Có sẵn" ? "green" : "yellow"
-                }`}
-              >
-                {xe.trangThai}
-              </p>
+              <p className="status">{xe.trangThai}</p>
 
               <div className="xe-actions">
-                <button
-                  className="btn-update"
-                  onClick={() => {
-                    setSelectedXe(xe);
-                    setPopupType("pin");
-                  }}
-                >
-                  ⚡ Pin
-                </button>
-                <button
-                  className="btn-report"
-                  onClick={() => {
-                    setSelectedXe(xe);
-                    setPopupType("issue");
-                  }}
-                >
-                  🧰 Sự cố
-                </button>
-                <button
-                  className="btn-maintain"
-                  onClick={() => {
-                    setSelectedXe(xe);
-                    setPopupType("maintain");
-                  }}
-                  disabled={xe.trangThai === "Bảo trì"}
-                >
-                  🛠️ Bảo trì
-                </button>
+                {xe.trangThai === "Đang kiểm tra" ? (
+                  <button className="btn-checking" onClick={() => { setSelectedXe(xe); setPopupType("checking"); }}>
+                    Cập nhật
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      className="btn-update"
+                      disabled={xe.trangThai?.toLowerCase().trim() === "bảo trì"}
+                      onClick={() => { setSelectedXe(xe); setPopupType("pin"); }}
+                    >
+                      Cập nhật pin
+                    </button>
+                    <button
+                      className="btn-report"
+                      disabled={xe.trangThai?.toLowerCase().trim() === "bảo trì"}
+                      onClick={() => { setSelectedXe(xe); setPopupType("issue"); }}
+                    >
+                      Báo sự cố
+                    </button>
+                    <button
+                      className="btn-maintain"
+                      disabled={xe.trangThai?.toLowerCase().trim() === "bảo trì"}
+                      onClick={() => { setSelectedXe(xe); setPopupType("maintain"); }}
+                    >
+                      Bảo trì
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* ⚡ Popup Cập nhật pin */}
+      {/* Popups */}
       {popupType === "pin" && selectedXe && (
         <div className="popup-overlay">
           <div className="popup-content">
-            <h2>⚡ Cập nhật pin xe</h2>
-            <p>
-              <strong>{selectedXe.ten}</strong> ({selectedXe.bienSo})
-            </p>
-
-            <label>Nhập phần trăm pin mới:</label>
-            <input
-              type="number"
-              placeholder="VD: 80"
-              value={pinValue}
-              onChange={(e) => setPinValue(e.target.value)}
-            />
-
+            <h2>Cập nhật pin</h2>
+            <p>{selectedXe.ten} ({selectedXe.bienSo})</p>
+            <input type="number" placeholder="Nhập phần trăm pin..." value={pinValue}
+              onChange={(e) => setPinValue(e.target.value)} />
             <div className="popup-buttons">
               <button onClick={() => setPopupType(null)}>Hủy</button>
-              <button className="btn-confirm" onClick={handleUpdatePin}>
-                Cập nhật
-              </button>
+              <button onClick={handleUpdatePin}>Lưu</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 🧰 Popup Báo cáo sự cố */}
       {popupType === "issue" && selectedXe && (
         <div className="popup-overlay">
           <div className="popup-content">
-            <h2>🧰 Báo cáo sự cố xe</h2>
-
-            <div className="popup-section">
-              <p>
-                <strong>{selectedXe.ten}</strong> ({selectedXe.bienSo})
-              </p>
-              <p>Hãng: {selectedXe.hang}</p>
-              <p>Trạm: {selectedXe.tram}</p>
-              <p>Pin hiện tại: {selectedXe.pin}%</p>
-            </div>
-
-            <hr />
-
-            <label>Mức độ hư tổn:</label>
-            <select
-              value={severity}
-              onChange={(e) => setSeverity(e.target.value)}
-              className="popup-select"
-            >
-              <option value="">-- Chọn mức độ --</option>
-              <option value="low">🟢 Thấp</option>
-              <option value="medium">🟡 Trung bình</option>
-              <option value="high">🟠 Cao</option>
-              <option value="critical">🔴 Nghiêm trọng</option>
+            <h2>Báo cáo sự cố</h2>
+            <p>{selectedXe.ten} ({selectedXe.bienSo})</p>
+            <select value={severity} onChange={(e) => setSeverity(e.target.value)}>
+              <option value="">Chọn mức độ</option>
+              <option value="LOW">Thấp</option>
+              <option value="MEDIUM">Trung bình</option>
+              <option value="HIGH">Cao</option>
+              <option value="CRITICAL">Nghiêm trọng</option>
             </select>
-
-            <label>Mô tả chi tiết:</label>
-            <textarea
-              rows="4"
-              className="popup-textarea"
-              placeholder="Nhập mô tả chi tiết về sự cố..."
-              value={issueText}
-              onChange={(e) => setIssueText(e.target.value)}
-            ></textarea>
-
+            <textarea placeholder="Mô tả sự cố..." value={issueText}
+              onChange={(e) => setIssueText(e.target.value)} />
             <div className="popup-buttons">
-              <button className="btn-cancel" onClick={() => setPopupType(null)}>
-                ❌ Hủy
-              </button>
-              <button
-                className="btn-confirm"
-                onClick={handleReportIssue}
-                disabled={!severity || !issueText.trim()}
-              >
-                📩 Gửi báo cáo
-              </button>
+              <button onClick={() => setPopupType(null)}>Hủy</button>
+              <button onClick={handleReportIssue}>Gửi</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 🛠️ Popup Đưa xe đi bảo trì */}
       {popupType === "maintain" && selectedXe && (
         <div className="popup-overlay">
           <div className="popup-content">
-            <h2>🛠️ Đưa xe đi bảo trì</h2>
-            <p>
-              <strong>{selectedXe.ten}</strong> ({selectedXe.bienSo})
-            </p>
-            <p className="warning-text">
-              ⚠️ Xe sau khi chuyển sang “Bảo trì” sẽ không thể cho thuê!
-            </p>
-
+            <h2>Đưa xe vào bảo trì</h2>
+            <p>{selectedXe.ten} ({selectedXe.bienSo})</p>
+            <p>Xe sẽ tạm ngừng cho thuê và chuyển sang trạng thái “Bảo trì”.</p>
             <div className="popup-buttons">
               <button onClick={() => setPopupType(null)}>Hủy</button>
-              <button className="btn-confirm" onClick={handleSendMaintenance}>
-                Xác nhận đem bảo trì
-              </button>
+              <button onClick={handleSendMaintenance}>Xác nhận</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {popupType === "checking" && selectedXe && (
+        <div className="popup-overlay">
+          <div className="popup-content">
+            <h2>Cập nhật sau khi kiểm tra</h2>
+            <p>{selectedXe.ten} ({selectedXe.bienSo})</p>
+            <input
+              type="number"
+              placeholder="Nhập pin mới..."
+              value={pinValue}
+              onChange={(e) => setPinValue(e.target.value)}
+            />
+            <select value={newStatus} onChange={(e) => setNewStatus(e.target.value)}>
+              <option value="">Giữ nguyên</option>
+              <option value="AVAILABLE">Có sẵn</option>
+              <option value="MAINTENANCE">Bảo trì</option>
+            </select>
+            <div className="popup-buttons">
+              <button onClick={() => setPopupType(null)}>Hủy</button>
+              <button onClick={handleFinishChecking}>Lưu</button>
             </div>
           </div>
         </div>
