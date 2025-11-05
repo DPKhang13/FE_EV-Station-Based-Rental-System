@@ -3,43 +3,33 @@ import React, { useState, useEffect } from "react";
 import transactionService from "../services/transactionService";
 import "./ThanhToanPage.css";
 
-// Định dạng tiền VND
+// 🪙 Định dạng tiền VND
 const formatVND = (n) =>
-  Number(n ?? 0).toLocaleString("vi-VN", {
+  (Number(n) || 0).toLocaleString("vi-VN", {
     style: "currency",
     currency: "VND",
   });
 
 // 🔤 Dịch trạng thái sang tiếng Việt
-const translateStatus = (status) => {
-  switch ((status || "").toUpperCase()) {
-    case "SUCCESS":
-      return "Thành công";
-    case "FAILED":
-      return "Thất bại";
-    case "PENDING":
-      return "Đang xử lý";
-    default:
-      return "Không xác định";
-  }
+const translateStatus = (status = "") => {
+  const map = {
+    SUCCESS: "Thành công",
+    FAILED: "Thất bại",
+    PENDING: "Đang xử lý",
+  };
+  return map[status.toUpperCase()] || "Không xác định";
 };
 
 // 🔤 Dịch loại giao dịch sang tiếng Việt
-const translateType = (type) => {
-  switch ((type || "").toUpperCase()) {
-    case "DEPOSIT":
-      return "Đã cọc tiền";
-    case "WITHDRAW":
-      return "Rút tiền";
-    case "RENTAL_PAYMENT":
-      return "Thanh toán thuê xe";
-    case "REFUND":
-      return "Hoàn tiền";
-    case "TOP_UP":
-      return "Nạp tài khoản";
-    default:
-      return "Khác";
-  }
+const translateType = (type = "") => {
+  const map = {
+    DEPOSIT: "Đã cọc tiền",
+    WITHDRAW: "Rút tiền",
+    RENTAL_PAYMENT: "Thanh toán thuê xe",
+    REFUND: "Hoàn tiền",
+    TOP_UP: "Nạp tài khoản",
+  };
+  return map[type.toUpperCase()] || "Khác";
 };
 
 const ThanhToanPage = () => {
@@ -48,20 +38,18 @@ const ThanhToanPage = () => {
   const [error, setError] = useState("");
   const [phone, setPhone] = useState("");
 
+  // 🚀 Lấy toàn bộ giao dịch khi mở trang
   useEffect(() => {
-    getAllTransactions();
+    fetchTransactions();
   }, []);
 
-  const getAllTransactions = async () => {
-    setLoading(true);
+  // 🔁 Hàm tải danh sách giao dịch
+  const fetchTransactions = async () => {
     try {
+      setLoading(true);
       const res = await transactionService.getAllTransactions();
-      const arr = Array.isArray(res?.data)
-        ? res.data
-        : Array.isArray(res)
-        ? res
-        : [];
-      setTransactions(arr);
+      const data = Array.isArray(res?.data) ? res.data : res;
+      setTransactions(data || []);
     } catch (err) {
       console.error("❌ Lỗi tải giao dịch:", err);
       setTransactions([]);
@@ -70,19 +58,20 @@ const ThanhToanPage = () => {
     }
   };
 
+  // 🔍 Tra cứu theo số điện thoại
   const handleSearch = async () => {
     if (!phone.trim()) {
       setError("Vui lòng nhập số điện thoại khách hàng!");
       return;
     }
     setError("");
-    setLoading(true);
     try {
+      setLoading(true);
       const res = await transactionService.searchByUserId(phone);
       setTransactions(Array.isArray(res) ? res : []);
     } catch (err) {
-      console.error(err);
-      setError(err?.message || "Không tìm thấy dữ liệu giao dịch!");
+      console.error("❌ Lỗi tìm kiếm:", err);
+      setError("Không tìm thấy dữ liệu giao dịch!");
       setTransactions([]);
     } finally {
       setLoading(false);
@@ -91,6 +80,7 @@ const ThanhToanPage = () => {
 
   return (
     <div className="page-container">
+      {/* 🔍 Form tìm kiếm */}
       <div className="search-box">
         <h2>Tra cứu lịch sử giao dịch</h2>
         <div className="search-form">
@@ -107,6 +97,7 @@ const ThanhToanPage = () => {
         {error && <p className="error">{error}</p>}
       </div>
 
+      {/* 📊 Bảng kết quả */}
       {loading && <p className="loading">Đang tải dữ liệu...</p>}
 
       <table className="transaction-table">
@@ -119,18 +110,19 @@ const ThanhToanPage = () => {
             <th>Thời gian</th>
           </tr>
         </thead>
+
         <tbody>
           {transactions.length > 0 ? (
             transactions.map((t) => (
               <tr key={t.transactionId}>
                 <td>{t.transactionId}</td>
                 <td>{formatVND(t.amount)}</td>
-                <td className={`status ${(t?.status || "").toLowerCase()}`}>
+                <td className={`status ${t.status?.toLowerCase()}`}>
                   {translateStatus(t.status)}
                 </td>
                 <td>{translateType(t.type)}</td>
                 <td>
-                  {t?.createdAt
+                  {t.createdAt
                     ? new Date(t.createdAt).toLocaleString("vi-VN", {
                         hour12: false,
                       })

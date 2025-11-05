@@ -3,159 +3,110 @@ import { orderService, authService } from "../services";
 import "./XacThucKhachHang.css";
 import PopupXacThucHoSoCaNhan from "../components/staff/PopupXacThucHoSoCaNhan";
 
-const BOOKING_STATUSES = new Set(["DEPOSITED", "RENTAL", "COMPLETED"]);
-
-const fmtVN = (dateStr) => {
-  const d = new Date(dateStr);
-  return isNaN(d.getTime()) ? "N/A" : d.toLocaleString("vi-VN");
-};
-const fmtRange = (start, end) => `${fmtVN(start)} - ${fmtVN(end)}`;
+// 🔧 Định dạng thời gian
+const fmtVN = (d) =>
+  d ? new Date(d).toLocaleString("vi-VN") : "N/A";
+const fmtRange = (s, e) => `${fmtVN(s)} - ${fmtVN(e)}`;
 
 const XacThucKhachHangPage = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedRow, setSelectedRow] = useState(null);
-  const [popupType, setPopupType] = useState(null);
   const [hoSoDatXe, setHoSoDatXe] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
 
+  const [selectedRow, setSelectedRow] = useState(null);
   const [selectedProfile, setSelectedProfile] = useState(null);
+  const [popupType, setPopupType] = useState(null);
+
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState(null);
   const [verifyLoading, setVerifyLoading] = useState(false);
 
-  const loadOrders = async () => {
-    try {
-      setLoading(true);
-      const res = await orderService.getPendingOrders();
-      const arr = Array.isArray(res?.data)
-        ? res.data
-        : Array.isArray(res)
-        ? res
-        : [];
-      setHoSoDatXe(arr);
-    } catch (error) {
-      console.error("❌ Error loading orders:", error);
-      setHoSoDatXe([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // 📦 Lấy danh sách hồ sơ đặt xe
   useEffect(() => {
-    loadOrders();
+    const fetchOrders = async () => {
+      try {
+        const res = await orderService.getPendingOrders();
+        setHoSoDatXe(res.data || res || []);
+      } catch (err) {
+        console.error("❌ Lỗi tải hồ sơ:", err);
+        setHoSoDatXe([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrders();
   }, []);
 
-  const filteredDatXe = hoSoDatXe.filter(
-    (item) =>
-      (item.customerName || "")
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      (item.phone || "").includes(searchTerm) ||
-      (item.orderId || "").toLowerCase().includes(searchTerm.toLowerCase())
+  // 🔍 Lọc theo tên / sđt / mã đơn
+  const filteredDatXe = hoSoDatXe.filter((x) =>
+    [x.customerName, x.phone, x.orderId]
+      .some((f) => (f || "").toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  // mở popup + tải hồ sơ chờ xác thực theo userId
+  // 🧾 Xem hồ sơ cá nhân chờ xác thực
   const handleOpenXacThuc = async (row) => {
     setSelectedRow(row);
     setPopupType("caNhan");
     setProfileLoading(true);
-    setProfileError(null);
-    setSelectedProfile(null);
-
     try {
-      const raw = await authService.getProfilePendingVerification();
-      const list = Array.isArray(raw) ? raw : raw?.data || raw?.items || [];
-      const profile = list.find((p) => p.userId === row.userId) || null;
-      setSelectedProfile(profile);
-    } catch (err) {
-      console.error("❌ Lỗi tải hồ sơ chờ xác thực:", err);
-      setProfileError("Không tải được hồ sơ chờ xác thực. Vui lòng thử lại.");
+      const res = await authService.getProfilePendingVerification();
+      const profiles = res.data || res || [];
+      setSelectedProfile(profiles.find((p) => p.userId === row.userId) || null);
+    } catch {
+      setProfileError("Không tải được hồ sơ chờ xác thực.");
     } finally {
       setProfileLoading(false);
     }
   };
 
-  // 🚗 Bàn giao xe (pickup)
+  // 🚗 Bàn giao xe
   const handleBanGiaoXe = async (row) => {
-    if (!row?.orderId) return;
-
-    if (
-      !window.confirm(`Xác nhận bàn giao xe cho khách hàng ${row.customerName}?`)
-    ) {
-      return;
-    }
-
+    if (!window.confirm(`Bàn giao xe cho ${row.customerName}?`)) return;
     try {
-      await orderService.pickup(row.orderId, {
-        note: "Bàn giao xe cho khách hàng",
-      });
-
+      await orderService.pickup(row.orderId, { note: "Bàn giao xe" });
       setHoSoDatXe((prev) =>
         prev.map((r) =>
           r.orderId === row.orderId
-            ? {
-                ...r,
-                status: "RENTAL",
-                pickedUpAt: new Date().toISOString(),
-              }
+            ? { ...r, status: "RENTAL", pickedUpAt: new Date().toISOString() }
             : r
         )
       );
-
       alert(`🚗 Đã bàn giao xe cho ${row.customerName}`);
-    } catch (err) {
-      console.error("❌ Lỗi khi bàn giao xe:", err);
-      alert("Không thể bàn giao xe. Vui lòng thử lại.");
+    } catch {
+      alert("❌ Không thể bàn giao xe. Vui lòng thử lại.");
     }
   };
 
+  // ✅ Xác thực hồ sơ khách hàng
   const handleVerifyProfile = async () => {
     if (!selectedRow?.userId) return;
     setVerifyLoading(true);
-    setProfileError(null);
     try {
-      const updated = await authService.verifyProfileByUserId(selectedRow.userId);
-      const updatedObj = Array.isArray(updated) ? updated[0] : updated;
-
+      const res = await authService.verifyProfileByUserId(selectedRow.userId);
       setHoSoDatXe((prev) =>
         prev.map((r) =>
           r.userId === selectedRow.userId
-            ? {
-                ...r,
-                profileVerified: true,
-                userStatus: "ĐÃ XÁC THỰC (HỒ SƠ)",
-              }
+            ? { ...r, profileVerified: true, userStatus: "ĐÃ XÁC THỰC (HỒ SƠ)" }
             : r
         )
       );
-
-      setSelectedProfile((prev) => ({
-        ...(prev || {}),
-        ...(updatedObj || {}),
-        status: updatedObj?.status || "ACTIVE",
-      }));
-
+      setSelectedProfile((p) => ({ ...(p || {}), status: "ACTIVE" }));
       setPopupType(null);
-      setSelectedRow(null);
-      alert("Đã xác thực hồ sơ khách hàng.");
-    } catch (err) {
-      console.error("❌ Xác thực hồ sơ thất bại:", err);
-      setProfileError("Xác thực hồ sơ thất bại. Vui lòng thử lại.");
+      alert("✅ Đã xác thực hồ sơ khách hàng.");
+    } catch {
+      setProfileError("Xác thực hồ sơ thất bại.");
     } finally {
       setVerifyLoading(false);
     }
   };
 
-  if (loading) {
+  if (loading)
     return (
       <div className="xacThuc-container">
         <h1 className="title">Xác thực khách hàng</h1>
-        <div style={{ textAlign: "center", padding: "40px" }}>
-          <p>Đang tải dữ liệu...</p>
-        </div>
+        <p style={{ textAlign: "center", padding: 40 }}>Đang tải dữ liệu...</p>
       </div>
     );
-  }
 
   return (
     <>
@@ -163,13 +114,12 @@ const XacThucKhachHangPage = () => {
         <h1 className="title">Xác thực khách hàng</h1>
         <p className="subtitle">Kiểm tra giấy tờ và xử lý hồ sơ đặt xe</p>
 
-        {/* 🔍 Đã bỏ icon trong placeholder */}
         <input
+          className="search-box"
           type="text"
           placeholder="Tìm kiếm theo họ tên, SĐT, mã đơn..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="search-box"
         />
 
         <div className="section">
@@ -189,16 +139,14 @@ const XacThucKhachHangPage = () => {
             <tbody>
               {filteredDatXe.map((row) => {
                 const isProfileVerified =
-                  row.profileVerified === true ||
-                  row.userStatus?.includes("ĐÃ XÁC THỰC");
+                  row.profileVerified || row.userStatus?.includes("ĐÃ XÁC THỰC");
                 const isVerified =
                   isProfileVerified ||
                   ["COMPLETED", "RENTAL"].includes(row.status);
 
                 const deposit =
-                  typeof row.depositAmount === "number" && !isNaN(row.depositAmount)
-                    ? row.depositAmount
-                    : Math.round(Number(row.totalPrice || 0) * 0.3);
+                  row.depositAmount ??
+                  Math.round(Number(row.totalPrice || 0) * 0.3);
 
                 return (
                   <tr key={row.orderId}>
@@ -215,8 +163,11 @@ const XacThucKhachHangPage = () => {
                     <td>
                       {Number(row.totalPrice || 0).toLocaleString("vi-VN")} VND
                       <br />
-                      <small>Cọc: {deposit.toLocaleString("vi-VN")} VND</small>
+                      <small>
+                        Cọc: {Number(deposit).toLocaleString("vi-VN")} VND
+                      </small>
                     </td>
+
                     <td>
                       <span
                         className={`status ${
@@ -225,15 +176,8 @@ const XacThucKhachHangPage = () => {
                             : "warning"
                         }`}
                       >
-                        {row.userStatus || "Không xác định"}
+                        {row.userStatus || "Chưa xác thực"}
                       </span>
-
-                      {row.confirmedAt && (
-                        <>
-                          <br />
-                          <small>{fmtVN(row.confirmedAt)}</small>
-                        </>
-                      )}
                       {row.pickedUpAt && (
                         <>
                           <br />
@@ -268,7 +212,6 @@ const XacThucKhachHangPage = () => {
                           )}
                           <button
                             className="btn-danger"
-                            onClick={() => handleTuChoiBanGiao(row)}
                             style={{ marginLeft: 8 }}
                           >
                             Từ chối bàn giao
