@@ -7,20 +7,21 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("accessToken") || null);
-  const [loading, setLoading] = useState(true); // ✅ Thêm biến loading
+  const [loading, setLoading] = useState(true); // ✅ Add loading state
 
-  // 🔹 Khôi phục user từ localStorage khi ứng dụng khởi động
+  // ✅ Restore session from localStorage on app start
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     const savedToken = localStorage.getItem("accessToken");
 
+    // ✅ Check if user data exists without token - clear invalid session
     if (savedUser && !savedToken) {
       console.warn("⚠️ User data found but no token - clearing session");
       localStorage.removeItem("user");
       localStorage.removeItem("role");
       setUser(null);
       setToken(null);
-      setLoading(false); // ✅ kết thúc quá trình load
+      setLoading(false);
       return;
     }
 
@@ -29,16 +30,19 @@ export const AuthProvider = ({ children }) => {
         const parsedUser = JSON.parse(savedUser);
         setUser(parsedUser);
         setToken(savedToken);
-        console.log("✅ Restored user session:", parsedUser);
+        console.log("✅ Session restored:", parsedUser);
       } catch (e) {
         console.error("❌ Failed to parse saved user:", e);
+        // Clear invalid data
         localStorage.removeItem("user");
         localStorage.removeItem("accessToken");
         localStorage.removeItem("role");
       }
+    } else {
+      console.log('ℹ️ No saved session found');
     }
 
-    setLoading(false); // ✅ Quan trọng: phải kết thúc loading trong mọi trường hợp
+    setLoading(false); // ✅ Important: must end loading in all cases
   }, []);
 
   // 🔹 Thiết lập token mặc định cho axios

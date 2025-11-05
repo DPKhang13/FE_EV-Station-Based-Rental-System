@@ -73,43 +73,75 @@
     gap: 10px;
 }
 
-/* Order Summary */
-.summary-grid {
+/* Order Summary - Compact Version */
+.order-summary-compact {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+}
+
+.order-summary-compact h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 16px;
+}
+
+.compact-info-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 16px;
 }
 
-.summary-item {
-    padding: 16px;
+.compact-item {
+    text-align: center;
+    padding: 12px;
     background: #f9fafb;
-    border-radius: 10px;
-    border-left: 3px solid #dc2626;
+    border-radius: 8px;
+    border: 2px solid #e5e7eb;
+    transition: all 0.2s ease;
 }
 
-.summary-item.highlight {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-    border-left-color: #f59e0b;
+.compact-item:hover {
+    border-color: #dc2626;
+    transform: translateY(-2px);
 }
 
-.summary-item .label {
+.compact-label {
     display: block;
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 12px;
     color: #6b7280;
-    margin-bottom: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
 }
 
-.summary-item .value {
+.compact-value {
     display: block;
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 15px;
     color: #1f2937;
+    font-weight: 700;
 }
 
-.summary-item .value.price {
-    font-size: 24px;
-    color: #10b981;
+.compact-item.total-price {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-color: #f59e0b;
+}
+
+.highlight-price {
+    font-size: 18px !important;
+    color: #059669 !important;
+    font-weight: 900 !important;
+}
+
+.vnd-text {
+    font-size: 12px;
+    color: #6b7280;
+    font-weight: 600;
+    margin-left: 2px;
 }
 
 /* Payment Methods */
@@ -264,7 +296,10 @@
         padding: 24px 20px;
     }
 
-    .summary-grid,
+    .compact-info-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
     .methods-grid {
         grid-template-columns: 1fr;
     }
@@ -276,5 +311,23 @@
     .btn-back,
     .btn-pay {
         width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .compact-info-row {
+        grid-template-columns: 1fr;
+    }
+
+    .compact-label {
+        font-size: 11px;
+    }
+
+    .compact-value {
+        font-size: 13px;
+    }
+
+    .highlight-price {
+        font-size: 16px !important;
     }
 }

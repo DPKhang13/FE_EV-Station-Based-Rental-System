@@ -34,9 +34,20 @@ export default function LoginPage() {
         return;
       }
 
-      // First store the token and login
+      // Store token and login
       login(data);
-      nav("/" + data.role, { replace: true });
+
+      // ✅ FIX: Redirect based on role
+      // - ADMIN/STAFF → role-based route
+      // - CUSTOMER → Home page
+      if (data.role === 'ADMIN') {
+        nav("/admin", { replace: true });
+      } else if (data.role === 'STAFF') {
+        nav("/staff", { replace: true });
+      } else {
+        // CUSTOMER or any other role → Home page
+        nav("/", { replace: true });
+      }
     } catch (err) {
       console.error('❌ Login error:', err);
       const s = err.response?.status;

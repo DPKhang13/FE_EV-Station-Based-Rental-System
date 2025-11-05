@@ -145,7 +145,6 @@ const ProfilePage = () => {
 
                         <div className="profile-info">
                             <h2>{formData.fullName || 'User'}</h2>
-                            <p className="user-id">User ID: {user.userId}</p>
                             <p className="user-email">{formData.email}</p>
                         </div>
 
@@ -219,17 +218,7 @@ const ProfilePage = () => {
                                     />
                                 </div>
 
-                                <div className="form-group full-width">
-                                    <label htmlFor="address">Address</label>
-                                    <textarea
-                                        id="address"
-                                        name="address"
-                                        value={formData.address}
-                                        onChange={handleChange}
-                                        disabled={!isEditing}
-                                        rows="3"
-                                    />
-                                </div>
+
                             </div>
 
                             {isEditing && (

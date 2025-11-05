@@ -29,7 +29,7 @@ const Navbar = () => {
                                     navigate('/');
                                     setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
                                 }}>
-                                HOME
+                                TRANG CHỦ
                             </a>
                         </li>
                         <li className="dropdown-container">
@@ -40,7 +40,7 @@ const Navbar = () => {
                                     setActiveCars('4');
                                     navigate('/?scroll=4-seater-cars');
                                 }}>
-                                OFFER
+                                LOẠI XE
                                 <svg className="dropdown-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                 </svg>
@@ -54,7 +54,7 @@ const Navbar = () => {
                                             setActiveCars('4');
                                             navigate('/?scroll=4-seater-cars');
                                         }}>
-                                        4-Seater Cars
+                                        Xe 4 Chỗ
                                     </a>
                                 </li>
                                 <li className="dropdown-item" data-seater="7">
@@ -65,7 +65,7 @@ const Navbar = () => {
                                             setActiveCars('7');
                                             navigate('/?scroll=7-seater-cars');
                                         }}>
-                                        7-Seater Cars
+                                        Xe 7 Chỗ
                                     </a>
                                 </li>
                             </ul>
@@ -78,7 +78,7 @@ const Navbar = () => {
                                     setActiveCars('');
                                     navigate('/location-select');
                                 }}>
-                                LIST CAR
+                                DANH SÁCH XE
                             </a>
                         </li>
                         <li>
@@ -89,7 +89,7 @@ const Navbar = () => {
                                     setActiveCars('');
                                     navigate('/about');
                                 }}>
-                                ABOUT US
+                                GIỚI THIỆU
                             </a>
                         </li>
                         <li>
@@ -100,7 +100,7 @@ const Navbar = () => {
                                     setActiveCars('');
                                     navigate('/?scroll=contact');
                                 }}>
-                                CONTACT US
+                                LIÊN HỆ
                             </a>
                         </li>
                         <li>
@@ -110,7 +110,7 @@ const Navbar = () => {
 
                                     // Check if user is logged in
                                     if (!user) {
-                                        alert('Please login to view your bookings!');
+                                        alert('Vui lòng đăng nhập để xem đơn đặt xe của bạn!');
                                         navigate('/login');
                                         return;
                                     }
@@ -119,87 +119,74 @@ const Navbar = () => {
                                     setActiveCars('');
                                     navigate('/my-bookings');
                                 }}>
-                                MY BOOKING
+                                ĐƠN ĐẶT XE
                             </a>
                         </li>
                     </ul>
 
                     <div className="navbar-buttons">
-                       {user ? (
-    user.role === "customer" ? (
-        // ✅ Chỉ render nếu role là customer
-        <div className="user-menu">
-            <button
-                className="user-button"
-                onClick={() => setShowDropdown(!showDropdown)}
-            >
-                <span className="user-avatar">👤</span>
-                <span className="user-name">{user.name || "User"}</span>
-                <svg
-                    className="dropdown-icon"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    style={{ width: "16px", height: "16px" }}
-                >
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                    />
-                </svg>
-            </button>
+                        {user ? (
+                            user.role === "customer" ? (
+                                // ✅ Show user menu for customers
+                                <div className="user-menu">
+                                    <button
+                                        className="user-button"
+                                        onClick={() => setShowDropdown(!showDropdown)}
+                                    >
+                                        <span className="user-avatar">👤</span>
+                                        <span className="user-name">{user.name || 'Người dùng'}</span>
+                                        <svg className="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: '16px', height: '16px' }}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
 
-            {showDropdown && (
-                <div className="user-dropdown">
-                    <button
-                        onClick={() => {
-                            setShowDropdown(false);
-                            navigate("/profile");
-                        }}
-                        className="dropdown-item"
-                    >
-                        👤 My Profile
-                    </button>
-                    <button
-                        onClick={() => {
-                            setShowDropdown(false);
-                            navigate("/my-bookings");
-                        }}
-                        className="dropdown-item"
-                    >
-                        📘 My Bookings
-                    </button>
-                    <div className="dropdown-divider"></div>
-                    <button
-                        onClick={() => {
-                            setShowDropdown(false);
-                            logout();
-                            navigate("/");
-                        }}
-                        className="dropdown-item logout"
-                    >
-                        🚪 Logout
-                    </button>
-                </div>
-            )}
-        </div>
-    ) : (
-        // ❌ Nếu user không phải customer
-        <>
-            {/* Bạn có thể ẩn hết hoặc render gì khác nếu muốn */}
-            <Link to="/login" className="login-button">Login</Link>
-        </>
-    )
-) : (
-    // User chưa đăng nhập
-    <>
-        <Link to="/login" className="login-button">Login</Link>
-        <Link to="/register" className="register-button">Register</Link>
-    </>
-)}
-
+                                    {showDropdown && (
+                                        <div className="user-dropdown">
+                                            <button
+                                                onClick={() => {
+                                                    setShowDropdown(false);
+                                                    navigate('/profile');
+                                                }}
+                                                className="dropdown-item"
+                                            >
+                                                👤 Hồ Sơ Của Tôi
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setShowDropdown(false);
+                                                    navigate('/my-bookings');
+                                                }}
+                                                className="dropdown-item"
+                                            >
+                                                📋 Đơn Đặt Xe
+                                            </button>
+                                            <div className="dropdown-divider"></div>
+                                            <button
+                                                onClick={() => {
+                                                    setShowDropdown(false);
+                                                    logout();
+                                                    navigate('/');
+                                                }}
+                                                className="dropdown-item logout"
+                                            >
+                                                🚪 Đăng Xuất
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                // ❌ If user is not a customer (staff/admin), show login button
+                                <>
+                                    <Link to="/login" className="login-button">Đăng Nhập</Link>
+                                </>
+                            )
+                        ) : (
+                            // User not logged in - show login/register buttons
+                            <>
+                                <Link to="/login" className="login-button">Đăng Nhập</Link>
+                                <Link to="/register" className="register-button">Đăng Ký</Link>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>

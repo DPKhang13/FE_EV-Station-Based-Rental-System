@@ -27,22 +27,36 @@ const PaymentPage = () => {
             const foundOrder = orders.find(o => o.orderId === orderId || String(o.orderId) === String(orderId));
 
             if (!foundOrder) {
-                alert('❌ Không tìm thấy đơn hàng!');
+                alert('Không tìm thấy đơn hàng!');
                 navigate('/my-bookings');
                 return;
             }
 
             // Check if order can be paid
             if (foundOrder.status !== 'PENDING') {
-                alert(`⚠️ Đơn hàng này không thể thanh toán.\nTrạng thái: ${foundOrder.status}`);
+                alert(`Đơn hàng này không thể thanh toán.\nTrạng thái: ${foundOrder.status}`);
                 navigate('/my-bookings');
                 return;
             }
 
+            // Load vehicle info
+            try {
+                const { vehicleService } = await import('../services');
+                const vehicles = await vehicleService.getVehicles();
+                const vehicle = vehicles.find(v => v.vehicleId === foundOrder.vehicleId);
+
+                if (vehicle) {
+                    foundOrder.vehicleName = vehicle.vehicleName;
+                    foundOrder.plateNumber = vehicle.plateNumber;
+                }
+            } catch (vehicleErr) {
+                console.error('⚠️ Failed to load vehicle info:', vehicleErr);
+            }
+
             setOrder(foundOrder);
-            console.log('✅ Order loaded:', foundOrder);
+            console.log('Order loaded:', foundOrder);
         } catch (err) {
-            console.error('❌ Error loading order:', err);
+            console.error('Error loading order:', err);
             alert('Không thể tải thông tin đơn hàng: ' + (err.message || 'Lỗi không xác định'));
             navigate('/my-bookings');
         } finally {
@@ -52,7 +66,7 @@ const PaymentPage = () => {
 
     const handlePayment = async () => {
         if (!paymentMethod) {
-            alert('⚠️ Vui lòng chọn phương thức thanh toán!');
+            alert('Vui lòng chọn phương thức thanh toán!');
             return;
         }
 
@@ -65,16 +79,16 @@ const PaymentPage = () => {
                 paymentType: 1 // 1 = Deposit payment (thanh toán đặt cọc)
             };
 
-            console.log('💳 Processing payment:', paymentData);
+            console.log('Processing payment:', paymentData);
 
             if (paymentMethod === 'CASH') {
                 // For cash payment, call API to record payment method
                 console.log('💵 Cash payment selected');
 
-                alert(`✅ Đã chọn thanh toán bằng tiền mặt!
+                alert(`Đã chọn thanh toán bằng tiền mặt!
 
-📍 Vui lòng mang tiền đến cửa hàng khi nhận xe.
-💰 Số tiền cần thanh toán: ${order.totalPrice ? order.totalPrice.toLocaleString() : 'N/A'} VND
+ Vui lòng mang tiền đến cửa hàng khi nhận xe.
+ Số tiền cần thanh toán: ${order.totalPrice ? order.totalPrice.toLocaleString() : 'N/A'} VND
 
 Đơn hàng của bạn đã được xác nhận và đang chờ nhận xe.`);
 
@@ -111,7 +125,7 @@ const PaymentPage = () => {
                 errorMsg = err.message;
             }
 
-            alert(`❌ ${errorMsg}\n\nVui lòng thử lại hoặc chọn phương thức thanh toán khác.`);
+            alert(`${errorMsg}\n\nVui lòng thử lại hoặc chọn phương thức thanh toán khác.`);
         } finally {
             setProcessing(false);
         }
@@ -132,7 +146,7 @@ const PaymentPage = () => {
         return (
             <div className="payment-page">
                 <div className="error-container">
-                    <h2>❌ Order not found</h2>
+                    <h2>Order not found</h2>
                     <button onClick={() => navigate('/my-bookings')} className="btn-back">
                         Back to My Bookings
                     </button>
@@ -145,44 +159,31 @@ const PaymentPage = () => {
         <div className="payment-page">
             <div className="payment-container">
                 <div className="page-header">
-                    <h1>💳 Thanh Toán Đơn Hàng</h1>
-                    <p className="subtitle">Order #{order.orderId}</p>
+                    <h1>Thanh Toán Đơn Hàng</h1>
                 </div>
 
-                {/* Order Summary */}
-                <div className="payment-section order-summary">
+                {/* Order Summary - Compact */}
+                <div className="payment-section order-summary-compact">
                     <h2>📋 Thông Tin Đơn Hàng</h2>
-                    <div className="summary-grid">
-                        <div className="summary-item">
-                            <span className="label">Mã đơn hàng:</span>
-                            <span className="value">#{order.orderId}</span>
+                    <div className="compact-info-row">
+                        <div className="compact-item">
+                            <span className="compact-label">Mã đơn:</span>
+                            <span className="compact-value">{order.orderId}</span>
                         </div>
-                        <div className="summary-item">
-                            <span className="label">Xe:</span>
-                            <span className="value">Vehicle ID: {order.vehicleId}</span>
+                        <div className="compact-item">
+                            <span className="compact-label">Tên xe:</span>
+                            <span className="compact-value">{order.vehicleName || 'Đang cập nhật'}</span>
                         </div>
-                        <div className="summary-item">
-                            <span className="label">Ngày nhận xe:</span>
-                            <span className="value">
-                                {new Date(order.startTime).toLocaleString('vi-VN')}
-                            </span>
+                        <div className="compact-item">
+                            <span className="compact-label">Thời gian:</span>
+                            <span className="compact-value">{order.plannedHours} giờ</span>
                         </div>
-                        <div className="summary-item">
-                            <span className="label">Ngày trả xe:</span>
-                            <span className="value">
-                                {new Date(order.endTime).toLocaleString('vi-VN')}
-                            </span>
-                        </div>
-                        <div className="summary-item">
-                            <span className="label">Thời gian thuê:</span>
-                            <span className="value">{order.plannedHours} giờ</span>
-                        </div>
-                        <div className="summary-item highlight">
-                            <span className="label">Tổng tiền:</span>
-                            <span className="value price">
+                        <div className="compact-item total-price">
+                            <span className="compact-label">Tổng tiền:</span>
+                            <span className="compact-value highlight-price">
                                 {order.totalPrice
-                                    ? `${order.totalPrice.toLocaleString()} VND`
-                                    : 'Đang tính...'}
+                                    ? `${order.totalPrice.toLocaleString()}`
+                                    : 'Đang tính...'} <span className="vnd-text">VND</span>
                             </span>
                         </div>
                     </div>
@@ -190,7 +191,7 @@ const PaymentPage = () => {
 
                 {/* Payment Method Selection */}
                 <div className="payment-section payment-methods">
-                    <h2>💰 Chọn Phương Thức Thanh Toán</h2>
+                    <h2>Chọn Phương Thức Thanh Toán</h2>
                     <div className="methods-grid">
                         <div
                             className={`method-card ${paymentMethod === 'CASH' ? 'selected' : ''}`}
@@ -239,7 +240,7 @@ const PaymentPage = () => {
                 {/* Payment Info */}
                 <div className="payment-info">
                     <p>
-                        💡 <strong>Lưu ý:</strong>
+                        <strong>Lưu ý:</strong>
                     </p>
                     <ul>
                         <li>Đơn hàng sẽ tự động hủy nếu không thanh toán trong vòng 10 phút</li>

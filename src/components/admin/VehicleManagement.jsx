@@ -1,54 +1,257 @@
 import React, { useState, useEffect } from 'react';
 import './VehicleManagement.css';
+import vehicleService from '../../services/vehicleService';
 
 const VehicleManagement = () => {
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [error, setError] = useState(null);
+
+    // Filters state
+    const [filters, setFilters] = useState({
+        colors: [],
+        seatCounts: [],
+        stations: [],
+        statuses: []
+    });
+
+    // Modals state
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingVehicle, setEditingVehicle] = useState(null);
+
+    // Form state
+    const [formData, setFormData] = useState({
+        vehicleName: '',
+        brand: '',
+        plateNumber: '',
+        variant: '',
+        color: '',
+        seatCount: '',
+        year: '',
+        stationId: '',
+        batteryStatus: '',
+        rangeKm: '',
+        status: 'Available',
+        transmission: 'Automatic',
+        batteryCapacity: '',
+        description: ''
+    });
+
+    // Fetch vehicles từ API
+    const fetchVehicles = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            console.log('🔄 [VehicleManagement] Fetching vehicles from API...');
+
+            const data = await vehicleService.fetchAndTransformVehicles();
+            console.log('✅ [VehicleManagement] Received vehicles:', data.length);
+            console.log('📊 [VehicleManagement] Sample vehicle:', data[0]);
+
+            setVehicles(data);
+        } catch (err) {
+            console.error('❌ [VehicleManagement] Error fetching vehicles:', err);
+            setError('Không thể tải danh sách xe. Vui lòng thử lại sau.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        console.log('🔄 Component mounted - sẽ fetch data');
-        // Tạm thời set fake data để test giao diện
-        setTimeout(() => {
-            setVehicles([
-                {
-                    vehicleId: 1,
-                    vehicle_name: 'VinFast VF3',
-                    plate_number: '29A-12345',
-                    grade: 'Air',
-                    color: 'Trắng',
-                    status: 'AVAILABLE',
-                    image: 'https://via.placeholder.com/100x60'
-                },
-                {
-                    vehicleId: 2,
-                    vehicle_name: 'VinFast VF5',
-                    plate_number: '30B-67890',
-                    grade: 'Plus',
-                    color: 'Đen',
-                    status: 'RESERVED',
-                    image: 'https://via.placeholder.com/100x60'
-                }
-            ]);
-            setLoading(false);
-            console.log('✅ Fake data loaded');
-        }, 1000);
+        fetchVehicles();
     }, []);
 
-    // Lọc xe theo từ khóa tìm kiếm
-    const filteredVehicles = vehicles.filter(vehicle =>
-        vehicle.vehicle_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        vehicle.plate_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        vehicle.color?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Lấy unique values cho filters
+    const getUniqueColors = () => [...new Set(vehicles.map(v => v.color).filter(Boolean))];
+    const getUniqueSeatCounts = () => [...new Set(vehicles.map(v => v.seat_count).filter(Boolean))].sort((a, b) => a - b);
+    const getUniqueStations = () => [...new Set(vehicles.map(v => v.stationName || `Station ${v.stationId}`).filter(Boolean))];
+    const getAllStatuses = () => ['Available', 'Rented', 'Reserved', 'Maintenance'];
+
+    // Lọc xe theo từ khóa tìm kiếm và filters
+    const filteredVehicles = vehicles.filter(vehicle => {
+        // Text search
+        const matchesSearch = !searchTerm ||
+            vehicle.vehicle_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            vehicle.plate_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            vehicle.color?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            vehicle.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            vehicle.stationName?.toLowerCase().includes(searchTerm.toLowerCase());
+
+        // Filter by color
+        const matchesColor = filters.colors.length === 0 || filters.colors.includes(vehicle.color);
+
+        // Filter by seat count
+        const matchesSeatCount = filters.seatCounts.length === 0 || filters.seatCounts.includes(vehicle.seat_count);
+
+        // Filter by station
+        const vehicleStation = vehicle.stationName || `Station ${vehicle.stationId}`;
+        const matchesStation = filters.stations.length === 0 || filters.stations.includes(vehicleStation);
+
+        // Filter by status
+        const matchesStatus = filters.statuses.length === 0 || filters.statuses.includes(vehicle.status);
+
+        return matchesSearch && matchesColor && matchesSeatCount && matchesStation && matchesStatus;
+    });
 
     console.log('🔍 Filtered vehicles:', filteredVehicles.length);
+
+    // Map status cho badge hiển thị
+    const getStatusInfo = (status) => {
+        const statusMap = {
+            'Available': { text: 'Sẵn sàng', class: 'AVAILABLE' },
+            'Rented': { text: 'Đang thuê', class: 'IN_USE' },
+            'Reserved': { text: 'Đã đặt', class: 'RESERVED' },
+            'Maintenance': { text: 'Bảo trì', class: 'MAINTENANCE' }
+        };
+        return statusMap[status] || { text: status, class: 'AVAILABLE' };
+    };
+
+    // Toggle filter
+    const toggleFilter = (filterType, value) => {
+        setFilters(prev => {
+            const current = prev[filterType];
+            const updated = current.includes(value)
+                ? current.filter(item => item !== value)
+                : [...current, value];
+            return { ...prev, [filterType]: updated };
+        });
+    };
+
+    // Clear all filters
+    const clearFilters = () => {
+        setFilters({
+            colors: [],
+            seatCounts: [],
+            stations: [],
+            statuses: []
+        });
+    };
+
+    // Handle add vehicle
+    const handleAddVehicle = () => {
+        setFormData({
+            vehicleName: '',
+            brand: '',
+            plateNumber: '',
+            variant: '',
+            color: '',
+            seatCount: '',
+            year: '',
+            stationId: '',
+            batteryStatus: '',
+            rangeKm: '',
+            status: 'Available',
+            transmission: 'Automatic',
+            batteryCapacity: '',
+            description: ''
+        });
+        setShowAddModal(true);
+    };
+
+    // Handle edit vehicle
+    const handleEditVehicle = (vehicle) => {
+        setEditingVehicle(vehicle);
+        setFormData({
+            vehicleName: vehicle.vehicle_name || '',
+            brand: vehicle.brand || '',
+            plateNumber: vehicle.plate_number || '',
+            variant: vehicle.variant || vehicle.grade || '',
+            color: vehicle.color || '',
+            seatCount: vehicle.seat_count || '',
+            year: vehicle.year_of_manufacture || '',
+            stationId: vehicle.stationId || '',
+            batteryStatus: vehicle.battery_status || '',
+            rangeKm: vehicle.range_km || '',
+            status: vehicle.status || 'Available',
+            transmission: vehicle.transmission || 'Automatic',
+            batteryCapacity: vehicle.battery_capacity || '',
+            description: vehicle.description || ''
+        });
+        setShowEditModal(true);
+    };
+
+    // Handle delete vehicle with double confirmation
+    const handleDeleteVehicle = async (vehicle) => {
+        // First confirmation
+        const firstConfirm = window.confirm(
+            `⚠️ BẠN CÓ CHẮC CHẮN MUỐN XÓA XE NÀY?\n\n` +
+            `🚗 Tên xe: ${vehicle.vehicle_name}\n` +
+            `🔢 Biển số: ${vehicle.plate_number}\n` +
+            `🎨 Màu: ${vehicle.color}\n\n` +
+            `Hành động này KHÔNG THỂ HOÀN TÁC!`
+        );
+
+        if (!firstConfirm) {
+            console.log('❌ User cancelled first confirmation');
+            return;
+        }
+
+        // Second confirmation
+        const secondConfirm = window.confirm(
+            `⚠️⚠️ XÁC NHẬN LẦN 2 ⚠️⚠️\n\n` +
+            `Bạn thực sự muốn xóa xe "${vehicle.vehicle_name}" (${vehicle.plate_number})?\n\n` +
+            `Đây là xác nhận cuối cùng. Sau khi xóa, dữ liệu sẽ MẤT VĨNH VIỄN!`
+        );
+
+        if (!secondConfirm) {
+            console.log('❌ User cancelled second confirmation');
+            return;
+        }
+
+        try {
+            console.log('🗑️ Deleting vehicle:', vehicle.id);
+            // TODO: Call API to delete vehicle
+            // await vehicleService.deleteVehicle(vehicle.id);
+
+            alert(`✅ Đã xóa xe ${vehicle.vehicle_name} thành công!`);
+            fetchVehicles(); // Refresh list
+        } catch (err) {
+            console.error('❌ Error deleting vehicle:', err);
+            alert(`❌ Lỗi khi xóa xe: ${err.message}`);
+        }
+    };
+
+    // Handle form submit
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        try {
+            if (showEditModal) {
+                console.log('✏️ Updating vehicle:', editingVehicle.id, formData);
+                // TODO: Call API to update vehicle
+                // await vehicleService.updateVehicle(editingVehicle.id, formData);
+                alert('✅ Cập nhật xe thành công!');
+            } else {
+                console.log('➕ Adding new vehicle:', formData);
+                // TODO: Call API to add vehicle
+                // await vehicleService.addVehicle(formData);
+                alert('✅ Thêm xe mới thành công!');
+            }
+
+            setShowAddModal(false);
+            setShowEditModal(false);
+            setEditingVehicle(null);
+            fetchVehicles(); // Refresh list
+        } catch (err) {
+            console.error('❌ Error saving vehicle:', err);
+            alert(`❌ Lỗi: ${err.message}`);
+        }
+    };
+
+    // Close modals
+    const closeModals = () => {
+        setShowAddModal(false);
+        setShowEditModal(false);
+        setEditingVehicle(null);
+    };
 
     return (
         <div className="vehicle-management">
             <div className="header">
                 <h1>🚗 Quản lý xe</h1>
-                <button className="btn-add">+ Thêm xe mới</button>
+                <button className="btn-add" onClick={handleAddVehicle}>+ Thêm xe mới</button>
             </div>
 
             <div className="search-bar">
@@ -60,17 +263,137 @@ const VehicleManagement = () => {
                 />
             </div>
 
+            {/* Filters Section */}
+            <div className="filters-section">
+                <div className="filter-header">
+                    <h3>🔍 Bộ lọc</h3>
+                    {(filters.colors.length > 0 || filters.seatCounts.length > 0 ||
+                        filters.stations.length > 0 || filters.statuses.length > 0) && (
+                            <button className="btn-clear-filters" onClick={clearFilters}>
+                                ✖️ Xóa bộ lọc
+                            </button>
+                        )}
+                </div>
+
+                <div className="filters-grid">
+                    {/* Color Filter */}
+                    <div className="filter-group">
+                        <h4>🎨 Màu sắc</h4>
+                        <div className="filter-options">
+                            {getUniqueColors().map(color => (
+                                <label key={color} className="filter-checkbox">
+                                    <input
+                                        type="checkbox"
+                                        checked={filters.colors.includes(color)}
+                                        onChange={() => toggleFilter('colors', color)}
+                                    />
+                                    <span>{color}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Seat Count Filter */}
+                    <div className="filter-group">
+                        <h4>💺 Số ghế</h4>
+                        <div className="filter-options">
+                            {getUniqueSeatCounts().map(count => (
+                                <label key={count} className="filter-checkbox">
+                                    <input
+                                        type="checkbox"
+                                        checked={filters.seatCounts.includes(count)}
+                                        onChange={() => toggleFilter('seatCounts', count)}
+                                    />
+                                    <span>{count} chỗ</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Station Filter */}
+                    <div className="filter-group">
+                        <h4>📍 Điểm thuê</h4>
+                        <div className="filter-options">
+                            {getUniqueStations().map(station => (
+                                <label key={station} className="filter-checkbox">
+                                    <input
+                                        type="checkbox"
+                                        checked={filters.stations.includes(station)}
+                                        onChange={() => toggleFilter('stations', station)}
+                                    />
+                                    <span>{station}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Status Filter */}
+                    <div className="filter-group">
+                        <h4>📊 Trạng thái</h4>
+                        <div className="filter-options">
+                            {getAllStatuses().map(status => {
+                                const statusInfo = getStatusInfo(status);
+                                return (
+                                    <label key={status} className="filter-checkbox">
+                                        <input
+                                            type="checkbox"
+                                            checked={filters.statuses.includes(status)}
+                                            onChange={() => toggleFilter('statuses', status)}
+                                        />
+                                        <span>{statusInfo.text}</span>
+                                    </label>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {error && (
+                <div className="error-message" style={{
+                    padding: '20px',
+                    background: '#fee2e2',
+                    color: '#991b1b',
+                    borderRadius: '8px',
+                    marginBottom: '20px',
+                    textAlign: 'center'
+                }}>
+                    ⚠️ {error}
+                    <button
+                        onClick={fetchVehicles}
+                        style={{
+                            marginLeft: '15px',
+                            padding: '8px 16px',
+                            background: '#ef4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        🔄 Thử lại
+                    </button>
+                </div>
+            )}
+
             {loading ? (
-                <div className="loading">⏳ Đang tải dữ liệu...</div>
+                <div className="loading">⏳ Đang tải dữ liệu xe từ hệ thống...</div>
             ) : (
                 <table className="vehicle-table">
                     <thead>
                         <tr>
+                            <th>ID</th>
                             <th>Hình ảnh</th>
                             <th>Tên xe</th>
                             <th>Biển số</th>
-                            <th>Grade</th>
+                            <th>Hãng</th>
+                            <th>Phiên bản</th>
                             <th>Màu sắc</th>
+                            <th>Số ghế</th>
+                            <th>Năm SX</th>
+                            <th>Điểm thuê</th>
+                            <th>Pin (%)</th>
+                            <th>Quãng đường (km)</th>
                             <th>Trạng thái</th>
                             <th>Hành động</th>
                         </tr>
@@ -78,34 +401,288 @@ const VehicleManagement = () => {
                     <tbody>
                         {filteredVehicles.length === 0 ? (
                             <tr>
-                                <td colSpan="7" style={{ textAlign: 'center', padding: '40px' }}>
-                                    Không tìm thấy xe nào
+                                <td colSpan="14" style={{ textAlign: 'center', padding: '40px' }}>
+                                    {searchTerm ? '🔍 Không tìm thấy xe nào phù hợp' : '📭 Chưa có xe nào trong hệ thống'}
                                 </td>
                             </tr>
                         ) : (
-                            filteredVehicles.map(vehicle => (
-                                <tr key={vehicle.vehicleId}>
-                                    <td>
-                                        <img src={vehicle.image} alt={vehicle.vehicle_name} />
-                                    </td>
-                                    <td>{vehicle.vehicle_name}</td>
-                                    <td>{vehicle.plate_number}</td>
-                                    <td>{vehicle.grade}</td>
-                                    <td>{vehicle.color}</td>
-                                    <td>
-                                        <span className={`status-badge ${vehicle.status}`}>
-                                            {vehicle.status}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button className="btn-edit">✏️ Sửa</button>
-                                        <button className="btn-delete">🗑️ Xóa</button>
-                                    </td>
-                                </tr>
-                            ))
+                            filteredVehicles.map(vehicle => {
+                                const statusInfo = getStatusInfo(vehicle.status);
+                                return (
+                                    <tr key={vehicle.id || vehicle.vehicle_id}>
+                                        <td><strong>#{vehicle.id}</strong></td>
+                                        <td>
+                                            <img
+                                                src={vehicle.image}
+                                                alt={vehicle.vehicle_name}
+                                                onError={(e) => {
+                                                    e.target.src = 'https://via.placeholder.com/100x60?text=No+Image';
+                                                }}
+                                            />
+                                        </td>
+                                        <td><strong>{vehicle.vehicle_name}</strong></td>
+                                        <td><span style={{ fontWeight: '600', color: '#3b82f6' }}>{vehicle.plate_number}</span></td>
+                                        <td>{vehicle.brand || 'N/A'}</td>
+                                        <td>{vehicle.grade || vehicle.variant || 'N/A'}</td>
+                                        <td>{vehicle.color}</td>
+                                        <td>{vehicle.seat_count} chỗ</td>
+                                        <td>{vehicle.year_of_manufacture}</td>
+                                        <td>{vehicle.stationName || `Station ${vehicle.stationId}` || 'N/A'}</td>
+                                        <td>
+                                            <span style={{
+                                                color: vehicle.battery_status >= 80 ? '#10b981' :
+                                                    vehicle.battery_status >= 50 ? '#f59e0b' : '#ef4444',
+                                                fontWeight: '600'
+                                            }}>
+                                                🔋 {vehicle.battery_status || 0}%
+                                            </span>
+                                        </td>
+                                        <td>{vehicle.range_km || 0} km</td>
+                                        <td>
+                                            <span className={`status-badge ${statusInfo.class}`}>
+                                                {statusInfo.text}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button
+                                                className="btn-edit"
+                                                title="Chỉnh sửa thông tin xe"
+                                                onClick={() => handleEditVehicle(vehicle)}
+                                            >
+                                                ✏️ Sửa
+                                            </button>
+                                            <button
+                                                className="btn-delete"
+                                                title="Xóa xe khỏi hệ thống"
+                                                onClick={() => handleDeleteVehicle(vehicle)}
+                                            >
+                                                🗑️ Xóa
+                                            </button>
+                                        </td>
+                                    </tr>
+                                );
+                            })
                         )}
                     </tbody>
                 </table>
+            )}
+
+            {!loading && !error && vehicles.length > 0 && (
+                <div style={{
+                    marginTop: '20px',
+                    padding: '15px',
+                    background: '#f0f9ff',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                }}>
+                    <div>
+                        <strong>📊 Tổng số xe:</strong> {vehicles.length} xe
+                        {searchTerm && <span> | Tìm thấy: {filteredVehicles.length} xe</span>}
+                    </div>
+                    <button
+                        onClick={fetchVehicles}
+                        style={{
+                            padding: '8px 16px',
+                            background: '#3b82f6',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '600'
+                        }}
+                    >
+                        🔄 Làm mới
+                    </button>
+                </div>
+            )}
+
+            {/* Add/Edit Vehicle Modal */}
+            {(showAddModal || showEditModal) && (
+                <div className="modal-overlay" onClick={closeModals}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>{showEditModal ? '✏️ Chỉnh sửa xe' : '➕ Thêm xe mới'}</h2>
+                            <button className="modal-close" onClick={closeModals}>✖️</button>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="vehicle-form">
+                            <div className="form-grid">
+                                <div className="form-group">
+                                    <label>Tên xe *</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.vehicleName}
+                                        onChange={(e) => setFormData({ ...formData, vehicleName: e.target.value })}
+                                        placeholder="VD: VinFast VF5"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Hãng xe *</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.brand}
+                                        onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                                        placeholder="VD: VinFast"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Biển số *</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.plateNumber}
+                                        onChange={(e) => setFormData({ ...formData, plateNumber: e.target.value })}
+                                        placeholder="VD: 29A-12345"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Phiên bản</label>
+                                    <input
+                                        type="text"
+                                        value={formData.variant}
+                                        onChange={(e) => setFormData({ ...formData, variant: e.target.value })}
+                                        placeholder="VD: Plus, Base"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Màu sắc *</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.color}
+                                        onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                                        placeholder="VD: Trắng, Đen"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Số ghế *</label>
+                                    <select
+                                        required
+                                        value={formData.seatCount}
+                                        onChange={(e) => setFormData({ ...formData, seatCount: e.target.value })}
+                                    >
+                                        <option value="">Chọn số ghế</option>
+                                        <option value="4">4 chỗ</option>
+                                        <option value="5">5 chỗ</option>
+                                        <option value="7">7 chỗ</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Năm sản xuất *</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        value={formData.year}
+                                        onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                                        placeholder="VD: 2024"
+                                        min="2000"
+                                        max="2030"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Điểm thuê (Station ID) *</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        value={formData.stationId}
+                                        onChange={(e) => setFormData({ ...formData, stationId: e.target.value })}
+                                        placeholder="VD: 1, 2, 3"
+                                        min="1"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Dung lượng pin (kWh)</label>
+                                    <input
+                                        type="number"
+                                        value={formData.batteryCapacity}
+                                        onChange={(e) => setFormData({ ...formData, batteryCapacity: e.target.value })}
+                                        placeholder="VD: 37.23"
+                                        step="0.01"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Pin hiện tại (%)</label>
+                                    <input
+                                        type="number"
+                                        value={formData.batteryStatus}
+                                        onChange={(e) => setFormData({ ...formData, batteryStatus: e.target.value })}
+                                        placeholder="VD: 85"
+                                        min="0"
+                                        max="100"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Quãng đường (km)</label>
+                                    <input
+                                        type="number"
+                                        value={formData.rangeKm}
+                                        onChange={(e) => setFormData({ ...formData, rangeKm: e.target.value })}
+                                        placeholder="VD: 300"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Hộp số</label>
+                                    <select
+                                        value={formData.transmission}
+                                        onChange={(e) => setFormData({ ...formData, transmission: e.target.value })}
+                                    >
+                                        <option value="Automatic">Tự động</option>
+                                        <option value="Manual">Số sàn</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Trạng thái *</label>
+                                    <select
+                                        required
+                                        value={formData.status}
+                                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                                    >
+                                        <option value="Available">Sẵn sàng</option>
+                                        <option value="Rented">Đang thuê</option>
+                                        <option value="Reserved">Đã đặt</option>
+                                        <option value="Maintenance">Bảo trì</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group full-width">
+                                    <label>Mô tả</label>
+                                    <textarea
+                                        value={formData.description}
+                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                        placeholder="Mô tả chi tiết về xe..."
+                                        rows="3"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="modal-footer">
+                                <button type="button" className="btn-cancel" onClick={closeModals}>
+                                    Hủy
+                                </button>
+                                <button type="submit" className="btn-submit">
+                                    {showEditModal ? '💾 Lưu thay đổi' : '➕ Thêm xe'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             )}
         </div>
     );

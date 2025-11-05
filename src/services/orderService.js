@@ -13,14 +13,20 @@ export const orderService = {
     create: async (orderData) => {
         console.log('🚀 [orderService.create] Sending request to /api/order/create');
         console.log('📦 [orderService.create] Payload:', JSON.stringify(orderData, null, 2));
-        console.log('🔍 [orderService.create] Field types:', {
-            customerId: typeof orderData.customerId,
-            vehicleId: typeof orderData.vehicleId,
-            startTime: typeof orderData.startTime,
-            endTime: typeof orderData.endTime,
-            plannedHours: typeof orderData.plannedHours,
-            couponCode: orderData.couponCode ? typeof orderData.couponCode : 'undefined'
+        console.log('🔍 [orderService.create] Field types:');
+        Object.keys(orderData).forEach(key => {
+            const value = orderData[key];
+            console.log(`  - ${key}:`, value, `| type: ${typeof value} | isNumber: ${typeof value === 'number'} | isNaN: ${isNaN(value)}`);
         });
+
+        // ✅ VALIDATE trước khi gửi
+        if (orderData.vehicleId && typeof orderData.vehicleId !== 'number') {
+            console.error('❌❌❌ vehicleId phải là NUMBER, nhưng đang là:', typeof orderData.vehicleId);
+        }
+        if (orderData.plannedHours && typeof orderData.plannedHours !== 'number') {
+            console.error('❌❌❌ plannedHours phải là NUMBER, nhưng đang là:', typeof orderData.plannedHours);
+        }
+
         return await api.post('/order/create', orderData);
     },
     getPendingOrders: async () => {

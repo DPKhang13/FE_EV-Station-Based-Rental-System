@@ -21,6 +21,24 @@ export const paymentService = {
     vnpayCallback: async (queryParams) => {
         const queryString = new URLSearchParams(queryParams).toString();
         return await api.get(`/payment/vnpay-callback?${queryString}`);
+    },
+
+    /**
+     * Verify VNPay payment từ Frontend
+     * POST /api/payment/verify-vnpay
+     */
+    verifyVNPayPayment: async (vnpParams) => {
+        try {
+            console.log('🔄 [PaymentService] Verifying VNPay payment:', vnpParams);
+
+            const response = await api.post('/payment/verify-vnpay', vnpParams);
+
+            console.log('✅ [PaymentService] Verify response:', response);
+            return response;
+        } catch (error) {
+            console.error('❌ [PaymentService] Verify error:', error);
+            throw error;
+        }
     }
 };
 

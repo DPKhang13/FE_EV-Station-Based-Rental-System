@@ -70,35 +70,53 @@ export const getVehicles = async () => {
  * @returns {Object} Dữ liệu xe theo format frontend
  */
 export const transformVehicleData = (apiVehicle) => {
+
+    // ✅ CHỈ dựa vào seatCount từ API để xác định type
+    const seatCount = apiVehicle.seatCount || 4;
+    const is7Seater = seatCount >= 7;
+    const vehicleType = is7Seater ? '7-seater' : '4-seater';
+
+    // ✅ Xử lý variant - API trả về trong field "variant"
+    const variantValue = apiVehicle.variant;
+
+    // ✅ Xử lý màu sắc
+    let carColor = apiVehicle.color;
+    if (!carColor || carColor === 'null' || carColor === 'undefined') {
+        carColor = null;
+    }
+
+    // ✅ Xử lý status - API trả về UPPERCASE
+    const statusValue = mapStatus(apiVehicle.status);
+
     // Map API data to frontend format
-    return {
+    const transformed = {
         id: apiVehicle.vehicleId,
         vehicle_id: apiVehicle.vehicleId.toString(),
         vehicle_name: apiVehicle.vehicleName,
         brand: apiVehicle.brand,
         name: apiVehicle.vehicleName,
-        // Xác định image dựa vào số ghế
-        image: getVehicleImage(apiVehicle.seatCount),
-        // Xác định type dựa vào số ghế
-        type: apiVehicle.seatCount <= 5 ? '4-seater' : '7-seater',
-        seat_count: apiVehicle.seatCount,
-        grade: apiVehicle.variant,
-        color: apiVehicle.color,
+        image: is7Seater ? image7Seater : image4Seater,
+        type: vehicleType,
+        seat_count: seatCount,
+        seatCount: seatCount,
+        grade: variantValue,        // ✅ Dùng trực tiếp từ API
+        variant: variantValue,      // ✅ Dùng trực tiếp từ API
+        color: carColor,
         year_of_manufacture: apiVehicle.year,
         plate_number: apiVehicle.plateNumber,
-        status: mapStatus(apiVehicle.status),
+        status: statusValue,        // ✅ Đã map sang 'Available'
         description: apiVehicle.description,
         branch: apiVehicle.stationId?.toString() || '1',
+        stationId: apiVehicle.stationId,
+        stationName: apiVehicle.stationName,
         transmission: apiVehicle.transmission,
-        variant: apiVehicle.variant,
         battery_status: apiVehicle.batteryStatus,
         battery_capacity: apiVehicle.batteryCapacity,
         range_km: apiVehicle.rangeKm,
-        // Thông tin bổ sung
-        stationId: apiVehicle.stationId,
-        stationName: apiVehicle.stationName,
         pricingRuleId: apiVehicle.pricingRuleId
     };
+
+    return transformed;
 };
 
 /**
@@ -134,10 +152,17 @@ const getVehicleImage = (seatCount) => {
 export const fetchAndTransformVehicles = async () => {
     try {
         const vehicles = await getVehicles();
-        return vehicles.map(transformVehicleData);
+        const transformed = vehicles.map(transformVehicleData);
+
+        // ✅ DEBUG: In ra 3 xe đầu tiên để kiểm tra
+        console.log('🎯 [Transform] Sample 3 xe đầu tiên sau transform:');
+        transformed.slice(0, 3).forEach(car => {
+            console.log(`   ${car.plate_number}: type="${car.type}", variant="${car.variant}", status="${car.status}", stationId=${car.stationId}`);
+        });
+
+        return transformed;
     } catch (error) {
         console.error('Lỗi khi fetch và transform vehicles:', error);
-        // Trả về array rỗng nếu có lỗi
         return [];
     }
 };

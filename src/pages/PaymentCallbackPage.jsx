@@ -1,135 +1,106 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import './PaymentCallbackPage.css';
+import { paymentService } from '../services/paymentService';
+import './PaymentCallback.css';
 
 const PaymentCallbackPage = () => {
-    const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const [status, setStatus] = useState('processing'); // 'processing', 'success', 'failed'
-    const [message, setMessage] = useState('Đang xử lý kết quả thanh toán...');
+    const [searchParams] = useSearchParams();
+    const [processing, setProcessing] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        // Get VNPay response params
-        const vnp_ResponseCode = searchParams.get('vnp_ResponseCode');
-        const vnp_TxnRef = searchParams.get('vnp_TxnRef');
-        const vnp_Amount = searchParams.get('vnp_Amount');
-        const vnp_TransactionNo = searchParams.get('vnp_TransactionNo');
+        handleCallback();
+    }, []);
 
-        console.log('🔔 VNPay callback received:', {
-            responseCode: vnp_ResponseCode,
-            txnRef: vnp_TxnRef,
-            amount: vnp_Amount,
-            transactionNo: vnp_TransactionNo
-        });
+    const handleCallback = async () => {
+        try {
+            console.log('📞 [PaymentCallback] Processing VNPay callback...');
 
-        // Process payment result
-        processPaymentResult(vnp_ResponseCode, vnp_TxnRef, vnp_Amount);
-    }, [searchParams]);
+            // ✅ Lấy tất cả params từ VNPay
+            const vnpParams = {};
+            for (let [key, value] of searchParams.entries()) {
+                vnpParams[key] = value;
+            }
 
-    const processPaymentResult = (responseCode, txnRef, amount) => {
-        // VNPay response codes:
-        // 00: Success
-        // Other: Failed
+            console.log('📦 [PaymentCallback] VNPay params:', vnpParams);
+            console.log('🔍 [PaymentCallback] Response Code:', vnpParams.vnp_ResponseCode);
 
-        if (responseCode === '00') {
-            setStatus('success');
-            setMessage('Thanh toán thành công!');
+            // ✅ Gọi API Backend để verify và xử lý payment
+            const response = await paymentService.verifyVNPayPayment(vnpParams);
 
-            // Auto redirect after 3 seconds
-            setTimeout(() => {
-                navigate('/my-bookings');
-            }, 3000);
-        } else {
-            setStatus('failed');
+            console.log('✅ [PaymentCallback] Backend response:', response);
+            console.log('✅ [PaymentCallback] Backend response.message:', response.message);
 
-            // Map error codes to messages
-            const errorMessages = {
-                '07': 'Giao dịch bị nghi ngờ gian lận',
-                '09': 'Thẻ chưa đăng ký dịch vụ Internet Banking',
-                '10': 'Xác thực thông tin thẻ không đúng quá 3 lần',
-                '11': 'Đã hết hạn chờ thanh toán',
-                '12': 'Thẻ bị khóa',
-                '13': 'Sai mật khẩu xác thực giao dịch (OTP)',
-                '24': 'Khách hàng hủy giao dịch',
-                '51': 'Tài khoản không đủ số dư',
-                '65': 'Tài khoản vượt quá hạn mức giao dịch trong ngày',
-                '75': 'Ngân hàng thanh toán đang bảo trì',
-                '79': 'Nhập sai mật khẩu thanh toán quá số lần quy định'
-            };
+            // ✅ Kiểm tra kết quả thanh toán từ responseCode
+            const responseCode = vnpParams.vnp_ResponseCode;
 
-            setMessage(errorMessages[responseCode] || 'Thanh toán thất bại!');
+            console.log('🎯 [PaymentCallback] DECISION LOGIC:');
+            console.log('  - responseCode:', responseCode);
+            console.log('  - responseCode === "00"?', responseCode === '00');
+            console.log('  - typeof responseCode:', typeof responseCode);
+
+            // ✅ CHECK: Nếu không có responseCode → redirect failed
+            if (!responseCode) {
+                console.error('❌ [PaymentCallback] NO RESPONSE CODE - Redirect to failed');
+                navigate('/payment-failed?error=no-response-code', { replace: true });
+                return;
+            }
+
+            if (responseCode === '00') {
+                // ✅ Thanh toán thành công
+                console.log('✅✅✅ [PaymentCallback] CODE 00 - GOING TO SUCCESS');
+
+                const queryParams = new URLSearchParams({
+                    orderId: response.orderId,
+                    amount: vnpParams.vnp_Amount,
+                    method: 'VNPAY',
+                    txnRef: vnpParams.vnp_TxnRef,
+                    responseCode: responseCode
+                }).toString();
+
+                navigate(`/payment-success?${queryParams}`, { replace: true });
+            } else {
+                // ❌ Thanh toán thất bại
+                console.log('❌❌❌ [PaymentCallback] CODE ' + responseCode + ' - GOING TO FAILED');
+
+                const queryParams = new URLSearchParams({
+                    orderId: response.orderId || 'unknown',
+                    responseCode: responseCode,
+                    txnRef: vnpParams.vnp_TxnRef
+                }).toString();
+
+                navigate(`/payment-failed?${queryParams}`, { replace: true });
+            }
+
+        } catch (err) {
+            console.error('❌ [PaymentCallback] Error:', err);
+            setError(err.message || 'Có lỗi xảy ra khi xử lý thanh toán');
+            setProcessing(false);
         }
     };
 
-    const getStatusIcon = () => {
-        switch (status) {
-            case 'processing':
-                return '⏳';
-            case 'success':
-                return '✅';
-            case 'failed':
-                return '❌';
-            default:
-                return '⏳';
-        }
-    };
-
-    const getStatusClass = () => {
-        switch (status) {
-            case 'success':
-                return 'success';
-            case 'failed':
-                return 'failed';
-            default:
-                return 'processing';
-        }
-    };
+    if (error) {
+        return (
+            <div className="payment-callback-page">
+                <div className="callback-container error">
+                    <div className="error-icon">❌</div>
+                    <h2>Lỗi xử lý thanh toán</h2>
+                    <p>{error}</p>
+                    <button onClick={() => navigate('/my-bookings')}>
+                        Quay lại đơn hàng
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="payment-callback-page">
             <div className="callback-container">
-                <div className={`status-card ${getStatusClass()}`}>
-                    <div className="status-icon">
-                        {getStatusIcon()}
-                    </div>
-                    <h1 className="status-title">{message}</h1>
-
-                    {status === 'processing' && (
-                        <div className="spinner"></div>
-                    )}
-
-                    {status === 'success' && (
-                        <div className="success-content">
-                            <p>✓ Đơn hàng của bạn đã được thanh toán thành công</p>
-                            <p>✓ Bạn sẽ được chuyển đến trang lịch sử đơn hàng sau 3 giây...</p>
-                        </div>
-                    )}
-
-                    {status === 'failed' && (
-                        <div className="failed-content">
-                            <p>Giao dịch thanh toán không thành công.</p>
-                            <p>Vui lòng thử lại hoặc chọn phương thức thanh toán khác.</p>
-                        </div>
-                    )}
-
-                    <div className="action-buttons">
-                        <button
-                            onClick={() => navigate('/my-bookings')}
-                            className="btn-primary"
-                        >
-                            Xem Đơn Hàng
-                        </button>
-
-                        {status === 'failed' && (
-                            <button
-                                onClick={() => navigate(-1)}
-                                className="btn-secondary"
-                            >
-                                Thử Lại
-                            </button>
-                        )}
-                    </div>
-                </div>
+                <div className="spinner"></div>
+                <h2>Đang xử lý thanh toán...</h2>
+                <p>Vui lòng chờ trong giây lát</p>
             </div>
         </div>
     );

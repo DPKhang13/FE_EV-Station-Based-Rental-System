@@ -106,7 +106,7 @@ const Contact = () => {
         setLoading(true);
         console.log("🔍 Đang yêu cầu quyền truy cập vị trí...");
 
-        if (navigator.geolocation) {
+        if (navigator.geolocation) { //xin quyen truy cap vi tri
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     console.log("✅ Đã được cấp quyền truy cập vị trí!");
@@ -163,14 +163,11 @@ const Contact = () => {
         }
     };
 
-    // Tạo URL Google Maps cho từng vị trí (có marker/ghim)
     const getMapUrl = (location) => {
         if (!location) {
             // Map mặc định - Quận 1 với marker
             return `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=10.7758,106.7008&zoom=15`;
         }
-        // Sử dụng địa chỉ hoặc tọa độ để hiển thị chính xác
-        // Encode address để tránh lỗi với ký tự đặc biệt
         const query = encodeURIComponent(location.address || `${location.lat},${location.lng}`);
         return `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${query}&zoom=15`;
     };
@@ -195,13 +192,13 @@ const Contact = () => {
                 {/* Hiển thị chi nhánh gần nhất */}
                 {nearestLocation && (
                     <div className="nearest-location-card">
-                        <h3>✅ Chi nhánh gần bạn nhất</h3>
+                        <h3>Chi nhánh gần bạn nhất</h3>
                         <div className="location-info">
                             <h4>{nearestLocation.name}</h4>
-                            <p><strong>📍 Địa chỉ:</strong> {nearestLocation.address}</p>
-                            <p><strong>📞 Điện thoại:</strong> {nearestLocation.phone}</p>
-                            <p><strong>📧 Email:</strong> {nearestLocation.email}</p>
-                            <p className="distance"><strong>🚗 Khoảng cách:</strong> ~{nearestLocation.distance} km</p>
+                            <p><strong>Địa chỉ:</strong> {nearestLocation.address}</p>
+                            <p><strong>Điện thoại:</strong> {nearestLocation.phone}</p>
+                            <p><strong>Email:</strong> {nearestLocation.email}</p>
+                            <p className="distance"><strong>Khoảng cách:</strong> ~{nearestLocation.distance} km</p>
                         </div>
                     </div>
                 )}
@@ -213,14 +210,14 @@ const Contact = () => {
                         {locations.map(location => (
                             <div key={location.id} className={`location-card ${selectedLocation?.id === location.id ? 'selected' : ''}`}>
                                 <h4>{location.name}</h4>
-                                <p className="location-address">📍 {location.address}</p>
-                                <p>📞 {location.phone}</p>
-                                <p>📧 {location.email}</p>
+                                <p className="location-address">{location.address}</p>
+                                <p>{location.phone}</p>
+                                <p>{location.email}</p>
                                 <button
                                     className="view-map-btn"
                                     onClick={() => viewOnMap(location)}
                                 >
-                                    🗺️ Xem trên bản đồ
+                                    Xem trên bản đồ
                                 </button>
                             </div>
                         ))}
@@ -232,7 +229,7 @@ const Contact = () => {
                     <h3>Bản đồ chi nhánh</h3>
                     {selectedLocation && (
                         <div className="selected-location-info">
-                            <p>📍 Đang hiển thị: <strong>{selectedLocation.name}</strong></p>
+                            <p>Đang hiển thị: <strong>{selectedLocation.name}</strong></p>
                         </div>
                     )}
                     <div className="contact-map">

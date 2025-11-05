@@ -15,16 +15,31 @@ const setTokenCookie = (token) => {
 };
 
 /**
- * Get token from localStorage and set cookie
+ * Get token from localStorage and set cookie + return Authorization header
  */
 const ensureTokenCookie = () => {
     const token = localStorage.getItem('accessToken');
-    if (token) {
-        setTokenCookie(token);
-    }
-    return {
+
+    console.log('🔍 [API] Checking token in localStorage:');
+    console.log('  - Token exists:', !!token);
+    console.log('  - Token value:', token ? `${token.substring(0, 20)}...` : 'NULL/UNDEFINED');
+
+    const headers = {
         'Content-Type': 'application/json'
     };
+
+    if (token) {
+        setTokenCookie(token);
+        // ✅ GỬI TOKEN TRONG HEADER để backend đọc được
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('✅ [API] Token added to Authorization header');
+    } else {
+        console.error('❌❌❌ [API] No token found in localStorage!');
+        console.error('❌ YOU NEED TO LOGIN FIRST!');
+        console.error('❌ Current localStorage keys:', Object.keys(localStorage));
+    }
+
+    return headers;
 };
 
 /**
@@ -32,8 +47,28 @@ const ensureTokenCookie = () => {
  */
 const handleResponse = async (response) => {
     if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`HTTP ${response.status}: ${error}`);
+        let errorData;
+        const contentType = response.headers.get('content-type');
+
+        try {
+            if (contentType && contentType.includes('application/json')) {
+                errorData = await response.json();
+            } else {
+                errorData = await response.text();
+            }
+        } catch (e) {
+            errorData = 'Failed to parse error response';
+        }
+
+        console.error(`🔴 [API] Error Response (${response.status}):`, errorData);
+
+        const error = new Error(`HTTP ${response.status}: ${typeof errorData === 'string' ? errorData : JSON.stringify(errorData)}`);
+        error.response = {
+            status: response.status,
+            data: errorData,
+            headers: response.headers
+        };
+        throw error;
     }
 
     // ✅ Extract new AccessToken from Set-Cookie header if present
@@ -80,6 +115,7 @@ export const apiFetch = async (endpoint, options = {}) => {
 
         console.log(`🚀 [API] ${options.method || 'GET'} ${url}`);
         console.log(`🍪 [API] Sending with credentials (cookies)`);
+        console.log(`🔑 [API] Headers:`, config.headers);
 
         let response = await fetch(url, config);
 

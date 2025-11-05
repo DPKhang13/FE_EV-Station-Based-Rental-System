@@ -25,7 +25,15 @@ import VerifyOtpPage from './pages/VerifyOtpPage.jsx';
 import AdminDashBoardPage from './pages/AdminDashBoardPage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
 import EmployeesPage from './pages/EmployeesPage.jsx';
-import ConfirmBookingPage from './pages/ConfirmBookingPage';
+import VehicleManagement from './components/admin/VehicleManagement.jsx';
+import ConfirmBookingPage from './pages/ConfirmBookingPage.jsx';
+import MyBookingsPage from './pages/MyBookingsPage.jsx';
+import PaymentPage from './pages/PaymentPage.jsx';
+import PaymentCallbackPage from './pages/PaymentCallbackPage.jsx';
+import ProfilePage from './pages/ProfilePage.jsx';
+import AboutPage from './pages/AboutPage.jsx';
+import PaymentSuccessPage from './pages/PaymentSuccess.jsx';
+import PaymentFailedPage from './pages/PaymentFailedPage.jsx';
 
 const HomePage = () => (
   <ScrollToSectionWrapper>
@@ -59,19 +67,29 @@ function ScrollToSectionWrapper({ children }) {
 // ✅ Tạo wrapper để điều kiện hiển thị layout
 function LayoutWrapper({ children }) {
   const location = useLocation();
-  const hideLayout = (location.pathname === '/login') || (location.pathname === '/register') || (location.pathname.startsWith('/staff') || (location.pathname.startsWith('/verify-otp')) || (location.pathname.startsWith('/admin'))); // 🔹 Kiểm tra nếu đang ở /login
+
+  // ✅ Thêm các payment routes vào danh sách ẩn layout
+  const hideLayout =
+    location.pathname === '/login' ||
+    location.pathname === '/register' ||
+    location.pathname === '/verify-otp' ||
+    location.pathname.startsWith('/staff') ||
+    location.pathname.startsWith('/admin') ||
+    location.pathname.startsWith('/payment-callback') || // ✅ Thêm
+    location.pathname.startsWith('/payment-success') ||  // ✅ Thêm
+    location.pathname.startsWith('/payment-failed');     // ✅ Thêm
 
   return (
     <>
       {!hideLayout && <Header />}
       {!hideLayout && <Navbar />}
-
       {children}
-
       {!hideLayout && <Footer />}
     </>
   );
 }
+
+// ...existing code...
 
 function App() {
   return (
@@ -84,31 +102,43 @@ function App() {
             <Route path="/listcar" element={<ListCarPage />} />
             <Route path="/booking-4seater" element={<Booking4Seater />} />
             <Route path="/booking-7seater" element={<Booking7Seater />} />
-            <Route path="/confirm-booking"  element={<ConfirmBookingPage />} />
+            <Route path="/confirm-booking" element={<ConfirmBookingPage />} />
+            <Route path="/my-bookings" element={<MyBookingsPage />} />
+            <Route path="/payment/:orderId" element={<PaymentPage />} />
+
+            {/* ✅ Payment routes */}
+            <Route path="/payment-callback" element={<PaymentCallbackPage />} />
+            <Route path="/payment-success" element={<PaymentSuccessPage />} />
+            <Route path="/payment-failed" element={<PaymentFailedPage />} />
+
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/about" element={<AboutPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/staff" element={<StaffPage />} >
-              {/* Các route con của StaffPage sẽ được định nghĩa ở đây */}
-              <Route index element={<Navigate to="/staff/giaotraxe" replace={true} />} />
-              <Route path="/staff/giaotraxe" element={<GiaoTraXe />} />
-              <Route path="/staff/xacthuc" element={<XacThucKhachHangPage />} />
-              <Route path="/staff/thanhtoan" element={<ThanhToanPage />} />
-              <Route path="/staff/quanlyxe" element={<QuanLyXePage />} />
-              
-            </Route>
             <Route path="/verify-otp" element={<VerifyOtpPage />} />
+
+            {/* Staff Routes */}
+            <Route path="/staff" element={<StaffPage />}>
+              <Route index element={<Navigate to="/staff/giaotraxe" replace={true} />} />
+              <Route path="giaotraxe" element={<GiaoTraXe />} />
+              <Route path="xacthuc" element={<XacThucKhachHangPage />} />
+              <Route path="thanhtoan" element={<ThanhToanPage />} />
+              <Route path="quanlyxe" element={<QuanLyXePage />} />
+            </Route>
+
+            {/* Admin Routes */}
             <Route path="/admin" element={<AdminPage />}>
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="dashboard" element={<AdminDashBoardPage />} />
               <Route path="employees" element={<EmployeesPage />} />
-
+              <Route path="vehicles" element={<VehicleManagement />} />
+              {/* ❌ XÓA dòng này: */}
+              {/* <Route path="/PaymentSuccess" element={<PaymentCallbackPage />} /> */}
             </Route>
-
-
-          </Routes>
-        </LayoutWrapper>
-      </AuthProvider>
-    </Router>
+          </Routes >
+        </LayoutWrapper >
+      </AuthProvider >
+    </Router >
   );
 }
 

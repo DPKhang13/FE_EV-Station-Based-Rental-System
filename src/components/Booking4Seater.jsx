@@ -16,6 +16,7 @@ const Booking4Seater = () => {
     const [selectedCarId, setSelectedCarId] = useState(preSelectedCar?.id || '');
     const [selectedCar, setSelectedCar] = useState(preSelectedCar || null);
     const [submitting, setSubmitting] = useState(false);
+    const [selectedColor, setSelectedColor] = useState('');
 
     const [formData, setFormData] = useState({
         startTime: '',
@@ -23,13 +24,26 @@ const Booking4Seater = () => {
         couponCode: ''
     });
 
-    // Filter 4-seater available cars, optionally by grade
+    // Filter 4-seater available cars, optionally by grade and color
     const availableCars = cars.filter(car => {
         const isFourSeater = car.type === '4-seater';
         const isAvailable = car.status === 'Available';
         const matchesGrade = gradeFilter ? car.grade === gradeFilter : true;
-        return isFourSeater && isAvailable && matchesGrade;
+        const matchesColor = selectedColor ? car.color === selectedColor : true;
+        return isFourSeater && isAvailable && matchesGrade && matchesColor;
     });
+
+    // Get unique colors from 4-seater available cars
+    const availableColors = [...new Set(
+        cars.filter(car =>
+            car.type === '4-seater' &&
+            car.status === 'Available' &&
+            car.color &&
+            car.color !== 'N/A' &&
+            car.color !== 'null' &&
+            (!gradeFilter || car.grade === gradeFilter)
+        ).map(car => car.color)
+    )].sort();
 
     // Scroll to top when component mounts
     useEffect(() => {
@@ -59,18 +73,18 @@ const Booking4Seater = () => {
 
         // 1. Validate car selection
         if (!selectedCar) {
-            alert('Please select a car before confirming booking.');
+            alert('Vui lòng chọn xe trước khi xác nhận đặt xe.');
             return;
         }
 
         // 2. Validate dates and hours
         if (!formData.startTime) {
-            alert('Please select pickup date and time.');
+            alert('Vui lòng chọn ngày và giờ nhận xe.');
             return;
         }
 
         if (!formData.plannedHours || formData.plannedHours < 1) {
-            alert('Please enter number of hours to rent (minimum 1 hour).');
+            alert('Vui lòng nhập số giờ thuê (tối thiểu 1 giờ).');
             return;
         }
 
@@ -97,7 +111,7 @@ const Booking4Seater = () => {
         const now = new Date();
 
         if (start < now) {
-            alert('Pickup time must be in the future!');
+            alert('Thời gian nhận xe phải là thời điểm trong tương lai!');
             return;
         }
 
@@ -131,7 +145,7 @@ const Booking4Seater = () => {
         });
 
         if (!customerId || !token) {
-            alert('Please login to continue!');
+            alert('Vui lòng đăng nhập để tiếp tục!');
             navigate('/login');
             return;
         }
@@ -197,31 +211,124 @@ const Booking4Seater = () => {
 
     return (
         <div className="booking-container">
-            <h1 className="booking-title">Booking 4-Seater Car</h1>
+            <h1 className="booking-title">Đặt Xe 4 Chỗ</h1>
 
             <div className="booking-content">
                 {/* Left side - Booking Form */}
                 <div className="booking-form-section">
                     <form onSubmit={handleSubmit} className="booking-form">
+                        {/* Color Filter - Color Boxes */}
+                        {!preSelectedCar && availableColors.length > 0 && (
+                            <div className="form-group">
+                                <label>🎨 Lọc theo màu sắc</label>
+                                <div style={{
+                                    display: 'flex',
+                                    gap: '12px',
+                                    flexWrap: 'wrap',
+                                    marginTop: '8px'
+                                }}>
+                                    {availableColors.map(color => {
+                                        const colorMap = {
+                                            'Black': '#000000',
+                                            'White': '#FFFFFF',
+                                            'Red': '#DC2626',
+                                            'Blue': '#2563EB',
+                                            'Silver': '#9CA3AF',
+                                            'Gray': '#6B7280',
+                                            'Yellow': '#EAB308'
+                                        };
+                                        const bgColor = colorMap[color] || '#6B7280';
+                                        const isSelected = selectedColor === color;
+
+                                        return (
+                                            <div
+                                                key={color}
+                                                onClick={() => {
+                                                    setSelectedColor(color);
+                                                    setSelectedCarId('');
+                                                    setSelectedCar(null);
+                                                }}
+                                                style={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center',
+                                                    gap: '6px',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.3s'
+                                                }}
+                                            >
+                                                <div style={{
+                                                    width: '50px',
+                                                    height: '50px',
+                                                    backgroundColor: bgColor,
+                                                    border: color === 'White' ? '2px solid #e5e7eb' : 'none',
+                                                    borderRadius: '8px',
+                                                    boxShadow: isSelected
+                                                        ? '0 0 0 3px #667eea, 0 4px 12px rgba(102, 126, 234, 0.4)'
+                                                        : '0 2px 4px rgba(0,0,0,0.1)',
+                                                    transform: isSelected ? 'scale(1.1)' : 'scale(1)',
+                                                    transition: 'all 0.3s ease'
+                                                }}
+                                                />
+                                                <span style={{
+                                                    fontSize: '13px',
+                                                    fontWeight: isSelected ? 700 : 500,
+                                                    color: isSelected ? '#667eea' : '#6b7280'
+                                                }}>{color}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                {selectedColor && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setSelectedColor('');
+                                            setSelectedCarId('');
+                                            setSelectedCar(null);
+                                        }}
+                                        style={{
+                                            marginTop: 12,
+                                            padding: '6px 16px',
+                                            background: '#dc2626',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: 6,
+                                            fontSize: 13,
+                                            fontWeight: 600,
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Xóa bộ lọc màu
+                                    </button>
+                                )}
+                            </div>
+                        )}
+
                         <div className="form-group">
-                            <label htmlFor="carSelect">Select Car *</label>
+                            <label htmlFor="carSelect">Chọn Xe *</label>
                             <select
                                 id="carSelect"
                                 value={selectedCarId}
                                 onChange={handleCarSelect}
                                 required
                             >
-                                <option value="">Choose a car</option>
+                                <option value="">Chọn một xe</option>
                                 {availableCars.map(car => (
                                     <option key={car.id} value={car.id}>
-                                        {car.vehicle_name} - {car.plate_number} ({car.color})
+                                        {car.vehicle_name}
                                     </option>
                                 ))}
                             </select>
+                            {selectedColor && (
+                                <small style={{ color: '#dc2626', fontSize: '12px', display: 'block', marginTop: '4px' }}>
+                                    Đang lọc xe màu: {selectedColor}
+                                </small>
+                            )}
                         </div>
 
                         <div className="form-group">
-                            <label htmlFor="startTime">Pick-up Date & Time *</label>
+                            <label htmlFor="startTime">Ngày & Giờ Nhận Xe *</label>
                             <input
                                 type="datetime-local"
                                 id="startTime"
@@ -232,12 +339,12 @@ const Booking4Seater = () => {
                                 required
                             />
                             <small style={{ color: '#666', fontSize: '12px', display: 'block', marginTop: '4px' }}>
-                                Select when you want to pick up the vehicle
+                                Chọn thời điểm bạn muốn nhận xe
                             </small>
                         </div>
 
                         <div className="form-group">
-                            <label htmlFor="plannedHours">Number of Hours to Rent *</label>
+                            <label htmlFor="plannedHours">Số Giờ Thuê * (Thuê 3 giờ giá rẻ hơn)</label>
                             <input
                                 type="number"
                                 id="plannedHours"
@@ -246,42 +353,42 @@ const Booking4Seater = () => {
                                 onChange={handleChange}
                                 min="1"
                                 step="1"
-                                placeholder="Enter number of hours (e.g., 24)"
+                                placeholder="Nhập số giờ (ví dụ: 24)"
                                 required
                             />
                             <small style={{ color: '#666', fontSize: '12px', display: 'block', marginTop: '4px' }}>
-                                Minimum rental period is 1 hour
+                                Thời gian thuê tối thiểu là 1 giờ
                             </small>
                         </div>
 
                         <div className="form-group">
-                            <label htmlFor="couponCode">Coupon Code (Optional)</label>
+                            <label htmlFor="couponCode">Mã Giảm Giá (Không bắt buộc)</label>
                             <input
                                 type="text"
                                 id="couponCode"
                                 name="couponCode"
                                 value={formData.couponCode}
                                 onChange={handleChange}
-                                placeholder="Enter coupon code if you have one"
+                                placeholder="Nhập mã giảm giá nếu bạn có"
                             />
                             <small style={{ color: '#666', fontSize: '12px', display: 'block', marginTop: '4px' }}>
-                                Leave blank if you don't have a coupon
+                                Để trống nếu bạn không có mã giảm giá
                             </small>
                         </div>
 
                         <button type="submit" className="submit-button">
-                            CONFIRM BOOKING
+                            XÁC NHẬN ĐẶT XE
                         </button>
                     </form>
                 </div>
 
                 {/* Right side - Selected Car Display */}
                 <div className="booking-car-display">
-                    <h2 className="car-display-title">Selected Car</h2>
+                    <h2 className="car-display-title">Xe Đã Chọn</h2>
 
                     {!selectedCar ? (
                         <div className="no-car-selected">
-                            <p>Please select a car from the dropdown to view details</p>
+                            <p>Vui lòng chọn xe từ danh sách để xem chi tiết</p>
                         </div>
                     ) : (
                         <>
