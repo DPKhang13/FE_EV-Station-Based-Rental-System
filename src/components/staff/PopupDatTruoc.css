@@ -1,0 +1,100 @@
+/* ================================
+   🎨 Popup Đặt Trước (Đơn giản & hiện đại)
+   ================================ */
+
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.25s ease;
+}
+
+.popup {
+  background: #fff;
+  padding: 25px 35px;
+  border-radius: 12px;
+  width: 380px;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  animation: slideUp 0.3s ease;
+}
+
+.popup h2 {
+  margin-bottom: 10px;
+  color: #2a3d66;
+  font-weight: 600;
+}
+
+.popup-message {
+  font-size: 1rem;
+  margin: 10px 0 20px;
+  color: #444;
+}
+
+.popup-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.btn-confirms {
+  flex: 1;
+  background: #4caf50;
+  color: #fff;
+  border: none;
+  padding: 10px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.25s ease;
+}
+
+.btn-confirms:hover {
+  background: #45a049;
+  transform: translateY(-1px);
+}
+
+.btn-closes {
+  flex: 1;
+  background: #b0b0b0;
+  color: #fff;
+  border: none;
+  padding: 10px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.25s ease;
+}
+
+.btn-closes:hover {
+  background: #999;
+  transform: translateY(-1px);
+}
+
+/* ✨ Hiệu ứng */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0.6;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

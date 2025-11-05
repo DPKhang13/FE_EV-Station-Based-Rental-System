@@ -1,390 +1,267 @@
+/* ================================
+   🎨 GIAO - TRẢ XE STYLE
+   ================================ */
+
 .giaoTraXe-container {
-  padding: 20px;
-  font-family: "Segoe UI", sans-serif;
-  background-color: #f6f8fb;
+  padding: 30px;
+  font-family: "Poppins", sans-serif;
+  background: #f6f7fb;
   min-height: 100vh;
-}
-
-.title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 16px;
-}
-
-.tabs {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.tabs button {
-  border: none;
-  background: #e5e7eb;
-  color: #111827;
-  padding: 8px 18px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.tabs button:hover {
-  background-color: #cbd5e1;
-}
-
-.tabs .active {
-  background-color: #2563eb;
-  color: white;
-}
-
-.xe-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 20px;
-}
-
-.xe-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-  padding: 16px;
-  text-align: center;
-  transition: 0.2s;
-}
-
-.xe-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-}
-
-.xe-img {
-  width: 100%;
-  height: 140px;
-  object-fit: contain;
-  margin-bottom: 10px;
-}
-
-.xe-name {
-  font-size: 18px;
-  font-weight: 600;
-  color: #111827;
-  margin-bottom: 6px;
-}
-
-.xe-info {
-  font-size: 14px;
-  color: #475569;
-  margin: 2px 0;
-}
-
-.xe-status {
-  font-weight: 600;
-  margin-top: 8px;
-}
-
-.status-green {
-  color: #16a34a;
-}
-
-.status-yellow {
-  color: #ca8a04;
-}
-
-.status-blue {
-  color: #2563eb;
-}
-
-.xe-customer {
-  font-size: 13px;
-  color: #374151;
-  margin-top: 6px;
-}
-
-.btn-action {
-  margin-top: 12px;
-  background-color: #2563eb;
-  color: white;
-  border: none;
-  padding: 10px;
-  width: 100%;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.btn-action:hover {
-  background-color: #1d4ed8;
-}
-.xe-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 20px;
-}
-
-.xe-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-  padding: 16px;
-  text-align: center;
-  transition: 0.2s;
-  
-  /* 🟩 Thêm 3 dòng dưới để các card đều nhau và nút luôn ở cuối */
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 100%;
-  min-height: 350px; /* bạn có thể điều chỉnh tùy kích thước mong muốn */
-}
-
-.xe-img {
-  width: 100%;
-  height: 160px; /* tăng chút cho đồng đều hình ảnh */
-  object-fit: cover; /* đổi từ contain sang cover cho đều khung */
-  margin-bottom: 10px;
-}
-
-.btn-action {
-  margin-top: auto; /* 🟩 giúp nút luôn nằm ở cuối card */
-  background-color: #2563eb;
-  color: white;
-  border: none;
-  padding: 10px;
-  width: 100%;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.btn-action:hover {
-  background-color: #1d4ed8;
-}
-.popup-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.popup-content {
-  background: white;
-  padding: 24px;
-  border-radius: 12px;
-  width: 400px;
-  max-width: 90%;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-}
-
-.popup-content h2 {
-  margin-bottom: 12px;
-  font-size: 20px;
-  color: #1e293b;
-}
-
-.popup-content label {
-  display: block;
-  font-weight: 500;
-  margin-top: 10px;
-}
-
-.popup-content input {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  margin-top: 4px;
-}
-
-.popup-buttons {
-  margin-top: 16px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.popup-buttons button {
-  padding: 8px 14px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.popup-buttons .btn-confirm {
-  background-color: #2563eb;
-  color: white;
-}
-.status-orange {
-  background-color: #ff9800;
-  color: white;
-}
-
-
-.status-purple {
-  background-color: #b197fc;
-  color: white;
-  font-weight: bold;
-}
-
-.btn-disabled {
-  background-color: #ccc;
   color: #333;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
-  cursor: not-allowed;
-}
-.giaoTraXe-container {
-  padding: 40px;
-  text-align: center;
-  background: #f9fbfc;
 }
 
 .title {
-  font-size: 28px;
+  text-align: center;
+  font-size: 2rem;
   font-weight: 700;
+  color: #2a3d66;
   margin-bottom: 20px;
 }
 
-.filter-bar {
+/* 🔍 Search bar */
+.search-bar {
   display: flex;
   justify-content: center;
-  align-items: center;
-  gap: 15px;
-  flex-wrap: wrap;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
 .search-input {
-  width: 280px;
+  width: 50%;
   padding: 10px 15px;
+  border: 1.5px solid #c9cdd4;
   border-radius: 8px;
-  border: 1.5px solid #d0d7de;
-  font-size: 15px;
+  font-size: 1rem;
   transition: all 0.3s ease;
 }
 
 .search-input:focus {
+  border-color: #5b8def;
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 6px rgba(0, 123, 255, 0.3);
+  box-shadow: 0 0 5px rgba(91, 141, 239, 0.3);
 }
 
+/* 🧭 Tabs */
 .tabs {
   display: flex;
-  gap: 8px;
+  justify-content: center;
   flex-wrap: wrap;
+  margin-bottom: 25px;
+  gap: 10px;
 }
 
-.tab-btn {
+.tabs button {
   padding: 8px 18px;
-  border-radius: 6px;
-  border: 1px solid #d0d7de;
-  background-color: white;
-  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  background-color: #e5e8f0;
   cursor: pointer;
-  transition: all 0.3s;
+  font-weight: 500;
+  transition: all 0.25s ease;
 }
 
-.tab-btn:hover {
-  background-color: #f1f5f9;
-}
-
-.tab-btn.active {
-  background-color: #007bff;
+.tabs button.active {
+  background-color: #5b8def;
   color: white;
-  border-color: #007bff;
+  box-shadow: 0 3px 8px rgba(91, 141, 239, 0.4);
 }
 
+.tabs button:hover:not(.active) {
+  background-color: #d2d7e4;
+}
+
+/* 🚗 Grid xe */
 .xe-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 25px;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 20px;
 }
 
 .xe-card {
   background: white;
-  padding: 20px;
-  border-radius: 12px;
+  border-radius: 14px;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  padding: 15px;
   text-align: center;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
 }
 
 .xe-card:hover {
   transform: translateY(-4px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
 }
 
 .xe-img {
   width: 100%;
-  height: 150px;
+  height: 160px;
   object-fit: cover;
   border-radius: 10px;
+  margin-bottom: 10px;
 }
 
-.xe-name {
-  font-size: 18px;
+.xe-card h3 {
+  margin: 5px 0;
+  font-size: 1.1rem;
+  color: #2a3d66;
   font-weight: 600;
-  margin: 10px 0;
 }
 
+.xe-card p {
+  font-size: 0.95rem;
+  margin: 4px 0;
+  color: #555;
+}
+
+/* 🌈 Trạng thái */
 .xe-status {
-  font-weight: bold;
-  margin-top: 8px;
+  font-weight: 600;
+  margin-top: 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  display: inline-block;
 }
 
 .status-green {
-  color: #16a34a;
+  background-color: #d3f9d8;
+  color: #1b7f1b;
+}
+
+.status-blue {
+  background-color: #dbe9ff;
+  color: #1451b8;
 }
 
 .status-yellow {
-  color: #facc15;
+  background-color: #fff5cc;
+  color: #b89100;
 }
 
 .status-purple {
-  color: #8b5cf6;
+  background-color: #f2e1ff;
+  color: #6f31b6;
 }
 
+.status-orange {
+  background-color: #ffe3c2;
+  color: #b85c00;
+}
+
+/* ⚙️ Button hành động */
 .btn-action {
-  background-color: #007bff;
+  margin-top: 10px;
+  background: linear-gradient(90deg, #ff9800, #f57c00);
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  margin-top: 10px;
-  transition: all 0.3s;
-}
-
-.btn-action:hover {
-  background-color: #0056b3;
-}
-
-.search-bar {
-  display: flex;
-  justify-content: center;
-  margin: 20px 0;
-}
-
-.search-input {
-  width: 300px;
-  padding: 10px 14px;
+  padding: 8px 14px;
   border-radius: 8px;
-  border: 1.5px solid #ccc;
-  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
   transition: all 0.3s ease;
 }
 
-.search-input:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 6px rgba(0, 123, 255, 0.3);
+.btn-action:hover {
+  background: linear-gradient(90deg, #f57c00, #ef6c00);
+  transform: translateY(-2px);
+}
+
+/* ⏳ Loading + Empty */
+.loading,
+.empty {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #777;
+  margin-top: 40px;
+}
+
+/* ================================
+   🧩 Popup Đặt trước
+   ================================ */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(30, 30, 30, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.popup {
+  background: #fff;
+  padding: 25px 30px;
+  border-radius: 12px;
+  width: 380px;
+  text-align: center;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.4s ease;
+}
+
+.popup h2 {
+  margin-bottom: 10px;
+  color: #2a3d66;
+}
+
+.popup-message {
+  font-size: 1rem;
+  margin: 10px 0 20px;
+  color: #444;
+}
+
+.popup-buttons {
+  display: flex;
+  justify-content: space-around;
+}
+
+.btn-confirms {
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.3s;
+}
+
+.btn-confirms:hover {
+  background: #3e8e41;
+}
+
+.btn-closes {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.3s;
+}
+
+.btn-closes:hover {
+  background: #c0392b;
+}
+
+/* ✨ Hiệu ứng */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0.5;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
