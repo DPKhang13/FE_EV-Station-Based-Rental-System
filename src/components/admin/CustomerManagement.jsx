@@ -68,7 +68,7 @@ const CustomerManagement = () => {
 
     const getStatusText = (status) => {
         switch (status) {
-            case 'ACTIVE': return 'Hoạt động';
+            case 'ACTIVE': return 'Đã Xác Thực';
             case 'ACTIVE_PENDING': return 'Chờ xác thực';
             case 'INACTIVE': return 'Ngưng hoạt động';
             default: return status;
@@ -86,21 +86,7 @@ const CustomerManagement = () => {
                     <h1>QUẢN LÝ KHÁCH HÀNG</h1>
                     <p className="customer-subtitle">Danh sách tất cả người dùng trong hệ thống</p>
                 </div>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                    <input
-                        type="text"
-                        placeholder="Tìm kiếm theo tên, email, SĐT..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        style={{
-                            padding: '10px 15px',
-                            borderRadius: '8px',
-                            border: '2px solid #e5e7eb',
-                            fontSize: '14px',
-                            minWidth: '300px'
-                        }}
-                    />
-                </div>
+                {/* search moved into filters */}
             </div>
 
             {error && (
@@ -120,23 +106,26 @@ const CustomerManagement = () => {
             )}
 
             <div className="customer-filters">
-                <div className="filter-group">
-                    <label>Vai trò:</label>
-                    <select value={filterRole} onChange={(e) => setFilterRole(e.target.value)}>
-                        <option value="all">Tất cả</option>
-                        <option value="admin">Quản trị viên</option>
-                        <option value="staff">Nhân viên</option>
-                        <option value="customer">Khách hàng</option>
-                    </select>
+                <div className="filter-left">
+                    <div className="filter-group">
+                        <label>Trạng thái:</label>
+                        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+                            <option value="all">Tất cả</option>
+                            <option value="ACTIVE">Hoạt động</option>
+                            <option value="ACTIVE_PENDING">Chờ xác thực</option>
+                            <option value="INACTIVE">Ngưng hoạt động</option>
+                        </select>
+                    </div>
                 </div>
-                <div className="filter-group">
-                    <label>Trạng thái:</label>
-                    <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                        <option value="all">Tất cả</option>
-                        <option value="ACTIVE">Hoạt động</option>
-                        <option value="ACTIVE_PENDING">Chờ xác thực</option>
-                        <option value="INACTIVE">Ngưng hoạt động</option>
-                    </select>
+
+                <div className="filter-right">
+                    <input
+                        type="text"
+                        className="search-input"
+                        placeholder="Tìm kiếm theo tên, email, SĐT..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
                 </div>
             </div>
 
@@ -144,13 +133,11 @@ const CustomerManagement = () => {
                 <table className="customer-table">
                     <thead>
                         <tr>
-                            <th>ID</th>
                             <th>Họ tên</th>
                             <th>Email</th>
                             <th>Số điện thoại</th>
                             <th>Vai trò</th>
                             <th>Trạng thái</th>
-                            <th>Trạm làm việc</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -163,9 +150,6 @@ const CustomerManagement = () => {
                         ) : (
                             filteredUsers.map((user, index) => (
                                 <tr key={user.userId || index}>
-                                    <td style={{ fontSize: '12px', fontFamily: 'monospace' }}>
-                                        {user.userId.substring(0, 8)}...
-                                    </td>
                                     <td className="user-name">{user.fullName}</td>
                                     <td className="email-text">{user.email}</td>
                                     <td>{user.phone}</td>
@@ -179,7 +163,6 @@ const CustomerManagement = () => {
                                             {getStatusText(user.status)}
                                         </span>
                                     </td>
-                                    <td>{user.stationId || 'N/A'}</td>
                                 </tr>
                             ))
                         )}

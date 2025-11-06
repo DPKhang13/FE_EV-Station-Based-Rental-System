@@ -428,110 +428,114 @@ const VehicleManagement = () => {
             {loading ? (
                 <div className="loading">⏳ Đang tải dữ liệu xe từ hệ thống...</div>
             ) : (
-                <table className="vehicle-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Hình ảnh</th>
-                            <th>Tên xe</th>
-                            <th>Biển số</th>
-                            <th>Hãng</th>
-                            <th>Phiên bản</th>
-                            <th>Màu sắc</th>
-                            <th>Số ghế</th>
-                            <th>Năm SX</th>
-                            <th>Điểm thuê</th>
-                            <th>Pin (%)</th>
-                            <th>Quãng đường (km)</th>
-                            <th>Trạng thái</th>
-                            <th>Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredVehicles.length === 0 ? (
+                <div style={{ width: '100vw', overflowX: 'auto' }}>
+                    <table className="vehicle-table" style={{ width: '100%', minWidth: '1500px', tableLayout: 'fixed' }}>
+                        <thead>
                             <tr>
-                                <td colSpan="14" style={{ textAlign: 'center', padding: '40px' }}>
-                                    {searchTerm ? '🔍 Không tìm thấy xe nào phù hợp' : '📭 Chưa có xe nào trong hệ thống'}
-                                </td>
+                                <th style={{ minWidth: '50px', textAlign: 'center' }}>ID</th>
+                                <th style={{ minWidth: '100px', textAlign: 'center' }}>Hình ảnh</th>
+                                <th style={{ minWidth: '120px', textAlign: 'center' }}>Tên xe</th>
+                                <th style={{ minWidth: '100px', textAlign: 'center' }}>Biển số</th>
+                                <th style={{ minWidth: '80px', textAlign: 'center' }}>Hãng</th>
+                                <th style={{ minWidth: '80px', textAlign: 'center' }}>Phiên bản</th>
+                                <th style={{ minWidth: '80px', textAlign: 'center' }}>Màu sắc</th>
+                                <th style={{ minWidth: '80px', textAlign: 'center' }}>Số ghế</th>
+                                <th style={{ minWidth: '80px', textAlign: 'center' }}>Năm SX</th>
+                                <th style={{ minWidth: '120px', textAlign: 'center' }}>Điểm thuê</th>
+                                <th style={{ minWidth: '80px', textAlign: 'center' }}>Pin (%)</th>
+                                <th style={{ minWidth: '100px', textAlign: 'center' }}>Quãng đường (km)</th>
+                                <th style={{ minWidth: '100px', textAlign: 'center' }}>Trạng thái</th>
+                                <th style={{ minWidth: '180px', textAlign: 'center' }}>Hành động</th>
                             </tr>
-                        ) : (
-                            filteredVehicles.map(vehicle => {
-                                const statusInfo = getStatusInfo(vehicle.status);
-                                return (
-                                    <tr key={vehicle.id || vehicle.vehicle_id}>
-                                        <td><strong>#{vehicle.id}</strong></td>
-                                        <td>
-                                            <img
-                                                src={vehicle.image}
-                                                alt={vehicle.vehicle_name}
-                                                onError={(e) => {
-                                                    e.target.src = 'https://via.placeholder.com/100x60?text=No+Image';
-                                                }}
-                                            />
-                                        </td>
-                                        <td><strong>{vehicle.vehicle_name}</strong></td>
-                                        <td><span style={{ fontWeight: '600', color: '#3b82f6' }}>{vehicle.plate_number}</span></td>
-                                        <td>{vehicle.brand || 'N/A'}</td>
-                                        <td>{vehicle.grade || vehicle.variant || 'N/A'}</td>
-                                        <td>{vehicle.color}</td>
-                                        <td>{vehicle.seat_count} chỗ</td>
-                                        <td>{vehicle.year_of_manufacture}</td>
-                                        <td>{vehicle.stationName || `Station ${vehicle.stationId}` || 'N/A'}</td>
-                                        <td>
-                                            <span style={{
-                                                color: vehicle.battery_status >= 80 ? '#10b981' :
-                                                    vehicle.battery_status >= 50 ? '#f59e0b' : '#ef4444',
-                                                fontWeight: '600'
-                                            }}>
-                                                {vehicle.battery_status || 0}
-                                            </span>
-                                        </td>
-                                        <td>{vehicle.range_km || 0} km</td>
-                                        <td>
-                                            <span className={`status-badge ${statusInfo.class}`}>
-                                                {statusInfo.text}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <button
-                                                className="btn-edit"
-                                                title="Chỉnh sửa thông tin xe"
-                                                onClick={() => handleEditVehicle(vehicle)}
-                                            >
-                                                Sửa
-                                            </button>
-                                            <button
-                                                className="btn-history"
-                                                title="Xem lịch sử đặt xe"
-                                                onClick={() => handleViewOrderHistory(vehicle)}
-                                                style={{
-                                                    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-                                                    color: 'white',
-                                                    padding: '8px 12px',
-                                                    border: 'none',
-                                                    borderRadius: '6px',
-                                                    cursor: 'pointer',
-                                                    fontSize: '14px',
-                                                    fontWeight: '600',
-                                                    marginRight: '8px'
-                                                }}
-                                            >
-                                                📋 Lịch sử
-                                            </button>
-                                            <button
-                                                className="btn-delete"
-                                                title="Xóa xe khỏi hệ thống"
-                                                onClick={() => handleDeleteVehicle(vehicle)}
-                                            >
-                                                Xóa
-                                            </button>
-                                        </td>
-                                    </tr>
-                                );
-                            })
-                        )}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {filteredVehicles.length === 0 ? (
+                                <tr>
+                                    <td colSpan="14" style={{ textAlign: 'center', padding: '40px' }}>
+                                        {searchTerm ? '🔍 Không tìm thấy xe nào phù hợp' : '📭 Chưa có xe nào trong hệ thống'}
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredVehicles.map(vehicle => {
+                                    const statusInfo = getStatusInfo(vehicle.status);
+                                    return (
+                                        <tr key={vehicle.id || vehicle.vehicle_id}>
+                                            <td style={{ textAlign: 'center' }}><strong>#{vehicle.id}</strong></td>
+                                            <td style={{ textAlign: 'center' }}>
+                                                <img
+                                                    src={vehicle.image}
+                                                    alt={vehicle.vehicle_name}
+                                                    style={{ width: '80px', height: '50px', objectFit: 'cover', borderRadius: '6px', display: 'block', margin: '0 auto' }}
+                                                    onError={(e) => {
+                                                        e.target.src = 'https://via.placeholder.com/100x60?text=No+Image';
+                                                    }}
+                                                />
+                                            </td>
+                                            <td style={{ textAlign: 'center' }}><strong>{vehicle.vehicle_name}</strong></td>
+                                            <td style={{ textAlign: 'center' }}><span style={{ fontWeight: '600', color: '#3b82f6' }}>{vehicle.plate_number}</span></td>
+                                            <td style={{ textAlign: 'center' }}>{vehicle.brand || 'N/A'}</td>
+                                            <td style={{ textAlign: 'center' }}>{vehicle.grade || vehicle.variant || 'N/A'}</td>
+                                            <td style={{ textAlign: 'center' }}>{vehicle.color}</td>
+                                            <td style={{ textAlign: 'center' }}>{vehicle.seat_count} chỗ</td>
+                                            <td style={{ textAlign: 'center' }}>{vehicle.year_of_manufacture}</td>
+                                            <td style={{ textAlign: 'center' }}>{vehicle.stationName || `Station ${vehicle.stationId}` || 'N/A'}</td>
+                                            <td style={{ textAlign: 'center' }}>
+                                                <span style={{
+                                                    color: vehicle.battery_status >= 80 ? '#10b981' :
+                                                        vehicle.battery_status >= 50 ? '#f59e0b' : '#ef4444',
+                                                    fontWeight: '600'
+                                                }}>
+                                                    {vehicle.battery_status || 0}
+                                                </span>
+                                            </td>
+                                            <td style={{ textAlign: 'center' }}>{vehicle.range_km || 0} km</td>
+                                            <td style={{ textAlign: 'center' }}>
+                                                <span className={`status-badge ${statusInfo.class}`}>
+                                                    {statusInfo.text}
+                                                </span>
+                                            </td>
+                                            <td style={{ textAlign: 'center' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px' }}>
+                                                    <button
+                                                        className="btn-edit"
+                                                        title="Chỉnh sửa thông tin xe"
+                                                        onClick={() => handleEditVehicle(vehicle)}
+                                                    >
+                                                        Sửa
+                                                    </button>
+                                                    <button
+                                                        className="btn-history"
+                                                        title="Xem lịch sử đặt xe"
+                                                        onClick={() => handleViewOrderHistory(vehicle)}
+                                                        style={{
+                                                            background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                                                            color: 'white',
+                                                            padding: '8px 12px',
+                                                            border: 'none',
+                                                            borderRadius: '6px',
+                                                            cursor: 'pointer',
+                                                            fontSize: '14px',
+                                                            fontWeight: '600'
+                                                        }}
+                                                    >
+                                                        📋 Lịch sử
+                                                    </button>
+                                                    <button
+                                                        className="btn-delete"
+                                                        title="Xóa xe khỏi hệ thống"
+                                                        onClick={() => handleDeleteVehicle(vehicle)}
+                                                    >
+                                                        Xóa
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             )}
 
             {!loading && !error && vehicles.length > 0 && (
