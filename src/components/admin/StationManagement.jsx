@@ -23,6 +23,12 @@ const StationManagement = () => {
     });
     const [stationVehicles, setStationVehicles] = useState([]);
     const [loadingVehicles, setLoadingVehicles] = useState(false);
+    const [showEditVehicleModal, setShowEditVehicleModal] = useState(false);
+    const [editingVehicle, setEditingVehicle] = useState(null);
+    const [showOrderHistoryModal, setShowOrderHistoryModal] = useState(false);
+    const [selectedVehicleForHistory, setSelectedVehicleForHistory] = useState(null);
+    const [orderHistory, setOrderHistory] = useState([]);
+    const [loadingOrderHistory, setLoadingOrderHistory] = useState(false);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -153,35 +159,19 @@ const StationManagement = () => {
         setLoadingVehicles(true);
 
         try {
-            // TODO: Replace with actual API call
-            // const vehicles = await vehicleService.getVehiclesByStation(station.stationid || station.id);
+            const stationId = station.stationid || station.id;
+            console.log('🔍 Fetching vehicles for station ID:', stationId);
 
-            // Mock data for now
-            const mockVehicles = [
-                {
-                    id: 1,
-                    plateNumber: '29A-12345',
-                    vehicleName: 'VinFast VF e34',
-                    color: 'White',
-                    seatCount: 4,
-                    variant: 'Plus',
-                    status: 'AVAILABLE'
-                },
-                {
-                    id: 2,
-                    plateNumber: '30B-67890',
-                    vehicleName: 'VinFast VF 8',
-                    color: 'Black',
-                    seatCount: 7,
-                    variant: 'Eco',
-                    status: 'RENTED'
-                }
-            ];
+            // Lấy xe từ API theo stationId
+            const vehicles = await vehicleService.getVehiclesByStation(stationId);
+            console.log('✅ Xe trong trạm:', vehicles.length, 'xe');
+            console.log('📋 Vehicle list:', vehicles);
 
-            setStationVehicles(mockVehicles);
+            setStationVehicles(vehicles);
         } catch (err) {
             console.error('❌ Error fetching vehicles:', err);
             setStationVehicles([]);
+            alert('❌ Không thể tải danh sách xe. Vui lòng thử lại.');
         } finally {
             setLoadingVehicles(false);
         }
@@ -307,6 +297,152 @@ const StationManagement = () => {
             console.error('❌ Error adding vehicle:', err);
             alert('❌ Có lỗi xảy ra khi thêm xe. Vui lòng thử lại.');
         }
+    };
+
+    const handleEditVehicle = (vehicle) => {
+        console.log('🔍 Editing vehicle object:', vehicle);
+        setEditingVehicle(vehicle);
+        setVehicleFormData({
+            plateNumber: vehicle.plateNumber,
+            vehicleName: vehicle.brand || 'VinFast',
+            color: vehicle.color || 'White',
+            seatCount: vehicle.seatCount || 4,
+            variant: vehicle.variant || 'AIR',
+            status: vehicle.status || 'AVAILABLE',
+            batteryStatus: vehicle.batteryStatus || '100%',
+            batteryCapacity: vehicle.batteryCapacity || '100 kWh'
+        });
+        setShowEditVehicleModal(true);
+    };
+
+    const handleCloseEditVehicleModal = () => {
+        setShowEditVehicleModal(false);
+        setEditingVehicle(null);
+        setVehicleFormData({
+            plateNumber: '',
+            vehicleName: '',
+            color: '',
+            seatCount: '',
+            variant: ''
+        });
+    };
+
+    const handleUpdateVehicle = async (e) => {
+        e.preventDefault();
+
+        try {
+            const brand = vehicleFormData.vehicleName;
+            const seatCount = parseInt(vehicleFormData.seatCount);
+            const variant = vehicleFormData.variant.toUpperCase();
+
+            const seatLabel = seatCount === 4 ? '4S' : '7S';
+            const vehicleName = `${brand} ${seatLabel} ${variant}`;
+
+            const seatText = seatCount === 4 ? '4-seater' : '7-seater';
+            const description = `${brand} EV ${seatText}, ${variant} variant`;
+
+            const vehicleData = {
+                plateNumber: vehicleFormData.plateNumber,
+                stationId: editingVehicle.stationId, // Thêm stationId từ xe đang edit
+                brand: brand,
+                vehicleName: vehicleName,
+                color: vehicleFormData.color,
+                seatCount: seatCount,
+                variant: variant,
+                status: vehicleFormData.status,
+                description: description,
+                batteryStatus: vehicleFormData.batteryStatus,
+                batteryCapacity: vehicleFormData.batteryCapacity,
+                rangeKm: 500
+            };
+
+            const vehicleId = editingVehicle.vehicleId || editingVehicle.id;
+            console.log('🔧 Updating vehicle ID:', vehicleId, 'Data:', vehicleData);
+
+            if (!vehicleId) {
+                throw new Error('Vehicle ID not found!');
+            }
+
+            const result = await vehicleService.updateVehicle(vehicleId, vehicleData);
+            console.log('✅ Vehicle updated successfully:', result);
+
+            // Đóng modal edit
+            handleCloseEditVehicleModal();
+
+            // Refresh danh sách xe (modal detail vẫn mở)
+            if (selectedStation) {
+                const stationId = selectedStation.stationid || selectedStation.id;
+                console.log('🔄 Refreshing vehicle list for station:', stationId);
+                const vehicles = await vehicleService.getVehiclesByStation(stationId);
+                console.log('✅ Refreshed:', vehicles.length, 'xe');
+                setStationVehicles(vehicles);
+            }
+
+            alert(`✅ Đã cập nhật xe ${vehicleFormData.plateNumber} thành công!`);
+        } catch (err) {
+            console.error('❌ Error updating vehicle:', err);
+            alert('❌ Có lỗi xảy ra khi cập nhật xe. Vui lòng thử lại.');
+        }
+    };
+
+    const handleDeleteVehicle = async (vehicle) => {
+        if (!window.confirm(`Bạn có chắc chắn muốn xóa xe ${vehicle.plateNumber}?`)) {
+            return;
+        }
+
+        try {
+            const vehicleId = vehicle.vehicleId || vehicle.id;
+            console.log('🗑️ Deleting vehicle ID:', vehicleId);
+
+            if (!vehicleId) {
+                throw new Error('Vehicle ID not found!');
+            }
+
+            await vehicleService.deleteVehicle(vehicleId);
+            console.log('✅ Vehicle deleted successfully');
+
+            // Refresh danh sách xe
+            if (selectedStation) {
+                const stationId = selectedStation.stationid || selectedStation.id;
+                console.log('🔄 Refreshing vehicle list for station:', stationId);
+                const vehicles = await vehicleService.getVehiclesByStation(stationId);
+                console.log('✅ Refreshed:', vehicles.length, 'xe');
+                setStationVehicles(vehicles);
+            }
+
+            alert(`✅ Đã xóa xe ${vehicle.plateNumber} thành công!`);
+        } catch (err) {
+            console.error('❌ Error deleting vehicle:', err);
+            alert('❌ Có lỗi xảy ra khi xóa xe. Vui lòng thử lại.');
+        }
+    };
+
+    const handleViewOrderHistory = async (vehicle) => {
+        setSelectedVehicleForHistory(vehicle);
+        setShowOrderHistoryModal(true);
+        setLoadingOrderHistory(true);
+
+        try {
+            const vehicleId = vehicle.vehicleId || vehicle.id;
+            console.log('📜 Fetching order history for vehicle ID:', vehicleId);
+
+            const history = await vehicleService.getVehicleOrderHistory(vehicleId);
+            console.log('✅ Order history:', history);
+
+            setOrderHistory(history);
+        } catch (err) {
+            console.error('❌ Error fetching order history:', err);
+            setOrderHistory([]);
+            alert('❌ Không thể tải lịch sử đặt xe. Vui lòng thử lại.');
+        } finally {
+            setLoadingOrderHistory(false);
+        }
+    };
+
+    const handleCloseOrderHistoryModal = () => {
+        setShowOrderHistoryModal(false);
+        setSelectedVehicleForHistory(null);
+        setOrderHistory([]);
     };
 
     if (loading) {
@@ -648,15 +784,32 @@ const StationManagement = () => {
                                                         <td>
                                                             <div className="action-buttons">
                                                                 <button
+                                                                    className="btn-view"
+                                                                    onClick={() => handleViewOrderHistory(vehicle)}
+                                                                    title="Xem lịch sử đặt xe"
+                                                                    style={{
+                                                                        background: '#dbeafe',
+                                                                        color: '#1e40af',
+                                                                        padding: '8px 12px',
+                                                                        border: 'none',
+                                                                        borderRadius: '6px',
+                                                                        cursor: 'pointer',
+                                                                        fontSize: '14px',
+                                                                        fontWeight: '600'
+                                                                    }}
+                                                                >
+                                                                    Lịch sử
+                                                                </button>
+                                                                <button
                                                                     className="btn-edit"
-                                                                    onClick={() => alert(`Sửa xe: ${vehicle.plateNumber}`)}
+                                                                    onClick={() => handleEditVehicle(vehicle)}
                                                                     title="Chỉnh sửa"
                                                                 >
                                                                     Chỉnh sửa
                                                                 </button>
                                                                 <button
                                                                     className="btn-delete"
-                                                                    onClick={() => alert(`Xóa xe: ${vehicle.plateNumber}`)}
+                                                                    onClick={() => handleDeleteVehicle(vehicle)}
                                                                     title="Xóa"
                                                                 >
                                                                     Xóa
@@ -786,6 +939,218 @@ const StationManagement = () => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Vehicle Modal */}
+            {showEditVehicleModal && editingVehicle && (
+                <div className="modal-overlay" onClick={handleCloseEditVehicleModal}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>🔧 Chỉnh sửa xe: {editingVehicle.plateNumber}</h2>
+                            <button className="modal-close" onClick={handleCloseEditVehicleModal}>✕</button>
+                        </div>
+
+                        <form onSubmit={handleUpdateVehicle} className="station-form">
+                            <div className="form-grid">
+                                <div className="form-group full-width">
+                                    <label>Biển số xe <span className="required">*</span></label>
+                                    <input
+                                        type="text"
+                                        name="plateNumber"
+                                        value={vehicleFormData.plateNumber}
+                                        onChange={handleVehicleInputChange}
+                                        required
+                                        disabled
+                                        style={{ background: '#f3f4f6', cursor: 'not-allowed' }}
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Hãng xe <span className="required">*</span></label>
+                                    <select
+                                        name="vehicleName"
+                                        value={vehicleFormData.vehicleName}
+                                        onChange={handleVehicleInputChange}
+                                        required
+                                    >
+                                        <option value="">-- Chọn hãng xe --</option>
+                                        <option value="VinFast">VinFast</option>
+                                        <option value="BMW">BMW</option>
+                                        <option value="Tesla">Tesla</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Màu sắc <span className="required">*</span></label>
+                                    <select
+                                        name="color"
+                                        value={vehicleFormData.color}
+                                        onChange={handleVehicleInputChange}
+                                        required
+                                    >
+                                        <option value="">-- Chọn màu --</option>
+                                        <option value="White">Trắng ⬜</option>
+                                        <option value="Black">Đen ⬛</option>
+                                        <option value="Silver">Bạc 🔲</option>
+                                        <option value="Red">Đỏ 🟥</option>
+                                        <option value="Blue">Xanh dương 🟦</option>
+                                        <option value="Gray">Xám ⬜</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Số chỗ ngồi <span className="required">*</span></label>
+                                    <select
+                                        name="seatCount"
+                                        value={vehicleFormData.seatCount}
+                                        onChange={handleVehicleInputChange}
+                                        required
+                                    >
+                                        <option value="">-- Chọn số chỗ --</option>
+                                        <option value="4">4 chỗ</option>
+                                        <option value="7">7 chỗ</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Variant <span className="required">*</span></label>
+                                    <select
+                                        name="variant"
+                                        value={vehicleFormData.variant}
+                                        onChange={handleVehicleInputChange}
+                                        required
+                                    >
+                                        <option value="">-- Chọn variant --</option>
+                                        <option value="AIR">Air</option>
+                                        <option value="PLUS">Plus</option>
+                                        <option value="PRO">Pro</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Trạng thái <span className="required">*</span></label>
+                                    <select
+                                        name="status"
+                                        value={vehicleFormData.status}
+                                        onChange={handleVehicleInputChange}
+                                        required
+                                    >
+                                        <option value="">-- Chọn trạng thái --</option>
+                                        <option value="AVAILABLE">Sẵn sàng</option>
+                                        <option value="RENTED">Đang thuê</option>
+                                        <option value="MAINTENANCE">Bảo trì</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Pin hiện tại (%)</label>
+                                    <input
+                                        type="text"
+                                        name="batteryStatus"
+                                        value={vehicleFormData.batteryStatus}
+                                        onChange={handleVehicleInputChange}
+                                        placeholder="VD: 100%"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Dung lượng pin (kWh)</label>
+                                    <input
+                                        type="text"
+                                        name="batteryCapacity"
+                                        value={vehicleFormData.batteryCapacity}
+                                        onChange={handleVehicleInputChange}
+                                        placeholder="VD: 100 kWh"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="form-actions">
+                                <button type="button" className="btn-cancel" onClick={handleCloseEditVehicleModal}>
+                                    Hủy
+                                </button>
+                                <button type="submit" className="btn-submit">
+                                    Cập nhật
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Order History Modal */}
+            {showOrderHistoryModal && selectedVehicleForHistory && (
+                <div className="modal-overlay" onClick={handleCloseOrderHistoryModal}>
+                    <div className="modal-content detail-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>📜 Lịch sử đặt xe: {selectedVehicleForHistory.plateNumber}</h2>
+                            <button className="modal-close" onClick={handleCloseOrderHistoryModal}>✕</button>
+                        </div>
+
+                        <div className="detail-content">
+                            {loadingOrderHistory ? (
+                                <div style={{ textAlign: 'center', padding: '40px' }}>
+                                    <div style={{ fontSize: '18px', marginBottom: '10px' }}>⏳ Đang tải lịch sử...</div>
+                                </div>
+                            ) : orderHistory.length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: '40px' }}>
+                                    <div style={{ fontSize: '18px', marginBottom: '10px' }}>📭 Chưa có lịch sử đặt xe</div>
+                                    <div style={{ fontSize: '14px', color: '#666' }}>
+                                        Xe này chưa từng được đặt thuê.
+                                    </div>
+                                </div>
+                            ) : (
+                                <div style={{ overflowX: 'auto' }}>
+                                    <table className="station-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Mã đơn</th>
+                                                <th>Trạm</th>
+                                                <th>Thời gian bắt đầu</th>
+                                                <th>Thời gian kết thúc</th>
+                                                <th>Trạng thái</th>
+                                                <th>Tổng tiền</th>
+                                                <th>Đặt cọc</th>
+                                                <th>Còn lại</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {orderHistory.map((order, index) => (
+                                                <tr key={index}>
+                                                    <td style={{ fontSize: '12px', fontFamily: 'monospace' }}>
+                                                        {order.orderId.substring(0, 8)}...
+                                                    </td>
+                                                    <td>{order.stationName || 'N/A'}</td>
+                                                    <td>{new Date(order.startTime).toLocaleString('vi-VN')}</td>
+                                                    <td>{new Date(order.endTime).toLocaleString('vi-VN')}</td>
+                                                    <td>
+                                                        <span className={`status-badge ${order.status === 'COMPLETED' ? 'status-active' :
+                                                                order.status === 'CANCELLED' ? 'status-inactive' :
+                                                                    'status-maintenance'
+                                                            }`}>
+                                                            {order.status}
+                                                        </span>
+                                                    </td>
+                                                    <td style={{ fontWeight: '600', color: '#059669' }}>
+                                                        {order.totalPrice?.toLocaleString('vi-VN')} đ
+                                                    </td>
+                                                    <td>{order.depositAmount?.toLocaleString('vi-VN')} đ</td>
+                                                    <td>{order.remainingAmount?.toLocaleString('vi-VN')} đ</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="detail-actions">
+                            <button className="btn-cancel" onClick={handleCloseOrderHistoryModal}>
+                                Đóng
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
