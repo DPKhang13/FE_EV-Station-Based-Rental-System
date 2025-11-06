@@ -258,37 +258,20 @@
   cursor: not-allowed;
   box-shadow: none;
 }
-/* =============================
-   🔧 Style cho form báo cáo sự cố
-   ============================= */
-.input-select,
-.input-textarea,
-.input-text {
-  width: 100%;
-  padding: 8px 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 14px;
-  margin-bottom: 10px;
-}
-
-.input-textarea {
-  resize: vertical;
-  min-height: 70px;
-}
-
-.btn-pay {
-  background-color: #dc3545;
+.btn-complete-receive {
+  background-color: #007bff;
   color: white;
   border: none;
+  padding: 10px 16px;
   border-radius: 8px;
-  padding: 10px 14px;
-  width: 100%;
+  font-size: 16px;
   cursor: pointer;
-  transition: all 0.25s ease-in-out;
+  transition: background 0.2s ease-in-out;
+  width: 100%;
+  margin-top: 10px;
 }
 
-.btn-pay:hover {
-  background-color: #b02a37;
+.btn-complete-receive:hover {
+  background-color: #0056b3;
 }
 

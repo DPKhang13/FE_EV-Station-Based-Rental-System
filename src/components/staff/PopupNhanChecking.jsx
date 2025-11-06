@@ -52,7 +52,7 @@ const PopupNhanChecking = ({ xe, onClose }) => {
     const intervalId = setInterval(async () => {
       console.log("🔁 Kiểm tra trạng thái thanh toán...");
       await fetchOrderPreview();
-    }, 5000); // 5 giây / lần
+    }, 5000);
 
     return () => {
       console.log("🛑 Dừng auto-refresh khi popup đóng hoặc trạng thái đổi.");
@@ -222,9 +222,16 @@ const PopupNhanChecking = ({ xe, onClose }) => {
               ⏳ Vui lòng chờ sự thanh toán của khách hàng...
             </button>
           ) : orderInfo?.status === "COMPLETED" ? (
-            <button className="btn-check" disabled style={{ backgroundColor: "#28a745" }}>
-              ✅ Khách hàng đã thanh toán thành công
-            </button>
+            <>
+              <button className="btn-check" disabled style={{ backgroundColor: "#28a745" }}>
+                ✅ Khách hàng đã thanh toán thành công
+              </button>
+
+              {/* 🆕 Nút hoàn tất nhận xe */}
+              <button className="btn-complete-receive">
+                🚗 Hoàn tất nhận xe
+              </button>
+            </>
           ) : (
             <button
               onClick={handleRequestPayment}
