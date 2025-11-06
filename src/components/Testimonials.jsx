@@ -74,8 +74,8 @@ const Testimonials = () => {
             <div className="testimonials-container">
                 <div className="testimonials-header">
                     <div className="testimonials-divider"></div>
-                    <h2 className="testimonials-title">TESTIMONIALS</h2>
-                    <p className="testimonials-subtitle">Read what our customers have to say about our vehicles and services.</p>
+                    <h2 className="testimonials-title">ĐÁNH GIÁ</h2>
+                    <p className="testimonials-subtitle">Đọc những gì khách hàng của chúng tôi nói về xe cộ và dịch vụ của chúng tôi.</p>
                 </div>
 
                 {loading ? (

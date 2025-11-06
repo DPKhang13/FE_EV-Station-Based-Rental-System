@@ -176,7 +176,7 @@ const Contact = () => {
         <section id="contact" className="contact">
             <div className="contact-container">
                 <div className="contact-divider"></div>
-                <h2 className="contact-title">CONTACT US</h2>
+                <h2 className="contact-title">LIÊN HỆ VỚI CHÚNG TÔI</h2>
 
                 {/* Nút tìm chi nhánh gần nhất */}
                 <div className="location-finder">
@@ -185,7 +185,7 @@ const Contact = () => {
                         onClick={getCurrentLocation}
                         disabled={loading}
                     >
-                        {loading ? '🔍 Đang tìm...' : '📍 Tìm chi nhánh gần bạn nhất'}
+                        {loading ? '🔍 Đang tìm...' : 'Tìm chi nhánh gần bạn nhất'}
                     </button>
                 </div>
 

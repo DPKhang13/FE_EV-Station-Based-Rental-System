@@ -36,6 +36,7 @@ import AboutPage from './pages/AboutPage.jsx';
 import PaymentSuccessPage from './pages/PaymentSuccess.jsx';
 import PaymentFailedPage from './pages/PaymentFailedPage.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
+import FeedbackPage from './pages/FeedbackPage.jsx';
 
 const HomePage = () => (
   <ScrollToSectionWrapper>
@@ -134,6 +135,13 @@ function App() {
             <Route path="/payment-callback" element={<PaymentCallbackPage />} />
             <Route path="/payment-success" element={<PaymentSuccessPage />} />
             <Route path="/payment-failed" element={<PaymentFailedPage />} />
+
+            {/* ✅ Feedback route */}
+            <Route path="/feedback" element={
+              <ProtectedRoute>
+                <FeedbackPage />
+              </ProtectedRoute>
+            } />
 
             <Route path="/profile" element={
               <ProtectedRoute>

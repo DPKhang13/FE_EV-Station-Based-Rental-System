@@ -16,6 +16,7 @@ const MyBookingsPage = () => {
     const [cancelOrderId, setCancelOrderId] = useState(null);
     const [cancelReason, setCancelReason] = useState('');
     const [searchOrderId, setSearchOrderId] = useState('');
+    const [orderStatuses, setOrderStatuses] = useState({}); // Store status của từng order
 
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'instant' });
@@ -47,6 +48,35 @@ const MyBookingsPage = () => {
             }, 500);
         }
     }, [navigate, location]);
+
+    // ✅ Fetch status chi tiết từ preview-return API
+    const fetchOrderStatuses = async (orders) => {
+        const statusMap = {};
+
+        for (const order of orders) {
+            try {
+                const preview = await orderService.getReturnPreview(order.orderId);
+                statusMap[order.orderId] = {
+                    status: preview.status || order.status,
+                    remainingAmount: preview.remainingAmount || 0,
+                    penaltyFee: preview.penaltyFee || 0,
+                    actualHours: preview.actualHours || 0
+                };
+            } catch (err) {
+                console.warn(`⚠️ Cannot fetch status for order ${order.orderId}:`, err);
+                // Fallback to original status
+                statusMap[order.orderId] = {
+                    status: order.status,
+                    remainingAmount: 0,
+                    penaltyFee: 0,
+                    actualHours: 0
+                };
+            }
+        }
+
+        setOrderStatuses(statusMap);
+        console.log('✅ Order statuses loaded:', statusMap);
+    };
 
     const loadMyBookings = async () => {
         try {
@@ -121,6 +151,10 @@ const MyBookingsPage = () => {
 
                 setBookings(sortedOrders);
                 console.log('✅ [MyBookings] Loaded bookings with vehicle info:', sortedOrders.length, 'orders');
+
+                // ✅ Lấy status chi tiết từ preview-return API cho mỗi order
+                await fetchOrderStatuses(sortedOrders);
+
             } catch (vehicleErr) {
                 console.error('⚠️ [MyBookings] Failed to load vehicle details:', vehicleErr);
                 // Fallback: Vẫn hiển thị orders nhưng không có thông tin xe
@@ -131,6 +165,9 @@ const MyBookingsPage = () => {
                 });
                 setBookings(sortedOrders);
                 console.log('[MyBookings] Loaded bookings (without vehicle details):', sortedOrders.length, 'orders');
+
+                // ✅ Lấy status chi tiết
+                await fetchOrderStatuses(sortedOrders);
             }
         } catch (err) {
             console.error('[MyBookings] Unexpected error:', err);
@@ -213,6 +250,49 @@ const MyBookingsPage = () => {
     const handlePayment = (orderId) => {
         console.log('Navigating to payment page for order:', orderId);
         navigate(`/payment/${orderId}`);
+    };
+
+    // ✅ Thanh toán phần còn lại cho AWAIT_FINAL
+    const handleFinalPayment = async (orderId) => {
+        try {
+            const orderStatus = orderStatuses[orderId];
+            if (!orderStatus || orderStatus.remainingAmount <= 0) {
+                alert('Không có số tiền cần thanh toán!');
+                return;
+            }
+
+            console.log('💰 Processing final payment for order:', orderId);
+            console.log('Amount to pay:', orderStatus.remainingAmount);
+
+            // Gọi VNPay payment API
+            const paymentData = {
+                orderId: orderId,
+                amount: orderStatus.remainingAmount,
+                returnUrl: window.location.origin + '/payment-callback'
+            };
+
+            // TODO: Call your VNPay API here
+            // const response = await paymentService.createPayment(paymentData);
+            // window.location.href = response.paymentUrl;
+
+            // Temporary: Navigate to payment page
+            navigate(`/payment/${orderId}`, {
+                state: {
+                    isFinalPayment: true,
+                    remainingAmount: orderStatus.remainingAmount
+                }
+            });
+
+        } catch (err) {
+            console.error('❌ Final payment error:', err);
+            alert('Không thể xử lý thanh toán: ' + err.message);
+        }
+    };
+
+    // ✅ Mở trang feedback cho COMPLETED
+    const handleFeedback = (orderId) => {
+        console.log('📝 Opening feedback for order:', orderId);
+        navigate('/feedback', { state: { orderId } });
     };
 
     const handleCancelOrder = (orderId) => {
@@ -310,7 +390,7 @@ const MyBookingsPage = () => {
         <div className="my-bookings-page">
             <div className="bookings-container">
                 <div className="page-header">
-                    <h1>📋 Đơn Đặt Xe Của Tôi</h1>
+                    <h1>Đơn Đặt Xe Của Tôi</h1>
                     <p className="subtitle">
                         Tổng số đơn: <strong>{bookings.length}</strong>
                     </p>
@@ -452,55 +532,153 @@ const MyBookingsPage = () => {
                                             Xem chi tiết
                                         </button>
 
-                                        {['PENDING', 'PENDING_DEPOSIT'].includes(booking.status) && (
-                                            <>
-                                                <button
-                                                    onClick={() => handlePayment(booking.orderId)}
-                                                    className="btn-payment"
-                                                    style={{
-                                                        background: '#10b981',
-                                                        color: 'white',
-                                                        border: 'none',
-                                                        padding: '10px 20px',
-                                                        borderRadius: '8px',
-                                                        fontSize: '14px',
-                                                        fontWeight: '600',
-                                                        cursor: 'pointer'
-                                                    }}
-                                                >
-                                                    Đặt Cọc
-                                                </button>
-                                                <button
-                                                    onClick={() => handleCancelOrder(booking.orderId)}
-                                                    className="btn-cancel"
-                                                    style={{
-                                                        background: '#ef4444',
-                                                        color: 'white',
-                                                        border: 'none',
-                                                        padding: '10px 20px',
-                                                        borderRadius: '8px',
-                                                        fontSize: '14px',
-                                                        fontWeight: '600',
-                                                        cursor: 'pointer'
-                                                    }}
-                                                >
-                                                    Hủy
-                                                </button>
-                                            </>
-                                        )}
+                                        {/* ✅ Check status từ preview-return API */}
+                                        {(() => {
+                                            const orderStatus = orderStatuses[booking.orderId];
+                                            const currentStatus = orderStatus?.status || booking.status;
 
-                                        {['DEPOSITED', 'CONFIRMED', 'PAID'].includes(booking.status) && (
-                                            <span style={{
-                                                color: '#10b981',
-                                                fontWeight: '600',
-                                                padding: '10px 16px',
-                                                background: '#d1fae5',
-                                                borderRadius: '8px',
-                                                fontSize: '14px'
-                                            }}>
-                                                Đã đặt cọc - Chờ nhận xe
-                                            </span>
-                                        )}
+                                            // RENTAL - Đang thuê, không cho thuê xe khác
+                                            if (currentStatus === 'RENTAL') {
+                                                return (
+                                                    <span style={{
+                                                        color: '#3b82f6',
+                                                        fontWeight: '600',
+                                                        padding: '10px 16px',
+                                                        background: '#dbeafe',
+                                                        borderRadius: '8px',
+                                                        fontSize: '14px'
+                                                    }}>
+                                                        🚗 Đang thuê - Không thể đặt xe khác
+                                                    </span>
+                                                );
+                                            }
+
+                                            // AWAIT_FINAL - Cần thanh toán số tiền còn lại
+                                            if (currentStatus === 'AWAIT_FINAL' && orderStatus?.remainingAmount > 0) {
+                                                return (
+                                                    <>
+                                                        <span style={{
+                                                            color: '#f59e0b',
+                                                            fontWeight: '600',
+                                                            padding: '10px 16px',
+                                                            background: '#fef3c7',
+                                                            borderRadius: '8px',
+                                                            fontSize: '14px'
+                                                        }}>
+                                                            💰 Còn lại: {orderStatus.remainingAmount.toLocaleString()} VND
+                                                        </span>
+                                                        <button
+                                                            onClick={() => handleFinalPayment(booking.orderId)}
+                                                            style={{
+                                                                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                                                                color: 'white',
+                                                                border: 'none',
+                                                                padding: '10px 20px',
+                                                                borderRadius: '8px',
+                                                                fontSize: '14px',
+                                                                fontWeight: '600',
+                                                                cursor: 'pointer',
+                                                                transition: 'all 0.2s'
+                                                            }}
+                                                        >
+                                                            Thanh toán ngay
+                                                        </button>
+                                                    </>
+                                                );
+                                            }
+
+                                            // COMPLETED - Hiện button Feedback
+                                            if (currentStatus === 'COMPLETED') {
+                                                return (
+                                                    <>
+                                                        <span style={{
+                                                            color: '#10b981',
+                                                            fontWeight: '600',
+                                                            padding: '10px 16px',
+                                                            background: '#d1fae5',
+                                                            borderRadius: '8px',
+                                                            fontSize: '14px'
+                                                        }}>
+                                                            ✅ Hoàn thành
+                                                        </span>
+                                                        <button
+                                                            onClick={() => handleFeedback(booking.orderId)}
+                                                            style={{
+                                                                background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                                                                color: 'white',
+                                                                border: 'none',
+                                                                padding: '10px 20px',
+                                                                borderRadius: '8px',
+                                                                fontSize: '14px',
+                                                                fontWeight: '600',
+                                                                cursor: 'pointer',
+                                                                transition: 'all 0.2s'
+                                                            }}
+                                                        >
+                                                            📝 Đánh giá
+                                                        </button>
+                                                    </>
+                                                );
+                                            }
+
+                                            // PENDING, PENDING_DEPOSIT - Đặt cọc hoặc hủy
+                                            if (['PENDING', 'PENDING_DEPOSIT'].includes(currentStatus)) {
+                                                return (
+                                                    <>
+                                                        <button
+                                                            onClick={() => handlePayment(booking.orderId)}
+                                                            className="btn-payment"
+                                                            style={{
+                                                                background: '#10b981',
+                                                                color: 'white',
+                                                                border: 'none',
+                                                                padding: '10px 20px',
+                                                                borderRadius: '8px',
+                                                                fontSize: '14px',
+                                                                fontWeight: '600',
+                                                                cursor: 'pointer'
+                                                            }}
+                                                        >
+                                                            Đặt Cọc
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleCancelOrder(booking.orderId)}
+                                                            className="btn-cancel"
+                                                            style={{
+                                                                background: '#ef4444',
+                                                                color: 'white',
+                                                                border: 'none',
+                                                                padding: '10px 20px',
+                                                                borderRadius: '8px',
+                                                                fontSize: '14px',
+                                                                fontWeight: '600',
+                                                                cursor: 'pointer'
+                                                            }}
+                                                        >
+                                                            Hủy
+                                                        </button>
+                                                    </>
+                                                );
+                                            }
+
+                                            // DEPOSITED, CONFIRMED, PAID - Chờ nhận xe
+                                            if (['DEPOSITED', 'CONFIRMED', 'PAID'].includes(currentStatus)) {
+                                                return (
+                                                    <span style={{
+                                                        color: '#10b981',
+                                                        fontWeight: '600',
+                                                        padding: '10px 16px',
+                                                        background: '#d1fae5',
+                                                        borderRadius: '8px',
+                                                        fontSize: '14px'
+                                                    }}>
+                                                        Đã đặt cọc - Chờ nhận xe
+                                                    </span>
+                                                );
+                                            }
+
+                                            return null;
+                                        })()}
                                     </div>
 
                                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>

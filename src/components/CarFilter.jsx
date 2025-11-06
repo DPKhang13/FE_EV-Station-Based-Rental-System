@@ -271,7 +271,7 @@ const CarFilter = ({ selectedBranch }) => {
                             boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                         }}>
                             <label style={{ fontWeight: 600, marginBottom: 12, display: 'block', fontSize: 18, color: '#1f2937' }}>
-                                🎨 Lọc theo màu sắc:
+                                Chọn Màu
                             </label>
                             <select
                                 value={selectedColors[0] || ''}

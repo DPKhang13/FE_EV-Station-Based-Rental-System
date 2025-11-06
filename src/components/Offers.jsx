@@ -82,7 +82,7 @@ const Offers = () => {
                 <div id="4-seater-cars" className="offers-category-section">
                     <div className="offers-big-card">
                         <div className="category-header">
-                            <h3 className="category-title">🚗 Xe 4 Chỗ</h3>
+                            <h3 className="category-title">XE 4 CHỖ</h3>
                             <p className="category-description">Hoàn hảo cho gia đình nhỏ hoặc du khách cá nhân</p>
                         </div>
 
@@ -160,7 +160,7 @@ const Offers = () => {
                 <div id="7-seater-cars" className="offers-category-section">
                     <div className="offers-big-card">
                         <div className="category-header">
-                            <h3 className="category-title">🚙 Xe 7 Chỗ</h3>
+                            <h3 className="category-title">XE 7 CHỖ</h3>
                             <p className="category-description">Lý tưởng cho gia đình lớn hoặc nhóm đông người</p>
                         </div>
 

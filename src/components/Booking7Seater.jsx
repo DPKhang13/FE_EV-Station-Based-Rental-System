@@ -236,7 +236,7 @@ const Booking7Seater = () => {
                         {/* Color Filter - Color Boxes */}
                         {!preSelectedCar && availableColors.length > 0 && (
                             <div className="form-group">
-                                <label>🎨 Lọc theo màu sắc</label>
+                                <label>Chọn Màu</label>
                                 <div style={{
                                     display: 'flex',
                                     gap: '12px',
@@ -336,11 +336,6 @@ const Booking7Seater = () => {
                                     </option>
                                 ))}
                             </select>
-                            {selectedColor && (
-                                <small style={{ color: '#dc2626', fontSize: '12px', display: 'block', marginTop: '4px' }}>
-                                    Đang lọc xe màu: {selectedColor}
-                                </small>
-                            )}
                         </div>
 
                         <div className="form-group">

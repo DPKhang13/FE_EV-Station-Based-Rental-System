@@ -55,7 +55,7 @@ const ListCarPage = () => {
             <h2 style={{ marginBottom: 20, fontSize: 32, fontWeight: 700 }}>Danh sách xe</h2>
             {selectedBranch && !loading && (
                 <p style={{ fontSize: 18, color: '#dc2626', fontWeight: 600, marginBottom: 40 }}>
-                    📍 {branchName}
+                    {branchName}
                 </p>
             )}
             <CarFilter selectedBranch={selectedBranch} />

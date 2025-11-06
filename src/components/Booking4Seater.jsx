@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useVehicles } from '../hooks/useVehicles';
 import { AuthContext } from '../context/AuthContext';
 import { validateVehicleForBooking } from '../utils/vehicleValidator';
+import { orderService } from '../services';
 import './Booking4Seater.css';
 
 // Import car images by color
@@ -45,6 +46,8 @@ const Booking4Seater = () => {
     const [selectedCar, setSelectedCar] = useState(preSelectedCar || null);
     const [submitting, setSubmitting] = useState(false);
     const [selectedColor, setSelectedColor] = useState('');
+    const [hasActiveRental, setHasActiveRental] = useState(false);
+    const [checkingRental, setCheckingRental] = useState(true);
 
     const [formData, setFormData] = useState({
         startTime: '',
@@ -77,6 +80,49 @@ const Booking4Seater = () => {
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'instant' });
     }, []);
+
+    // ✅ Check if user has active RENTAL order
+    useEffect(() => {
+        const checkActiveRental = async () => {
+            try {
+                setCheckingRental(true);
+                const orders = await orderService.getMyOrders();
+
+                if (!Array.isArray(orders)) {
+                    setCheckingRental(false);
+                    return;
+                }
+
+                // Check each order's status using preview-return API
+                for (const order of orders) {
+                    try {
+                        const preview = await orderService.getReturnPreview(order.orderId);
+                        if (preview.status === 'RENTAL') {
+                            setHasActiveRental(true);
+                            console.log('⚠️ User has active RENTAL order:', order.orderId);
+                            break;
+                        }
+                    } catch (err) {
+                        // If preview fails, fallback to order status
+                        if (order.status === 'RENTAL') {
+                            setHasActiveRental(true);
+                            break;
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('❌ Error checking active rental:', err);
+            } finally {
+                setCheckingRental(false);
+            }
+        };
+
+        if (user) {
+            checkActiveRental();
+        } else {
+            setCheckingRental(false);
+        }
+    }, [user]);
 
     const handleChange = (e) => {
         setFormData({
@@ -237,6 +283,60 @@ const Booking4Seater = () => {
         );
     }
 
+    // ✅ Show blocking message if user has active RENTAL
+    if (checkingRental) {
+        return (
+            <div className="booking-container">
+                <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+                    <div className="spinner" style={{ margin: '0 auto 20px' }}></div>
+                    <p>Đang kiểm tra trạng thái đặt xe...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (hasActiveRental) {
+        return (
+            <div className="booking-container">
+                <div style={{
+                    maxWidth: '600px',
+                    margin: '60px auto',
+                    padding: '40px',
+                    background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+                    borderRadius: '20px',
+                    textAlign: 'center',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
+                }}>
+                    <div style={{ fontSize: '64px', marginBottom: '20px' }}>🚗</div>
+                    <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#92400e', marginBottom: '16px' }}>
+                        Bạn đang có chuyến thuê xe
+                    </h2>
+                    <p style={{ fontSize: '16px', color: '#78350f', marginBottom: '24px', lineHeight: '1.6' }}>
+                        Bạn hiện đang có một chuyến thuê xe đang hoạt động.
+                        Vui lòng hoàn thành hoặc trả xe trước khi đặt xe mới.
+                    </p>
+                    <button
+                        onClick={() => navigate('/my-bookings')}
+                        style={{
+                            padding: '14px 32px',
+                            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '12px',
+                            fontSize: '16px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            boxShadow: '0 4px 12px rgba(245, 158, 11, 0.4)'
+                        }}
+                    >
+                        Xem đơn đặt xe
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="booking-container">
             <h1 className="booking-title">Đặt Xe 4 Chỗ</h1>
@@ -248,7 +348,7 @@ const Booking4Seater = () => {
                         {/* Color Filter - Color Boxes */}
                         {!preSelectedCar && availableColors.length > 0 && (
                             <div className="form-group">
-                                <label>🎨 Lọc theo màu sắc</label>
+                                <label>Chọn Màu</label>
                                 <div style={{
                                     display: 'flex',
                                     gap: '12px',
@@ -348,11 +448,7 @@ const Booking4Seater = () => {
                                     </option>
                                 ))}
                             </select>
-                            {selectedColor && (
-                                <small style={{ color: '#dc2626', fontSize: '12px', display: 'block', marginTop: '4px' }}>
-                                    Đang lọc xe màu: {selectedColor}
-                                </small>
-                            )}
+
                         </div>
 
                         <div className="form-group">

@@ -17,10 +17,10 @@ const Hero = () => {
                         XE HƠI ĐIỆN CỦA CHÚNG TÔI ĐÁP ỨNG HOÀN TOÀN TIÊU CHÍ <span className="sigma-highlight">SIGMA</span>
                     </p>
                     <ul className="sigma-list">
-                        <li><span className="highlight-letter">S</span>iêu tiết kiệm năng lượng</li>
-                        <li>Vận hành êm á<span className="highlight-letter">I</span></li>
-                        <li>Khôn<span className="highlight-letter">G</span> lo trục trặc</li>
-                        <li>Bảo vệ <span className="highlight-letter">M</span>ôi trường</li>
+                        <li><span className="highlight-letter">S</span>iêu đẳng cấp khi so với xe của Ronaldo</li>
+                        <li>Vận hành trơn tru êm á<span className="highlight-letter">I</span></li>
+                        <li>Khôn<span className="highlight-letter">G</span> có 1 tí nổi lo trục trặc</li>
+                        <li>Bảo vệ <span className="highlight-letter">M</span>ôi trường khỏi ô nhiễm</li>
                         <li><span className="highlight-letter">A</span>n toàn tuyệt đối</li>
                     </ul>
                 </div>

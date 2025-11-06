@@ -78,27 +78,48 @@ export const orderService = {
      * Return - Trả xe
      * POST /api/order/{orderId}/return
      */
-  return: async (orderId, returnData) => {
-  try {
-    const data = await api.post(`/order/${orderId}/return`, returnData);
-    console.log("✅ [orderService.return] Kết quả API:", data);
-    return data;
-  } catch (error) {
-    console.error("❌ [orderService.return] Lỗi:", error);
-    throw error;
-  }
-},
+    return: async (orderId, returnData) => {
+        try {
+            const res = await api.post(`/order/${orderId}/return`, returnData);
+            const data = res?.data ?? res;
+            console.log("✅ [orderService.return] Kết quả API:", data);
+            return data;
+        } catch (error) {
+            console.error("❌ [orderService.return] Lỗi:", error);
+            throw error;
+        }
+    },
 
- get: async (orderId) => {
-    try {
-          const res= await api.get(`/order/${orderId}/preview-return`);
-        const data = res?.data ?? res;
-        console.log("✅ [orderService.get] Kết quả API:", data);
-        return data;    
-    } catch (error) {
-        console.error("❌ [orderService.get] Lỗi:", error);
-        throw error;
-    }
+    /**
+     * Get order by ID with preview-return data
+     * GET /api/order/{orderId}/preview-return
+     */
+    get: async (orderId) => {
+        try {
+            const res = await api.get(`/order/${orderId}/preview-return`);
+            const data = res?.data ?? res;
+            console.log("✅ [orderService.get] Kết quả API:", data);
+            return data;
+        } catch (error) {
+            console.error("❌ [orderService.get] Lỗi:", error);
+            throw error;
+        }
+    },
+
+    /**
+     * Get order return preview với status và remainingAmount
+     * GET /api/order/{orderId}/preview-return
+     */
+    getReturnPreview: async (orderId) => {
+        try {
+            const res = await api.get(`/order/${orderId}/preview-return`);
+            const data = res?.data ?? res;
+            console.log(`✅ [orderService.getReturnPreview] Order ${orderId}:`, data);
+            return data;
+        } catch (error) {
+            console.error(`❌ [orderService.getReturnPreview] Order ${orderId} error:`, error);
+            throw error;
+        }
     },
 
 };

@@ -236,9 +236,9 @@ const LocationSelect = () => {
                 }}>
                     <h3 style={{ marginBottom: 16 }}>✅ Chi nhánh gần bạn nhất</h3>
                     <h4 style={{ fontSize: 20, marginBottom: 12 }}>{nearestLocation.name}</h4>
-                    <p><strong>📍 Địa chỉ:</strong> {nearestLocation.address}</p>
-                    <p><strong>📞 Điện thoại:</strong> {nearestLocation.phone}</p>
-                    <p style={{ marginTop: 8 }}><strong>🚗 Khoảng cách:</strong> ~{nearestLocation.distance} km</p>
+                    <p><strong> Địa chỉ:</strong> {nearestLocation.address}</p>
+                    <p><strong> Điện thoại:</strong> {nearestLocation.phone}</p>
+                    <p style={{ marginTop: 8 }}><strong> Khoảng cách:</strong> ~{nearestLocation.distance} km</p>
                 </div>
             )}
 
@@ -321,7 +321,7 @@ const LocationSelect = () => {
                                 color: isSelected ? '#92400e' : '#333',
                                 fontWeight: isSelected ? 600 : 400
                             }}>
-                                📞 {location.phone}
+                                {location.phone}
                             </p>
 
                             <button
