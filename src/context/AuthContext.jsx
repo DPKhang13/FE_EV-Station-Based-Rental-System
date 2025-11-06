@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useState, useEffect } from "react";
 import axios from "axios";
 
@@ -7,23 +6,26 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("accessToken") || null);
-  const [loading, setLoading] = useState(true); // ✅ Add loading state
+  const [loading, setLoading] = useState(true);
 
-  // ✅ Clear localStorage on app start - Always start fresh
+  // ✅ Không xóa session nữa — thay vào đó load lại thông tin từ localStorage
   useEffect(() => {
-    // Clear all session data when app starts
-    localStorage.removeItem("user");
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("role");
+    const savedToken = localStorage.getItem("accessToken");
+    const savedUser = localStorage.getItem("user");
 
-    setUser(null);
-    setToken(null);
+    if (savedToken && savedUser) {
+      setToken(savedToken);
+      setUser(JSON.parse(savedUser));
+      axios.defaults.headers.common["Authorization"] = `Bearer ${savedToken}`;
+      console.log("🔐 Session restored:", JSON.parse(savedUser));
+    } else {
+      console.log("🚫 No session found");
+    }
+
     setLoading(false);
-
-    console.log("🔄 Session cleared - Starting fresh");
   }, []);
 
-  // 🔹 Thiết lập token mặc định cho axios
+  // 🔹 Tự động thêm token vào axios
   useEffect(() => {
     if (token) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -32,7 +34,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token]);
 
-  // 🔹 Hàm đăng nhập
+  // 🔹 Đăng nhập
   const login = (data) => {
     const userData = {
       userId: data.userId || data.customerId || data.id,
@@ -54,14 +56,14 @@ export const AuthProvider = ({ children }) => {
     console.log("✅ User logged in:", userData);
   };
 
-  // 🔹 Hàm đăng xuất
+  // 🔹 Đăng xuất
   const logout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("role");
     localStorage.removeItem("user");
     setToken(null);
     setUser(null);
-    console.log("✅ User logged out");
+    console.log("👋 User logged out");
   };
 
   return (

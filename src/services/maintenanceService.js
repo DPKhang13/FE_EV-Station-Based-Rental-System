@@ -25,7 +25,9 @@ export const maintenanceService = {
      createIncident: async (incidentData) => {
     return await api.post('/incidents/create', incidentData);
   },
-
+ getAllIncidents: async () => {
+    return await api.get('/incidents/getAllList');
+  },
   /**
    * 🛠️ Tạo mới yêu cầu bảo trì (maintenance)
    * POST /api/maintenances/create

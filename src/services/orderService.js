@@ -80,10 +80,7 @@ export const orderService = {
      */
   return: async (orderId, returnData) => {
   try {
-    const res = await api.post(`/order/${orderId}/return`, returnData);
-    // ✅ Nếu axios đã có interceptor, res là data thật
-    // ✅ Nếu không có interceptor, lấy res.data
-    const data = res?.data ?? res;
+    const data = await api.post(`/order/${orderId}/return`, returnData);
     console.log("✅ [orderService.return] Kết quả API:", data);
     return data;
   } catch (error) {
@@ -91,6 +88,7 @@ export const orderService = {
     throw error;
   }
 },
+
  get: async (orderId) => {
     try {
           const res= await api.get(`/order/${orderId}/preview-return`);

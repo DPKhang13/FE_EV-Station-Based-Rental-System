@@ -11,6 +11,7 @@ import PopupDatTruoc from "../components/staff/PopupDatTruoc";
 import PopupNhanXe from "../components/staff/PopUpNhanXe";
 import PopupXacThuc from "../components/staff/PopUpXacThuc";
 import PopupDaXacThuc from "../components/staff/PopUpDaXacThuc";
+import PopupNhanChecking from "../components/staff/PopupNhanChecking";
 
 const GiaoTraXe = () => {
   const { user } = useContext(AuthContext);
@@ -105,7 +106,7 @@ const GiaoTraXe = () => {
     switch (xe.trangThai) {
       case "Có sẵn":
         setSelectedVehicle(xe);
-        setPopupType("xacthuc"); // có thể là popup cho thuê hoặc xác thực giao
+        setPopupType("xacthuc");
         break;
 
       case "Đã đặt trước":
@@ -133,9 +134,18 @@ const GiaoTraXe = () => {
         setPopupType("daXacThuc");
         break;
 
-      case "Đang kiểm tra":
-        alert("🧾 Xe này đang được kiểm tra, vui lòng chờ xác nhận!");
+      case "Đang kiểm tra": {
+        const relatedOrder = orders.find(
+          (o) => Number(o.vehicleId) === Number(xe.id)
+        );
+        if (!relatedOrder) {
+          alert("⚠️ Không tìm thấy đơn hàng liên quan đến xe này!");
+          return;
+        }
+        setSelectedVehicle({ ...xe, order: relatedOrder });
+        setPopupType("nhanChecking");
         break;
+      }
 
       default:
         break;
@@ -227,19 +237,33 @@ const GiaoTraXe = () => {
                 {xe.trangThai}
               </p>
 
-         {/* Nút hành động */}
-{xe.trangThai === "Đang cho thuê" && (
-  <button className="btn-action" onClick={() => handleVehicleAction(xe)}>
-    Nhận xe trả
-  </button>
-)}
+              {/* Nút hành động */}
+              {xe.trangThai === "Đang cho thuê" && (
+                <button
+                  className="btn-action"
+                  onClick={() => handleVehicleAction(xe)}
+                >
+                  Nhận xe trả
+                </button>
+              )}
 
-{xe.trangThai === "Đã đặt trước" && (
-  <button className="btn-action" onClick={() => handleVehicleAction(xe)}>
-    Đang chờ bàn giao
-  </button>
-)}
+              {xe.trangThai === "Đã đặt trước" && (
+                <button
+                  className="btn-action"
+                  onClick={() => handleVehicleAction(xe)}
+                >
+                  Đang chờ bàn giao
+                </button>
+              )}
 
+              {xe.trangThai === "Đang kiểm tra" && (
+                <button
+                  className="btn-action checking"
+                  onClick={() => handleVehicleAction(xe)}
+                >
+                  Nhận Checking
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -257,6 +281,12 @@ const GiaoTraXe = () => {
       )}
       {popupType === "daXacThuc" && (
         <PopupDaXacThuc
+          xe={selectedVehicle}
+          onClose={() => setPopupType(null)}
+        />
+      )}
+      {popupType === "nhanChecking" && (
+        <PopupNhanChecking
           xe={selectedVehicle}
           onClose={() => setPopupType(null)}
         />

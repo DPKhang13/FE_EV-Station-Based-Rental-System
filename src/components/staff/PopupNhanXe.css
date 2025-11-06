@@ -171,3 +171,124 @@
   background: #a71d2a;
 }
 
+.btn-check {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  margin-top: 10px;
+}
+
+.btn-check:hover {
+  background-color: #0056b3;
+}
+/* Nút kiểm tra xe */
+.btn-check {
+  background-color: #0d6efd; /* xanh chuẩn Bootstrap */
+  color: #fff;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  margin-top: 12px;
+  width: 100%;
+  transition: all 0.25s ease-in-out;
+  box-shadow: 0 2px 6px rgba(13, 110, 253, 0.3);
+}
+
+.btn-check:hover {
+  background-color: #0b5ed7;
+  box-shadow: 0 4px 10px rgba(13, 110, 253, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-check:active {
+  background-color: #0a58ca;
+  transform: translateY(0);
+}
+
+/* Thêm hiệu ứng icon lắc nhẹ */
+.btn-check:hover::before {
+  animation: checkIcon 0.5s ease-in-out;
+}
+
+@keyframes checkIcon {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(3px); }
+  50% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+  100% { transform: translateX(0); }
+}
+.btn-check {
+  background-color: #0d6efd;
+  color: white;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  margin-top: 12px;
+  width: 100%;
+  transition: all 0.25s ease-in-out;
+  box-shadow: 0 2px 6px rgba(13, 110, 253, 0.3);
+}
+
+.btn-check:hover {
+  background-color: #0b5ed7;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(13, 110, 253, 0.4);
+}
+
+.btn-check:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+/* =============================
+   🔧 Style cho form báo cáo sự cố
+   ============================= */
+.input-select,
+.input-textarea,
+.input-text {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.input-textarea {
+  resize: vertical;
+  min-height: 70px;
+}
+
+.btn-pay {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  width: 100%;
+  cursor: pointer;
+  transition: all 0.25s ease-in-out;
+}
+
+.btn-pay:hover {
+  background-color: #b02a37;
+}
+
