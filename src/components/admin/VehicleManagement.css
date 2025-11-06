@@ -12,6 +12,16 @@
     margin-bottom: 30px;
 }
 
+.vehicle-management .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    border: 2px solid #000000;
+    padding: 20px;
+    border-radius: 8px;
+}
+
 .vehicle-management h1 {
     font-size: 28px;
     margin: 0;
@@ -67,8 +77,10 @@
     vertical-align: middle;
 }
 
+/* Disable hover effect completely */
 .vehicle-table tbody tr:hover {
-    background: #f9fafb;
+    background: transparent !important;
+    background-color: transparent !important;
 }
 
 .vehicle-table img {
@@ -264,11 +276,71 @@
     grid-column: 1 / -1;
 }
 
-/* Buttons */
-.btn-cancel,
-.btn-submit,
-.btn-edit,
-.btn-delete {
+.form-group label {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.form-group textarea {
+    resize: vertical;
+}
+
+/* Color selector with visual indicators */
+.color-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.color-option::before {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+    vertical-align: middle;
+}
+
+select option[value="White"]::before { background-color: white; }
+select option[value="Black"]::before { background-color: black; }
+select option[value="Silver"]::before { background-color: silver; }
+select option[value="Red"]::before { background-color: red; }
+select option[value="Blue"]::before { background-color: blue; }
+select option[value="Gray"]::before { background-color: gray; }
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.btn-cancel {
+    background: #6b7280;
+    color: white;
+    padding: 10px 20px;
     border: none;
     border-radius: 6px;
     font-size: 14px;

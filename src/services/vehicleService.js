@@ -139,14 +139,6 @@ const mapStatus = (apiStatus) => {
 };
 
 /**
- * Lấy image phù hợp dựa vào số ghế
- */
-const getVehicleImage = (seatCount) => {
-    // Use imported images (ES6 style)
-    return seatCount <= 5 ? image4Seater : image7Seater;
-};
-
-/**
  * Lấy và transform tất cả xe
  */
 export const fetchAndTransformVehicles = async () => {
@@ -201,6 +193,40 @@ export const createVehicle = async (vehicleData) => {
         return data;
     } catch (error) {
         console.error('❌ [API] Lỗi khi tạo xe:', error);
+        throw error;
+    }
+};
+
+/**
+ * Xóa xe
+ * @param {number} vehicleId - ID của xe cần xóa
+ * @returns {Promise<void>}
+ */
+export const deleteVehicle = async (vehicleId) => {
+    try {
+        const token = localStorage.getItem('accessToken');
+
+        console.log('🗑️ [API] Đang xóa xe ID:', vehicleId);
+
+        const response = await fetch(`${API_BASE_URL}/vehicles/deleted/${vehicleId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        console.log('📡 [API] Response status:', response.status);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ [API] Error response:', errorText);
+            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        }
+
+        console.log('✅ [API] Xe đã được xóa thành công');
+        return true;
+    } catch (error) {
+        console.error('❌ [API] Lỗi khi xóa xe:', error);
         throw error;
     }
 };
@@ -286,41 +312,6 @@ export const updateVehicle = async (vehicleId, vehicleData) => {
 };
 
 /**
- * Xóa xe
- * @param {Number} vehicleId - ID của xe cần xóa
- * @returns {Promise<void>}
- */
-export const deleteVehicle = async (vehicleId) => {
-    try {
-        const token = localStorage.getItem('accessToken');
-
-        console.log('🚀 [API] Đang xóa xe:', vehicleId);
-
-        const response = await fetch(`${API_BASE_URL}/vehicles/delete/${vehicleId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
-        console.log('📡 [API] Response status:', response.status);
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('❌ [API] Error response:', errorText);
-            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
-        }
-
-        console.log('✅ [API] Xe đã được xóa');
-        return;
-    } catch (error) {
-        console.error('❌ [API] Lỗi khi xóa xe:', error);
-        throw error;
-    }
-};
-
-/**
  * Lấy lịch sử đặt xe theo vehicleId
  * @param {Number} vehicleId - ID của xe
  * @returns {Promise<Array>} Danh sách lịch sử đặt xe
@@ -363,9 +354,9 @@ const vehicleService = {
     transformVehicleData,
     fetchAndTransformVehicles,
     createVehicle,
+    deleteVehicle,
     getVehiclesByStation,
     updateVehicle,
-    deleteVehicle,
     getVehicleOrderHistory
 };
 
