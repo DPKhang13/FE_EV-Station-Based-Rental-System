@@ -4,7 +4,7 @@ export const adminService = {
  
 
     getStaffs: async () => {
-        return await api.get('/staffList/list');
+        return await api.get('/staffschedule/getlist/staff');
     }
 
 
