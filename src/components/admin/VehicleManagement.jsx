@@ -176,10 +176,10 @@ const VehicleManagement = () => {
     const handleDeleteVehicle = async (vehicle) => {
         // First confirmation
         const firstConfirm = window.confirm(
-            `⚠️ BẠN CÓ CHẮC CHẮN MUỐN XÓA XE NÀY?\n\n` +
-            `🚗 Tên xe: ${vehicle.vehicle_name}\n` +
-            `🔢 Biển số: ${vehicle.plate_number}\n` +
-            `🎨 Màu: ${vehicle.color}\n\n` +
+            `BẠN CÓ CHẮC CHẮN MUỐN XÓA XE NÀY?\n\n` +
+            `Tên xe: ${vehicle.vehicle_name}\n` +
+            `Biển số: ${vehicle.plate_number}\n` +
+            `Màu: ${vehicle.color}\n\n` +
             `Hành động này KHÔNG THỂ HOÀN TÁC!`
         );
 
@@ -190,7 +190,7 @@ const VehicleManagement = () => {
 
         // Second confirmation
         const secondConfirm = window.confirm(
-            `⚠️⚠️ XÁC NHẬN LẦN 2 ⚠️⚠️\n\n` +
+            `XÁC NHẬN LẦN 2\n\n` +
             `Bạn thực sự muốn xóa xe "${vehicle.vehicle_name}" (${vehicle.plate_number})?\n\n` +
             `Đây là xác nhận cuối cùng. Sau khi xóa, dữ liệu sẽ MẤT VĨNH VIỄN!`
         );
@@ -250,14 +250,13 @@ const VehicleManagement = () => {
     return (
         <div className="vehicle-management">
             <div className="header">
-                <h1>🚗 Quản lý xe</h1>
-                <button className="btn-add" onClick={handleAddVehicle}>+ Thêm xe mới</button>
+                <h1>QUẢN LÝ XE</h1>
             </div>
 
             <div className="search-bar">
                 <input
                     type="text"
-                    placeholder="🔍 Tìm kiếm theo tên, biển số, màu sắc..."
+                    placeholder=" Tìm kiếm theo tên, biển số, màu sắc..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -266,11 +265,11 @@ const VehicleManagement = () => {
             {/* Filters Section */}
             <div className="filters-section">
                 <div className="filter-header">
-                    <h3>🔍 Bộ lọc</h3>
+                    <h3> Bộ lọc</h3>
                     {(filters.colors.length > 0 || filters.seatCounts.length > 0 ||
                         filters.stations.length > 0 || filters.statuses.length > 0) && (
                             <button className="btn-clear-filters" onClick={clearFilters}>
-                                ✖️ Xóa bộ lọc
+                                Xóa bộ lọc
                             </button>
                         )}
                 </div>
@@ -278,7 +277,7 @@ const VehicleManagement = () => {
                 <div className="filters-grid">
                     {/* Color Filter */}
                     <div className="filter-group">
-                        <h4>🎨 Màu sắc</h4>
+                        <h4> Màu sắc</h4>
                         <div className="filter-options">
                             {getUniqueColors().map(color => (
                                 <label key={color} className="filter-checkbox">
@@ -295,7 +294,7 @@ const VehicleManagement = () => {
 
                     {/* Seat Count Filter */}
                     <div className="filter-group">
-                        <h4>💺 Số ghế</h4>
+                        <h4>Số ghế</h4>
                         <div className="filter-options">
                             {getUniqueSeatCounts().map(count => (
                                 <label key={count} className="filter-checkbox">
@@ -312,7 +311,7 @@ const VehicleManagement = () => {
 
                     {/* Station Filter */}
                     <div className="filter-group">
-                        <h4>📍 Điểm thuê</h4>
+                        <h4>Điểm thuê</h4>
                         <div className="filter-options">
                             {getUniqueStations().map(station => (
                                 <label key={station} className="filter-checkbox">
@@ -329,7 +328,7 @@ const VehicleManagement = () => {
 
                     {/* Status Filter */}
                     <div className="filter-group">
-                        <h4>📊 Trạng thái</h4>
+                        <h4>Trạng thái</h4>
                         <div className="filter-options">
                             {getAllStatuses().map(status => {
                                 const statusInfo = getStatusInfo(status);
@@ -434,7 +433,7 @@ const VehicleManagement = () => {
                                                     vehicle.battery_status >= 50 ? '#f59e0b' : '#ef4444',
                                                 fontWeight: '600'
                                             }}>
-                                                🔋 {vehicle.battery_status || 0}%
+                                                {vehicle.battery_status || 0}
                                             </span>
                                         </td>
                                         <td>{vehicle.range_km || 0} km</td>
@@ -449,14 +448,14 @@ const VehicleManagement = () => {
                                                 title="Chỉnh sửa thông tin xe"
                                                 onClick={() => handleEditVehicle(vehicle)}
                                             >
-                                                ✏️ Sửa
+                                                Sửa
                                             </button>
                                             <button
                                                 className="btn-delete"
                                                 title="Xóa xe khỏi hệ thống"
                                                 onClick={() => handleDeleteVehicle(vehicle)}
                                             >
-                                                🗑️ Xóa
+                                                Xóa
                                             </button>
                                         </td>
                                     </tr>
@@ -478,7 +477,7 @@ const VehicleManagement = () => {
                     alignItems: 'center'
                 }}>
                     <div>
-                        <strong>📊 Tổng số xe:</strong> {vehicles.length} xe
+                        <strong> Tổng số xe:</strong> {vehicles.length} xe
                         {searchTerm && <span> | Tìm thấy: {filteredVehicles.length} xe</span>}
                     </div>
                     <button
@@ -494,7 +493,7 @@ const VehicleManagement = () => {
                             fontWeight: '600'
                         }}
                     >
-                        🔄 Làm mới
+                        Làm mới
                     </button>
                 </div>
             )}
@@ -504,7 +503,7 @@ const VehicleManagement = () => {
                 <div className="modal-overlay" onClick={closeModals}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>{showEditModal ? '✏️ Chỉnh sửa xe' : '➕ Thêm xe mới'}</h2>
+                            <h2>{showEditModal ? ' Chỉnh sửa xe' : ' Thêm xe mới'}</h2>
                             <button className="modal-close" onClick={closeModals}>✖️</button>
                         </div>
 
@@ -677,7 +676,7 @@ const VehicleManagement = () => {
                                     Hủy
                                 </button>
                                 <button type="submit" className="btn-submit">
-                                    {showEditModal ? '💾 Lưu thay đổi' : '➕ Thêm xe'}
+                                    {showEditModal ? ' Lưu thay đổi' : 'Thêm xe'}
                                 </button>
                             </div>
                         </form>

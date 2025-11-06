@@ -491,8 +491,16 @@ const MyBookingsPage = () => {
                                     </div>
 
                                     <div className="detail-box">
-                                        <div className="detail-label">Thời Gian Thuê</div>
-                                        <div className="detail-value">{booking.plannedHours || 0} giờ</div>
+                                        <div className="detail-label">Ngày Đặt Xe</div>
+                                        <div className="detail-value">
+                                            {booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('vi-VN', {
+                                                hour: '2-digit',
+                                                minute: '2-digit',
+                                                day: '2-digit',
+                                                month: '2-digit',
+                                                year: 'numeric'
+                                            }) : 'N/A'}
+                                        </div>
                                     </div>
 
                                     {/* Hàng 2 - 3 cột */}
@@ -744,7 +752,7 @@ const MyBookingsPage = () => {
                                 </div>
                             </div>
 
-                            {/* Vehicle Info */}
+                            {/* Vehicle Details */}
                             <div className="detail-section">
                                 <h3>Thông tin xe</h3>
                                 <div className="detail-grid">
@@ -755,6 +763,30 @@ const MyBookingsPage = () => {
                                     <div className="detail-item">
                                         <span className="label">Biển số:</span>
                                         <span className="value">{selectedBooking.plateNumber || 'Đang cập nhật'}</span>
+                                    </div>
+                                    <div className="detail-item">
+                                        <span className="label">Màu sắc:</span>
+                                        <span className="value" style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px'
+                                        }}>
+                                            {selectedBooking.color || 'Đang cập nhật'}
+                                            {selectedBooking.color && (
+                                                <span style={{
+                                                    display: 'inline-block',
+                                                    width: '20px',
+                                                    height: '20px',
+                                                    borderRadius: '4px',
+                                                    border: '2px solid #ddd',
+                                                    backgroundColor: selectedBooking.color.toLowerCase()
+                                                }}></span>
+                                            )}
+                                        </span>
+                                    </div>
+                                    <div className="detail-item">
+                                        <span className="label">Trạm thuê:</span>
+                                        <span className="value">{selectedBooking.pickupStationId || 'Đang cập nhật'}</span>
                                     </div>
                                 </div>
                             </div>

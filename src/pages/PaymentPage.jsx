@@ -165,17 +165,17 @@ const PaymentPage = () => {
                 {/* Order Summary - Compact */}
                 <div className="payment-section order-summary-compact">
                     <h2>📋 Thông Tin Đơn Hàng</h2>
+                    <div className="order-id-row">
+                        <span className="compact-label">Mã đơn:</span>
+                        <span className="compact-value">{order.orderId}</span>
+                    </div>
                     <div className="compact-info-row">
-                        <div className="compact-item">
-                            <span className="compact-label">Mã đơn:</span>
-                            <span className="compact-value">{order.orderId}</span>
-                        </div>
                         <div className="compact-item">
                             <span className="compact-label">Tên xe:</span>
                             <span className="compact-value">{order.vehicleName || 'Đang cập nhật'}</span>
                         </div>
                         <div className="compact-item">
-                            <span className="compact-label">Thời gian:</span>
+                            <span className="compact-label">Số giờ thuê dự kiến:</span>
                             <span className="compact-value">{order.plannedHours} giờ</span>
                         </div>
                         <div className="compact-item total-price">
@@ -209,7 +209,13 @@ const PaymentPage = () => {
                             className={`method-card ${paymentMethod === 'VNPAY' ? 'selected' : ''}`}
                             onClick={() => setPaymentMethod('VNPAY')}
                         >
-                            <div className="method-icon">🏦</div>
+                            <div className="method-icon vnpay-icon">
+                                <img
+                                    src="https://vnpay.vn/s1/statics.vnpay.vn/2023/9/06ncktiwd6dc1694418196384.png"
+                                    alt="VNPay"
+                                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                                />
+                            </div>
                             <h3>VNPay</h3>
                             <p>Thanh toán trực tuyến qua cổng VNPay</p>
                             {paymentMethod === 'VNPAY' && (

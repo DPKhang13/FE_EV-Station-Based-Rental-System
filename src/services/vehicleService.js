@@ -167,11 +167,50 @@ export const fetchAndTransformVehicles = async () => {
     }
 };
 
+/**
+ * Tạo xe mới
+ * @param {Object} vehicleData - Dữ liệu xe cần tạo
+ * @returns {Promise<Object>} Xe vừa tạo
+ */
+export const createVehicle = async (vehicleData) => {
+    try {
+        const token = localStorage.getItem('accessToken');
+
+        console.log('🚀 [API] Đang tạo xe mới:', vehicleData);
+
+        const response = await fetch(`${API_BASE_URL}/vehicles/create`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(vehicleData)
+        });
+
+        console.log('📡 [API] Response status:', response.status);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ [API] Error response:', errorText);
+            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ [API] Xe đã được tạo:', data);
+
+        return data;
+    } catch (error) {
+        console.error('❌ [API] Lỗi khi tạo xe:', error);
+        throw error;
+    }
+};
+
 // Default export cho vehicleService object
 const vehicleService = {
     getVehicles,
     transformVehicleData,
-    fetchAndTransformVehicles
+    fetchAndTransformVehicles,
+    createVehicle
 };
 
 export default vehicleService;
