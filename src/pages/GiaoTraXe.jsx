@@ -17,55 +17,53 @@ const GiaoTraXe = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // 🔹 State
   const [currentTab, setCurrentTab] = useState("tatca");
   const [searchTerm, setSearchTerm] = useState("");
   const [vehicleList, setVehicleList] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [popupType, setPopupType] = useState(null);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
 
   /** ================================
-   * 🚀 Lấy dữ liệu khi có user đăng nhập
+   * 🚀 Lấy dữ liệu xe và đơn hàng
    * ================================ */
-  useEffect(() => {
+  const fetchData = async () => {
     if (!user) return;
     const stationId = user.stationId || 1;
 
-    const fetchData = async () => {
-      try {
-        setLoading(true);
+    try {
+      setLoading(true);
 
-        const vehicles = await vehicleService.fetchAndTransformVehicles();
-        const ordersRes = await orderService.getAll();
+      const vehicles = await vehicleService.fetchAndTransformVehicles();
+      const ordersRes = await orderService.getAll();
 
-        const vehiclesAtStation = vehicles
-          .filter((v) => Number(v.stationId) === Number(stationId))
-          .map((v) => ({
-            id: v.id || v.vehicleId,
-            ten: v.vehicle_name || v.vehicleName,
-            bienSo: v.plate_number || v.plateNumber,
-            pin: parseInt(v.battery_status?.replace("%", "") || "100"),
-            trangThai: formatStatus(v.status),
-            mau: v.color,
-            hang: v.brand,
-            nam: v.year_of_manufacture || v.year,
-            tram: v.stationName,
-            hinhAnh: v.image,
-          }))
-          .sort((a, b) => a.id - b.id);
+      const vehiclesAtStation = vehicles
+        .filter((v) => Number(v.stationId) === Number(stationId))
+        .map((v) => ({
+          id: v.id || v.vehicleId,
+          ten: v.vehicle_name || v.vehicleName,
+          bienSo: v.plate_number || v.plateNumber,
+          pin: parseInt(v.battery_status?.replace("%", "") || "100"),
+          trangThai: formatStatus(v.status),
+          mau: v.color,
+          hang: v.brand,
+          nam: v.year_of_manufacture || v.year,
+          tram: v.stationName,
+          hinhAnh: v.image,
+        }))
+        .sort((a, b) => a.id - b.id);
 
-        setVehicleList(vehiclesAtStation);
-        setOrders(Array.isArray(ordersRes?.data) ? ordersRes.data : ordersRes);
-      } catch (err) {
-        console.error("❌ Lỗi khi tải dữ liệu:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+      setVehicleList(vehiclesAtStation);
+      setOrders(Array.isArray(ordersRes?.data) ? ordersRes.data : ordersRes);
+    } catch (err) {
+      console.error("❌ Lỗi khi tải dữ liệu:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
   }, [user]);
 
@@ -289,6 +287,7 @@ const GiaoTraXe = () => {
         <PopupNhanChecking
           xe={selectedVehicle}
           onClose={() => setPopupType(null)}
+          onReload={fetchData} // ✅ callback reload
         />
       )}
     </div>

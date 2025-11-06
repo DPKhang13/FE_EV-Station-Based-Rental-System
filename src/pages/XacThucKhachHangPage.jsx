@@ -2,15 +2,15 @@ import React, { useState, useEffect } from "react";
 import { orderService, authService } from "../services";
 import "./XacThucKhachHang.css";
 import PopupXacThucHoSoCaNhan from "../components/staff/PopupXacThucHoSoCaNhan";
+import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 
-
 // 🔧 Định dạng thời gian
-const fmtVN = (d) =>
-  d ? new Date(d).toLocaleString("vi-VN") : "N/A";
+const fmtVN = (d) => (d ? new Date(d).toLocaleString("vi-VN") : "N/A");
 const fmtRange = (s, e) => `${fmtVN(s)} - ${fmtVN(e)}`;
 
 const XacThucKhachHangPage = () => {
+  const {user} = useContext(AuthContext)
   const [hoSoDatXe, setHoSoDatXe] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
@@ -24,26 +24,39 @@ const XacThucKhachHangPage = () => {
   const [verifyLoading, setVerifyLoading] = useState(false);
 
   // 📦 Lấy danh sách hồ sơ đặt xe
+ // 📦 Lấy danh sách hồ sơ đặt xe
+const fetchOrders = async () => {
+  try {
+    const res = await orderService.getPendingOrders();
+    const allOrders = res.data || res || [];
+
+    // ✅ Lọc theo trạm của nhân viên đang đăng nhập
+    const stationId = user?.stationId || 1; // fallback nếu chưa có
+    const filteredOrders = allOrders.filter(
+      (order) => Number(order.stationId) === Number(stationId)
+    );
+
+    setHoSoDatXe(filteredOrders);
+  } catch (err) {
+    console.error("❌ Lỗi tải hồ sơ:", err);
+    setHoSoDatXe([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const res = await orderService.getPendingOrders();
-        setHoSoDatXe(res.data || res || []);
-      } catch (err) {
-        console.error("❌ Lỗi tải hồ sơ:", err);
-        setHoSoDatXe([]);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchOrders();
   }, []);
 
   // 🔍 Lọc theo tên / sđt / mã đơn
-  const filteredDatXe = hoSoDatXe.filter((x) =>
-    [x.customerName, x.phone, x.orderId]
-      .some((f) => (f || "").toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredDatXe = hoSoDatXe.filter((x) => {
+  if (x.status === "COMPLETED") return false; // ẩn đơn hoàn tất
+  const term = searchTerm.toLowerCase();
+  return [x.customerName, x.phone, x.orderId]
+    .some((f) => (f || "").toLowerCase().includes(term));
+});
+
 
   // 🧾 Xem hồ sơ cá nhân chờ xác thực
   const handleOpenXacThuc = async (row) => {
@@ -84,7 +97,7 @@ const XacThucKhachHangPage = () => {
     if (!selectedRow?.userId) return;
     setVerifyLoading(true);
     try {
-      const res = await authService.verifyProfileByUserId(selectedRow.userId);
+      await authService.verifyProfileByUserId(selectedRow.userId);
       setHoSoDatXe((prev) =>
         prev.map((r) =>
           r.userId === selectedRow.userId
@@ -147,8 +160,10 @@ const XacThucKhachHangPage = () => {
                   ["COMPLETED", "RENTAL"].includes(row.status);
 
                 const deposit =
-                  row.depositAmount ??
-                  Math.round(Number(row.totalPrice || 0) * 0.3);
+                  row.depositAmount ?? Math.round(Number(row.totalPrice || 0) * 0.3);
+
+                // ✅ Xác định xem đã bàn giao hay chưa
+                const isDelivered = !!row.pickedUpAt || ["RENTAL", "Rented", "ON_RENT"].includes(row.status);
 
                 return (
                   <tr key={row.orderId}>
@@ -189,9 +204,9 @@ const XacThucKhachHangPage = () => {
                     </td>
 
                     <td>
-                      {row.status === "RENTAL" ? (
+                      {isDelivered ? (
                         <button className="btn-secondary" disabled>
-                          Đã bàn giao
+                          ✅ Đã bàn giao
                         </button>
                       ) : (
                         <>
