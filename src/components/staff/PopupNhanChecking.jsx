@@ -23,14 +23,23 @@ const PopupNhanChecking = ({ xe, onClose }) => {
   const [description, setDescription] = useState(() => localStorage.getItem("nhanChecking_description") || "");
   const [cost, setCost] = useState(() => localStorage.getItem("nhanChecking_cost") || "");
 
-  // -------------------- EFFECT: Lấy dữ liệu đơn hàng --------------------
+  // -------------------- Lấy dữ liệu đơn hàng --------------------
   const fetchOrderPreview = async () => {
-    const orderId = xe.order?.orderId || xe.orderId;
-    if (!orderId) return console.error("⚠️ Không có orderId hợp lệ:", xe);
+    const orderId =
+      xe?.order?.orderId ||
+      xe?.order?.order_id ||
+      xe?.orderId ||
+      xe?.order_id;
+
+    if (!orderId) {
+      console.error("⚠️ Không có orderId hợp lệ:", xe);
+      return;
+    }
 
     try {
       setLoading(true);
-      const { data } = await api.get(`/order/${orderId}/preview-return`);
+      const res = await api.get(`/order/${orderId}/preview-return`);
+      const data = res?.data ?? res;
       setOrderInfo(data);
       console.log("✅ [PopupNhanChecking] order preview:", data);
     } catch (err) {
@@ -41,17 +50,17 @@ const PopupNhanChecking = ({ xe, onClose }) => {
   };
 
   useEffect(() => {
-    fetchOrderPreview();
+    if (xe) fetchOrderPreview();
   }, [xe]);
 
-  // -------------------- EFFECT: Auto refresh khi chờ thanh toán --------------------
+  // -------------------- Auto refresh khi chờ thanh toán --------------------
   useEffect(() => {
     if (orderInfo?.status !== "AWAIT_FINAL") return;
-    const intervalId = setInterval(fetchOrderPreview, 5000);
+    const intervalId = setInterval(fetchOrderPreview, 10000);
     return () => clearInterval(intervalId);
   }, [orderInfo?.status]);
 
-  // -------------------- EFFECT: Lưu form tạm --------------------
+  // -------------------- Lưu form tạm --------------------
   useEffect(() => {
     localStorage.setItem("nhanChecking_severity", severity);
     localStorage.setItem("nhanChecking_description", description);
@@ -91,7 +100,12 @@ const PopupNhanChecking = ({ xe, onClose }) => {
 
   // -------------------- 💰 Gửi yêu cầu thanh toán --------------------
   const handleRequestPayment = async () => {
-    const orderId = xe.order?.orderId || xe.orderId;
+    const orderId =
+      xe?.order?.orderId ||
+      xe?.order?.order_id ||
+      xe?.orderId ||
+      xe?.order_id;
+
     if (!orderId) return alert("⚠️ Không tìm thấy orderId hợp lệ!");
 
     try {
@@ -101,8 +115,10 @@ const PopupNhanChecking = ({ xe, onClose }) => {
         processedBy: user?.userId || "unknown",
       };
 
-      const { data } = await orderService.return(orderId, payload);
+      const res = await orderService.return(orderId, payload);
+      const data = res?.data ?? res;
       console.log("✅ [PopupNhanChecking] API return thành công:", data);
+
       alert("✅ Yêu cầu thanh toán khách hàng đã được gửi thành công!");
       setDone(true);
       await fetchOrderPreview();
@@ -115,46 +131,70 @@ const PopupNhanChecking = ({ xe, onClose }) => {
   };
 
   // -------------------- 🚗 Hoàn tất nhận xe --------------------
-  const handleCompleteReceive = async () => {
-    try {
-      const today = new Date().toISOString().split("T")[0];
-      const { data } = await maintenanceService.getAllIncidents();
+ const handleCompleteReceive = async () => {
+  if (!orderInfo || orderInfo.status !== "COMPLETED") {
+    alert("⚠️ Đơn hàng chưa hoàn tất, không thể nhận xe!");
+    return;
+  }
 
-      const relatedIncidents = data.filter(
-        (i) =>
-          (i.vehicleId === xe.id || i.vehicleId === xe.vehicleId) &&
-          i.occurredOn === today
-      );
+  try {
+    const today = new Date().toISOString().split("T")[0];
+    const res = await maintenanceService.getAllIncidents();
 
-      setHasIncidents(relatedIncidents.length > 0);
-      setShowConfirmPopup(true);
-    } catch (err) {
-      console.error("❌ Lỗi khi kiểm tra sự cố:", err);
-      alert("Không thể kiểm tra sự cố!");
-    }
-  };
+    // ✅ Dữ liệu thực tế (tránh lỗi undefined hoặc nested)
+    const incidents = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
+
+    console.log("✅ [API] Response:", incidents);
+
+    // ✅ Lọc sự cố của xe hôm nay
+    const relatedIncidents = incidents.filter(
+      (i) =>
+        Number(i.vehicleId) === Number(xe.id || xe.vehicleId) &&
+        i.occurredOn?.startsWith(today)
+    );
+
+    console.log("🔍 relatedIncidents:", relatedIncidents);
+
+    // ✅ Nếu có sự cố -> show nút bảo trì
+    setHasIncidents(relatedIncidents.length > 0);
+    setShowConfirmPopup(true);
+  } catch (err) {
+    console.error("❌ Lỗi khi kiểm tra sự cố:", err);
+    alert("Không thể kiểm tra sự cố!");
+  }
+};
+
+
+
 
   // -------------------- 🧾 Xử lý lựa chọn từ popup --------------------
-  const handleConfirmChoice = async (choice) => {
-    setShowConfirmPopup(false);
-    const newStatus = choice === "MAINTENANCE" ? "MAINTENANCE" : "AVAILABLE";
+ const handleConfirmChoice = async (choice) => {
+  setShowConfirmPopup(false);
+  const newStatus = choice === "MAINTENANCE" ? "MAINTENANCE" : "AVAILABLE";
 
-    try {
-      await rentalStationService.updateVehicleStatus(xe.id || xe.vehicleId, {
-        status: newStatus,
-        battery: xe.pin || 100,
-      });
-      setReceiveSuccess(true);
-    } catch (err) {
-      console.error("❌ Lỗi khi cập nhật trạng thái xe:", err);
-      alert("Không thể cập nhật trạng thái xe!");
-    }
-  };
+  try {
+    await rentalStationService.updateVehicleStatus(xe.id || xe.vehicleId, {
+      status: newStatus,
+      battery: xe.pin || 100,
+    });
 
-  // -------------------- 🔄 Đóng popup chính --------------------
-  const handleCloseAndRefresh = () => {
-    onClose();
-    window.location.reload();
+    // ✅ Hiện popup thành công
+    setReceiveSuccess(true);
+
+    // ✅ Reload sau 1.5s để người dùng kịp thấy popup
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
+  } catch (err) {
+    console.error("❌ Lỗi khi cập nhật trạng thái xe:", err);
+    alert("Không thể cập nhật trạng thái xe!");
+  }
+};
+
+
+  // -------------------- 🔄 Đóng popup --------------------
+  const handleClose = () => {
+    if (typeof onClose === "function") onClose();
   };
 
   // -------------------- 🖼️ Giao diện --------------------
@@ -175,7 +215,7 @@ const PopupNhanChecking = ({ xe, onClose }) => {
           <div className="order-info">
             <h3>📦 Thông tin đơn hàng</h3>
             <ul>
-              <li><strong>Mã đơn:</strong> {orderInfo.orderId}</li>
+              <li><strong>Mã đơn:</strong> {orderInfo.orderId || orderInfo.order_id}</li>
               <li><strong>Xe ID:</strong> {orderInfo.vehicleId}</li>
               <li><strong>Trạng thái:</strong> {orderInfo.status}</li>
               <li><strong>Tổng tiền:</strong> {orderInfo.totalPrice?.toLocaleString()}₫</li>
@@ -226,7 +266,7 @@ const PopupNhanChecking = ({ xe, onClose }) => {
 
         <hr />
 
-        {/* Nút thanh toán / chờ thanh toán */}
+        {/* Thanh toán */}
         {!done ? (
           orderInfo?.status === "AWAIT_FINAL" ? (
             <button className="btn-check" disabled>
@@ -245,14 +285,27 @@ const PopupNhanChecking = ({ xe, onClose }) => {
           <p style={{ color: "green" }}>✅ Yêu cầu thanh toán đã được gửi thành công.</p>
         )}
 
+        <hr />
+
         {/* Footer */}
         <div className="popup-buttons">
-          <button onClick={handleCloseAndRefresh} className="btn-cancel">Đóng</button>
+          {orderInfo?.status === "COMPLETED" && (
+            <button
+              onClick={handleCompleteReceive}
+              className="btn-confirm"
+              style={{ backgroundColor: "#007bff", color: "#fff" }}
+            >
+              🚗 Hoàn tất nhận xe
+            </button>
+          )}
+          <button onClick={handleClose} className="btn-cancel">
+            Đóng
+          </button>
         </div>
       </div>
 
       {/* Popup xác nhận */}
-      {showConfirmPopup && (
+      {orderInfo && orderInfo.status === "COMPLETED" && showConfirmPopup && (
         <div className="confirm-overlay">
           <div className="confirm-box">
             <h3>Hoàn tất nhận xe</h3>
@@ -263,14 +316,23 @@ const PopupNhanChecking = ({ xe, onClose }) => {
             </p>
             <div className="confirm-actions">
               {hasIncidents && (
-                <button className="btn-maintenance" onClick={() => handleConfirmChoice("MAINTENANCE")}>
+                <button
+                  className="btn-maintenance"
+                  onClick={() => handleConfirmChoice("MAINTENANCE")}
+                >
                   Bảo trì
                 </button>
               )}
-              <button className="btn-available" onClick={() => handleConfirmChoice("AVAILABLE")}>
+              <button
+                className="btn-available"
+                onClick={() => handleConfirmChoice("AVAILABLE")}
+              >
                 Có sẵn
               </button>
-              <button className="btn-cancel-popup" onClick={() => setShowConfirmPopup(false)}>
+              <button
+                className="btn-cancel-popup"
+                onClick={() => setShowConfirmPopup(false)}
+              >
                 ❌ Hủy
               </button>
             </div>
@@ -278,25 +340,16 @@ const PopupNhanChecking = ({ xe, onClose }) => {
         </div>
       )}
 
-      {/* Popup thông báo thành công */}
+      {/* Popup thành công */}
       {receiveSuccess && (
-        <div className="confirm-overlay">
-          <div className="confirm-box" style={{ borderTop: "6px solid #28a745" }}>
-            <h3 style={{ color: "#28a745" }}>✅ Đã nhận xe thành công!</h3>
-            <p>Xe đã được cập nhật trạng thái mới.</p>
-            <button
-              className="btn-available"
-              onClick={() => {
-                setReceiveSuccess(false);
-                onClose();
-                window.location.reload();
-              }}
-            >
-              Đóng
-            </button>
-          </div>
-        </div>
-      )}
+  <div className="confirm-overlay">
+    <div className="confirm-box" style={{ borderTop: "6px solid #28a745" }}>
+      <h3 style={{ color: "#28a745" }}>✅ Đã nhận xe thành công!</h3>
+      <p>Trang sẽ tự tải lại sau giây lát...</p>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };
