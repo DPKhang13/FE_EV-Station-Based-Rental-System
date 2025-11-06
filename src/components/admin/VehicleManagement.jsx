@@ -176,8 +176,8 @@ const VehicleManagement = () => {
         setSelectedVehicleOrders([]);
     };
 
-    // Handle add vehicle
-    const handleAddVehicle = () => {
+    // Handle add vehicle (currently unused - reserved for future use)
+    const _handleAddVehicle = () => {
         setFormData({
             vehicleName: '',
             brand: '',
