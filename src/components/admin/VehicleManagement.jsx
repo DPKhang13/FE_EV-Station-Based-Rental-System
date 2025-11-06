@@ -20,6 +20,10 @@ const VehicleManagement = () => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingVehicle, setEditingVehicle] = useState(null);
+    const [showFilters, setShowFilters] = useState(false);
+    const [showOrderHistory, setShowOrderHistory] = useState(false);
+    const [selectedVehicleOrders, setSelectedVehicleOrders] = useState([]);
+    const [loadingOrders, setLoadingOrders] = useState(false);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -128,6 +132,48 @@ const VehicleManagement = () => {
             stations: [],
             statuses: []
         });
+    };
+
+    // Xem lịch sử đặt xe
+    const handleViewOrderHistory = async (vehicle) => {
+        try {
+            setLoadingOrders(true);
+            setShowOrderHistory(true);
+
+            const vehicleId = vehicle.vehicle_id;
+            const token = localStorage.getItem('accessToken');
+
+            console.log('📦 Fetching order history for vehicle:', vehicleId);
+
+            const response = await fetch(`http://localhost:8080/api/order/vehicle/${vehicleId}/history`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch order history');
+            }
+
+            const vehicleOrders = await response.json();
+            console.log(`✅ Orders for vehicle ${vehicle.plate_number}:`, vehicleOrders.length);
+            console.log('� Order data:', vehicleOrders);
+
+            setSelectedVehicleOrders(vehicleOrders);
+        } catch (err) {
+            console.error('❌ Error fetching order history:', err);
+            alert('❌ Không thể tải lịch sử đặt xe. Vui lòng thử lại.');
+            setShowOrderHistory(false);
+        } finally {
+            setLoadingOrders(false);
+        }
+    };
+
+    const closeOrderHistory = () => {
+        setShowOrderHistory(false);
+        setSelectedVehicleOrders([]);
     };
 
     // Handle add vehicle
@@ -265,9 +311,13 @@ const VehicleManagement = () => {
             </div>
 
             {/* Filters Section */}
-            <div className="filters-section">
+            <div
+                className={`filters-section ${showFilters ? 'open' : ''}`}
+                onMouseEnter={() => setShowFilters(true)}
+                onMouseLeave={() => setShowFilters(false)}
+            >
                 <div className="filter-header">
-                    <h3> Bộ lọc</h3>
+                    <h3>🔍 Bộ lọc {!showFilters && '(Di chuột vào để mở)'}</h3>
                     {(filters.colors.length > 0 || filters.seatCounts.length > 0 ||
                         filters.stations.length > 0 || filters.statuses.length > 0) && (
                             <button className="btn-clear-filters" onClick={clearFilters}>
@@ -279,7 +329,7 @@ const VehicleManagement = () => {
                 <div className="filters-grid">
                     {/* Color Filter */}
                     <div className="filter-group">
-                        <h4> Màu sắc</h4>
+                        <h4>🎨 Màu sắc</h4>
                         <div className="filter-options">
                             {getUniqueColors().map(color => (
                                 <label key={color} className="filter-checkbox">
@@ -296,7 +346,7 @@ const VehicleManagement = () => {
 
                     {/* Seat Count Filter */}
                     <div className="filter-group">
-                        <h4>Số ghế</h4>
+                        <h4>💺 Số ghế</h4>
                         <div className="filter-options">
                             {getUniqueSeatCounts().map(count => (
                                 <label key={count} className="filter-checkbox">
@@ -313,7 +363,7 @@ const VehicleManagement = () => {
 
                     {/* Station Filter */}
                     <div className="filter-group">
-                        <h4>Điểm thuê</h4>
+                        <h4>📍 Điểm thuê</h4>
                         <div className="filter-options">
                             {getUniqueStations().map(station => (
                                 <label key={station} className="filter-checkbox">
@@ -330,7 +380,7 @@ const VehicleManagement = () => {
 
                     {/* Status Filter */}
                     <div className="filter-group">
-                        <h4>Trạng thái</h4>
+                        <h4>📊 Trạng thái</h4>
                         <div className="filter-options">
                             {getAllStatuses().map(status => {
                                 const statusInfo = getStatusInfo(status);
@@ -455,6 +505,24 @@ const VehicleManagement = () => {
                                                 onClick={() => handleEditVehicle(vehicle)}
                                             >
                                                 Sửa
+                                            </button>
+                                            <button
+                                                className="btn-history"
+                                                title="Xem lịch sử đặt xe"
+                                                onClick={() => handleViewOrderHistory(vehicle)}
+                                                style={{
+                                                    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                                                    color: 'white',
+                                                    padding: '8px 12px',
+                                                    border: 'none',
+                                                    borderRadius: '6px',
+                                                    cursor: 'pointer',
+                                                    fontSize: '14px',
+                                                    fontWeight: '600',
+                                                    marginRight: '8px'
+                                                }}
+                                            >
+                                                📋 Lịch sử
                                             </button>
                                             <button
                                                 className="btn-delete"
@@ -734,6 +802,99 @@ const VehicleManagement = () => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Order History Modal */}
+            {showOrderHistory && (
+                <div className="modal-overlay" onClick={closeOrderHistory}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '1200px' }}>
+                        <div className="modal-header">
+                            <h2>📋 Lịch sử đặt xe</h2>
+                            <button className="modal-close" onClick={closeOrderHistory}>✕</button>
+                        </div>
+
+                        <div className="modal-body">
+                            {loadingOrders ? (
+                                <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+                                    ⏳ Đang tải lịch sử đặt xe...
+                                </div>
+                            ) : selectedVehicleOrders.length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+                                    📭 Chưa có lịch sử đặt xe nào
+                                </div>
+                            ) : (
+                                <div style={{ overflowX: 'auto' }}>
+                                    <table className="vehicle-table" style={{ width: '100%' }}>
+                                        <thead>
+                                            <tr>
+                                                <th>Mã đơn</th>
+                                                <th>Biển số</th>
+                                                <th>Trạm</th>
+                                                <th>Hãng</th>
+                                                <th>Màu</th>
+                                                <th>Số ghế</th>
+                                                <th>Thời gian bắt đầu</th>
+                                                <th>Thời gian kết thúc</th>
+                                                <th>Tổng tiền</th>
+                                                <th>Đặt cọc</th>
+                                                <th>Còn lại</th>
+                                                <th>Trạng thái</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {selectedVehicleOrders.map((order, index) => (
+                                                <tr key={order.orderId || index}>
+                                                    <td style={{ fontFamily: 'monospace', fontSize: '11px' }}>
+                                                        {order.orderId ? order.orderId.split('-')[0] + '...' : 'N/A'}
+                                                    </td>
+                                                    <td style={{ fontWeight: 'bold' }}>{order.plateNumber || 'N/A'}</td>
+                                                    <td>{order.stationName || `Station ${order.stationId}`}</td>
+                                                    <td>{order.brand || 'N/A'}</td>
+                                                    <td>{order.color || 'N/A'}</td>
+                                                    <td>{order.seatCount} chỗ</td>
+                                                    <td>{order.startTime || 'N/A'}</td>
+                                                    <td>{order.endTime || 'N/A'}</td>
+                                                    <td style={{ fontWeight: 'bold', color: '#059669' }}>
+                                                        {order.totalPrice?.toLocaleString() || '0'}đ
+                                                    </td>
+                                                    <td>{order.depositAmount?.toLocaleString() || '0'}đ</td>
+                                                    <td>{order.remainingAmount?.toLocaleString() || '0'}đ</td>
+                                                    <td>
+                                                        <span style={{
+                                                            padding: '4px 8px',
+                                                            borderRadius: '12px',
+                                                            fontSize: '12px',
+                                                            fontWeight: '600',
+                                                            background: order.status === 'DEPOSITED' ? '#d1fae5' :
+                                                                order.status === 'PENDING_DEPOSIT' ? '#fef3c7' :
+                                                                    order.status === 'PAYMENT_FAILED' ? '#fee2e2' :
+                                                                        order.status === 'COMPLETED' ? '#dbeafe' : '#e5e7eb',
+                                                            color: order.status === 'DEPOSITED' ? '#065f46' :
+                                                                order.status === 'PENDING_DEPOSIT' ? '#92400e' :
+                                                                    order.status === 'PAYMENT_FAILED' ? '#991b1b' :
+                                                                        order.status === 'COMPLETED' ? '#1e40af' : '#1f2937'
+                                                        }}>
+                                                            {order.status}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    <div style={{ marginTop: '20px', padding: '15px', background: '#f3f4f6', borderRadius: '8px' }}>
+                                        <strong>📊 Thống kê:</strong> Tổng {selectedVehicleOrders.length} đơn đặt xe
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="modal-footer">
+                            <button className="btn-cancel" onClick={closeOrderHistory}>
+                                Đóng
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

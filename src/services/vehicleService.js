@@ -231,13 +231,133 @@ export const deleteVehicle = async (vehicleId) => {
     }
 };
 
+/**
+ * Lấy danh sách xe theo stationId
+ * @param {Number} stationId - ID của trạm
+ * @returns {Promise<Array>} Danh sách xe trong trạm
+ */
+export const getVehiclesByStation = async (stationId) => {
+    try {
+        const token = localStorage.getItem('accessToken');
+
+        console.log('🚀 [API] Đang lấy xe theo trạm:', stationId);
+
+        const response = await fetch(`${API_BASE_URL}/vehicles/get`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        console.log('📡 [API] Response status:', response.status);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ [API] Error response:', errorText);
+            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ [API] Tất cả xe:', data.length);
+
+        // Lọc xe theo stationId
+        const filteredVehicles = data.filter(vehicle => vehicle.stationId === stationId);
+        console.log('✅ [API] Xe của trạm', stationId, ':', filteredVehicles.length, 'xe');
+
+        return filteredVehicles;
+    } catch (error) {
+        console.error('❌ [API] Lỗi khi lấy xe theo trạm:', error);
+        throw error;
+    }
+};
+
+/**
+ * Cập nhật thông tin xe
+ * @param {Number} vehicleId - ID của xe
+ * @param {Object} vehicleData - Dữ liệu xe cần cập nhật
+ * @returns {Promise<Object>} Xe đã cập nhật
+ */
+export const updateVehicle = async (vehicleId, vehicleData) => {
+    try {
+        const token = localStorage.getItem('accessToken');
+
+        console.log('🚀 [API] Đang cập nhật xe:', vehicleId, vehicleData);
+
+        const response = await fetch(`${API_BASE_URL}/vehicles/update/${vehicleId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(vehicleData)
+        });
+
+        console.log('📡 [API] Response status:', response.status);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ [API] Error response:', errorText);
+            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ [API] Xe đã được cập nhật:', data);
+
+        return data;
+    } catch (error) {
+        console.error('❌ [API] Lỗi khi cập nhật xe:', error);
+        throw error;
+    }
+};
+
+/**
+ * Lấy lịch sử đặt xe theo vehicleId
+ * @param {Number} vehicleId - ID của xe
+ * @returns {Promise<Array>} Danh sách lịch sử đặt xe
+ */
+export const getVehicleOrderHistory = async (vehicleId) => {
+    try {
+        const token = localStorage.getItem('accessToken');
+
+        console.log('🚀 [API] Đang lấy lịch sử đặt xe:', vehicleId);
+
+        const response = await fetch(`${API_BASE_URL}/order/vehicle/${vehicleId}/history`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        console.log('📡 [API] Response status:', response.status);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ [API] Error response:', errorText);
+            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ [API] Lịch sử đặt xe:', data);
+
+        return data;
+    } catch (error) {
+        console.error('❌ [API] Lỗi khi lấy lịch sử đặt xe:', error);
+        throw error;
+    }
+};
+
 // Default export cho vehicleService object
 const vehicleService = {
     getVehicles,
     transformVehicleData,
     fetchAndTransformVehicles,
     createVehicle,
-    deleteVehicle
+    deleteVehicle,
+    getVehiclesByStation,
+    updateVehicle,
+    getVehicleOrderHistory
 };
 
 export default vehicleService;
