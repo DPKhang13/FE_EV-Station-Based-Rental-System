@@ -11,6 +11,16 @@
     margin-bottom: 30px;
 }
 
+.vehicle-management .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    border: 2px solid #000000;
+    padding: 20px;
+    border-radius: 8px;
+}
+
 .vehicle-management h1 {
     font-size: 28px;
     margin: 0;
@@ -86,8 +96,10 @@
     vertical-align: middle;
 }
 
+/* Disable hover effect completely */
 .vehicle-table tbody tr:hover {
-    background: #f9fafb;
+    background: transparent !important;
+    background-color: transparent !important;
 }
 
 .vehicle-table img {
@@ -320,6 +332,30 @@
 .form-group textarea {
     resize: vertical;
 }
+
+/* Color selector with visual indicators */
+.color-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.color-option::before {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+    vertical-align: middle;
+}
+
+select option[value="White"]::before { background-color: white; }
+select option[value="Black"]::before { background-color: black; }
+select option[value="Silver"]::before { background-color: silver; }
+select option[value="Red"]::before { background-color: red; }
+select option[value="Blue"]::before { background-color: blue; }
+select option[value="Gray"]::before { background-color: gray; }
 
 .modal-footer {
     display: flex;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { stationService } from '../../services';
 import vehicleService from '../../services/vehicleService';
+import { formatVariant } from '../../utils/formatVariant';
 import './StationManagement.css';
 
 const StationManagement = () => {
@@ -264,8 +265,9 @@ const StationManagement = () => {
         try {
             const brand = vehicleFormData.vehicleName; // VinFast, BMW, Tesla
             const seatCount = parseInt(vehicleFormData.seatCount);
-            // Gửi variant UPPERCASE (AIR, PLUS, PRO) vì backend validate theo uppercase
-            const variant = vehicleFormData.variant.toUpperCase();
+            
+            // ✅ Normalize variant về dạng First-letter capitalized (Air, Plus, Pro)
+            const variant = formatVariant(vehicleFormData.variant);
 
             // Tạo vehicleName theo format: Brand + Số ghế + S + Variant
             // Ví dụ: "VinFast 7S Air", "BMW 4S Plus"
@@ -340,7 +342,10 @@ const StationManagement = () => {
                     <button
                         className="btn-add-station"
                         onClick={handleSearch}
-                        style={{ background: '#3b82f6' }}
+                        style={{ 
+                            background: '#3b82f6',
+                            padding: '0px 13px'
+                        }}
                     >
                         Tìm kiếm
                     </button>
@@ -634,7 +639,7 @@ const StationManagement = () => {
                                                             </span>
                                                         </td>
                                                         <td>{vehicle.seatCount} chỗ</td>
-                                                        <td>{vehicle.variant ? vehicle.variant.charAt(0).toUpperCase() + vehicle.variant.slice(1).toLowerCase() : ''}</td>
+                                                        <td>{formatVariant(vehicle.variant)}</td>
                                                         <td>
                                                             <span className={`status-badge ${vehicle.status === 'AVAILABLE' ? 'status-active' :
                                                                 vehicle.status === 'RENTED' ? 'status-inactive' :

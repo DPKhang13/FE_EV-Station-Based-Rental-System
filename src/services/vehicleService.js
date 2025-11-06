@@ -139,14 +139,6 @@ const mapStatus = (apiStatus) => {
 };
 
 /**
- * Lấy image phù hợp dựa vào số ghế
- */
-const getVehicleImage = (seatCount) => {
-    // Use imported images (ES6 style)
-    return seatCount <= 5 ? image4Seater : image7Seater;
-};
-
-/**
  * Lấy và transform tất cả xe
  */
 export const fetchAndTransformVehicles = async () => {
@@ -205,12 +197,47 @@ export const createVehicle = async (vehicleData) => {
     }
 };
 
+/**
+ * Xóa xe
+ * @param {number} vehicleId - ID của xe cần xóa
+ * @returns {Promise<void>}
+ */
+export const deleteVehicle = async (vehicleId) => {
+    try {
+        const token = localStorage.getItem('accessToken');
+
+        console.log('🗑️ [API] Đang xóa xe ID:', vehicleId);
+
+        const response = await fetch(`${API_BASE_URL}/vehicles/deleted/${vehicleId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        console.log('📡 [API] Response status:', response.status);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ [API] Error response:', errorText);
+            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        }
+
+        console.log('✅ [API] Xe đã được xóa thành công');
+        return true;
+    } catch (error) {
+        console.error('❌ [API] Lỗi khi xóa xe:', error);
+        throw error;
+    }
+};
+
 // Default export cho vehicleService object
 const vehicleService = {
     getVehicles,
     transformVehicleData,
     fetchAndTransformVehicles,
-    createVehicle
+    createVehicle,
+    deleteVehicle
 };
 
 export default vehicleService;

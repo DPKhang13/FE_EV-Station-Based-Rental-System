@@ -137,7 +137,7 @@
 }
 
 .station-table thead {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(90deg, #6a8cff 0%, #7b5cff 100%) !important;
 }
 
 .station-table th {
@@ -148,15 +148,39 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: white !important;
+    background: transparent !important;
+    border-right: none !important;
+}
+
+.station-table th:last-child {
+    border-right: none !important;
+}
+
+.station-table thead tr {
+border-radius: 12px 12px 0 0;
+    overflow: hidden;
+    background: none !important;
+}
+
+.station-table thead:hover,
+.station-table thead:focus,
+.station-table thead:active,
+.station-table th:hover,
+.station-table th:focus,
+.station-table th:active {
+    background: linear-gradient(90deg, #6a8cff 0%, #7b5cff 100%) !important;
+    color: white !important;
 }
 
 .station-table tbody tr {
     border-bottom: 1px solid #e5e7eb;
-    transition: all 0.2s;
+    transition: none !important;
 }
 
 .station-table tbody tr:hover {
-    background: #f9fafb;
+    background: none !important;
+    box-shadow: none !important;
+    transform: none !important;
 }
 
 .station-table tbody tr:last-child {
@@ -205,27 +229,28 @@
 
 /* Status Badge */
 .status-badge {
-    padding: 6px 12px;
+    padding: 8px 16px;
     border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .status-active {
-    background: #d1fae5;
-    color: #065f46;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
 }
 
 .status-inactive {
-    background: #fee2e2;
-    color: #991b1b;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
 }
 
 .status-maintenance {
-    background: #fef3c7;
-    color: #92400e;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
 }
 
 /* Action Buttons */
@@ -312,7 +337,7 @@
     border-radius: 16px;
     width: 90%;
     max-width: 800px;
-    max-height: 90vh;
+max-height: 90vh;
     overflow-y: auto;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     animation: slideUp 0.3s;
@@ -492,7 +517,6 @@
 .detail-item.full-width {
     grid-column: 1 / -1;
 }
-
 .detail-label {
     font-size: 13px;
     color: #6b7280;
