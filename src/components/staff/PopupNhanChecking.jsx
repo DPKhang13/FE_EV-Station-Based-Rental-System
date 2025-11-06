@@ -6,15 +6,13 @@ import { orderService } from "../../services";
 import api from "../../services/api";
 import "./PopupNhanXe.css";
 
-const PopupNhanChecking = ({ xe, onClose }) => {
+const PopupNhanChecking = ({ xe, onClose, onReload }) => {
   const { user } = useContext(AuthContext);
 
-  // -------------------- STATE --------------------
   const [orderInfo, setOrderInfo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
-
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [hasIncidents, setHasIncidents] = useState(false);
   const [receiveSuccess, setReceiveSuccess] = useState(false);
@@ -23,14 +21,23 @@ const PopupNhanChecking = ({ xe, onClose }) => {
   const [description, setDescription] = useState(() => localStorage.getItem("nhanChecking_description") || "");
   const [cost, setCost] = useState(() => localStorage.getItem("nhanChecking_cost") || "");
 
-  // -------------------- EFFECT: Lấy dữ liệu đơn hàng --------------------
+  // -------------------- Lấy dữ liệu đơn hàng --------------------
   const fetchOrderPreview = async () => {
-    const orderId = xe.order?.orderId || xe.orderId;
-    if (!orderId) return console.error("⚠️ Không có orderId hợp lệ:", xe);
+    const orderId =
+      xe?.order?.orderId ||
+      xe?.order?.order_id ||
+      xe?.orderId ||
+      xe?.order_id;
+
+    if (!orderId) {
+      console.error("⚠️ Không có orderId hợp lệ:", xe);
+      return;
+    }
 
     try {
       setLoading(true);
-      const { data } = await api.get(`/order/${orderId}/preview-return`);
+      const res = await api.get(`/order/${orderId}/preview-return`);
+      const data = res?.data ?? res;
       setOrderInfo(data);
       console.log("✅ [PopupNhanChecking] order preview:", data);
     } catch (err) {
@@ -41,17 +48,17 @@ const PopupNhanChecking = ({ xe, onClose }) => {
   };
 
   useEffect(() => {
-    fetchOrderPreview();
+    if (xe) fetchOrderPreview();
   }, [xe]);
 
-  // -------------------- EFFECT: Auto refresh khi chờ thanh toán --------------------
+  // -------------------- Auto refresh khi chờ thanh toán --------------------
   useEffect(() => {
     if (orderInfo?.status !== "AWAIT_FINAL") return;
-    const intervalId = setInterval(fetchOrderPreview, 5000);
+    const intervalId = setInterval(fetchOrderPreview, 10000);
     return () => clearInterval(intervalId);
   }, [orderInfo?.status]);
 
-  // -------------------- EFFECT: Lưu form tạm --------------------
+  // -------------------- Lưu form tạm --------------------
   useEffect(() => {
     localStorage.setItem("nhanChecking_severity", severity);
     localStorage.setItem("nhanChecking_description", description);
@@ -91,7 +98,12 @@ const PopupNhanChecking = ({ xe, onClose }) => {
 
   // -------------------- 💰 Gửi yêu cầu thanh toán --------------------
   const handleRequestPayment = async () => {
-    const orderId = xe.order?.orderId || xe.orderId;
+    const orderId =
+      xe?.order?.orderId ||
+      xe?.order?.order_id ||
+      xe?.orderId ||
+      xe?.order_id;
+
     if (!orderId) return alert("⚠️ Không tìm thấy orderId hợp lệ!");
 
     try {
@@ -101,8 +113,10 @@ const PopupNhanChecking = ({ xe, onClose }) => {
         processedBy: user?.userId || "unknown",
       };
 
-      const { data } = await orderService.return(orderId, payload);
+      const res = await orderService.return(orderId, payload);
+      const data = res?.data ?? res;
       console.log("✅ [PopupNhanChecking] API return thành công:", data);
+
       alert("✅ Yêu cầu thanh toán khách hàng đã được gửi thành công!");
       setDone(true);
       await fetchOrderPreview();
@@ -116,14 +130,20 @@ const PopupNhanChecking = ({ xe, onClose }) => {
 
   // -------------------- 🚗 Hoàn tất nhận xe --------------------
   const handleCompleteReceive = async () => {
+    // 👉 nới điều kiện để tránh case status khác chữ COMPLETED
+    if (!orderInfo || !["COMPLETED", "DONE", "PAID", "RETURNED"].includes(orderInfo.status)) {
+      alert("⚠️ Đơn hàng chưa hoàn tất, không thể nhận xe!");
+      return;
+    }
+
     try {
       const today = new Date().toISOString().split("T")[0];
-      const { data } = await maintenanceService.getAllIncidents();
-
-      const relatedIncidents = data.filter(
+      const res = await maintenanceService.getAllIncidents();
+      const incidents = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
+      const relatedIncidents = incidents.filter(
         (i) =>
-          (i.vehicleId === xe.id || i.vehicleId === xe.vehicleId) &&
-          i.occurredOn === today
+          Number(i.vehicleId) === Number(xe.id || xe.vehicleId) &&
+          i.occurredOn?.startsWith(today)
       );
 
       setHasIncidents(relatedIncidents.length > 0);
@@ -144,38 +164,41 @@ const PopupNhanChecking = ({ xe, onClose }) => {
         status: newStatus,
         battery: xe.pin || 100,
       });
+
       setReceiveSuccess(true);
+
+      // ✅ Gọi callback reload thay vì reload trang
+      setTimeout(() => {
+        setReceiveSuccess(false);
+        if (typeof onClose === "function") onClose();
+        if (typeof onReload === "function") onReload();
+      }, 1500);
     } catch (err) {
       console.error("❌ Lỗi khi cập nhật trạng thái xe:", err);
       alert("Không thể cập nhật trạng thái xe!");
     }
   };
 
-  // -------------------- 🔄 Đóng popup chính --------------------
-  const handleCloseAndRefresh = () => {
-    onClose();
-    window.location.reload();
+  const handleClose = () => {
+    if (typeof onClose === "function") onClose();
   };
 
-  // -------------------- 🖼️ Giao diện --------------------
   return (
     <div className="popup-overlay">
       <div className="popup-content popup-maintenance">
-        {/* Header */}
         <h2>🔧 Nhận xe kiểm tra: {xe.ten}</h2>
         <p>Biển số: <strong>{xe.bienSo}</strong></p>
         <p>Hãng: <strong>{xe.hang}</strong></p>
         <p>Pin hiện tại: <strong>{xe.pin}%</strong></p>
         <hr />
 
-        {/* Thông tin đơn hàng */}
         {loading ? (
           <p>Đang tải thông tin đơn hàng...</p>
         ) : orderInfo ? (
           <div className="order-info">
             <h3>📦 Thông tin đơn hàng</h3>
             <ul>
-              <li><strong>Mã đơn:</strong> {orderInfo.orderId}</li>
+              <li><strong>Mã đơn:</strong> {orderInfo.orderId || orderInfo.order_id}</li>
               <li><strong>Xe ID:</strong> {orderInfo.vehicleId}</li>
               <li><strong>Trạng thái:</strong> {orderInfo.status}</li>
               <li><strong>Tổng tiền:</strong> {orderInfo.totalPrice?.toLocaleString()}₫</li>
@@ -188,15 +211,10 @@ const PopupNhanChecking = ({ xe, onClose }) => {
 
         <hr />
 
-        {/* Form báo cáo sự cố */}
         {orderInfo?.status !== "AWAIT_FINAL" && orderInfo?.status !== "COMPLETED" && (
           <>
             <h3>📋 Báo cáo sự cố</h3>
-            <select
-              className="input-select"
-              value={severity}
-              onChange={(e) => setSeverity(e.target.value)}
-            >
+            <select className="input-select" value={severity} onChange={(e) => setSeverity(e.target.value)}>
               <option value="">Chọn mức độ</option>
               <option value="LOW">Thấp</option>
               <option value="MEDIUM">Trung bình</option>
@@ -226,7 +244,6 @@ const PopupNhanChecking = ({ xe, onClose }) => {
 
         <hr />
 
-        {/* Nút thanh toán / chờ thanh toán */}
         {!done ? (
           orderInfo?.status === "AWAIT_FINAL" ? (
             <button className="btn-check" disabled>
@@ -234,7 +251,7 @@ const PopupNhanChecking = ({ xe, onClose }) => {
             </button>
           ) : orderInfo?.status === "COMPLETED" ? (
             <button className="btn-check" disabled style={{ backgroundColor: "#28a745" }}>
-              ✅ Đã hoàn tất nhận xe
+              ✅ Đã thanh toán thành công
             </button>
           ) : (
             <button onClick={handleRequestPayment} className="btn-check" disabled={sending}>
@@ -245,14 +262,26 @@ const PopupNhanChecking = ({ xe, onClose }) => {
           <p style={{ color: "green" }}>✅ Yêu cầu thanh toán đã được gửi thành công.</p>
         )}
 
-        {/* Footer */}
+        <hr />
+
         <div className="popup-buttons">
-          <button onClick={handleCloseAndRefresh} className="btn-cancel">Đóng</button>
+          {["COMPLETED", "DONE", "PAID", "RETURNED"].includes(orderInfo?.status) && (
+            <button
+              onClick={handleCompleteReceive}
+              className="btn-confirm"
+              style={{ backgroundColor: "#007bff", color: "#fff" }}
+            >
+              🚗 Hoàn tất nhận xe
+            </button>
+          )}
+          <button onClick={handleClose} className="btn-cancel">
+            Đóng
+          </button>
         </div>
       </div>
 
       {/* Popup xác nhận */}
-      {showConfirmPopup && (
+      {orderInfo && showConfirmPopup && (
         <div className="confirm-overlay">
           <div className="confirm-box">
             <h3>Hoàn tất nhận xe</h3>
@@ -263,14 +292,23 @@ const PopupNhanChecking = ({ xe, onClose }) => {
             </p>
             <div className="confirm-actions">
               {hasIncidents && (
-                <button className="btn-maintenance" onClick={() => handleConfirmChoice("MAINTENANCE")}>
+                <button
+                  className="btn-maintenance"
+                  onClick={() => handleConfirmChoice("MAINTENANCE")}
+                >
                   Bảo trì
                 </button>
               )}
-              <button className="btn-available" onClick={() => handleConfirmChoice("AVAILABLE")}>
+              <button
+                className="btn-available"
+                onClick={() => handleConfirmChoice("AVAILABLE")}
+              >
                 Có sẵn
               </button>
-              <button className="btn-cancel-popup" onClick={() => setShowConfirmPopup(false)}>
+              <button
+                className="btn-cancel-popup"
+                onClick={() => setShowConfirmPopup(false)}
+              >
                 ❌ Hủy
               </button>
             </div>
@@ -278,22 +316,12 @@ const PopupNhanChecking = ({ xe, onClose }) => {
         </div>
       )}
 
-      {/* Popup thông báo thành công */}
+      {/* Popup thành công */}
       {receiveSuccess && (
         <div className="confirm-overlay">
           <div className="confirm-box" style={{ borderTop: "6px solid #28a745" }}>
             <h3 style={{ color: "#28a745" }}>✅ Đã nhận xe thành công!</h3>
-            <p>Xe đã được cập nhật trạng thái mới.</p>
-            <button
-              className="btn-available"
-              onClick={() => {
-                setReceiveSuccess(false);
-                onClose();
-                window.location.reload();
-              }}
-            >
-              Đóng
-            </button>
+            <p>Trang sẽ tự cập nhật sau giây lát...</p>
           </div>
         </div>
       )}

@@ -1,4 +1,95 @@
 import React, { useState, useEffect } from 'react';
+
+// Mapping hình ảnh xe theo hãng, số ghế, màu sắc
+const carImageMap = {
+    'Vinfast': {
+        '4': {
+            'xanh': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/a80cae76-5c8a-4226-ac85-116ba2da7a3a.png',
+            'bạc': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/b76c51c2-6e69-491c-ae83-0d36ff93cdff.png',
+            'đen': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/e88bd242-3df4-48a7-8fe2-a9a3466f939f.png',
+            'đỏ': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/e420cb1b-1710-4dbe-a5e3-e1285c690b6e.png',
+            'trắng': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/unnamed.jpg',
+        },
+        '7': {
+            'trắng': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Vinfast/unnamed.jpg',
+            'bạc': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Vinfast/unnamed%20%284%29.jpg',
+            'đen': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Vinfast/unnamed%20%283%29.jpg',
+            'đỏ': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Vinfast/unnamed%20%282%29.jpg',
+            'xanh': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Vinfast/unnamed%20%281%29.jpg',
+        }
+    },
+    'BMW': {
+        '4': {
+            'trắng': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/white.jpg',
+            'bạc': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/unnamed%20%281%29.jpg',
+            'xanh': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/blue.jpg',
+            'đen': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/8f9f3e31-0c04-4441-bb40-97778c9824e0.png',
+            'đỏ': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/7f3edc23-30ba-4e84-83a9-c8c418f2362d.png',
+        },
+        '7': {
+            'đỏ': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/BMW/unnamed%20%281%29.jpg',
+            'đen': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/BMW/unnamed%20%284%29.jpg',
+            'trắng': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/BMW/unnamed.jpg',
+            'bạc': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/BMW/unnamed%20%283%29.jpg',
+            'xanh': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/BMW/unnamed%20%282%29.jpg',
+        }
+    },
+    'Tesla': {
+        '4': {
+            'bạc': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed4.jpg',
+            'xanh': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed.jpg',
+            'đen': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%283%29.jpg',
+            'trắng': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%282%29.jpg',
+            'đỏ': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%281%29.jpg',
+        },
+        '7': {
+            'trắng': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Tesla/unnamed.jpg',
+            'bạc': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Tesla/unnamed%20%284%29.jpg',
+            'đỏ': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Tesla/unnamed%20%282%29.jpg',
+            'đen': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Tesla/unnamed%20%283%29.jpg',
+            'xanh': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Tesla/unnamed%20%281%29.jpg',
+        }
+    }
+};
+
+function getCarImageUrl(brand, seat, color) {
+    // Chuẩn hóa dữ liệu đầu vào
+    let brandKey = (brand || '').trim().toLowerCase();
+    if (brandKey === 'vinfast' || brandKey === 'vin fast') brandKey = 'Vinfast';
+    else if (brandKey === 'bmw') brandKey = 'BMW';
+    else if (brandKey === 'tesla') brandKey = 'Tesla';
+
+    // Chuẩn hóa số ghế
+    let seatKey = String(seat).replace(' chỗ', '').replace('chỗ', '').replace(' ', '').trim();
+    if (seatKey === '4' || seatKey === '04') seatKey = '4';
+    else if (seatKey === '7' || seatKey === '07') seatKey = '7';
+
+    // Chuẩn hóa màu sắc
+    let colorKey = (color || '').toLowerCase().replace(/\s/g, '');
+    // mapping tiếng Anh sang tiếng Việt
+    const colorMap = {
+        'white': 'trắng',
+        'silver': 'bạc',
+        'blue': 'xanh',
+        'black': 'đen',
+        'red': 'đỏ',
+        'green': 'xanh',
+        'gray': 'bạc',
+        'grey': 'bạc',
+        'xanhduong': 'xanh',
+        'xanh': 'xanh',
+        'trang': 'trắng',
+        'bac': 'bạc',
+        'den': 'đen',
+        'do': 'đỏ',
+    };
+    if (colorMap[colorKey]) colorKey = colorMap[colorKey];
+
+    if (carImageMap[brandKey] && carImageMap[brandKey][seatKey] && carImageMap[brandKey][seatKey][colorKey]) {
+        return carImageMap[brandKey][seatKey][colorKey];
+    }
+    return 'https://via.placeholder.com/100x60?text=No+Image';
+}
 import './VehicleManagement.css';
 import vehicleService from '../../services/vehicleService';
 
@@ -295,8 +386,8 @@ const VehicleManagement = () => {
 
     return (
         <div className="vehicle-management">
-            <div className="header">
-                <h1>QUẢN LÝ XE</h1>
+            <div className="header" style={{ background: 'none', boxShadow: 'none' }}>
+                <h1 style={{ color: '#111', background: 'none' }}>QUẢN LÝ XE</h1>
             </div>
 
             <div className="search-bar">
@@ -463,7 +554,7 @@ const VehicleManagement = () => {
                                             <td style={{ textAlign: 'center' }}><strong>#{vehicle.id}</strong></td>
                                             <td style={{ textAlign: 'center' }}>
                                                 <img
-                                                    src={vehicle.image}
+                                                    src={getCarImageUrl(vehicle.brand, vehicle.seat_count, vehicle.color)}
                                                     alt={vehicle.vehicle_name}
                                                     style={{ width: '80px', height: '50px', objectFit: 'cover', borderRadius: '6px', display: 'block', margin: '0 auto' }}
                                                     onError={(e) => {
@@ -761,18 +852,18 @@ const VehicleManagement = () => {
                 <div className="modal-overlay" onClick={closeOrderHistory}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '1200px' }}>
                         <div className="modal-header">
-                            <h2>📋 Lịch sử đặt xe</h2>
+                            <h2> Lịch sử đặt xe</h2>
                             <button className="modal-close" onClick={closeOrderHistory}>✕</button>
                         </div>
 
                         <div className="modal-body">
                             {loadingOrders ? (
                                 <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-                                    ⏳ Đang tải lịch sử đặt xe...
+                                    Đang tải lịch sử đặt xe...
                                 </div>
                             ) : selectedVehicleOrders.length === 0 ? (
                                 <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-                                    📭 Chưa có lịch sử đặt xe nào
+                                    Chưa có lịch sử đặt xe nào
                                 </div>
                             ) : (
                                 <div style={{ overflowX: 'auto' }}>
@@ -834,7 +925,7 @@ const VehicleManagement = () => {
                                         </tbody>
                                     </table>
                                     <div style={{ marginTop: '20px', padding: '15px', background: '#f3f4f6', borderRadius: '8px' }}>
-                                        <strong>📊 Thống kê:</strong> Tổng {selectedVehicleOrders.length} đơn đặt xe
+                                        <strong> Thống kê:</strong> Tổng {selectedVehicleOrders.length} đơn đặt xe
                                     </div>
                                 </div>
                             )}
