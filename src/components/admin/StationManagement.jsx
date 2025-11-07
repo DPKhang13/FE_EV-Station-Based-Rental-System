@@ -39,6 +39,101 @@ const StationManagement = () => {
         street: ''
     });
 
+    // Local car image mapping (same logic as VehicleManagement) to show thumbnails
+    const carImageMap = {
+        vinfast: {
+            '7': {
+                trắng: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Vinfast/unnamed.jpg',
+                bạc: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Vinfast/unnamed%20%284%29.jpg',
+                đen: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Vinfast/unnamed%20%283%29.jpg',
+                đỏ: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Vinfast/unnamed%20%282%29.jpg',
+                xanh: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Vinfast/unnamed%20%281%29.jpg',
+            },
+            '4': {
+                xanh: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/a80cae76-5c8a-4226-ac85-116ba2da7a3a.png',
+                bạc: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/b76c51c2-6e69-491c-ae83-0d36ff93cdff.png',
+                đen: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/e88bd242-3df4-48a7-8fe2-a9a3466f939f.png',
+                đỏ: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/e420cb1b-1710-4dbe-a5e3-e1285c690b6e.png',
+                trắng: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/unnamed.jpg',
+            },
+        },
+        bmw: {
+            '7': {
+                đỏ: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/BMW/unnamed%20%281%29.jpg',
+                đen: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/BMW/unnamed%20%284%29.jpg',
+                trắng: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/BMW/unnamed.jpg',
+                bạc: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/BMW/unnamed%20%283%29.jpg',
+                xanh: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/BMW/unnamed%20%282%29.jpg',
+            },
+            '4': {
+                trắng: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/white.jpg',
+                bạc: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/unnamed%20%281%29.jpg',
+                xanh: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/blue.jpg',
+                đen: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/8f9f3e31-0c04-4441-bb40-97778c9824e0.png',
+                đỏ: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/7f3edc23-30ba-4e84-83a9-c8c418f2362d.png',
+            },
+        },
+        tesla: {
+            '7': {
+                trắng: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Tesla/unnamed.jpg',
+                bạc: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Tesla/unnamed%20%284%29.jpg',
+                đỏ: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Tesla/unnamed%20%282%29.jpg',
+                đen: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Tesla/unnamed%20%283%29.jpg',
+                xanh: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Tesla/unnamed%20%281%29.jpg',
+            },
+            '4': {
+                bạc: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed4.jpg',
+                xanh: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed.jpg',
+                đen: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%283%29.jpg',
+                trắng: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%282%29.jpg',
+                đỏ: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%281%29.jpg',
+            },
+        },
+    };
+
+    const getCarImageUrl = (vehicle) => {
+        if (!vehicle) return 'https://via.placeholder.com/100x60?text=No+Image';
+        const brand = (vehicle.brand || '').toLowerCase().replace(/\s+/g, '');
+        const seat = String(vehicle.seat_count || vehicle.seatCount || '4');
+        let colorRaw = (vehicle.color || '').toLowerCase().trim();
+
+        const colorSynonyms = {
+            'white': 'trắng',
+            'black': 'đen',
+            'silver': 'bạc',
+            'grey': 'xanh',
+            'gray': 'xanh',
+            'blue': 'xanh',
+            'red': 'đỏ'
+        };
+
+        if (!colorRaw && vehicle.colorName) colorRaw = vehicle.colorName.toLowerCase().trim();
+        if (colorSynonyms[colorRaw]) colorRaw = colorSynonyms[colorRaw];
+
+        const tryLookup = (b, s, c) => {
+            try {
+                return carImageMap?.[b]?.[s]?.[c];
+            } catch {
+                return undefined;
+            }
+        };
+
+        let url = tryLookup(brand, seat, colorRaw);
+        if (!url) {
+            const normalize = (str) => str.normalize ? str.normalize('NFD').replace(/\p{Diacritic}/gu, '') : str;
+            const colorNoAcc = normalize(colorRaw);
+            const bucket = carImageMap?.[brand]?.[seat] || {};
+            for (const key of Object.keys(bucket)) {
+                if (normalize(key) === colorNoAcc) {
+                    url = bucket[key];
+                    break;
+                }
+            }
+        }
+
+        return url || vehicle.image || 'https://via.placeholder.com/100x60?text=No+Image';
+    };
+
     // Fetch stations on component mount
     useEffect(() => {
         fetchStations();
@@ -255,7 +350,7 @@ const StationManagement = () => {
         try {
             const brand = vehicleFormData.vehicleName; // VinFast, BMW, Tesla
             const seatCount = parseInt(vehicleFormData.seatCount);
-            
+
             // ✅ Normalize variant về dạng First-letter capitalized (Air, Plus, Pro)
             const variant = formatVariant(vehicleFormData.variant);
 
@@ -478,7 +573,7 @@ const StationManagement = () => {
                     <button
                         className="btn-add-station"
                         onClick={handleSearch}
-                        style={{ 
+                        style={{
                             background: '#3b82f6',
                             padding: '0px 13px'
                         }}
@@ -736,6 +831,7 @@ const StationManagement = () => {
                                         <thead>
                                             <tr>
                                                 <th>ID</th>
+                                                <th>HÌNH ẢNH</th>
                                                 <th>BIỂN SỐ</th>
                                                 <th>TÊN XE</th>
                                                 <th>MÀU SẮC</th>
@@ -756,6 +852,14 @@ const StationManagement = () => {
                                                 stationVehicles.map((vehicle, index) => (
                                                     <tr key={vehicle.id || index}>
                                                         <td>{vehicle.id}</td>
+                                                        <td>
+                                                            <img
+                                                                src={getCarImageUrl(vehicle)}
+                                                                alt={vehicle.vehicleName || vehicle.plateNumber}
+                                                                style={{ width: 84, height: 50, objectFit: 'cover', borderRadius: 4 }}
+                                                                onError={(e) => { e.target.src = 'https://via.placeholder.com/100x60?text=No+Image'; }}
+                                                            />
+                                                        </td>
                                                         <td style={{ fontWeight: 'bold', color: '#1f2937' }}>{vehicle.plateNumber}</td>
                                                         <td>{vehicle.vehicleName}</td>
                                                         <td>
@@ -858,6 +962,26 @@ const StationManagement = () => {
                             <button className="modal-close" onClick={handleCloseAddVehicleModal}>✕</button>
                         </div>
 
+                        {/* Preview based on selected brand/color/seat */}
+                        <div style={{ textAlign: 'center', padding: '12px 24px 0 24px' }}>
+                            {(() => {
+                                const previewVehicle = {
+                                    brand: vehicleFormData.vehicleName,
+                                    color: vehicleFormData.color,
+                                    seatCount: Number(vehicleFormData.seatCount) || 4,
+                                    image: ''
+                                };
+                                return (
+                                    <img
+                                        src={getCarImageUrl(previewVehicle)}
+                                        alt="Preview"
+                                        style={{ width: 220, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
+                                        onError={(e) => { e.target.src = 'https://via.placeholder.com/220x120?text=No+Image'; }}
+                                    />
+                                );
+                            })()}
+                        </div>
+
                         <form onSubmit={handleAddVehicle} className="station-form">
                             <div className="form-grid">
                                 <div className="form-group full-width">
@@ -955,6 +1079,26 @@ const StationManagement = () => {
                         <div className="modal-header">
                             <h2>🔧 Chỉnh sửa xe: {editingVehicle.plateNumber}</h2>
                             <button className="modal-close" onClick={handleCloseEditVehicleModal}>✕</button>
+                        </div>
+
+                        {/* Preview for edit modal */}
+                        <div style={{ textAlign: 'center', padding: '12px 24px 0 24px' }}>
+                            {(() => {
+                                const previewVehicle = {
+                                    brand: vehicleFormData.vehicleName || editingVehicle.brand,
+                                    color: vehicleFormData.color || editingVehicle.color,
+                                    seatCount: Number(vehicleFormData.seatCount) || editingVehicle.seatCount || 4,
+                                    image: editingVehicle.image || ''
+                                };
+                                return (
+                                    <img
+                                        src={getCarImageUrl(previewVehicle)}
+                                        alt="Preview"
+                                        style={{ width: 220, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
+                                        onError={(e) => { e.target.src = 'https://via.placeholder.com/220x120?text=No+Image'; }}
+                                    />
+                                );
+                            })()}
                         </div>
 
                         <form onSubmit={handleUpdateVehicle} className="station-form">
@@ -1132,8 +1276,8 @@ const StationManagement = () => {
                                                     <td>{new Date(order.endTime).toLocaleString('vi-VN')}</td>
                                                     <td>
                                                         <span className={`status-badge ${order.status === 'COMPLETED' ? 'status-active' :
-                                                                order.status === 'CANCELLED' ? 'status-inactive' :
-                                                                    'status-maintenance'
+                                                            order.status === 'CANCELLED' ? 'status-inactive' :
+                                                                'status-maintenance'
                                                             }`}>
                                                             {order.status}
                                                         </span>
