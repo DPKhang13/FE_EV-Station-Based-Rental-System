@@ -3,7 +3,7 @@ import orderService from "../../services/orderService";
 import rentalStationService from "../../services/rentalStationService"; // ✅ import service
 import "./PopupNhanXe.css";
 
-const PopupNhanXe = ({ xe, onClose }) => {
+const PopupNhanXe = ({ xe, onClose, onReload }) => {
   const [orderInfo, setOrderInfo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
@@ -115,7 +115,11 @@ const PopupNhanXe = ({ xe, onClose }) => {
         )}
 
         <div className="popup-buttons">
-          <button onClick={onClose} className="btn-cancel">
+          <button  onClick={() => {
+              onClose();
+              onReload && onReload();
+          }}
+           className="btn-cancel">
             Đóng
           </button>
         </div>
