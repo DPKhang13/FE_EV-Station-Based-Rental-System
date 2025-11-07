@@ -355,7 +355,7 @@ const StationManagement = () => {
         try {
             const brand = vehicleFormData.vehicleName; // VinFast, BMW, Tesla
             const seatCount = parseInt(vehicleFormData.seatCount);
-
+            
             // ✅ Normalize variant về dạng First-letter capitalized (Air, Plus, Pro)
             const variant = formatVariant(vehicleFormData.variant);
 
@@ -609,7 +609,7 @@ const StationManagement = () => {
                     <button
                         className="btn-add-station"
                         onClick={handleSearch}
-                        style={{
+                        style={{ 
                             background: '#3b82f6',
                             padding: '0px 13px'
                         }}

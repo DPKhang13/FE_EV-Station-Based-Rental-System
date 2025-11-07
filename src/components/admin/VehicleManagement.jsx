@@ -18,6 +18,7 @@ const VehicleManagement = () => {
         plateNumber: '',
         variant: '',
         color: '',
+        colorHex: '#ffffff',
         seatCount: '',
         year: '',
         stationId: '',
@@ -275,14 +276,15 @@ const VehicleManagement = () => {
         setHistoryVehicle(null);
     };
 
-    // Handle add vehicle
-    const handleAddVehicle = () => {
+    // Handle add vehicle (currently unused - reserved for future use)
+    const _handleAddVehicle = () => {
         setFormData({
             vehicleName: '',
             brand: '',
             plateNumber: '',
             variant: '',
             color: '',
+            colorHex: '#ffffff',
             seatCount: '',
             year: '',
             stationId: '',
