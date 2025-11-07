@@ -1,6 +1,6 @@
 .offers {
     padding: 80px 0;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: #FFFFFF;
     min-height: 100vh;
 }
 
@@ -15,47 +15,57 @@
     margin-bottom: 80px;
 }
 
-/* BIG CARD - Hộp lớn bao quanh header + 3 cards */
+/* BIG CARD - Hộp lớn bao quanh header + 3 cards - Mercedes Style */
 .offers-big-card {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(249, 250, 251, 0.98) 100%);
-    padding: 40px;
-    border-radius: 25px;
-    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12);
-    border: 3px solid rgba(102, 126, 234, 0.15);
-    backdrop-filter: blur(10px);
+    background: #FFFFFF;
+    padding: 50px;
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+    border-top: 3px solid #DC0000;
+    backdrop-filter: none;
     transition: all 0.4s ease;
 }
 
 .offers-big-card:hover {
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    transform: translateY(0);
 }
 
-/* Category header inside big card */
+/* Category header inside big card - Mercedes Style */
 .category-header {
-    margin-bottom: 35px;
+    margin-bottom: 50px;
     text-align: center;
-    padding-bottom: 25px;
-    border-bottom: 3px solid rgba(102, 126, 234, 0.2);
+    padding-bottom: 30px;
+    border-bottom: 1px solid #E0E0E0;
 }
 
 .category-title {
-    font-size: 42px;
-    font-weight: 900;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 12px;
-    letter-spacing: 2px;
-    text-shadow: 0 2px 10px rgba(102, 126, 234, 0.2);
+    font-size: 36px;
+    font-weight: 300;
+    color: #000000;
+    margin-bottom: 15px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    position: relative;
+}
+
+.category-title::after {
+    content: '';
+    display: block;
+    width: 80px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, #DC0000 50%, transparent 100%);
+    margin: 20px auto 0;
+    border-radius: 0;
 }
 
 .category-description {
-    font-size: 18px;
-    color: #6b7280;
+    font-size: 15px;
+    color: #666666;
     margin: 0;
-    font-weight: 500;
+    font-weight: 300;
+    letter-spacing: 1px;
 }
 
 /* Cards nằm ngang TRONG big card */
@@ -150,56 +160,56 @@
 
 /* offer-card (cleaned and consolidated further down) */
 
-/* AIR Card - Clean White with Blue Accent */
+/* AIR Card - Mercedes Blue */
 .offer-card:nth-child(1) {
-    background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
-    border: 2px solid #3b82f6;
+    background: #FFFFFF;
+    border: 2px solid #E0E0E0;
 }
 
 .offer-card:nth-child(1) .offer-title {
-    color: #2563eb;
+    color: #000000;
 }
 
 .offer-card:nth-child(1) .offer-image {
-    border-bottom-color: #3b82f6;
+    border-bottom: 2px solid #E0E0E0;
 }
 
-/* PLUS Card - Elegant Silver/Gray */
+/* PLUS Card - Mercedes Silver */
 .offer-card:nth-child(2) {
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    border: 2px solid #64748b;
+    background: #FFFFFF;
+    border: 2px solid #CCCCCC;
 }
 
 .offer-card:nth-child(2) .offer-title {
-    color: #475569;
+    color: #000000;
 }
 
 .offer-card:nth-child(2) .offer-image {
-    border-bottom-color: #64748b;
+    border-bottom: 2px solid #CCCCCC;
 }
 
-/* PRO Card - Premium Gold/Purple */
+/* PRO Card - Mercedes Red */
 .offer-card:nth-child(3) {
-    background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%);
-    border: 2px solid #f59e0b;
+    background: #FFFFFF;
+    border: 2px solid #DC0000;
 }
 
 .offer-card:nth-child(3) .offer-title {
-    color: #d97706;
+    color: #DC0000;
 }
 
 .offer-card:nth-child(3) .offer-image {
-    border-bottom-color: #f59e0b;
+    border-bottom: 2px solid #DC0000;
 }
 
 .offer-card:nth-child(3)::before {
     content: '👑';
     position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 28px;
+    top: 15px;
+    right: 15px;
+    font-size: 32px;
     z-index: 10;
-    text-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+    filter: drop-shadow(0 0 8px rgba(220, 0, 0, 0.4));
 }
 
 
@@ -217,14 +227,12 @@
 }
 
 .offers-title {
-    font-size: 42px;
-    font-weight: 800;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 16px;
-    letter-spacing: 2px;
+    font-size: 48px;
+    font-weight: 300;
+    color: #000000;
+    margin-bottom: 20px;
+    letter-spacing: 6px;
+    text-transform: uppercase;
 }
 
 .offer-image:hover {
@@ -265,26 +273,26 @@
 }
 
 .offer-card {
-    background: #fff;
-    border-radius: 20px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    background: #FFFFFF;
+    border-radius: 0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     overflow: hidden;
     text-align: center;
-    transition: all 0.4s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 0;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     position: relative;
-    border: 2px solid rgba(102, 126, 234, 0.1);
+    border: 2px solid #E0E0E0;
     min-height: 450px;
     height: 100%;
 }
 
 .offer-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-    border-color: rgba(102, 126, 234, 0.3);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    border-color: #DC0000;
 }
 
 .offer-card .offer-image {
@@ -297,26 +305,27 @@
 }
 
 .offer-card .offer-title {
-    font-size: 28px;
-    font-weight: 800;
+    font-size: 24px;
+    font-weight: 400;
     margin: 20px 0 12px 0;
     padding: 0 20px;
     text-transform: uppercase;
-    letter-spacing: 2px;
-    color: #1f2937;
+    letter-spacing: 3px;
+    color: #000000;
 }
 
 .offer-card .offer-price {
-    font-size: 20px;
-    font-weight: 700;
-    color: #dc2626;
+    font-size: 18px;
+    font-weight: 300;
+    color: #DC0000;
     margin: 8px 0 15px 0;
     padding: 0 20px;
+    letter-spacing: 1px;
 }
 
 .offer-card .offer-price span {
-    font-size: 26px;
-    font-weight: 900;
+    font-size: 24px;
+    font-weight: 400;
 }
 
 .offer-card .offer-description {
@@ -331,23 +340,41 @@
 .offer-card .rent-now-button {
     margin: 0 20px 20px 20px;
     padding: 14px 32px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: 700;
+    background: #000000;
+    color: #FFFFFF;
+    border: 2px solid #000000;
+    border-radius: 0;
+    font-size: 13px;
+    font-weight: 400;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     text-transform: uppercase;
-    letter-spacing: 1px;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    letter-spacing: 2px;
+    box-shadow: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.offer-card .rent-now-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: #DC0000;
+    transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: -1;
+}
+
+.offer-card .rent-now-button:hover::before {
+    left: 0;
 }
 
 .offer-card .rent-now-button:hover {
-    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    border-color: #DC0000;
     transform: translateY(-2px);
-    box-shadow: 0 6px 25px rgba(102, 126, 234, 0.5);
+    box-shadow: 0 5px 15px rgba(220, 0, 0, 0.3);
 }
 
 /* Remove luxury specific styles - all cards are now equal */
