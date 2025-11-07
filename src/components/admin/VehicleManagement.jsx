@@ -2,6 +2,33 @@ import React, { useState, useEffect } from 'react';
 import './VehicleManagement.css';
 import vehicleService from '../../services/vehicleService';
 
+// Mapping ảnh xe theo hãng, màu sắc và số chỗ
+const CAR_IMAGE_MAPPING = {
+    '4': { // 4 chỗ
+        'Vinfast': {
+            'Blue': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/a80cae76-5c8a-4226-ac85-116ba2da7a3a.png',
+            'Silver': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/b76c51c2-6e69-491c-ae83-0d36ff93cdff.png',
+            'Black': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/e88bd242-3df4-48a7-8fe2-a9a3466f939f.png',
+            'Red': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/e420cb1b-1710-4dbe-a5e3-e1285c690b6e.png',
+            'White': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/unnamed.jpg'
+        },
+        'BMW': {
+            'White': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/white.jpg',
+            'Silver': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/unnamed%20%281%29.jpg',
+            'Blue': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/blue.jpg',
+            'Black': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/8f9f3e31-0c04-4441-bb40-97778c9824e0.png',
+            'Red': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/7f3edc23-30ba-4e84-83a9-c8c418f2362d.png'
+        },
+        'Tesla': {
+            'Silver': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed4.jpg',
+            'Blue': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed.jpg',
+            'Black': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%283%29.jpg',
+            'White': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%282%29.jpg',
+            'Red': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%281%29.jpg'
+        }
+    }
+};
+
 const VehicleManagement = () => {
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -41,7 +68,8 @@ const VehicleManagement = () => {
         status: 'Available',
         transmission: 'Automatic',
         batteryCapacity: '',
-        description: ''
+        description: '',
+        imageUrl: ''
     });
 
     // Fetch vehicles từ API
@@ -176,6 +204,55 @@ const VehicleManagement = () => {
         setSelectedVehicleOrders([]);
     };
 
+    // Function to fetch image URL from backend API
+    const fetchCarImageFromAPI = async (brand, color, seatCount) => {
+        try {
+            const token = localStorage.getItem('accessToken');
+            const API_BASE_URL = 'http://localhost:8080/api';
+            
+            console.log('🎨 [API] Fetching image for:', { brand, color, seatCount });
+            
+            const url = `${API_BASE_URL}/vehicles/image-url?brand=${encodeURIComponent(brand)}&color=${encodeURIComponent(color)}&seatCount=${seatCount}`;
+            
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('✅ [API] Image URL received:', data.imageUrl);
+                return data.imageUrl;
+            } else {
+                console.error('❌ [API] Failed to fetch image:', response.status);
+                return '';
+            }
+        } catch (error) {
+            console.error('❌ [API] Error fetching image:', error);
+            return '';
+        }
+    };
+
+    // Function to update form data and auto-fill image from API
+    const updateFormWithImage = async (updates) => {
+        const newFormData = { ...formData, ...updates };
+        
+        console.log('🔄 [updateFormWithImage] Current form:', newFormData);
+        
+        // Tự động cập nhật ảnh nếu có đủ thông tin
+        if (newFormData.brand && newFormData.color && newFormData.seatCount) {
+            const imageUrl = await fetchCarImageFromAPI(newFormData.brand, newFormData.color, newFormData.seatCount);
+            if (imageUrl) {
+                newFormData.imageUrl = imageUrl;
+                console.log('✅ [updateFormWithImage] Auto-filled image:', imageUrl);
+            }
+        }
+        
+        setFormData(newFormData);
+    };
+
     // Handle add vehicle (currently unused - reserved for future use)
     const _handleAddVehicle = () => {
         setFormData({
@@ -193,7 +270,8 @@ const VehicleManagement = () => {
             status: 'Available',
             transmission: 'Automatic',
             batteryCapacity: '',
-            description: ''
+            description: '',
+            imageUrl: ''
         });
         setShowAddModal(true);
     };
@@ -215,7 +293,8 @@ const VehicleManagement = () => {
             status: vehicle.status || 'Available',
             transmission: vehicle.transmission || 'Automatic',
             batteryCapacity: vehicle.battery_capacity || '',
-            description: vehicle.description || ''
+            description: vehicle.description || '',
+            imageUrl: vehicle.imageUrl || vehicle.image_url || ''
         });
         setShowEditModal(true);
     };
@@ -583,6 +662,62 @@ const VehicleManagement = () => {
 
                         <form onSubmit={handleSubmit} className="vehicle-form">
                             <div className="form-grid">
+                                <div className="form-group full-width">
+                                    <label>🚗 Chọn nhanh mẫu xe (tự động điền ảnh)</label>
+                                    <select
+                                        onChange={(e) => {
+                                            if (e.target.value) {
+                                                const [brand, color, seats, imageUrl] = e.target.value.split('|||');
+                                                const colorMap = {
+                                                    'White': '#ffffff',
+                                                    'Black': '#000000',
+                                                    'Silver': '#c0c0c0',
+                                                    'Red': '#ff0000',
+                                                    'Blue': '#0000ff'
+                                                };
+                                                setFormData({
+                                                    ...formData,
+                                                    brand: brand,
+                                                    color: color,
+                                                    colorHex: colorMap[color] || '#ffffff',
+                                                    seatCount: seats,
+                                                    imageUrl: imageUrl
+                                                });
+                                            }
+                                        }}
+                                        style={{
+                                            padding: '12px',
+                                            border: '2px solid #3b82f6',
+                                            borderRadius: '8px',
+                                            background: '#eff6ff',
+                                            fontWeight: '600'
+                                        }}
+                                    >
+                                        <option value="">-- Chọn mẫu xe có sẵn --</option>
+                                        <optgroup label="🚗 Vinfast 4 chỗ">
+                                            <option value="Vinfast|||Blue|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/a80cae76-5c8a-4226-ac85-116ba2da7a3a.png">🔵 Vinfast - Xanh</option>
+                                            <option value="Vinfast|||Silver|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/b76c51c2-6e69-491c-ae83-0d36ff93cdff.png">⚪ Vinfast - Bạc</option>
+                                            <option value="Vinfast|||Black|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/e88bd242-3df4-48a7-8fe2-a9a3466f939f.png">⚫ Vinfast - Đen</option>
+                                            <option value="Vinfast|||Red|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/e420cb1b-1710-4dbe-a5e3-e1285c690b6e.png">🔴 Vinfast - Đỏ</option>
+                                            <option value="Vinfast|||White|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/unnamed.jpg">⚪ Vinfast - Trắng</option>
+                                        </optgroup>
+                                        <optgroup label="🚙 BMW 4 chỗ">
+                                            <option value="BMW|||White|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/white.jpg">⚪ BMW - Trắng</option>
+                                            <option value="BMW|||Silver|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/unnamed%20%281%29.jpg">⚪ BMW - Bạc</option>
+                                            <option value="BMW|||Blue|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/blue.jpg">🔵 BMW - Xanh</option>
+                                            <option value="BMW|||Black|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/8f9f3e31-0c04-4441-bb40-97778c9824e0.png">⚫ BMW - Đen</option>
+                                            <option value="BMW|||Red|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/7f3edc23-30ba-4e84-83a9-c8c418f2362d.png">🔴 BMW - Đỏ</option>
+                                        </optgroup>
+                                        <optgroup label="🚘 Tesla 4 chỗ">
+                                            <option value="Tesla|||Silver|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed4.jpg">⚪ Tesla - Bạc</option>
+                                            <option value="Tesla|||Blue|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed.jpg">🔵 Tesla - Xanh</option>
+                                            <option value="Tesla|||Black|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%283%29.jpg">⚫ Tesla - Đen</option>
+                                            <option value="Tesla|||White|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%282%29.jpg">⚪ Tesla - Trắng</option>
+                                            <option value="Tesla|||Red|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%281%29.jpg">🔴 Tesla - Đỏ</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+
                                 <div className="form-group">
                                     <label>Tên xe *</label>
                                     <input
@@ -596,13 +731,16 @@ const VehicleManagement = () => {
 
                                 <div className="form-group">
                                     <label>Hãng xe *</label>
-                                    <input
-                                        type="text"
+                                    <select
                                         required
                                         value={formData.brand}
-                                        onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                                        placeholder="VD: VinFast"
-                                    />
+                                        onChange={(e) => updateFormWithImage({ brand: e.target.value })}
+                                    >
+                                        <option value="">-- Chọn hãng xe --</option>
+                                        <option value="Vinfast">Vinfast</option>
+                                        <option value="BMW">BMW</option>
+                                        <option value="Tesla">Tesla</option>
+                                    </select>
                                 </div>
 
                                 <div className="form-group">
@@ -663,8 +801,7 @@ const VehicleManagement = () => {
                                                     'Gray': '#808080',
 
                                                 };
-                                                setFormData({ 
-                                                    ...formData, 
+                                                updateFormWithImage({ 
                                                     color: e.target.value,
                                                     colorHex: colorMap[e.target.value] || formData.colorHex
                                                 });
@@ -690,7 +827,7 @@ const VehicleManagement = () => {
                                     <select
                                         required
                                         value={formData.seatCount}
-                                        onChange={(e) => setFormData({ ...formData, seatCount: e.target.value })}
+                                        onChange={(e) => updateFormWithImage({ seatCount: e.target.value })}
                                     >
                                         <option value="">Chọn số ghế</option>
                                         <option value="4">4 chỗ</option>
@@ -790,6 +927,50 @@ const VehicleManagement = () => {
                                         placeholder="Mô tả chi tiết về xe..."
                                         rows="3"
                                     />
+                                </div>
+
+                                <div className="form-group full-width">
+                                    <label>Đường dẫn ảnh</label>
+                                    <div style={{ 
+                                        marginBottom: '8px', 
+                                        padding: '8px 12px', 
+                                        background: '#f3f4f6', 
+                                        borderRadius: '6px',
+                                        fontSize: '12px',
+                                        color: '#6b7280'
+                                    }}>
+                                        📋 Hiện tại: Brand={formData.brand || '?'}, Color={formData.color || '?'}, Seats={formData.seatCount || '?'}
+                                        {formData.brand && formData.color && formData.seatCount && (
+                                            <span style={{ color: '#10b981', fontWeight: 'bold' }}> ✓ Đủ điều kiện</span>
+                                        )}
+                                    </div>
+                                    <input
+                                        type="url"
+                                        value={formData.imageUrl || ''}
+                                        onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                                        placeholder="URL ảnh xe (tự động điền khi chọn hãng, màu, số chỗ)"
+                                        style={{ 
+                                            backgroundColor: formData.imageUrl ? '#f0fdf4' : '#fff',
+                                            borderColor: formData.imageUrl ? '#10b981' : '#e5e7eb'
+                                        }}
+                                    />
+                                    {formData.imageUrl && (
+                                        <div style={{ marginTop: '8px' }}>
+                                            <img 
+                                                src={formData.imageUrl} 
+                                                alt="Preview" 
+                                                style={{ 
+                                                    maxWidth: '200px', 
+                                                    maxHeight: '120px',
+                                                    borderRadius: '8px',
+                                                    border: '2px solid #e5e7eb'
+                                                }}
+                                                onError={(e) => {
+                                                    e.target.style.display = 'none';
+                                                }}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
