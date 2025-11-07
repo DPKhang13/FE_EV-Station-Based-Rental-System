@@ -134,10 +134,29 @@
 .station-table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
+    /* enforce column widths to prevent extreme horizontal growth */
 }
 
 .station-table thead {
     background: linear-gradient(90deg, #6a8cff 0%, #7b5cff 100%) !important;
+}
+
+/* Keep the action (last) column visible when table is wide by making it sticky to the right */
+.station-table th:last-child,
+.station-table td:last-child {
+    position: -webkit-sticky;
+    /* Safari */
+    position: sticky;
+    right: 0;
+    background: #fff;
+    /* avoid showing rows behind when sticky */
+    z-index: 5;
+}
+
+.station-table thead th:last-child {
+    z-index: 6;
+    /* ensure header is above body cells */
 }
 
 .station-table th {
@@ -188,13 +207,114 @@
 }
 
 .station-table td {
-    padding: 16px;
+    padding: 10px 12px;
+    /* reduce padding so more columns fit */
     color: #374151;
+    font-size: 13px;
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Specific column width constraints to keep important columns visible */
+/* Default (main station list) column widths */
+.station-table th:nth-child(1),
+.station-table td:nth-child(1) {
+    width: 56px;
+    /* ID */
+}
+
+.station-table th:nth-child(2),
+.station-table td:nth-child(2) {
+    width: 240px;
+    /* Tên điểm thuê */
+}
+
+.station-table th:nth-child(3),
+.station-table td:nth-child(3) {
+    width: 180px;
+    /* Đường */
+}
+
+.station-table th:nth-child(4),
+.station-table td:nth-child(4) {
+    width: 140px;
+    /* Phường/Xã */
+}
+
+.station-table th:nth-child(5),
+.station-table td:nth-child(5) {
+    width: 140px;
+    /* Quận/Huyện */
+}
+
+.station-table th:nth-child(6),
+.station-table td:nth-child(6) {
+    width: 120px;
+    /* Thành phố */
+}
+
+/* Vehicle table inside detail modal needs different constraints */
+.detail-modal .station-table th:nth-child(1),
+.detail-modal .station-table td:nth-child(1) {
+    width: 56px;
+    /* ID */
+}
+
+.detail-modal .station-table th:nth-child(2),
+.detail-modal .station-table td:nth-child(2) {
+    width: 96px;
+    /* image column */
+}
+
+.detail-modal .station-table th:nth-child(3),
+.detail-modal .station-table td:nth-child(3) {
+    width: 110px;
+    /* plate */
+}
+
+.detail-modal .station-table th:nth-child(4),
+.detail-modal .station-table td:nth-child(4) {
+    width: 180px;
+    /* name */
+}
+
+/* Ensure the action column doesn't wrap buttons onto multiple lines */
+.station-table td:last-child {
+    white-space: nowrap;
+    min-width: 240px;
+    /* give some room for buttons to sit inline */
+}
+
+/* Modal-specific: give the action column more room and tighten button spacing */
+.modal-content .station-table td:last-child {
+    white-space: nowrap;
+    min-width: 260px;
+    /* reduced so modal fits more columns without scrolling */
+}
+
+.modal-content .action-buttons {
+    gap: 6px;
+    flex-wrap: nowrap;
+}
+
+.modal-content .action-buttons>button {
+    padding: 4px 8px;
+    font-size: 13px;
 }
 
 .station-name {
     font-weight: 600;
     color: #1f2937;
+}
+
+/* Table thumbnails */
+.station-table td img {
+    width: 72px;
+    height: 54px;
+    object-fit: cover;
+    border-radius: 6px;
 }
 
 .station-address {
@@ -229,13 +349,17 @@
 
 /* Status Badge */
 .status-badge {
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 13px;
+    padding: 6px 10px;
+    border-radius: 12px;
+    font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    letter-spacing: 0.4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
+    line-height: 1;
+    white-space: nowrap;
+    /* keep badge on single line */
+    display: inline-block;
 }
 
 .status-active {
@@ -257,17 +381,28 @@
 .action-buttons {
     display: flex;
     gap: 8px;
+    align-items: center;
+    flex-wrap: nowrap;
+    /* keep buttons on one line */
+    white-space: nowrap;
 }
 
 .btn-view,
 .btn-edit,
 .btn-delete {
-    padding: 8px 12px;
+    padding: 5px 8px;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 16px;
-    transition: all 0.2s;
+    font-size: 12px;
+    transition: all 0.12s;
+    min-width: 44px;
+    height: 34px;
+    /* allow buttons to shrink but keep consistent size */
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .btn-view {
@@ -615,5 +750,18 @@ max-height: 90vh;
     .modal-content {
         width: 95%;
         max-height: 95vh;
+    }
+
+    /* On narrower screens allow action buttons to wrap if needed */
+    .action-buttons {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .btn-view,
+    .btn-edit,
+    .btn-delete {
+        font-size: 14px;
+        padding: 8px 10px;
     }
 }

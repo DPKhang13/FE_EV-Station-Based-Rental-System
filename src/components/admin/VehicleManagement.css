@@ -12,6 +12,12 @@
     margin-bottom: 30px;
 }
 
+.vehicle-management .header {
+    background: white;
+    padding: 12px 18px;
+    border-radius: 4px;
+}
+
 .vehicle-management .page-header {
     display: flex;
     justify-content: space-between;
@@ -19,12 +25,14 @@
     margin-bottom: 30px;
     border: 2px solid #000000;
     padding: 20px;
-    border-radius: 8px;
+    border-radius: 4px;
 }
 
 .vehicle-management h1 {
     font-size: 28px;
     margin: 0;
+    color: #000;
+    /* make header text black */
 }
 
 /* Search bar */
@@ -36,7 +44,7 @@
     width: 100%;
     padding: 12px 20px;
     border: 1px solid #e5e7eb;
-    border-radius: 8px;
+    border-radius: 4px;
     font-size: 16px;
 }
 
@@ -49,7 +57,7 @@
 .vehicle-table {
     width: 100%;
     background: white;
-    border-radius: 12px;
+    border-radius: 4px;
     overflow-x: auto;
     overflow-y: visible;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -77,6 +85,47 @@
     vertical-align: middle;
 }
 
+.vehicle-table td:last-child {
+    /* Use flex so action buttons are evenly spaced and aligned */
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    /* keep actions on the right */
+    align-items: center;
+    white-space: nowrap;
+    min-width: 240px;
+    /* reserve space for buttons */
+}
+
+.vehicle-table td:last-child button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    min-width: 56px;
+}
+
+.vehicle-table .btn-history {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: #fff;
+    border: none;
+}
+
+.vehicle-table .btn-edit {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+}
+
+.vehicle-table .btn-delete {
+    background: #ef4444;
+    color: #fff;
+    border: none;
+}
+
 /* Disable hover effect completely */
 .vehicle-table tbody tr:hover {
     background: transparent !important;
@@ -87,14 +136,14 @@
     width: 80px;
     height: 50px;
     object-fit: cover;
-    border-radius: 6px;
+    border-radius: 4px;
     display: block;
 }
 
 /* Status Badge */
 .status-badge {
     padding: 6px 12px;
-    border-radius: 6px;
+    border-radius: 4px;
     font-size: 14px;
     font-weight: 600;
 }
@@ -123,7 +172,7 @@
 .filters-section {
     background: white;
     padding: 0;
-    border-radius: 12px;
+    border-radius: 4px;
     margin-bottom: 20px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     overflow: hidden;
@@ -185,6 +234,17 @@
     gap: 20px;
 }
 
+/* Ensure each filter group stacks title above options (label on top, checkboxes below) */
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.filter-group .filter-options {
+    width: 100%;
+}
+
 .filter-group h4 {
     margin: 0 0 10px 0;
     color: #374151;
@@ -204,7 +264,7 @@
     gap: 8px;
     cursor: pointer;
     padding: 6px 10px;
-    border-radius: 6px;
+    border-radius: 4px;
     transition: background 0.2s;
 }
 
@@ -229,7 +289,7 @@
     color: white;
     padding: 8px 16px;
     border: none;
-    border-radius: 6px;
+    border-radius: 4px;
     font-size: 14px;
     cursor: pointer;
     transition: all 0.3s;
@@ -253,12 +313,30 @@
 
 .modal-content {
     background: white;
-    border-radius: 12px;
+    border-radius: 4px;
     width: 100%;
     max-width: 900px;
     max-height: 90vh;
     overflow-y: auto;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Order history thumbnails inside modal */
+.order-history-img {
+    width: 80px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 4px;
+    display: block;
+}
+
+.order-vehicle-image-large {
+    width: 160px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 6px;
+    display: block;
+    margin: 0 auto 12px auto;
 }
 
 /* Form */
@@ -288,7 +366,7 @@
 .form-group textarea {
     padding: 10px 12px;
     border: 1px solid #d1d5db;
-    border-radius: 6px;
+    border-radius: 4px;
     font-size: 14px;
     font-family: inherit;
     transition: border-color 0.2s;
@@ -322,12 +400,29 @@
     vertical-align: middle;
 }
 
-select option[value="White"]::before { background-color: white; }
-select option[value="Black"]::before { background-color: black; }
-select option[value="Silver"]::before { background-color: silver; }
-select option[value="Red"]::before { background-color: red; }
-select option[value="Blue"]::before { background-color: blue; }
-select option[value="Gray"]::before { background-color: gray; }
+select option[value="White"]::before {
+    background-color: white;
+}
+
+select option[value="Black"]::before {
+    background-color: black;
+}
+
+select option[value="Silver"]::before {
+    background-color: silver;
+}
+
+select option[value="Red"]::before {
+    background-color: red;
+}
+
+select option[value="Blue"]::before {
+    background-color: blue;
+}
+
+select option[value="Gray"]::before {
+    background-color: gray;
+}
 
 .modal-footer {
     display: flex;
@@ -342,7 +437,7 @@ select option[value="Gray"]::before { background-color: gray; }
     color: white;
     padding: 10px 20px;
     border: none;
-    border-radius: 6px;
+    border-radius: 4px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
