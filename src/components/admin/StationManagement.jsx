@@ -31,6 +31,11 @@ const StationManagement = () => {
     const [orderHistory, setOrderHistory] = useState([]);
     const [loadingOrderHistory, setLoadingOrderHistory] = useState(false);
 
+    // Vehicle details modal state
+    const [showVehicleDetailsModal, setShowVehicleDetailsModal] = useState(false);
+    const [vehicleDetails, setVehicleDetails] = useState(null);
+    const [loadingVehicleDetails, setLoadingVehicleDetails] = useState(false);
+
     const [formData, setFormData] = useState({
         name: '',
         city: '',
@@ -536,6 +541,37 @@ const StationManagement = () => {
         }
     };
 
+    // Fetch full vehicle details (from GET /api/vehicles/get) and show modal
+    const handleShowVehicleDetails = async (vehicle) => {
+        setShowVehicleDetailsModal(true);
+        setVehicleDetails(null);
+        setLoadingVehicleDetails(true);
+
+        try {
+            const vehicleId = vehicle.vehicleId || vehicle.id;
+            console.log('🔍 Fetching full vehicle list to locate vehicle ID:', vehicleId);
+
+            const resp = await vehicleService.getVehicles();
+            let list = [];
+            if (Array.isArray(resp)) list = resp;
+            else if (resp?.data && Array.isArray(resp.data)) list = resp.data;
+            else if (resp?.result && Array.isArray(resp.result)) list = resp.result;
+
+            const found = list.find(v => String(v.vehicleId) === String(vehicleId) || String(v.id) === String(vehicleId) || (v.plateNumber && v.plateNumber === vehicle.plateNumber));
+            if (found) {
+                setVehicleDetails(found);
+            } else {
+                // Fallback: show the passed-in object
+                setVehicleDetails(vehicle);
+            }
+        } catch (err) {
+            console.error('❌ Error fetching vehicle details:', err);
+            setVehicleDetails(vehicle);
+        } finally {
+            setLoadingVehicleDetails(false);
+        }
+    };
+
     const handleCloseOrderHistoryModal = () => {
         setShowOrderHistoryModal(false);
         setSelectedVehicleForHistory(null);
@@ -836,7 +872,7 @@ const StationManagement = () => {
                                                 <th>TÊN XE</th>
                                                 <th>MÀU SẮC</th>
                                                 <th>SỐ CHỖ</th>
-                                                <th>VARIANT</th>
+                                                <th>Loại xe</th>
                                                 <th>TRẠNG THÁI</th>
                                                 <th>THAO TÁC</th>
                                             </tr>
@@ -894,8 +930,8 @@ const StationManagement = () => {
                                                             <div className="action-buttons">
                                                                 <button
                                                                     className="btn-view"
-                                                                    onClick={() => handleViewOrderHistory(vehicle)}
-                                                                    title="Xem lịch sử đặt xe"
+                                                                    onClick={() => handleShowVehicleDetails(vehicle)}
+                                                                    title="Xem chi tiết xe"
                                                                     style={{
                                                                         background: '#dbeafe',
                                                                         color: '#1e40af',
@@ -907,7 +943,7 @@ const StationManagement = () => {
                                                                         fontWeight: '600'
                                                                     }}
                                                                 >
-                                                                    Lịch sử
+                                                                    Xem chi tiết
                                                                 </button>
                                                                 <button
                                                                     className="btn-edit"
@@ -963,7 +999,8 @@ const StationManagement = () => {
                         </div>
 
                         {/* Preview based on selected brand/color/seat */}
-                        <div style={{ textAlign: 'center', padding: '12px 24px 0 24px' }}>
+                        {/* Reduce horizontal padding and let image be responsive to remove white side bars */}
+                        <div style={{ textAlign: 'center', padding: '12px 0 0 0', width: '100%' }}>
                             {(() => {
                                 const previewVehicle = {
                                     brand: vehicleFormData.vehicleName,
@@ -975,8 +1012,19 @@ const StationManagement = () => {
                                     <img
                                         src={getCarImageUrl(previewVehicle)}
                                         alt="Preview"
-                                        style={{ width: 220, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
-                                        onError={(e) => { e.target.src = 'https://via.placeholder.com/220x120?text=No+Image'; }}
+                                        style={{
+                                            width: '35%',
+                                            maxWidth: 720,
+                                            height: 'auto',
+                                            objectFit: 'contain',
+                                            borderRadius: 8,
+                                            border: '1px solid #eee',
+                                            background: 'transparent',
+                                            boxShadow: '0 6px 18px rgba(0,0,0,0.08)',
+                                            display: 'block',
+                                            margin: '0 auto'
+                                        }}
+                                        onError={(e) => { e.target.src = 'https://via.placeholder.com/420x400?text=No+Image'; }}
                                     />
                                 );
                             })()}
@@ -1044,14 +1092,14 @@ const StationManagement = () => {
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Variant <span className="required">*</span></label>
+                                    <label>Loại xe <span className="required">*</span></label>
                                     <select
                                         name="variant"
                                         value={vehicleFormData.variant}
                                         onChange={handleVehicleInputChange}
                                         required
                                     >
-                                        <option value="">-- Chọn variant --</option>
+                                        <option value="">-- Chọn loại xe --</option>
                                         <option value="Air">Air</option>
                                         <option value="Plus">Plus</option>
                                         <option value="Pro">Pro</option>
@@ -1082,7 +1130,8 @@ const StationManagement = () => {
                         </div>
 
                         {/* Preview for edit modal */}
-                        <div style={{ textAlign: 'center', padding: '12px 24px 0 24px' }}>
+                        {/* Reduce horizontal padding and let image be responsive to remove white side bars */}
+                        <div style={{ textAlign: 'center', padding: '12px 0 0 0', width: '100%' }}>
                             {(() => {
                                 const previewVehicle = {
                                     brand: vehicleFormData.vehicleName || editingVehicle.brand,
@@ -1094,8 +1143,19 @@ const StationManagement = () => {
                                     <img
                                         src={getCarImageUrl(previewVehicle)}
                                         alt="Preview"
-                                        style={{ width: 220, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
-                                        onError={(e) => { e.target.src = 'https://via.placeholder.com/220x120?text=No+Image'; }}
+                                        style={{
+                                            width: '35%',
+                                            maxWidth: 720,
+                                            height: 'auto',
+                                            objectFit: 'contain',
+                                            borderRadius: 8,
+                                            border: '1px solid #eee',
+                                            background: 'transparent',
+                                            boxShadow: '0 6px 18px rgba(0,0,0,0.08)',
+                                            display: 'block',
+                                            margin: '0 auto'
+                                        }}
+                                        onError={(e) => { e.target.src = 'https://via.placeholder.com/420x400?text=No+Image'; }}
                                     />
                                 );
                             })()}
@@ -1164,14 +1224,14 @@ const StationManagement = () => {
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Variant <span className="required">*</span></label>
+                                    <label>Loại xe <span className="required">*</span></label>
                                     <select
                                         name="variant"
                                         value={vehicleFormData.variant}
                                         onChange={handleVehicleInputChange}
                                         required
                                     >
-                                        <option value="">-- Chọn variant --</option>
+                                        <option value="">-- Chọn loại xe --</option>
                                         <option value="AIR">Air</option>
                                         <option value="PLUS">Plus</option>
                                         <option value="PRO">Pro</option>
@@ -1297,6 +1357,98 @@ const StationManagement = () => {
 
                         <div className="detail-actions">
                             <button className="btn-cancel" onClick={handleCloseOrderHistoryModal}>
+                                Đóng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Vehicle Details Modal */}
+            {showVehicleDetailsModal && (
+                <div className="modal-overlay" onClick={() => { setShowVehicleDetailsModal(false); setVehicleDetails(null); }}>
+                    <div className="modal-content detail-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>🔍 Thông tin xe</h2>
+                            <button className="modal-close" onClick={() => { setShowVehicleDetailsModal(false); setVehicleDetails(null); }}>✕</button>
+                        </div>
+
+                        <div className="detail-content">
+                            {loadingVehicleDetails ? (
+                                <div style={{ textAlign: 'center', padding: '40px' }}>⏳ Đang tải thông tin xe...</div>
+                            ) : !vehicleDetails ? (
+                                <div style={{ textAlign: 'center', padding: '40px' }}>Không tìm thấy thông tin xe.</div>
+                            ) : (
+                                <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
+                                    <div style={{ flex: '0 0 360px', textAlign: 'center' }}>
+                                        <img
+                                            src={getCarImageUrl(vehicleDetails)}
+                                            alt={vehicleDetails.vehicleName || vehicleDetails.plateNumber}
+                                            style={{ width: '100%', maxWidth: 360, height: 'auto', objectFit: 'contain', borderRadius: 8 }}
+                                            onError={(e) => { e.target.src = 'https://via.placeholder.com/420x300?text=No+Image'; }}
+                                        />
+                                    </div>
+
+                                    <div style={{ flex: 1 }}>
+                                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                            <tbody>
+                                                <tr>
+                                                    <td style={{ padding: '8px 12px', fontWeight: 700, width: 160 }}>Mã xe</td>
+                                                    <td style={{ padding: '8px 12px' }}>{vehicleDetails.vehicleId || vehicleDetails.id || 'N/A'}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ padding: '8px 12px', fontWeight: 700 }}>Biển số</td>
+                                                    <td style={{ padding: '8px 12px' }}>{vehicleDetails.plateNumber || 'N/A'}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ padding: '8px 12px', fontWeight: 700 }}>Tên xe</td>
+                                                    <td style={{ padding: '8px 12px' }}>{vehicleDetails.vehicleName || 'N/A'}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ padding: '8px 12px', fontWeight: 700 }}>Hãng</td>
+                                                    <td style={{ padding: '8px 12px' }}>{vehicleDetails.brand || 'N/A'}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ padding: '8px 12px', fontWeight: 700 }}>Màu</td>
+                                                    <td style={{ padding: '8px 12px' }}>{vehicleDetails.color || vehicleDetails.colorName || 'N/A'}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ padding: '8px 12px', fontWeight: 700 }}>Số chỗ</td>
+                                                    <td style={{ padding: '8px 12px' }}>{vehicleDetails.seatCount || vehicleDetails.seat_count || 'N/A'}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ padding: '8px 12px', fontWeight: 700 }}>Loại xe</td>
+                                                    <td style={{ padding: '8px 12px' }}>{formatVariant(vehicleDetails.variant || vehicleDetails.variantName || '')}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ padding: '8px 12px', fontWeight: 700 }}>Trạng thái</td>
+                                                    <td style={{ padding: '8px 12px' }}>{vehicleDetails.status || 'N/A'}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ padding: '8px 12px', fontWeight: 700 }}>Pin</td>
+                                                    <td style={{ padding: '8px 12px' }}>{vehicleDetails.batteryStatus || 'N/A'}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ padding: '8px 12px', fontWeight: 700 }}>Dung lượng pin</td>
+                                                    <td style={{ padding: '8px 12px' }}>{vehicleDetails.batteryCapacity || 'N/A'}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ padding: '8px 12px', fontWeight: 700 }}>Phạm vi (km)</td>
+                                                    <td style={{ padding: '8px 12px' }}>{vehicleDetails.rangeKm || vehicleDetails.range_km || 'N/A'}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ padding: '8px 12px', fontWeight: 700 }}>Mô tả</td>
+                                                    <td style={{ padding: '8px 12px' }}>{vehicleDetails.description || '—'}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="detail-actions">
+                            <button className="btn-cancel" onClick={() => { setShowVehicleDetailsModal(false); setVehicleDetails(null); }}>
                                 Đóng
                             </button>
                         </div>

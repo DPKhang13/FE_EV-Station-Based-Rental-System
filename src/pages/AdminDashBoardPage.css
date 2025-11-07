@@ -222,3 +222,62 @@ tr:hover {
   color: #e74c3c;
   font-weight: 600;
 }
+/* 🚗 Thanh tỷ lệ sử dụng xe */
+.usage-item {
+  margin-bottom: 20px;
+}
+
+.usage-item p {
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: #334155;
+}
+
+.bar {
+  width: 100%;
+  height: 10px;
+  background-color: #e2e8f0; /* xám nhạt */
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.8s ease-in-out, background-color 0.5s ease;
+}
+
+/* 💚 Màu gradient đẹp tuỳ theo mức sử dụng */
+.fill.low {
+  background: linear-gradient(90deg, #60a5fa, #3b82f6); /* xanh dương nhạt */
+}
+
+.fill.medium {
+  background: linear-gradient(90deg, #34d399, #10b981); /* xanh lá */
+}
+
+.fill.high {
+  background: linear-gradient(90deg, #facc15, #f59e0b); /* vàng/cam cảnh báo */
+}
+
+.usage-item span {
+  font-size: 14px;
+  color: #475569;
+  font-weight: 500;
+}
+.fill.high {
+  background: linear-gradient(90deg, #facc15, #f97316);
+  box-shadow: 0 0 10px rgba(250, 204, 21, 0.6);
+}
+/* 🚫 Xoá khung / viền vàng sau các thẻ KPI */
+.summary {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.card {
+  border: none !important;
+}
+

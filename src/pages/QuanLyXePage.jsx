@@ -18,7 +18,7 @@ const QuanLyXePage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTab, setFilterTab] = useState("tatca");
 
-  const STATION_ID = user?.stationId || 1;
+  const STATION_ID = user?.stationId;
 
   // 📦 Lấy danh sách xe
   const loadVehicles = async () => {

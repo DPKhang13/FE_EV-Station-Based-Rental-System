@@ -234,6 +234,17 @@
     gap: 20px;
 }
 
+/* Ensure each filter group stacks title above options (label on top, checkboxes below) */
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.filter-group .filter-options {
+    width: 100%;
+}
+
 .filter-group h4 {
     margin: 0 0 10px 0;
     color: #374151;

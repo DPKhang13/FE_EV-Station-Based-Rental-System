@@ -442,7 +442,7 @@ const VehicleManagement = () => {
                 onMouseLeave={() => setShowFilters(false)}
             >
                 <div className="filter-header">
-                    <h3>🔍 Bộ lọc {!showFilters && '(Di chuột vào để mở)'}</h3>
+                    <h3> Bộ lọc {!showFilters && '(Di chuột vào để mở)'}</h3>
                     {(filters.colors.length > 0 || filters.seatCounts.length > 0 ||
                         filters.stations.length > 0 || filters.statuses.length > 0) && (
                             <button className="btn-clear-filters" onClick={clearFilters}>
@@ -454,7 +454,7 @@ const VehicleManagement = () => {
                 <div className="filters-grid">
                     {/* Color Filter */}
                     <div className="filter-group">
-                        <h4>🎨 Màu sắc</h4>
+                        <h4> Màu sắc</h4>
                         <div className="filter-options">
                             {getUniqueColors().map(color => (
                                 <label key={color} className="filter-checkbox">
@@ -471,7 +471,7 @@ const VehicleManagement = () => {
 
                     {/* Seat Count Filter */}
                     <div className="filter-group">
-                        <h4>💺 Số ghế</h4>
+                        <h4> Số ghế</h4>
                         <div className="filter-options">
                             {getUniqueSeatCounts().map(count => (
                                 <label key={count} className="filter-checkbox">
@@ -488,7 +488,7 @@ const VehicleManagement = () => {
 
                     {/* Station Filter */}
                     <div className="filter-group">
-                        <h4>📍 Điểm thuê</h4>
+                        <h4> Điểm thuê</h4>
                         <div className="filter-options">
                             {getUniqueStations().map(station => (
                                 <label key={station} className="filter-checkbox">
@@ -505,7 +505,7 @@ const VehicleManagement = () => {
 
                     {/* Status Filter */}
                     <div className="filter-group">
-                        <h4>📊 Trạng thái</h4>
+                        <h4> Trạng thái</h4>
                         <div className="filter-options">
                             {getAllStatuses().map(status => {
                                 const statusInfo = getStatusInfo(status);

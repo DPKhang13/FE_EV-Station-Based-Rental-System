@@ -2,12 +2,15 @@ import React, { useState, useEffect } from "react";
 import { orderService, authService } from "../services";
 import "./XacThucKhachHang.css";
 import PopupXacThucHoSoCaNhan from "../components/staff/PopupXacThucHoSoCaNhan";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 // 🔧 Định dạng thời gian
 const fmtVN = (d) => (d ? new Date(d).toLocaleString("vi-VN") : "N/A");
 const fmtRange = (s, e) => `${fmtVN(s)} - ${fmtVN(e)}`;
 
 const XacThucKhachHangPage = () => {
+  const {user} = useContext(AuthContext)
   const [hoSoDatXe, setHoSoDatXe] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
@@ -21,17 +24,26 @@ const XacThucKhachHangPage = () => {
   const [verifyLoading, setVerifyLoading] = useState(false);
 
   // 📦 Lấy danh sách hồ sơ đặt xe
-  const fetchOrders = async () => {
-    try {
-      const res = await orderService.getPendingOrders();
-      setHoSoDatXe(res.data || res || []);
-    } catch (err) {
-      console.error("❌ Lỗi tải hồ sơ:", err);
-      setHoSoDatXe([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+ // 📦 Lấy danh sách hồ sơ đặt xe
+const fetchOrders = async () => {
+  try {
+    const res = await orderService.getPendingOrders();
+    const allOrders = res.data || res || [];
+
+    // ✅ Lọc theo trạm của nhân viên đang đăng nhập
+    const stationId = user?.stationId || 1; // fallback nếu chưa có
+    const filteredOrders = allOrders.filter(
+      (order) => Number(order.stationId) === Number(stationId)
+    );
+
+    setHoSoDatXe(filteredOrders);
+  } catch (err) {
+    console.error("❌ Lỗi tải hồ sơ:", err);
+    setHoSoDatXe([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchOrders();

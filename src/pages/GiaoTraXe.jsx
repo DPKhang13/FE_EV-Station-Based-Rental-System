@@ -30,7 +30,7 @@ const GiaoTraXe = () => {
    * ================================ */
   const fetchData = async () => {
     if (!user) return;
-    const stationId = user.stationId || 1;
+    const stationId = user.stationId ;
 
     try {
       setLoading(true);
@@ -272,7 +272,8 @@ const GiaoTraXe = () => {
         <PopupDatTruoc xe={selectedVehicle} onClose={() => setPopupType(null)} />
       )}
       {popupType === "nhanxe" && (
-        <PopupNhanXe xe={selectedVehicle} onClose={() => setPopupType(null)} />
+        <PopupNhanXe xe={selectedVehicle} onClose={() => setPopupType(null)} 
+        onReload={fetchData}/>
       )}
       {popupType === "xacthuc" && (
         <PopupXacThuc xe={selectedVehicle} onClose={() => setPopupType(null)} />

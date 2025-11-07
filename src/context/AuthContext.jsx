@@ -44,6 +44,7 @@ export const AuthProvider = ({ children }) => {
       phone: data.phone || data.phoneNumber,
       address: data.address,
       dateOfBirth: data.dateOfBirth || data.dob,
+      stationId: data.stationId || data.tramId,
     };
 
     localStorage.setItem("accessToken", data.jwtToken);

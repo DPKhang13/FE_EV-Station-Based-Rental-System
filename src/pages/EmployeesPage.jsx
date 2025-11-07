@@ -27,10 +27,7 @@ const EmployeesPage = () => {
     switch (role?.toLowerCase()) {
       case "staff":
         return "Nhân viên";
-      case "manager":
-        return "Quản lý";
-      case "admin":
-        return "Quản trị viên";
+     break; 
       default:
         return "Không rõ";
     }
@@ -116,7 +113,7 @@ const EmployeesPage = () => {
               <th>Chức vụ</th>
               <th>Điểm làm việc</th>
               <th>Hiệu suất</th>
-              <th>Trạng thái</th>
+              <th>Trạng thái tài khoản</th>
               <th>Thao tác</th>
             </tr>
           </thead>
@@ -147,7 +144,7 @@ const EmployeesPage = () => {
                     }`}
                   >
                     {e.status === "ACTIVE"
-                      ? "Đang làm việc"
+                      ? "Hoạt động"
                       : "Ngưng hoạt động"}
                   </span>
                 </td>
