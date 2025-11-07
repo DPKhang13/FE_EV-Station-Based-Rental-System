@@ -26,17 +26,19 @@ export const authService = {
 
         // Normalize response format for AuthContext
         const normalizedResponse = {
-            jwtToken: response.accessToken || response.jwtToken || response.token,
-            userId: response.userId || response.customerId || response.id,
-            fullName: response.fullName || response.username || response.name,
-            email: response.email,
-            role: response.role,
-            phone: response.phone || response.phoneNumber,
-            address: response.address,
-            dateOfBirth: response.dateOfBirth || response.dob,
-            needOtp: response.needOtp,
-            verifyUrl: response.verifyUrl
-        };
+  jwtToken: response.accessToken || response.jwtToken || response.token,
+  userId: response.userId || response.customerId || response.id,
+  fullName: response.fullName || response.username || response.name,
+  email: response.email,
+  role: response.role,
+  phone: response.phone || response.phoneNumber,
+  address: response.address,
+  dateOfBirth: response.dateOfBirth || response.dob,
+  stationId: response.stationId, // ✅ thêm dòng này
+  needOtp: response.needOtp,
+  verifyUrl: response.verifyUrl
+};
+
 
         console.log('✅ Normalized Login Response:', normalizedResponse);
 
