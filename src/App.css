@@ -17,10 +17,10 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #dc2626;
+  background: #888888;
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #b91c1c;
+  background: #555555;
 }

@@ -337,7 +337,7 @@
     border-radius: 16px;
     width: 90%;
     max-width: 800px;
-    max-height: 90vh;
+max-height: 90vh;
     overflow-y: auto;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     animation: slideUp 0.3s;
@@ -517,7 +517,6 @@
 .detail-item.full-width {
     grid-column: 1 / -1;
 }
-
 .detail-label {
     font-size: 13px;
     color: #6b7280;

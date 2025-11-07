@@ -123,6 +123,7 @@ const VehicleManagement = () => {
         plateNumber: '',
         variant: '',
         color: '',
+        colorHex: '#ffffff',
         seatCount: '',
         year: '',
         stationId: '',
@@ -266,14 +267,15 @@ const VehicleManagement = () => {
         setSelectedVehicleOrders([]);
     };
 
-    // Handle add vehicle
-    const handleAddVehicle = () => {
+    // Handle add vehicle (currently unused - reserved for future use)
+    const _handleAddVehicle = () => {
         setFormData({
             vehicleName: '',
             brand: '',
             plateNumber: '',
             variant: '',
             color: '',
+            colorHex: '#ffffff',
             seatCount: '',
             year: '',
             stationId: '',
@@ -339,8 +341,8 @@ const VehicleManagement = () => {
 
         try {
             console.log('🗑️ Deleting vehicle:', vehicle.id);
-            // TODO: Call API to delete vehicle
-            // await vehicleService.deleteVehicle(vehicle.id);
+
+            await vehicleService.deleteVehicle(vehicle.id);
 
             alert(`✅ Đã xóa xe ${vehicle.vehicle_name} thành công!`);
             fetchVehicles(); // Refresh list
@@ -717,13 +719,61 @@ const VehicleManagement = () => {
 
                                 <div className="form-group">
                                     <label>Màu sắc *</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={formData.color}
-                                        onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                                        placeholder="VD: Trắng, Đen"
-                                    />
+                                    {/* Color picker with preview - Updated */}
+                                    <div style={{
+                                        display: 'flex',
+                                        gap: '12px',
+                                        alignItems: 'center'
+                                    }}>
+                                        <input
+                                            type="color"
+                                            value={formData.colorHex || '#ffffff'}
+                                            onChange={(e) => setFormData({
+                                                ...formData,
+                                                colorHex: e.target.value
+                                            })}
+                                            style={{
+                                                width: '60px',
+                                                height: '42px',
+                                                border: '1px solid #d1d5db',
+                                                borderRadius: '6px',
+                                                cursor: 'pointer'
+                                            }}
+                                            title="Chọn màu"
+                                        />
+                                        <select
+                                            required
+                                            value={formData.color}
+                                            onChange={(e) => {
+                                                const colorMap = {
+                                                    'White': '#ffffff',
+                                                    'Black': '#000000',
+                                                    'Silver': '#c0c0c0',
+                                                    'Red': '#ff0000',
+                                                    'Blue': '#0000ff',
+                                                    'Gray': '#808080',
+
+                                                };
+                                                setFormData({
+                                                    ...formData,
+                                                    color: e.target.value,
+                                                    colorHex: colorMap[e.target.value] || formData.colorHex
+                                                });
+                                            }}
+                                            style={{ flex: 1 }}
+                                        >
+                                            <option value="">-- Chọn màu --</option>
+                                            <option value="White">⚪ Trắng</option>
+                                            <option value="Black">⚫ Đen</option>
+                                            <option value="Silver">🔘 Bạc</option>
+                                            <option value="Red">🔴 Đỏ</option>
+                                            <option value="Blue">🔵 Xanh dương</option>
+                                            <option value="Gray">⚫ Xám</option>
+                                        </select>
+                                    </div>
+                                    <small style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px' }}>
+                                        Chọn màu từ dropdown hoặc dùng color picker để chọn màu tùy chỉnh
+                                    </small>
                                 </div>
 
                                 <div className="form-group">
