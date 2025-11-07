@@ -996,12 +996,12 @@ const StationManagement = () => {
                                         required
                                     >
                                         <option value="">-- Chọn màu --</option>
-                                        <option value="White">Trắng ⬜</option>
-                                        <option value="Black">Đen ⬛</option>
-                                        <option value="Silver">Bạc 🔲</option>
-                                        <option value="Red">Đỏ 🟥</option>
+                                        <option value="White">Trắng </option>
+                                        <option value="Black">Đen </option>
+                                        <option value="Silver">Bạc </option>
+                                        <option value="Red">Đỏ </option>
                                         <option value="Blue">Xanh dương 🟦</option>
-                                        <option value="Gray">Xám ⬜</option>
+                                        <option value="Gray">Xám </option>
                                     </select>
                                 </div>
 
