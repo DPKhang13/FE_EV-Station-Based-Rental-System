@@ -17,11 +17,11 @@ const Hero = () => {
                         XE HƠI ĐIỆN CỦA CHÚNG TÔI ĐÁP ỨNG HOÀN TOÀN TIÊU CHÍ <span className="sigma-highlight">SIGMA</span>
                     </p>
                     <ul className="sigma-list">
-                        <li><span className="highlight-letter">S</span>iêu đẳng cấp khi so với xe của Ronaldo</li>
-                        <li>Vận hành trơn tru êm á<span className="highlight-letter">I</span></li>
-                        <li>Khôn<span className="highlight-letter">G</span> có 1 tí nổi lo trục trặc</li>
-                        <li>Bảo vệ <span className="highlight-letter">M</span>ôi trường khỏi ô nhiễm</li>
-                        <li><span className="highlight-letter">A</span>n toàn tuyệt đối</li>
+                        <li><span className="highlight-letter">S</span>ustainable - Bền vững với công nghệ thân thiện môi trường</li>
+                        <li><span className="highlight-letter">I</span>ntelligent - Thông minh với hệ thống điều khiển tiên tiến</li>
+                        <li><span className="highlight-letter">G</span>uaranteed - Chất lượng được đảm bảo theo tiêu chuẩn quốc tế</li>
+                        <li>S<span className="highlight-letter">M</span>ooth - Vận hành êm ái, trơn tru trên mọi cung đường</li>
+                        <li><span className="highlight-letter">A</span>ffordable - Giá cả hợp lý, phù hợp với mọi nhu cầu</li>
                     </ul>
                 </div>
             </div>

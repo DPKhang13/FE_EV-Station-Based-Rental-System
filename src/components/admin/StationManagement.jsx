@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { stationService } from '../../services';
+import vehicleService from '../../services/vehicleService';
+import { formatVariant } from '../../utils/formatVariant';
 import './StationManagement.css';
 
 const StationManagement = () => {
@@ -10,19 +12,31 @@ const StationManagement = () => {
     const [editingStation, setEditingStation] = useState(null);
     const [selectedStation, setSelectedStation] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [showAddVehicleModal, setShowAddVehicleModal] = useState(false);
+    const [selectedStationForVehicle, setSelectedStationForVehicle] = useState(null);
+    const [vehicleFormData, setVehicleFormData] = useState({
+        plateNumber: '',
+        vehicleName: '',
+        color: '',
+        seatCount: '',
+        variant: ''
+    });
+    const [stationVehicles, setStationVehicles] = useState([]);
+    const [loadingVehicles, setLoadingVehicles] = useState(false);
+    const [showEditVehicleModal, setShowEditVehicleModal] = useState(false);
+    const [editingVehicle, setEditingVehicle] = useState(null);
+    const [showOrderHistoryModal, setShowOrderHistoryModal] = useState(false);
+    const [selectedVehicleForHistory, setSelectedVehicleForHistory] = useState(null);
+    const [orderHistory, setOrderHistory] = useState([]);
+    const [loadingOrderHistory, setLoadingOrderHistory] = useState(false);
 
     const [formData, setFormData] = useState({
-        stationName: '',
-        address: '',
+        name: '',
         city: '',
         district: '',
         ward: '',
-        latitude: '',
-        longitude: '',
-        contactPhone: '',
-        contactEmail: '',
-        openingHours: '',
-        status: 'ACTIVE'
+        street: ''
     });
 
     // Fetch stations on component mount
@@ -34,17 +48,56 @@ const StationManagement = () => {
         try {
             setLoading(true);
             const response = await stationService.getAllStations();
-            console.log('✅ Stations fetched:', response);
-            setStations(response.data || response || []);
+
+            console.log('🔍 DEBUG - Raw response:', response);
+            console.log('🔍 DEBUG - Response type:', typeof response);
+            console.log('🔍 DEBUG - Is Array?', Array.isArray(response));
+
+            // Handle different response formats
+            let stationData = [];
+            if (Array.isArray(response)) {
+                console.log('✅ Response is array');
+                stationData = response;
+            } else if (response?.data && Array.isArray(response.data)) {
+                console.log('✅ Response.data is array');
+                stationData = response.data;
+            } else if (response?.result && Array.isArray(response.result)) {
+                console.log('✅ Response.result is array');
+                stationData = response.result;
+            } else {
+                console.log('❌ Response format unknown:', response);
+            }
+
+            console.log('🔍 DEBUG - Station data before mapping:', stationData);
+            console.log('🔍 DEBUG - Station data length:', stationData.length);
+
+            // Map stationid -> id for consistency
+            stationData = stationData.map(station => {
+                console.log('🔍 Mapping station:', station);
+                return {
+                    ...station,
+                    id: station.stationid || station.id
+                };
+            });
+
+            console.log('✅ Final parsed stations:', stationData);
+            console.log('✅ Setting stations state with:', stationData.length, 'items');
+
+            setStations(stationData);
             setError('');
+
+            if (stationData.length === 0) {
+                console.warn('⚠️ No stations found in response!');
+            }
         } catch (err) {
             console.error('❌ Error fetching stations:', err);
-            setError('Không thể tải danh sách điểm thuê. Vui lòng thử lại sau.');
+            console.error('❌ Error response:', err.response);
+            console.error('❌ Error message:', err.message);
+            setError(`Không thể tải danh sách điểm thuê. ${err.message || 'Vui lòng thử lại sau.'}`);
         } finally {
             setLoading(false);
         }
     };
-
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -58,7 +111,8 @@ const StationManagement = () => {
 
         try {
             if (editingStation) {
-                await stationService.updateStation(editingStation.stationId, formData);
+                const stationId = editingStation.stationid || editingStation.id;
+                await stationService.updateStation(stationId, formData);
                 alert('✅ Cập nhật điểm thuê thành công!');
             } else {
                 await stationService.createStation(formData);
@@ -76,17 +130,11 @@ const StationManagement = () => {
     const handleEdit = (station) => {
         setEditingStation(station);
         setFormData({
-            stationName: station.stationName || '',
-            address: station.address || '',
+            name: station.name || '',
             city: station.city || '',
             district: station.district || '',
             ward: station.ward || '',
-            latitude: station.latitude || '',
-            longitude: station.longitude || '',
-            contactPhone: station.contactPhone || '',
-            contactEmail: station.contactEmail || '',
-            openingHours: station.openingHours || '',
-            status: station.status || 'ACTIVE'
+            street: station.street || ''
         });
         setShowModal(true);
     };
@@ -109,13 +157,24 @@ const StationManagement = () => {
     const handleViewDetails = async (station) => {
         setSelectedStation(station);
         setShowDetailModal(true);
+        setLoadingVehicles(true);
 
-        // Try to fetch additional statistics if available
         try {
-            const stats = await stationService.getStationStatistics(station.stationId);
-            setSelectedStation(prev => ({ ...prev, ...stats }));
+            const stationId = station.stationid || station.id;
+            console.log('🔍 Fetching vehicles for station ID:', stationId);
+
+            // Lấy xe từ API theo stationId
+            const vehicles = await vehicleService.getVehiclesByStation(stationId);
+            console.log('✅ Xe trong trạm:', vehicles.length, 'xe');
+            console.log('📋 Vehicle list:', vehicles);
+
+            setStationVehicles(vehicles);
         } catch (err) {
-            console.log('ℹ️ Statistics not available');
+            console.error('❌ Error fetching vehicles:', err);
+            setStationVehicles([]);
+            alert('❌ Không thể tải danh sách xe. Vui lòng thử lại.');
+        } finally {
+            setLoadingVehicles(false);
         }
     };
 
@@ -123,29 +182,269 @@ const StationManagement = () => {
         setShowModal(false);
         setEditingStation(null);
         setFormData({
-            stationName: '',
-            address: '',
+            name: '',
             city: '',
             district: '',
             ward: '',
-            latitude: '',
-            longitude: '',
-            contactPhone: '',
-            contactEmail: '',
-            openingHours: '',
-            status: 'ACTIVE'
+            street: ''
         });
     };
 
-    const getStatusBadge = (status) => {
-        const statusMap = {
-            'ACTIVE': { label: 'Hoạt động', className: 'status-active' },
-            'INACTIVE': { label: 'Tạm ngưng', className: 'status-inactive' },
-            'MAINTENANCE': { label: 'Bảo trì', className: 'status-maintenance' }
-        };
+    const handleSearch = async () => {
+        if (!searchQuery.trim()) {
+            fetchStations();
+            return;
+        }
 
-        const statusInfo = statusMap[status] || { label: status, className: '' };
-        return <span className={`status-badge ${statusInfo.className}`}>{statusInfo.label}</span>;
+        try {
+            setLoading(true);
+            const response = await stationService.searchStations(searchQuery);
+            console.log('✅ Search results:', response);
+
+            let stationData = [];
+            if (Array.isArray(response)) {
+                stationData = response;
+            } else if (response?.data && Array.isArray(response.data)) {
+                stationData = response.data;
+            }
+
+            // Map stationid -> id
+            stationData = stationData.map(station => ({
+                ...station,
+                id: station.stationid || station.id
+            }));
+
+            setStations(stationData);
+            setError('');
+        } catch (err) {
+            console.error('❌ Error searching stations:', err);
+            setError('Không thể tìm kiếm. Vui lòng thử lại.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleOpenAddVehicle = (station) => {
+        setSelectedStationForVehicle(station);
+        setShowAddVehicleModal(true);
+    };
+
+    const handleCloseAddVehicleModal = () => {
+        setShowAddVehicleModal(false);
+        setSelectedStationForVehicle(null);
+        setVehicleFormData({
+            plateNumber: '',
+            vehicleName: '',
+            color: '',
+            seatCount: '',
+            variant: ''
+        });
+    };
+
+    const handleVehicleInputChange = (e) => {
+        const { name, value } = e.target;
+        setVehicleFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleAddVehicle = async (e) => {
+        e.preventDefault();
+
+        try {
+            const brand = vehicleFormData.vehicleName; // VinFast, BMW, Tesla
+            const seatCount = parseInt(vehicleFormData.seatCount);
+            
+            // ✅ Normalize variant về dạng First-letter capitalized (Air, Plus, Pro)
+            const variant = formatVariant(vehicleFormData.variant);
+
+            // Tạo vehicleName theo format: Brand + Số ghế + S + Variant
+            // Ví dụ: "VinFast 7S Air", "BMW 4S Plus"
+            const seatLabel = seatCount === 4 ? '4S' : '7S';
+            const vehicleName = `${brand} ${seatLabel} ${variant}`;
+
+            // Tạo description theo format: Brand EV X-seater, Variant variant
+            const seatText = seatCount === 4 ? '4-seater' : '7-seater';
+            const description = `${brand} EV ${seatText}, ${variant} variant`;
+
+            // Prepare data to send to backend
+            const vehicleData = {
+                plateNumber: vehicleFormData.plateNumber,
+                stationId: selectedStationForVehicle.stationid || selectedStationForVehicle.id,
+                brand: brand,
+                vehicleName: vehicleName, // VinFast 7S Air
+                color: vehicleFormData.color,
+                seatCount: seatCount,
+                variant: variant,
+                status: 'AVAILABLE',
+                description: description, // VinFast EV 7-seater, Air variant
+                batteryStatus: '100%', // Thêm % vào
+                batteryCapacity: '100 kWh', // Thêm kWh vào
+                rangeKm: 500
+            };
+
+            console.log('🚗 Adding vehicle:', vehicleData);
+
+            // Call API to add vehicle
+            const result = await vehicleService.createVehicle(vehicleData);
+            console.log('✅ Vehicle created successfully:', result);
+
+            alert(`✅ Đã thêm xe thành công vào trạm: ${selectedStationForVehicle.name}`);
+            handleCloseAddVehicleModal();
+
+            // Refresh station list to show updated vehicle counts
+            await fetchStations();
+        } catch (err) {
+            console.error('❌ Error adding vehicle:', err);
+            alert('❌ Có lỗi xảy ra khi thêm xe. Vui lòng thử lại.');
+        }
+    };
+
+    const handleEditVehicle = (vehicle) => {
+        console.log('🔍 Editing vehicle object:', vehicle);
+        setEditingVehicle(vehicle);
+        setVehicleFormData({
+            plateNumber: vehicle.plateNumber,
+            vehicleName: vehicle.brand || 'VinFast',
+            color: vehicle.color || 'White',
+            seatCount: vehicle.seatCount || 4,
+            variant: vehicle.variant || 'AIR',
+            status: vehicle.status || 'AVAILABLE',
+            batteryStatus: vehicle.batteryStatus || '100%',
+            batteryCapacity: vehicle.batteryCapacity || '100 kWh'
+        });
+        setShowEditVehicleModal(true);
+    };
+
+    const handleCloseEditVehicleModal = () => {
+        setShowEditVehicleModal(false);
+        setEditingVehicle(null);
+        setVehicleFormData({
+            plateNumber: '',
+            vehicleName: '',
+            color: '',
+            seatCount: '',
+            variant: ''
+        });
+    };
+
+    const handleUpdateVehicle = async (e) => {
+        e.preventDefault();
+
+        try {
+            const brand = vehicleFormData.vehicleName;
+            const seatCount = parseInt(vehicleFormData.seatCount);
+            const variant = vehicleFormData.variant.toUpperCase();
+
+            const seatLabel = seatCount === 4 ? '4S' : '7S';
+            const vehicleName = `${brand} ${seatLabel} ${variant}`;
+
+            const seatText = seatCount === 4 ? '4-seater' : '7-seater';
+            const description = `${brand} EV ${seatText}, ${variant} variant`;
+
+            const vehicleData = {
+                plateNumber: vehicleFormData.plateNumber,
+                stationId: editingVehicle.stationId, // Thêm stationId từ xe đang edit
+                brand: brand,
+                vehicleName: vehicleName,
+                color: vehicleFormData.color,
+                seatCount: seatCount,
+                variant: variant,
+                status: vehicleFormData.status,
+                description: description,
+                batteryStatus: vehicleFormData.batteryStatus,
+                batteryCapacity: vehicleFormData.batteryCapacity,
+                rangeKm: 500
+            };
+
+            const vehicleId = editingVehicle.vehicleId || editingVehicle.id;
+            console.log('🔧 Updating vehicle ID:', vehicleId, 'Data:', vehicleData);
+
+            if (!vehicleId) {
+                throw new Error('Vehicle ID not found!');
+            }
+
+            const result = await vehicleService.updateVehicle(vehicleId, vehicleData);
+            console.log('✅ Vehicle updated successfully:', result);
+
+            // Đóng modal edit
+            handleCloseEditVehicleModal();
+
+            // Refresh danh sách xe (modal detail vẫn mở)
+            if (selectedStation) {
+                const stationId = selectedStation.stationid || selectedStation.id;
+                console.log('🔄 Refreshing vehicle list for station:', stationId);
+                const vehicles = await vehicleService.getVehiclesByStation(stationId);
+                console.log('✅ Refreshed:', vehicles.length, 'xe');
+                setStationVehicles(vehicles);
+            }
+
+            alert(`✅ Đã cập nhật xe ${vehicleFormData.plateNumber} thành công!`);
+        } catch (err) {
+            console.error('❌ Error updating vehicle:', err);
+            alert('❌ Có lỗi xảy ra khi cập nhật xe. Vui lòng thử lại.');
+        }
+    };
+
+    const handleDeleteVehicle = async (vehicle) => {
+        if (!window.confirm(`Bạn có chắc chắn muốn xóa xe ${vehicle.plateNumber}?`)) {
+            return;
+        }
+
+        try {
+            const vehicleId = vehicle.vehicleId || vehicle.id;
+            console.log('🗑️ Deleting vehicle ID:', vehicleId);
+
+            if (!vehicleId) {
+                throw new Error('Vehicle ID not found!');
+            }
+
+            await vehicleService.deleteVehicle(vehicleId);
+            console.log('✅ Vehicle deleted successfully');
+
+            // Refresh danh sách xe
+            if (selectedStation) {
+                const stationId = selectedStation.stationid || selectedStation.id;
+                console.log('🔄 Refreshing vehicle list for station:', stationId);
+                const vehicles = await vehicleService.getVehiclesByStation(stationId);
+                console.log('✅ Refreshed:', vehicles.length, 'xe');
+                setStationVehicles(vehicles);
+            }
+
+            alert(`✅ Đã xóa xe ${vehicle.plateNumber} thành công!`);
+        } catch (err) {
+            console.error('❌ Error deleting vehicle:', err);
+            alert('❌ Có lỗi xảy ra khi xóa xe. Vui lòng thử lại.');
+        }
+    };
+
+    const handleViewOrderHistory = async (vehicle) => {
+        setSelectedVehicleForHistory(vehicle);
+        setShowOrderHistoryModal(true);
+        setLoadingOrderHistory(true);
+
+        try {
+            const vehicleId = vehicle.vehicleId || vehicle.id;
+            console.log('📜 Fetching order history for vehicle ID:', vehicleId);
+
+            const history = await vehicleService.getVehicleOrderHistory(vehicleId);
+            console.log('✅ Order history:', history);
+
+            setOrderHistory(history);
+        } catch (err) {
+            console.error('❌ Error fetching order history:', err);
+            setOrderHistory([]);
+            alert('❌ Không thể tải lịch sử đặt xe. Vui lòng thử lại.');
+        } finally {
+            setLoadingOrderHistory(false);
+        }
+    };
+
+    const handleCloseOrderHistoryModal = () => {
+        setShowOrderHistoryModal(false);
+        setSelectedVehicleForHistory(null);
+        setOrderHistory([]);
     };
 
     if (loading) {
@@ -156,45 +455,82 @@ const StationManagement = () => {
         <div className="station-management">
             <div className="station-header">
                 <div>
-                    <h1>📍 Quản lý Điểm Thuê</h1>
+                    <h1>QUẢN LÝ ĐIỂM THUÊ</h1>
                     <p className="station-subtitle">Quản lý các điểm cho thuê xe điện</p>
+                    <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                    </p>
                 </div>
-                <button className="btn-add-station" onClick={() => setShowModal(true)}>
-                    ➕ Thêm Điểm Thuê
-                </button>
-            </div>
-
-            {error && (
-                <div className="error-message">
-                    ⚠️ {error}
-                    <button onClick={fetchStations}>🔄 Thử lại</button>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <input
+                        type="text"
+                        placeholder="Tìm kiếm điểm thuê..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                        style={{
+                            padding: '10px 15px',
+                            borderRadius: '8px',
+                            border: '2px solid #e5e7eb',
+                            fontSize: '14px',
+                            minWidth: '250px'
+                        }}
+                    />
+                    <button
+                        className="btn-add-station"
+                        onClick={handleSearch}
+                        style={{ 
+                            background: '#3b82f6',
+                            padding: '0px 13px'
+                        }}
+                    >
+                        Tìm kiếm
+                    </button>
+                </div>
+            </div>            {error && (
+                <div className="error-message" style={{
+                    background: '#fee',
+                    border: '2px solid #f44',
+                    padding: '20px',
+                    borderRadius: '12px',
+                    margin: '20px 0',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                }}>
+                    <div>
+                        <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
+                            ⚠️ Lỗi tải dữ liệu
+                        </div>
+                        <div style={{ fontSize: '14px', color: '#666' }}>
+                            {error}
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#999', marginTop: '8px' }}>
+                            💡 Kiểm tra: Backend có chạy không? (http://localhost:8080)
+                        </div>
+                    </div>
+                    <button
+                        onClick={fetchStations}
+                        style={{
+                            background: '#10b981',
+                            color: 'white',
+                            border: 'none',
+                            padding: '12px 24px',
+                            borderRadius: '8px',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Thử lại
+                    </button>
                 </div>
             )}
 
             <div className="station-stats">
                 <div className="stat-card">
-                    <div className="stat-icon">📍</div>
                     <div className="stat-info">
                         <div className="stat-value">{stations.length}</div>
                         <div className="stat-label">Tổng điểm thuê</div>
-                    </div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-icon">✅</div>
-                    <div className="stat-info">
-                        <div className="stat-value">
-                            {stations.filter(s => s.status === 'ACTIVE').length}
-                        </div>
-                        <div className="stat-label">Đang hoạt động</div>
-                    </div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-icon">🚗</div>
-                    <div className="stat-info">
-                        <div className="stat-value">
-                            {stations.reduce((sum, s) => sum + (s.totalVehicles || 0), 0)}
-                        </div>
-                        <div className="stat-label">Tổng số xe</div>
                     </div>
                 </div>
             </div>
@@ -204,72 +540,80 @@ const StationManagement = () => {
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Tên điểm thuê</th>
-                            <th>Địa chỉ</th>
-                            <th>Thành phố</th>
-                            <th>Liên hệ</th>
-                            <th>Số xe</th>
-                            <th>Trạng thái</th>
-                            <th>Thao tác</th>
+                            <th>TÊN ĐIỂM THUÊ</th>
+                            <th>ĐƯỜNG</th>
+                            <th>PHƯỜNG/XÃ</th>
+                            <th>QUẬN/HUYỆN</th>
+                            <th>THÀNH PHỐ</th>
+                            <th>THAO TÁC</th>
                         </tr>
                     </thead>
                     <tbody>
                         {stations.length === 0 ? (
                             <tr>
-                                <td colSpan="8" className="no-data">
-                                    Chưa có điểm thuê nào
+                                <td colSpan="7" className="no-data" style={{ padding: '40px', textAlign: 'center' }}>
+                                    <div style={{ fontSize: '18px', marginBottom: '10px' }}>
+                                        Chưa có điểm thuê nào
+                                    </div>
+                                    <div style={{ fontSize: '14px', color: '#666' }}>
+                                        State.stations.length: {stations.length}
+                                    </div>
+                                    <div style={{ fontSize: '12px', color: '#999', marginTop: '10px' }}>
+                                        Mở F12 Console để xem debug logs
+                                    </div>
                                 </td>
                             </tr>
                         ) : (
-                            stations.map(station => (
-                                <tr key={station.stationId}>
-                                    <td>{station.stationId}</td>
-                                    <td className="station-name">{station.stationName}</td>
-                                    <td className="station-address">{station.address}</td>
-                                    <td>{station.city}</td>
-                                    <td>
-                                        {station.contactPhone && (
-                                            <div>📞 {station.contactPhone}</div>
-                                        )}
-                                        {station.contactEmail && (
-                                            <div className="email-text">✉️ {station.contactEmail}</div>
-                                        )}
-                                    </td>
-                                    <td>
-                                        <div className="vehicle-stats">
-                                            <span className="total-vehicles">
-                                                {station.totalVehicles || 0}
-                                            </span>
-                                            {station.availableVehicles !== undefined && (
-                                                <span className="available-vehicles">
-                                                    ({station.availableVehicles} sẵn sàng)
-                                                </span>
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td>{getStatusBadge(station.status)}</td>
+                            stations.map((station, index) => (
+                                <tr key={station.id || index}>
+                                    <td>{station.id}</td>
+                                    <td className="station-name">{station.name}</td>
+                                    <td className="station-address">{station.street || 'N/A'}</td>
+                                    <td>{station.ward || 'N/A'}</td>
+                                    <td>{station.district || 'N/A'}</td>
+                                    <td>{station.city || 'N/A'}</td>
                                     <td>
                                         <div className="action-buttons">
                                             <button
+                                                className="btn-add-vehicle"
+                                                onClick={() => handleOpenAddVehicle(station)}
+                                                title="Thêm xe"
+                                                style={{
+                                                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                                    color: 'white',
+                                                    padding: '8px 12px',
+                                                    border: 'none',
+                                                    borderRadius: '6px',
+                                                    cursor: 'pointer',
+                                                    fontSize: '14px',
+                                                    fontWeight: '600',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                                onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                                                onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                                            >
+                                                Thêm xe
+                                            </button>
+                                            <button
                                                 className="btn-view"
                                                 onClick={() => handleViewDetails(station)}
-                                                title="Xem chi tiết"
+                                                title="Quản lý xe"
                                             >
-                                                👁️
+                                                Quản lý
                                             </button>
                                             <button
                                                 className="btn-edit"
                                                 onClick={() => handleEdit(station)}
                                                 title="Chỉnh sửa"
                                             >
-                                                ✏️
+                                                Chỉnh sửa
                                             </button>
                                             <button
                                                 className="btn-delete"
-                                                onClick={() => handleDelete(station.stationId)}
+                                                onClick={() => handleDelete(station.id)}
                                                 title="Xóa"
                                             >
-                                                🗑️
+                                                Xóa
                                             </button>
                                         </div>
                                     </td>
@@ -285,136 +629,69 @@ const StationManagement = () => {
                 <div className="modal-overlay" onClick={handleCloseModal}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>{editingStation ? '✏️ Chỉnh sửa điểm thuê' : '➕ Thêm điểm thuê mới'}</h2>
+                            <h2>{editingStation ? ' Chỉnh sửa điểm thuê' : ' Thêm điểm thuê mới'}</h2>
                             <button className="modal-close" onClick={handleCloseModal}>✕</button>
                         </div>
 
                         <form onSubmit={handleSubmit} className="station-form">
                             <div className="form-grid">
-                                <div className="form-group">
+                                <div className="form-group full-width">
                                     <label>Tên điểm thuê <span className="required">*</span></label>
                                     <input
                                         type="text"
-                                        name="stationName"
-                                        value={formData.stationName}
+                                        name="name"
+                                        value={formData.name}
                                         onChange={handleInputChange}
                                         required
-                                        placeholder="VD: Hanoi EV Station 1"
+                                        placeholder="VD: Trạm EV Hà Nội 1"
                                     />
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Trạng thái</label>
-                                    <select
-                                        name="status"
-                                        value={formData.status}
-                                        onChange={handleInputChange}
-                                    >
-                                        <option value="ACTIVE">Hoạt động</option>
-                                        <option value="INACTIVE">Tạm ngưng</option>
-                                        <option value="MAINTENANCE">Bảo trì</option>
-                                    </select>
-                                </div>
-
-                                <div className="form-group full-width">
-                                    <label>Địa chỉ <span className="required">*</span></label>
-                                    <input
-                                        type="text"
-                                        name="address"
-                                        value={formData.address}
-                                        onChange={handleInputChange}
-                                        required
-                                        placeholder="123 Xuan Thuy, Cau Giay"
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Thành phố</label>
+                                    <label>Thành phố <span className="required">*</span></label>
                                     <input
                                         type="text"
                                         name="city"
                                         value={formData.city}
                                         onChange={handleInputChange}
-                                        placeholder="Hanoi"
+                                        required
+                                        placeholder="Hà Nội"
                                     />
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Quận/Huyện</label>
+                                    <label>Quận/Huyện <span className="required">*</span></label>
                                     <input
                                         type="text"
                                         name="district"
                                         value={formData.district}
                                         onChange={handleInputChange}
-                                        placeholder="Cau Giay"
+                                        required
+                                        placeholder="Cầu Giấy"
                                     />
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Phường/Xã</label>
+                                    <label>Phường/Xã <span className="required">*</span></label>
                                     <input
                                         type="text"
                                         name="ward"
                                         value={formData.ward}
                                         onChange={handleInputChange}
-                                        placeholder="Dich Vong"
+                                        required
+                                        placeholder="Dịch Vọng"
                                     />
                                 </div>
 
-                                <div className="form-group">
-                                    <label>Số điện thoại</label>
-                                    <input
-                                        type="tel"
-                                        name="contactPhone"
-                                        value={formData.contactPhone}
-                                        onChange={handleInputChange}
-                                        placeholder="024-1234567"
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Email</label>
-                                    <input
-                                        type="email"
-                                        name="contactEmail"
-                                        value={formData.contactEmail}
-                                        onChange={handleInputChange}
-                                        placeholder="station@example.com"
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Giờ mở cửa</label>
+                                <div className="form-group full-width">
+                                    <label>Đường <span className="required">*</span></label>
                                     <input
                                         type="text"
-                                        name="openingHours"
-                                        value={formData.openingHours}
+                                        name="street"
+                                        value={formData.street}
                                         onChange={handleInputChange}
-                                        placeholder="8:00 AM - 10:00 PM"
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Vĩ độ</label>
-                                    <input
-                                        type="number"
-                                        step="any"
-                                        name="latitude"
-                                        value={formData.latitude}
-                                        onChange={handleInputChange}
-                                        placeholder="21.0285"
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Kinh độ</label>
-                                    <input
-                                        type="number"
-                                        step="any"
-                                        name="longitude"
-                                        value={formData.longitude}
-                                        onChange={handleInputChange}
-                                        placeholder="105.8542"
+                                        required
+                                        placeholder="123 Xuân Thủy"
                                     />
                                 </div>
                             </div>
@@ -424,7 +701,7 @@ const StationManagement = () => {
                                     Hủy
                                 </button>
                                 <button type="submit" className="btn-submit">
-                                    {editingStation ? '💾 Cập nhật' : '➕ Thêm mới'}
+                                    {editingStation ? 'Cập nhật' : ' Thêm mới'}
                                 </button>
                             </div>
                         </form>
@@ -432,117 +709,450 @@ const StationManagement = () => {
                 </div>
             )}
 
-            {/* Detail Modal */}
+            {/* Vehicle Management Modal */}
             {showDetailModal && selectedStation && (
                 <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
-                    <div className="modal-content detail-modal" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-content detail-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '1200px' }}>
                         <div className="modal-header">
-                            <h2>📍 Chi tiết điểm thuê</h2>
+                            <div>
+                                <h2> Quản lý xe - {selectedStation.name}</h2>
+                                <p style={{ fontSize: '14px', color: '#666', marginTop: '4px' }}>
+                                    {[selectedStation.street, selectedStation.ward, selectedStation.district, selectedStation.city]
+                                        .filter(Boolean)
+                                        .join(', ')}
+                                </p>
+                            </div>
                             <button className="modal-close" onClick={() => setShowDetailModal(false)}>✕</button>
                         </div>
 
                         <div className="detail-content">
-                            <div className="detail-section">
-                                <h3>Thông tin cơ bản</h3>
-                                <div className="detail-grid">
-                                    <div className="detail-item">
-                                        <span className="detail-label">ID:</span>
-                                        <span className="detail-value">{selectedStation.stationId}</span>
-                                    </div>
-                                    <div className="detail-item">
-                                        <span className="detail-label">Tên:</span>
-                                        <span className="detail-value">{selectedStation.stationName}</span>
-                                    </div>
-                                    <div className="detail-item">
-                                        <span className="detail-label">Trạng thái:</span>
-                                        {getStatusBadge(selectedStation.status)}
-                                    </div>
-                                    <div className="detail-item full-width">
-                                        <span className="detail-label">Địa chỉ:</span>
-                                        <span className="detail-value">{selectedStation.address}</span>
-                                    </div>
-                                    <div className="detail-item">
-                                        <span className="detail-label">Thành phố:</span>
-                                        <span className="detail-value">{selectedStation.city || 'N/A'}</span>
-                                    </div>
-                                    <div className="detail-item">
-                                        <span className="detail-label">Quận:</span>
-                                        <span className="detail-value">{selectedStation.district || 'N/A'}</span>
-                                    </div>
+                            {loadingVehicles ? (
+                                <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+                                    ⏳ Đang tải danh sách xe...
                                 </div>
-                            </div>
-
-                            <div className="detail-section">
-                                <h3>Liên hệ</h3>
-                                <div className="detail-grid">
-                                    <div className="detail-item">
-                                        <span className="detail-label">📞 Điện thoại:</span>
-                                        <span className="detail-value">{selectedStation.contactPhone || 'N/A'}</span>
-                                    </div>
-                                    <div className="detail-item">
-                                        <span className="detail-label">✉️ Email:</span>
-                                        <span className="detail-value">{selectedStation.contactEmail || 'N/A'}</span>
-                                    </div>
-                                    <div className="detail-item">
-                                        <span className="detail-label">🕐 Giờ mở cửa:</span>
-                                        <span className="detail-value">{selectedStation.openingHours || 'N/A'}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {(selectedStation.totalVehicles !== undefined) && (
-                                <div className="detail-section">
-                                    <h3>Thống kê xe</h3>
-                                    <div className="stats-grid">
-                                        <div className="stat-box">
-                                            <div className="stat-icon">🚗</div>
-                                            <div className="stat-number">{selectedStation.totalVehicles || 0}</div>
-                                            <div className="stat-text">Tổng số xe</div>
-                                        </div>
-                                        <div className="stat-box">
-                                            <div className="stat-icon">✅</div>
-                                            <div className="stat-number">{selectedStation.availableVehicles || 0}</div>
-                                            <div className="stat-text">Sẵn sàng</div>
-                                        </div>
-                                        <div className="stat-box">
-                                            <div className="stat-icon">🚙</div>
-                                            <div className="stat-number">{selectedStation.inUseVehicles || 0}</div>
-                                            <div className="stat-text">Đang thuê</div>
-                                        </div>
-                                        <div className="stat-box">
-                                            <div className="stat-icon">🔧</div>
-                                            <div className="stat-number">{selectedStation.maintenanceVehicles || 0}</div>
-                                            <div className="stat-text">Bảo trì</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {(selectedStation.latitude && selectedStation.longitude) && (
-                                <div className="detail-section">
-                                    <h3>Vị trí</h3>
-                                    <div className="detail-grid">
-                                        <div className="detail-item">
-                                            <span className="detail-label">Vĩ độ:</span>
-                                            <span className="detail-value">{selectedStation.latitude}</span>
-                                        </div>
-                                        <div className="detail-item">
-                                            <span className="detail-label">Kinh độ:</span>
-                                            <span className="detail-value">{selectedStation.longitude}</span>
-                                        </div>
-                                    </div>
+                            ) : (
+                                <div className="station-table-container">
+                                    <table className="station-table">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>BIỂN SỐ</th>
+                                                <th>TÊN XE</th>
+                                                <th>MÀU SẮC</th>
+                                                <th>SỐ CHỖ</th>
+                                                <th>VARIANT</th>
+                                                <th>TRẠNG THÁI</th>
+                                                <th>THAO TÁC</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {stationVehicles.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="8" className="no-data">
+                                                        Chưa có xe nào trong trạm này
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                stationVehicles.map((vehicle, index) => (
+                                                    <tr key={vehicle.id || index}>
+                                                        <td>{vehicle.id}</td>
+                                                        <td style={{ fontWeight: 'bold', color: '#1f2937' }}>{vehicle.plateNumber}</td>
+                                                        <td>{vehicle.vehicleName}</td>
+                                                        <td>
+                                                            <span style={{
+                                                                display: 'inline-flex',
+                                                                alignItems: 'center',
+                                                                gap: '6px'
+                                                            }}>
+                                                                {vehicle.color}
+                                                                <span style={{
+                                                                    width: '16px',
+                                                                    height: '16px',
+                                                                    borderRadius: '4px',
+                                                                    border: '2px solid #ddd',
+                                                                    backgroundColor: vehicle.color.toLowerCase()
+                                                                }}></span>
+                                                            </span>
+                                                        </td>
+                                                        <td>{vehicle.seatCount} chỗ</td>
+                                                        <td>{formatVariant(vehicle.variant)}</td>
+                                                        <td>
+                                                            <span className={`status-badge ${vehicle.status === 'AVAILABLE' ? 'status-active' :
+                                                                vehicle.status === 'RENTED' ? 'status-inactive' :
+                                                                    'status-maintenance'
+                                                                }`}>
+                                                                {vehicle.status === 'AVAILABLE' ? 'Sẵn sàng' :
+                                                                    vehicle.status === 'RENTED' ? 'Đang thuê' :
+                                                                        vehicle.status}
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <div className="action-buttons">
+                                                                <button
+                                                                    className="btn-view"
+                                                                    onClick={() => handleViewOrderHistory(vehicle)}
+                                                                    title="Xem lịch sử đặt xe"
+                                                                    style={{
+                                                                        background: '#dbeafe',
+                                                                        color: '#1e40af',
+                                                                        padding: '8px 12px',
+                                                                        border: 'none',
+                                                                        borderRadius: '6px',
+                                                                        cursor: 'pointer',
+                                                                        fontSize: '14px',
+                                                                        fontWeight: '600'
+                                                                    }}
+                                                                >
+                                                                    Lịch sử
+                                                                </button>
+                                                                <button
+                                                                    className="btn-edit"
+                                                                    onClick={() => handleEditVehicle(vehicle)}
+                                                                    title="Chỉnh sửa"
+                                                                >
+                                                                    Chỉnh sửa
+                                                                </button>
+                                                                <button
+                                                                    className="btn-delete"
+                                                                    onClick={() => handleDeleteVehicle(vehicle)}
+                                                                    title="Xóa"
+                                                                >
+                                                                    Xóa
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
                                 </div>
                             )}
                         </div>
 
                         <div className="detail-actions">
-                            <button className="btn-edit" onClick={() => {
-                                setShowDetailModal(false);
-                                handleEdit(selectedStation);
-                            }}>
-                                ✏️ Chỉnh sửa
+                            <button
+                                className="btn-submit"
+                                onClick={() => {
+                                    setShowDetailModal(false);
+                                    handleOpenAddVehicle(selectedStation);
+                                }}
+                                style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
+                            >
+                                Thêm xe mới
                             </button>
                             <button className="btn-cancel" onClick={() => setShowDetailModal(false)}>
+                                Đóng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Add Vehicle Modal */}
+            {showAddVehicleModal && selectedStationForVehicle && (
+                <div className="modal-overlay" onClick={handleCloseAddVehicleModal}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2> Thêm xe vào trạm: {selectedStationForVehicle.name}</h2>
+                            <button className="modal-close" onClick={handleCloseAddVehicleModal}>✕</button>
+                        </div>
+
+                        <form onSubmit={handleAddVehicle} className="station-form">
+                            <div className="form-grid">
+                                <div className="form-group full-width">
+                                    <label>Biển số xe <span className="required">*</span></label>
+                                    <input
+                                        type="text"
+                                        name="plateNumber"
+                                        value={vehicleFormData.plateNumber}
+                                        onChange={handleVehicleInputChange}
+                                        required
+                                        placeholder="VD: 29A-12345"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Hãng xe <span className="required">*</span></label>
+                                    <select
+                                        name="vehicleName"
+                                        value={vehicleFormData.vehicleName}
+                                        onChange={handleVehicleInputChange}
+                                        required
+                                    >
+                                        <option value="">-- Chọn hãng xe --</option>
+                                        <option value="VinFast">VinFast</option>
+                                        <option value="BMW">BMW</option>
+                                        <option value="Tesla">Tesla</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Màu sắc <span className="required">*</span></label>
+                                    <select
+                                        name="color"
+                                        value={vehicleFormData.color}
+                                        onChange={handleVehicleInputChange}
+                                        required
+                                    >
+                                        <option value="">-- Chọn màu --</option>
+                                        <option value="White">Trắng ⬜</option>
+                                        <option value="Black">Đen ⬛</option>
+                                        <option value="Silver">Bạc 🔲</option>
+                                        <option value="Red">Đỏ 🟥</option>
+                                        <option value="Blue">Xanh dương 🟦</option>
+                                        <option value="Gray">Xám ⬜</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Số chỗ ngồi <span className="required">*</span></label>
+                                    <select
+                                        name="seatCount"
+                                        value={vehicleFormData.seatCount}
+                                        onChange={handleVehicleInputChange}
+                                        required
+                                    >
+                                        <option value="">-- Chọn số chỗ --</option>
+                                        <option value="4">4 chỗ</option>
+                                        <option value="7">7 chỗ</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Variant <span className="required">*</span></label>
+                                    <select
+                                        name="variant"
+                                        value={vehicleFormData.variant}
+                                        onChange={handleVehicleInputChange}
+                                        required
+                                    >
+                                        <option value="">-- Chọn variant --</option>
+                                        <option value="Air">Air</option>
+                                        <option value="Plus">Plus</option>
+                                        <option value="Pro">Pro</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="form-actions">
+                                <button type="button" className="btn-cancel" onClick={handleCloseAddVehicleModal}>
+                                    Hủy
+                                </button>
+                                <button type="submit" className="btn-submit">
+                                    Thêm xe
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Vehicle Modal */}
+            {showEditVehicleModal && editingVehicle && (
+                <div className="modal-overlay" onClick={handleCloseEditVehicleModal}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>🔧 Chỉnh sửa xe: {editingVehicle.plateNumber}</h2>
+                            <button className="modal-close" onClick={handleCloseEditVehicleModal}>✕</button>
+                        </div>
+
+                        <form onSubmit={handleUpdateVehicle} className="station-form">
+                            <div className="form-grid">
+                                <div className="form-group full-width">
+                                    <label>Biển số xe <span className="required">*</span></label>
+                                    <input
+                                        type="text"
+                                        name="plateNumber"
+                                        value={vehicleFormData.plateNumber}
+                                        onChange={handleVehicleInputChange}
+                                        required
+                                        disabled
+                                        style={{ background: '#f3f4f6', cursor: 'not-allowed' }}
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Hãng xe <span className="required">*</span></label>
+                                    <select
+                                        name="vehicleName"
+                                        value={vehicleFormData.vehicleName}
+                                        onChange={handleVehicleInputChange}
+                                        required
+                                    >
+                                        <option value="">-- Chọn hãng xe --</option>
+                                        <option value="VinFast">VinFast</option>
+                                        <option value="BMW">BMW</option>
+                                        <option value="Tesla">Tesla</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Màu sắc <span className="required">*</span></label>
+                                    <select
+                                        name="color"
+                                        value={vehicleFormData.color}
+                                        onChange={handleVehicleInputChange}
+                                        required
+                                    >
+                                        <option value="">-- Chọn màu --</option>
+                                        <option value="White">Trắng ⬜</option>
+                                        <option value="Black">Đen ⬛</option>
+                                        <option value="Silver">Bạc 🔲</option>
+                                        <option value="Red">Đỏ 🟥</option>
+                                        <option value="Blue">Xanh dương 🟦</option>
+                                        <option value="Gray">Xám ⬜</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Số chỗ ngồi <span className="required">*</span></label>
+                                    <select
+                                        name="seatCount"
+                                        value={vehicleFormData.seatCount}
+                                        onChange={handleVehicleInputChange}
+                                        required
+                                    >
+                                        <option value="">-- Chọn số chỗ --</option>
+                                        <option value="4">4 chỗ</option>
+                                        <option value="7">7 chỗ</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Variant <span className="required">*</span></label>
+                                    <select
+                                        name="variant"
+                                        value={vehicleFormData.variant}
+                                        onChange={handleVehicleInputChange}
+                                        required
+                                    >
+                                        <option value="">-- Chọn variant --</option>
+                                        <option value="AIR">Air</option>
+                                        <option value="PLUS">Plus</option>
+                                        <option value="PRO">Pro</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Trạng thái <span className="required">*</span></label>
+                                    <select
+                                        name="status"
+                                        value={vehicleFormData.status}
+                                        onChange={handleVehicleInputChange}
+                                        required
+                                    >
+                                        <option value="">-- Chọn trạng thái --</option>
+                                        <option value="AVAILABLE">Sẵn sàng</option>
+                                        <option value="RENTED">Đang thuê</option>
+                                        <option value="MAINTENANCE">Bảo trì</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Pin hiện tại (%)</label>
+                                    <input
+                                        type="text"
+                                        name="batteryStatus"
+                                        value={vehicleFormData.batteryStatus}
+                                        onChange={handleVehicleInputChange}
+                                        placeholder="VD: 100%"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Dung lượng pin (kWh)</label>
+                                    <input
+                                        type="text"
+                                        name="batteryCapacity"
+                                        value={vehicleFormData.batteryCapacity}
+                                        onChange={handleVehicleInputChange}
+                                        placeholder="VD: 100 kWh"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="form-actions">
+                                <button type="button" className="btn-cancel" onClick={handleCloseEditVehicleModal}>
+                                    Hủy
+                                </button>
+                                <button type="submit" className="btn-submit">
+                                    Cập nhật
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Order History Modal */}
+            {showOrderHistoryModal && selectedVehicleForHistory && (
+                <div className="modal-overlay" onClick={handleCloseOrderHistoryModal}>
+                    <div className="modal-content detail-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>📜 Lịch sử đặt xe: {selectedVehicleForHistory.plateNumber}</h2>
+                            <button className="modal-close" onClick={handleCloseOrderHistoryModal}>✕</button>
+                        </div>
+
+                        <div className="detail-content">
+                            {loadingOrderHistory ? (
+                                <div style={{ textAlign: 'center', padding: '40px' }}>
+                                    <div style={{ fontSize: '18px', marginBottom: '10px' }}>⏳ Đang tải lịch sử...</div>
+                                </div>
+                            ) : orderHistory.length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: '40px' }}>
+                                    <div style={{ fontSize: '18px', marginBottom: '10px' }}>📭 Chưa có lịch sử đặt xe</div>
+                                    <div style={{ fontSize: '14px', color: '#666' }}>
+                                        Xe này chưa từng được đặt thuê.
+                                    </div>
+                                </div>
+                            ) : (
+                                <div style={{ overflowX: 'auto' }}>
+                                    <table className="station-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Mã đơn</th>
+                                                <th>Trạm</th>
+                                                <th>Thời gian bắt đầu</th>
+                                                <th>Thời gian kết thúc</th>
+                                                <th>Trạng thái</th>
+                                                <th>Tổng tiền</th>
+                                                <th>Đặt cọc</th>
+                                                <th>Còn lại</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {orderHistory.map((order, index) => (
+                                                <tr key={index}>
+                                                    <td style={{ fontSize: '12px', fontFamily: 'monospace' }}>
+                                                        {order.orderId.substring(0, 8)}...
+                                                    </td>
+                                                    <td>{order.stationName || 'N/A'}</td>
+                                                    <td>{new Date(order.startTime).toLocaleString('vi-VN')}</td>
+                                                    <td>{new Date(order.endTime).toLocaleString('vi-VN')}</td>
+                                                    <td>
+                                                        <span className={`status-badge ${order.status === 'COMPLETED' ? 'status-active' :
+                                                                order.status === 'CANCELLED' ? 'status-inactive' :
+                                                                    'status-maintenance'
+                                                            }`}>
+                                                            {order.status}
+                                                        </span>
+                                                    </td>
+                                                    <td style={{ fontWeight: '600', color: '#059669' }}>
+                                                        {order.totalPrice?.toLocaleString('vi-VN')} đ
+                                                    </td>
+                                                    <td>{order.depositAmount?.toLocaleString('vi-VN')} đ</td>
+                                                    <td>{order.remainingAmount?.toLocaleString('vi-VN')} đ</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="detail-actions">
+                            <button className="btn-cancel" onClick={handleCloseOrderHistoryModal}>
                                 Đóng
                             </button>
                         </div>

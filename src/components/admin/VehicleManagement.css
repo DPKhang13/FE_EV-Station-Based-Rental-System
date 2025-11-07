@@ -4,6 +4,7 @@
     min-height: 100vh;
 }
 
+/* Header */
 .vehicle-management .header {
     display: flex;
     justify-content: space-between;
@@ -11,29 +12,22 @@
     margin-bottom: 30px;
 }
 
+.vehicle-management .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    border: 2px solid #000000;
+    padding: 20px;
+    border-radius: 8px;
+}
+
 .vehicle-management h1 {
     font-size: 28px;
-    color: #1a2332;
     margin: 0;
 }
 
-.btn-add {
-    background: #10b981;
-    color: white;
-    padding: 12px 24px;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.btn-add:hover {
-    background: #059669;
-    transform: translateY(-2px);
-}
-
+/* Search bar */
 .search-bar {
     margin-bottom: 20px;
 }
@@ -51,6 +45,7 @@
     border-color: #10b981;
 }
 
+/* Table */
 .vehicle-table {
     width: 100%;
     background: white;
@@ -59,11 +54,6 @@
     overflow-y: visible;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     display: block;
-}
-
-.vehicle-table table {
-    width: 100%;
-    min-width: 1400px;
 }
 
 .vehicle-table thead {
@@ -87,8 +77,10 @@
     vertical-align: middle;
 }
 
+/* Disable hover effect completely */
 .vehicle-table tbody tr:hover {
-    background: #f9fafb;
+    background: transparent !important;
+    background-color: transparent !important;
 }
 
 .vehicle-table img {
@@ -99,6 +91,7 @@
     display: block;
 }
 
+/* Status Badge */
 .status-badge {
     padding: 6px 12px;
     border-radius: 6px;
@@ -126,51 +119,69 @@
     color: #991b1b;
 }
 
-/* Wrap table in scrollable container */
-.vehicle-management {
-    overflow-x: auto;
-}
-
-/* Filters Section */
+/* ========== FILTERS ========== */
 .filters-section {
     background: white;
-    padding: 20px;
+    padding: 0;
     border-radius: 12px;
     margin-bottom: 20px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
 }
 
+/* Header có thể bấm được */
 .filter-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
+    padding: 16px 20px;
+    cursor: pointer;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    transition: background 0.2s;
+}
+
+.filter-header:hover {
+    background: #f3f4f6;
 }
 
 .filter-header h3 {
     margin: 0;
     color: #1a2332;
     font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.btn-clear-filters {
-    background: #ef4444;
-    color: white;
-    padding: 8px 16px;
-    border: none;
-    border-radius: 6px;
+.filter-header h3::after {
+    content: "▼";
     font-size: 14px;
-    cursor: pointer;
-    transition: all 0.3s;
+    transition: transform 0.3s;
 }
 
-.btn-clear-filters:hover {
-    background: #dc2626;
+.filters-section.open .filter-header h3::after {
+    transform: rotate(-180deg);
+}
+
+/* Khi đóng thì ẩn phần filter grid */
+.filters-grid {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: all 0.4s ease;
+    padding: 0 20px;
+}
+
+.filters-section.open .filters-grid {
+    max-height: 1000px;
+    opacity: 1;
+    padding: 20px;
 }
 
 .filters-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 20px;
 }
 
@@ -212,13 +223,26 @@
     color: #4b5563;
 }
 
-/* Modal Styles */
+/* Clear Filters Button */
+.btn-clear-filters {
+    background: #ef4444;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-clear-filters:hover {
+    background: #dc2626;
+}
+
+/* Modal */
 .modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
@@ -237,42 +261,7 @@
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.modal-header h2 {
-    margin: 0;
-    color: #1a2332;
-    font-size: 24px;
-}
-
-.modal-close {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #6b7280;
-    padding: 0;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    transition: all 0.2s;
-}
-
-.modal-close:hover {
-    background: #f3f4f6;
-    color: #1a2332;
-}
-
-/* Vehicle Form */
+/* Form */
 .vehicle-form {
     padding: 20px;
 }
@@ -281,12 +270,6 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
-    margin-bottom: 20px;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
 }
 
 .form-group.full-width {
@@ -322,6 +305,30 @@
     resize: vertical;
 }
 
+/* Color selector with visual indicators */
+.color-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.color-option::before {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+    vertical-align: middle;
+}
+
+select option[value="White"]::before { background-color: white; }
+select option[value="Black"]::before { background-color: black; }
+select option[value="Silver"]::before { background-color: silver; }
+select option[value="Red"]::before { background-color: red; }
+select option[value="Blue"]::before { background-color: blue; }
+select option[value="Gray"]::before { background-color: gray; }
+
 .modal-footer {
     display: flex;
     justify-content: flex-end;
@@ -342,51 +349,10 @@
     transition: all 0.3s;
 }
 
-.btn-cancel:hover {
-    background: #4b5563;
-}
-
-.btn-submit {
-    background: #10b981;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.btn-submit:hover {
-    background: #059669;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .filters-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-.btn-edit,
-.btn-delete {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    cursor: pointer;
-    margin-right: 8px;
-    transition: all 0.3s;
-}
-
 .btn-edit {
     background: #3b82f6;
     color: white;
+    padding: 8px 16px;
 }
 
 .btn-edit:hover {
@@ -396,10 +362,31 @@
 .btn-delete {
     background: #ef4444;
     color: white;
+    padding: 8px 16px;
 }
 
 .btn-delete:hover {
     background: #dc2626;
+}
+
+.btn-cancel {
+    background: #6b7280;
+    color: white;
+    padding: 10px 20px;
+}
+
+.btn-cancel:hover {
+    background: #4b5563;
+}
+
+.btn-submit {
+    background: #10b981;
+    color: white;
+    padding: 10px 20px;
+}
+
+.btn-submit:hover {
+    background: #059669;
 }
 
 .loading {

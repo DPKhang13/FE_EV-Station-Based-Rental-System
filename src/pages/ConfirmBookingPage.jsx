@@ -384,9 +384,12 @@ ${backendError?.message === 'Unexpected error' ? `
                             <span className="label">Trạng Thái:</span>
                             <span className="value status-pending">CHỜ XỬ LÝ</span>
                         </div>
-                        <p className="summary-note">
-                            💡 <strong>Lưu ý:</strong> Giá cuối cùng sẽ được hệ thống tính toán dựa trên thời gian thuê, loại xe và các ưu đãi áp dụng.
-                        </p>
+                        <div className="summary-note">
+                            <div className="note-icon">💡</div>
+                            <div className="note-content">
+                                <strong>Lưu ý:</strong> Giá cuối cùng sẽ được hệ thống tính toán dựa trên thời gian thuê, loại xe và các ưu đãi áp dụng.
+                            </div>
+                        </div>
                     </div>
 
                     {/* Action Buttons */}

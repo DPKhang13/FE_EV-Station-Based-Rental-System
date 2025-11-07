@@ -1,4 +1,95 @@
 import React, { useState, useEffect } from 'react';
+
+// Mapping hình ảnh xe theo hãng, số ghế, màu sắc
+const carImageMap = {
+    'Vinfast': {
+        '4': {
+            'xanh': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/a80cae76-5c8a-4226-ac85-116ba2da7a3a.png',
+            'bạc': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/b76c51c2-6e69-491c-ae83-0d36ff93cdff.png',
+            'đen': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/e88bd242-3df4-48a7-8fe2-a9a3466f939f.png',
+            'đỏ': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/e420cb1b-1710-4dbe-a5e3-e1285c690b6e.png',
+            'trắng': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/unnamed.jpg',
+        },
+        '7': {
+            'trắng': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Vinfast/unnamed.jpg',
+            'bạc': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Vinfast/unnamed%20%284%29.jpg',
+            'đen': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Vinfast/unnamed%20%283%29.jpg',
+            'đỏ': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Vinfast/unnamed%20%282%29.jpg',
+            'xanh': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Vinfast/unnamed%20%281%29.jpg',
+        }
+    },
+    'BMW': {
+        '4': {
+            'trắng': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/white.jpg',
+            'bạc': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/unnamed%20%281%29.jpg',
+            'xanh': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/blue.jpg',
+            'đen': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/8f9f3e31-0c04-4441-bb40-97778c9824e0.png',
+            'đỏ': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/7f3edc23-30ba-4e84-83a9-c8c418f2362d.png',
+        },
+        '7': {
+            'đỏ': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/BMW/unnamed%20%281%29.jpg',
+            'đen': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/BMW/unnamed%20%284%29.jpg',
+            'trắng': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/BMW/unnamed.jpg',
+            'bạc': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/BMW/unnamed%20%283%29.jpg',
+            'xanh': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/BMW/unnamed%20%282%29.jpg',
+        }
+    },
+    'Tesla': {
+        '4': {
+            'bạc': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed4.jpg',
+            'xanh': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed.jpg',
+            'đen': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%283%29.jpg',
+            'trắng': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%282%29.jpg',
+            'đỏ': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%281%29.jpg',
+        },
+        '7': {
+            'trắng': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Tesla/unnamed.jpg',
+            'bạc': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Tesla/unnamed%20%284%29.jpg',
+            'đỏ': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Tesla/unnamed%20%282%29.jpg',
+            'đen': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Tesla/unnamed%20%283%29.jpg',
+            'xanh': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Tesla/unnamed%20%281%29.jpg',
+        }
+    }
+};
+
+function getCarImageUrl(brand, seat, color) {
+    // Chuẩn hóa dữ liệu đầu vào
+    let brandKey = (brand || '').trim().toLowerCase();
+    if (brandKey === 'vinfast' || brandKey === 'vin fast') brandKey = 'Vinfast';
+    else if (brandKey === 'bmw') brandKey = 'BMW';
+    else if (brandKey === 'tesla') brandKey = 'Tesla';
+
+    // Chuẩn hóa số ghế
+    let seatKey = String(seat).replace(' chỗ', '').replace('chỗ', '').replace(' ', '').trim();
+    if (seatKey === '4' || seatKey === '04') seatKey = '4';
+    else if (seatKey === '7' || seatKey === '07') seatKey = '7';
+
+    // Chuẩn hóa màu sắc
+    let colorKey = (color || '').toLowerCase().replace(/\s/g, '');
+    // mapping tiếng Anh sang tiếng Việt
+    const colorMap = {
+        'white': 'trắng',
+        'silver': 'bạc',
+        'blue': 'xanh',
+        'black': 'đen',
+        'red': 'đỏ',
+        'green': 'xanh',
+        'gray': 'bạc',
+        'grey': 'bạc',
+        'xanhduong': 'xanh',
+        'xanh': 'xanh',
+        'trang': 'trắng',
+        'bac': 'bạc',
+        'den': 'đen',
+        'do': 'đỏ',
+    };
+    if (colorMap[colorKey]) colorKey = colorMap[colorKey];
+
+    if (carImageMap[brandKey] && carImageMap[brandKey][seatKey] && carImageMap[brandKey][seatKey][colorKey]) {
+        return carImageMap[brandKey][seatKey][colorKey];
+    }
+    return 'https://via.placeholder.com/100x60?text=No+Image';
+}
 import './VehicleManagement.css';
 import vehicleService from '../../services/vehicleService';
 
@@ -20,6 +111,10 @@ const VehicleManagement = () => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingVehicle, setEditingVehicle] = useState(null);
+    const [showFilters, setShowFilters] = useState(false);
+    const [showOrderHistory, setShowOrderHistory] = useState(false);
+    const [selectedVehicleOrders, setSelectedVehicleOrders] = useState([]);
+    const [loadingOrders, setLoadingOrders] = useState(false);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -28,6 +123,7 @@ const VehicleManagement = () => {
         plateNumber: '',
         variant: '',
         color: '',
+        colorHex: '#ffffff',
         seatCount: '',
         year: '',
         stationId: '',
@@ -129,14 +225,57 @@ const VehicleManagement = () => {
         });
     };
 
-    // Handle add vehicle
-    const handleAddVehicle = () => {
+    // Xem lịch sử đặt xe
+    const handleViewOrderHistory = async (vehicle) => {
+        try {
+            setLoadingOrders(true);
+            setShowOrderHistory(true);
+
+            const vehicleId = vehicle.vehicle_id;
+            const token = localStorage.getItem('accessToken');
+
+            console.log('📦 Fetching order history for vehicle:', vehicleId);
+
+            const response = await fetch(`http://localhost:8080/api/order/vehicle/${vehicleId}/history`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch order history');
+            }
+
+            const vehicleOrders = await response.json();
+            console.log(`✅ Orders for vehicle ${vehicle.plate_number}:`, vehicleOrders.length);
+            console.log('� Order data:', vehicleOrders);
+
+            setSelectedVehicleOrders(vehicleOrders);
+        } catch (err) {
+            console.error('❌ Error fetching order history:', err);
+            alert('❌ Không thể tải lịch sử đặt xe. Vui lòng thử lại.');
+            setShowOrderHistory(false);
+        } finally {
+            setLoadingOrders(false);
+        }
+    };
+
+    const closeOrderHistory = () => {
+        setShowOrderHistory(false);
+        setSelectedVehicleOrders([]);
+    };
+
+    // Handle add vehicle (currently unused - reserved for future use)
+    const _handleAddVehicle = () => {
         setFormData({
             vehicleName: '',
             brand: '',
             plateNumber: '',
             variant: '',
             color: '',
+            colorHex: '#ffffff',
             seatCount: '',
             year: '',
             stationId: '',
@@ -176,10 +315,10 @@ const VehicleManagement = () => {
     const handleDeleteVehicle = async (vehicle) => {
         // First confirmation
         const firstConfirm = window.confirm(
-            `⚠️ BẠN CÓ CHẮC CHẮN MUỐN XÓA XE NÀY?\n\n` +
-            `🚗 Tên xe: ${vehicle.vehicle_name}\n` +
-            `🔢 Biển số: ${vehicle.plate_number}\n` +
-            `🎨 Màu: ${vehicle.color}\n\n` +
+            `BẠN CÓ CHẮC CHẮN MUỐN XÓA XE NÀY?\n\n` +
+            `Tên xe: ${vehicle.vehicle_name}\n` +
+            `Biển số: ${vehicle.plate_number}\n` +
+            `Màu: ${vehicle.color}\n\n` +
             `Hành động này KHÔNG THỂ HOÀN TÁC!`
         );
 
@@ -190,7 +329,7 @@ const VehicleManagement = () => {
 
         // Second confirmation
         const secondConfirm = window.confirm(
-            `⚠️⚠️ XÁC NHẬN LẦN 2 ⚠️⚠️\n\n` +
+            `XÁC NHẬN LẦN 2\n\n` +
             `Bạn thực sự muốn xóa xe "${vehicle.vehicle_name}" (${vehicle.plate_number})?\n\n` +
             `Đây là xác nhận cuối cùng. Sau khi xóa, dữ liệu sẽ MẤT VĨNH VIỄN!`
         );
@@ -202,8 +341,8 @@ const VehicleManagement = () => {
 
         try {
             console.log('🗑️ Deleting vehicle:', vehicle.id);
-            // TODO: Call API to delete vehicle
-            // await vehicleService.deleteVehicle(vehicle.id);
+
+            await vehicleService.deleteVehicle(vehicle.id);
 
             alert(`✅ Đã xóa xe ${vehicle.vehicle_name} thành công!`);
             fetchVehicles(); // Refresh list
@@ -249,28 +388,31 @@ const VehicleManagement = () => {
 
     return (
         <div className="vehicle-management">
-            <div className="header">
-                <h1>🚗 Quản lý xe</h1>
-                <button className="btn-add" onClick={handleAddVehicle}>+ Thêm xe mới</button>
+            <div className="header" style={{ background: 'none', boxShadow: 'none' }}>
+                <h1 style={{ color: '#111', background: 'none' }}>QUẢN LÝ XE</h1>
             </div>
 
             <div className="search-bar">
                 <input
                     type="text"
-                    placeholder="🔍 Tìm kiếm theo tên, biển số, màu sắc..."
+                    placeholder=" Tìm kiếm theo tên, biển số, màu sắc..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
             </div>
 
             {/* Filters Section */}
-            <div className="filters-section">
+            <div
+                className={`filters-section ${showFilters ? 'open' : ''}`}
+                onMouseEnter={() => setShowFilters(true)}
+                onMouseLeave={() => setShowFilters(false)}
+            >
                 <div className="filter-header">
-                    <h3>🔍 Bộ lọc</h3>
+                    <h3>🔍 Bộ lọc {!showFilters && '(Di chuột vào để mở)'}</h3>
                     {(filters.colors.length > 0 || filters.seatCounts.length > 0 ||
                         filters.stations.length > 0 || filters.statuses.length > 0) && (
                             <button className="btn-clear-filters" onClick={clearFilters}>
-                                ✖️ Xóa bộ lọc
+                                Xóa bộ lọc
                             </button>
                         )}
                 </div>
@@ -379,92 +521,114 @@ const VehicleManagement = () => {
             {loading ? (
                 <div className="loading">⏳ Đang tải dữ liệu xe từ hệ thống...</div>
             ) : (
-                <table className="vehicle-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Hình ảnh</th>
-                            <th>Tên xe</th>
-                            <th>Biển số</th>
-                            <th>Hãng</th>
-                            <th>Phiên bản</th>
-                            <th>Màu sắc</th>
-                            <th>Số ghế</th>
-                            <th>Năm SX</th>
-                            <th>Điểm thuê</th>
-                            <th>Pin (%)</th>
-                            <th>Quãng đường (km)</th>
-                            <th>Trạng thái</th>
-                            <th>Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredVehicles.length === 0 ? (
+                <div style={{ width: '100vw', overflowX: 'auto' }}>
+                    <table className="vehicle-table" style={{ width: '100%', minWidth: '1500px', tableLayout: 'fixed' }}>
+                        <thead>
                             <tr>
-                                <td colSpan="14" style={{ textAlign: 'center', padding: '40px' }}>
-                                    {searchTerm ? '🔍 Không tìm thấy xe nào phù hợp' : '📭 Chưa có xe nào trong hệ thống'}
-                                </td>
+                                <th style={{ minWidth: '50px', textAlign: 'center' }}>ID</th>
+                                <th style={{ minWidth: '100px', textAlign: 'center' }}>Hình ảnh</th>
+                                <th style={{ minWidth: '120px', textAlign: 'center' }}>Tên xe</th>
+                                <th style={{ minWidth: '100px', textAlign: 'center' }}>Biển số</th>
+                                <th style={{ minWidth: '80px', textAlign: 'center' }}>Hãng</th>
+                                <th style={{ minWidth: '80px', textAlign: 'center' }}>Phiên bản</th>
+                                <th style={{ minWidth: '80px', textAlign: 'center' }}>Màu sắc</th>
+                                <th style={{ minWidth: '80px', textAlign: 'center' }}>Số ghế</th>
+                                <th style={{ minWidth: '80px', textAlign: 'center' }}>Năm SX</th>
+                                <th style={{ minWidth: '120px', textAlign: 'center' }}>Điểm thuê</th>
+                                <th style={{ minWidth: '80px', textAlign: 'center' }}>Pin (%)</th>
+                                <th style={{ minWidth: '100px', textAlign: 'center' }}>Quãng đường (km)</th>
+                                <th style={{ minWidth: '100px', textAlign: 'center' }}>Trạng thái</th>
+                                <th style={{ minWidth: '180px', textAlign: 'center' }}>Hành động</th>
                             </tr>
-                        ) : (
-                            filteredVehicles.map(vehicle => {
-                                const statusInfo = getStatusInfo(vehicle.status);
-                                return (
-                                    <tr key={vehicle.id || vehicle.vehicle_id}>
-                                        <td><strong>#{vehicle.id}</strong></td>
-                                        <td>
-                                            <img
-                                                src={vehicle.image}
-                                                alt={vehicle.vehicle_name}
-                                                onError={(e) => {
-                                                    e.target.src = 'https://via.placeholder.com/100x60?text=No+Image';
-                                                }}
-                                            />
-                                        </td>
-                                        <td><strong>{vehicle.vehicle_name}</strong></td>
-                                        <td><span style={{ fontWeight: '600', color: '#3b82f6' }}>{vehicle.plate_number}</span></td>
-                                        <td>{vehicle.brand || 'N/A'}</td>
-                                        <td>{vehicle.grade || vehicle.variant || 'N/A'}</td>
-                                        <td>{vehicle.color}</td>
-                                        <td>{vehicle.seat_count} chỗ</td>
-                                        <td>{vehicle.year_of_manufacture}</td>
-                                        <td>{vehicle.stationName || `Station ${vehicle.stationId}` || 'N/A'}</td>
-                                        <td>
-                                            <span style={{
-                                                color: vehicle.battery_status >= 80 ? '#10b981' :
-                                                    vehicle.battery_status >= 50 ? '#f59e0b' : '#ef4444',
-                                                fontWeight: '600'
-                                            }}>
-                                                🔋 {vehicle.battery_status || 0}%
-                                            </span>
-                                        </td>
-                                        <td>{vehicle.range_km || 0} km</td>
-                                        <td>
-                                            <span className={`status-badge ${statusInfo.class}`}>
-                                                {statusInfo.text}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <button
-                                                className="btn-edit"
-                                                title="Chỉnh sửa thông tin xe"
-                                                onClick={() => handleEditVehicle(vehicle)}
-                                            >
-                                                ✏️ Sửa
-                                            </button>
-                                            <button
-                                                className="btn-delete"
-                                                title="Xóa xe khỏi hệ thống"
-                                                onClick={() => handleDeleteVehicle(vehicle)}
-                                            >
-                                                🗑️ Xóa
-                                            </button>
-                                        </td>
-                                    </tr>
-                                );
-                            })
-                        )}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {filteredVehicles.length === 0 ? (
+                                <tr>
+                                    <td colSpan="14" style={{ textAlign: 'center', padding: '40px' }}>
+                                        {searchTerm ? '🔍 Không tìm thấy xe nào phù hợp' : '📭 Chưa có xe nào trong hệ thống'}
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredVehicles.map(vehicle => {
+                                    const statusInfo = getStatusInfo(vehicle.status);
+                                    return (
+                                        <tr key={vehicle.id || vehicle.vehicle_id}>
+                                            <td style={{ textAlign: 'center' }}><strong>#{vehicle.id}</strong></td>
+                                            <td style={{ textAlign: 'center' }}>
+                                                <img
+                                                    src={getCarImageUrl(vehicle.brand, vehicle.seat_count, vehicle.color)}
+                                                    alt={vehicle.vehicle_name}
+                                                    style={{ width: '80px', height: '50px', objectFit: 'cover', borderRadius: '6px', display: 'block', margin: '0 auto' }}
+                                                    onError={(e) => {
+                                                        e.target.src = 'https://via.placeholder.com/100x60?text=No+Image';
+                                                    }}
+                                                />
+                                            </td>
+                                            <td style={{ textAlign: 'center' }}><strong>{vehicle.vehicle_name}</strong></td>
+                                            <td style={{ textAlign: 'center' }}><span style={{ fontWeight: '600', color: '#3b82f6' }}>{vehicle.plate_number}</span></td>
+                                            <td style={{ textAlign: 'center' }}>{vehicle.brand || 'N/A'}</td>
+                                            <td style={{ textAlign: 'center' }}>{vehicle.grade || vehicle.variant || 'N/A'}</td>
+                                            <td style={{ textAlign: 'center' }}>{vehicle.color}</td>
+                                            <td style={{ textAlign: 'center' }}>{vehicle.seat_count} chỗ</td>
+                                            <td style={{ textAlign: 'center' }}>{vehicle.year_of_manufacture}</td>
+                                            <td style={{ textAlign: 'center' }}>{vehicle.stationName || `Station ${vehicle.stationId}` || 'N/A'}</td>
+                                            <td style={{ textAlign: 'center' }}>
+                                                <span style={{
+                                                    color: vehicle.battery_status >= 80 ? '#10b981' :
+                                                        vehicle.battery_status >= 50 ? '#f59e0b' : '#ef4444',
+                                                    fontWeight: '600'
+                                                }}>
+                                                    {vehicle.battery_status || 0}
+                                                </span>
+                                            </td>
+                                            <td style={{ textAlign: 'center' }}>{vehicle.range_km || 0} km</td>
+                                            <td style={{ textAlign: 'center' }}>
+                                                <span className={`status-badge ${statusInfo.class}`}>
+                                                    {statusInfo.text}
+                                                </span>
+                                            </td>
+                                            <td style={{ textAlign: 'center' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px' }}>
+                                                    <button
+                                                        className="btn-edit"
+                                                        title="Chỉnh sửa thông tin xe"
+                                                        onClick={() => handleEditVehicle(vehicle)}
+                                                    >
+                                                        Sửa
+                                                    </button>
+                                                    <button
+                                                        className="btn-history"
+                                                        title="Xem lịch sử đặt xe"
+                                                        onClick={() => handleViewOrderHistory(vehicle)}
+                                                        style={{
+                                                            background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                                                            color: 'white',
+                                                            padding: '8px 12px',
+                                                            border: 'none',
+                                                            borderRadius: '6px',
+                                                            cursor: 'pointer',
+                                                            fontSize: '14px',
+                                                            fontWeight: '600'
+                                                        }}
+                                                    >
+                                                        📋 Lịch sử
+                                                    </button>
+                                                    <button
+                                                        className="btn-delete"
+                                                        title="Xóa xe khỏi hệ thống"
+                                                        onClick={() => handleDeleteVehicle(vehicle)}
+                                                    >
+                                                        Xóa
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             )}
 
             {!loading && !error && vehicles.length > 0 && (
@@ -478,7 +642,7 @@ const VehicleManagement = () => {
                     alignItems: 'center'
                 }}>
                     <div>
-                        <strong>📊 Tổng số xe:</strong> {vehicles.length} xe
+                        <strong> Tổng số xe:</strong> {vehicles.length} xe
                         {searchTerm && <span> | Tìm thấy: {filteredVehicles.length} xe</span>}
                     </div>
                     <button
@@ -494,7 +658,7 @@ const VehicleManagement = () => {
                             fontWeight: '600'
                         }}
                     >
-                        🔄 Làm mới
+                        Làm mới
                     </button>
                 </div>
             )}
@@ -504,7 +668,7 @@ const VehicleManagement = () => {
                 <div className="modal-overlay" onClick={closeModals}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>{showEditModal ? '✏️ Chỉnh sửa xe' : '➕ Thêm xe mới'}</h2>
+                            <h2>{showEditModal ? ' Chỉnh sửa xe' : ' Thêm xe mới'}</h2>
                             <button className="modal-close" onClick={closeModals}>✖️</button>
                         </div>
 
@@ -555,13 +719,61 @@ const VehicleManagement = () => {
 
                                 <div className="form-group">
                                     <label>Màu sắc *</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={formData.color}
-                                        onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                                        placeholder="VD: Trắng, Đen"
-                                    />
+                                    {/* Color picker with preview - Updated */}
+                                    <div style={{
+                                        display: 'flex',
+                                        gap: '12px',
+                                        alignItems: 'center'
+                                    }}>
+                                        <input
+                                            type="color"
+                                            value={formData.colorHex || '#ffffff'}
+                                            onChange={(e) => setFormData({
+                                                ...formData,
+                                                colorHex: e.target.value
+                                            })}
+                                            style={{
+                                                width: '60px',
+                                                height: '42px',
+                                                border: '1px solid #d1d5db',
+                                                borderRadius: '6px',
+                                                cursor: 'pointer'
+                                            }}
+                                            title="Chọn màu"
+                                        />
+                                        <select
+                                            required
+                                            value={formData.color}
+                                            onChange={(e) => {
+                                                const colorMap = {
+                                                    'White': '#ffffff',
+                                                    'Black': '#000000',
+                                                    'Silver': '#c0c0c0',
+                                                    'Red': '#ff0000',
+                                                    'Blue': '#0000ff',
+                                                    'Gray': '#808080',
+
+                                                };
+                                                setFormData({
+                                                    ...formData,
+                                                    color: e.target.value,
+                                                    colorHex: colorMap[e.target.value] || formData.colorHex
+                                                });
+                                            }}
+                                            style={{ flex: 1 }}
+                                        >
+                                            <option value="">-- Chọn màu --</option>
+                                            <option value="White">⚪ Trắng</option>
+                                            <option value="Black">⚫ Đen</option>
+                                            <option value="Silver">🔘 Bạc</option>
+                                            <option value="Red">🔴 Đỏ</option>
+                                            <option value="Blue">🔵 Xanh dương</option>
+                                            <option value="Gray">⚫ Xám</option>
+                                        </select>
+                                    </div>
+                                    <small style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px' }}>
+                                        Chọn màu từ dropdown hoặc dùng color picker để chọn màu tùy chỉnh
+                                    </small>
                                 </div>
 
                                 <div className="form-group">
@@ -677,10 +889,103 @@ const VehicleManagement = () => {
                                     Hủy
                                 </button>
                                 <button type="submit" className="btn-submit">
-                                    {showEditModal ? '💾 Lưu thay đổi' : '➕ Thêm xe'}
+                                    {showEditModal ? ' Lưu thay đổi' : 'Thêm xe'}
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Order History Modal */}
+            {showOrderHistory && (
+                <div className="modal-overlay" onClick={closeOrderHistory}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '1200px' }}>
+                        <div className="modal-header">
+                            <h2> Lịch sử đặt xe</h2>
+                            <button className="modal-close" onClick={closeOrderHistory}>✕</button>
+                        </div>
+
+                        <div className="modal-body">
+                            {loadingOrders ? (
+                                <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+                                    Đang tải lịch sử đặt xe...
+                                </div>
+                            ) : selectedVehicleOrders.length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+                                    Chưa có lịch sử đặt xe nào
+                                </div>
+                            ) : (
+                                <div style={{ overflowX: 'auto' }}>
+                                    <table className="vehicle-table" style={{ width: '100%' }}>
+                                        <thead>
+                                            <tr>
+                                                <th>Mã đơn</th>
+                                                <th>Biển số</th>
+                                                <th>Trạm</th>
+                                                <th>Hãng</th>
+                                                <th>Màu</th>
+                                                <th>Số ghế</th>
+                                                <th>Thời gian bắt đầu</th>
+                                                <th>Thời gian kết thúc</th>
+                                                <th>Tổng tiền</th>
+                                                <th>Đặt cọc</th>
+                                                <th>Còn lại</th>
+                                                <th>Trạng thái</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {selectedVehicleOrders.map((order, index) => (
+                                                <tr key={order.orderId || index}>
+                                                    <td style={{ fontFamily: 'monospace', fontSize: '11px' }}>
+                                                        {order.orderId ? order.orderId.split('-')[0] + '...' : 'N/A'}
+                                                    </td>
+                                                    <td style={{ fontWeight: 'bold' }}>{order.plateNumber || 'N/A'}</td>
+                                                    <td>{order.stationName || `Station ${order.stationId}`}</td>
+                                                    <td>{order.brand || 'N/A'}</td>
+                                                    <td>{order.color || 'N/A'}</td>
+                                                    <td>{order.seatCount} chỗ</td>
+                                                    <td>{order.startTime || 'N/A'}</td>
+                                                    <td>{order.endTime || 'N/A'}</td>
+                                                    <td style={{ fontWeight: 'bold', color: '#059669' }}>
+                                                        {order.totalPrice?.toLocaleString() || '0'}đ
+                                                    </td>
+                                                    <td>{order.depositAmount?.toLocaleString() || '0'}đ</td>
+                                                    <td>{order.remainingAmount?.toLocaleString() || '0'}đ</td>
+                                                    <td>
+                                                        <span style={{
+                                                            padding: '4px 8px',
+                                                            borderRadius: '12px',
+                                                            fontSize: '12px',
+                                                            fontWeight: '600',
+                                                            background: order.status === 'DEPOSITED' ? '#d1fae5' :
+                                                                order.status === 'PENDING_DEPOSIT' ? '#fef3c7' :
+                                                                    order.status === 'PAYMENT_FAILED' ? '#fee2e2' :
+                                                                        order.status === 'COMPLETED' ? '#dbeafe' : '#e5e7eb',
+                                                            color: order.status === 'DEPOSITED' ? '#065f46' :
+                                                                order.status === 'PENDING_DEPOSIT' ? '#92400e' :
+                                                                    order.status === 'PAYMENT_FAILED' ? '#991b1b' :
+                                                                        order.status === 'COMPLETED' ? '#1e40af' : '#1f2937'
+                                                        }}>
+                                                            {order.status}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    <div style={{ marginTop: '20px', padding: '15px', background: '#f3f4f6', borderRadius: '8px' }}>
+                                        <strong> Thống kê:</strong> Tổng {selectedVehicleOrders.length} đơn đặt xe
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="modal-footer">
+                            <button className="btn-cancel" onClick={closeOrderHistory}>
+                                Đóng
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

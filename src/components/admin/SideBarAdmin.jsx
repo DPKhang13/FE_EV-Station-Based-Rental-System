@@ -45,7 +45,7 @@ export default function SideBarAdmin() {
             <FaUsers />
             <span>Danh sách khách hàng</span>
           </NavLink>
-         
+
 
           {/* --- Nhóm c. Quản lý nhân viên --- */}
           <p className="sidebar__section-title">🧑‍💼 Nhân viên</p>
@@ -53,7 +53,7 @@ export default function SideBarAdmin() {
             <FaUserTie />
             <span>Danh sách nhân viên</span>
           </NavLink>
-          
+
 
           {/* --- Nhóm d. Báo cáo & phân tích --- */}
           <p className="sidebar__section-title">📊 Báo cáo & Phân tích</p>
@@ -61,7 +61,7 @@ export default function SideBarAdmin() {
             <FaChartPie />
             <span>Thống kê tổng quan</span>
           </NavLink>
-        
+
         </nav>
       </div>
 
