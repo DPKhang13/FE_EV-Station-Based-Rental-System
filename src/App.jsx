@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import './App.css';
 import Navbar from './components/Navbar';
-import Hero from './components/Hero';
+import CarShowcase from './components/CarShowcase';
 import Offers from './components/Offers';
 import Testimonials from './components/Testimonials';
 import Stats from './components/Stats';
@@ -40,7 +40,7 @@ import FeedbackPage from './pages/FeedbackPage.jsx';
 
 const HomePage = () => (
   <ScrollToSectionWrapper>
-    <Hero />
+    <CarShowcase />
     <Offers />
     <Testimonials />
     <Stats />
