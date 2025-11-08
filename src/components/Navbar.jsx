@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import './Navbar.css';
-import logo from '../assets/logo.jpg';
+import logo from '../assets/logo2.png';
 
 const Navbar = () => {
     const [activeNav, setActiveNav] = useState('home');
@@ -120,7 +120,7 @@ const Navbar = () => {
                                     setActiveCars('');
                                     navigate('/my-bookings');
                                 }}>
-                                ĐƠN ĐẶT XE
+                                ĐƠN ĐẶT
                             </a>
                         </li>
                     </ul>
@@ -150,7 +150,7 @@ const Navbar = () => {
                                                 }}
                                                 className="dropdown-item"
                                             >
-                                                👤 Hồ Sơ Của Tôi
+                                                Hồ Sơ Của Tôi
                                             </button>
                                             <button
                                                 onClick={() => {
@@ -159,7 +159,7 @@ const Navbar = () => {
                                                 }}
                                                 className="dropdown-item"
                                             >
-                                                📋 Đơn Đặt Xe
+                                                 Đơn Đặt
                                             </button>
                                             <div className="dropdown-divider"></div>
                                             <button
@@ -170,13 +170,13 @@ const Navbar = () => {
                                                 }}
                                                 className="dropdown-item logout"
                                             >
-                                                🚪 Đăng Xuất
+                                                Đăng Xuất
                                             </button>
                                         </div>
                                     )}
                                 </div>
                             ) : (
-                                // ❌ If user is not a customer (staff/admin), show login button
+                                // If user is not a customer (staff/admin), show login button
                                 <>
                                     <Link to="/login" className="login-button">Đăng Nhập</Link>
                                 </>
