@@ -97,6 +97,12 @@
     width: 50%;
 }
 
+/* Prevent animation when link is active/selected */
+.navbar-menu a.nav-selected::before,
+.navbar-menu a.nav-selected::after {
+    display: none;
+}
+
 .navbar-menu a.dropdown {
     display: flex;
     align-items: center;
@@ -109,8 +115,8 @@
 }
 
 .navbar-menu a.active {
-    color: #000000;
-    font-weight: 600;
+    color: #dc2626;
+    font-weight: 500;
 }
 
 .navbar-menu a.dropdown {

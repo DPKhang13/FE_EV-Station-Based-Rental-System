@@ -1,12 +1,24 @@
 .contact {
-    padding: 80px 0;
-    background-color: white;
+    padding: 100px 0;
+    background-color: #FFFFFF;
+    background-image: linear-gradient(180deg, #FFFFFF 0%, #F5F5F5 100%);
+    position: relative;
+}
+
+.contact::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #dc2626, transparent);
 }
 
 .contact-container {
-    max-width: 1280px;
+    max-width: 1400px;
     margin: 0 auto;
-    padding: 0 16px;
+    padding: 0 40px;
 }
 
 .contact-grid {
@@ -31,17 +43,21 @@
 }
 
 .contact-divider {
-    width: 80px;
-    height: 4px;
-    background-color: #dc2626;
-    margin-bottom: 24px;
+    width: 60px;
+    height: 2px;
+    background: #dc2626;
+    margin: 0 auto 30px;
 }
 
 .contact-title {
-    font-size: 36px;
-    font-weight: bold;
-    color: #111827;
-    margin-bottom: 32px;
+    font-size: 32px;
+    font-weight: 300;
+    color: #000000;
+    margin-bottom: 60px;
+    text-align: center;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
 }
 
 .contact-details {
@@ -88,56 +104,74 @@
     height: 20px;
 }
 
-/* Location Finder Styles */
+/* Location Finder Styles - Mercedes Design */
 .location-finder {
     text-align: center;
-    margin: 40px 0;
+    margin: 50px 0;
 }
 
 .find-location-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    padding: 16px 40px;
-    font-size: 1.1rem;
-    border-radius: 50px;
+    background: transparent;
+    color: #000000;
+    border: 2px solid #000000;
+    padding: 16px 50px;
+    font-size: 14px;
+    border-radius: 0;
     cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 700;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 500;
+    letter-spacing: 2px;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    position: relative;
+    overflow: hidden;
 }
 
-.find-location-btn:hover {
+.find-location-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: #dc2626;
+    transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: -1;
+}
+
+.find-location-btn:hover:not(:disabled)::before {
+    left: 0;
+}
+
+.find-location-btn:hover:not(:disabled) {
+    border-color: #dc2626;
+    color: #FFFFFF;
     transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
-    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
 }
 
 .find-location-btn:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
     transform: none;
 }
 
 .nearest-location-card {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    color: white;
-    padding: 30px;
-    border-radius: 20px;
-    margin: 30px auto;
-    max-width: 700px;
-    box-shadow: 0 10px 40px rgba(245, 87, 108, 0.3);
-    animation: slideIn 0.5s ease;
+    background: #FFFFFF;
+    color: #000000;
+    padding: 40px;
+    border-radius: 0;
+    margin: 50px auto;
+    max-width: 800px;
+    box-shadow: 0 10px 40px rgba(220, 38, 38, 0.2);
+    border-top: 3px solid #dc2626;
+    animation: slideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes slideIn {
     from {
         opacity: 0;
-        transform: translateY(-30px);
+        transform: translateY(30px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
@@ -145,160 +179,228 @@
 }
 
 .nearest-location-card h3 {
-    margin-bottom: 25px;
-    font-size: 1.8rem;
+    margin-bottom: 30px;
+    font-size: 20px;
     text-align: center;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    font-weight: 300;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #000000;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
 }
 
 .location-info {
-    background: rgba(255, 255, 255, 0.15);
-    padding: 20px;
-    border-radius: 15px;
-    backdrop-filter: blur(10px);
+    background: #f5f5f5;
+    padding: 30px;
+    border-radius: 0;
+    border-left: 3px solid #dc2626;
 }
 
 .location-info h4 {
-    font-size: 1.5rem;
-    margin-bottom: 15px;
+    font-size: 18px;
+    margin-bottom: 20px;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
+    font-weight: 500;
+    color: #000000;
 }
 
 .location-info p {
-    margin: 10px 0;
-    font-size: 1.05rem;
-    line-height: 1.6;
+    margin: 12px 0;
+    font-size: 14px;
+    line-height: 1.8;
+    color: #666666;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+}
+
+.location-info p strong {
+    color: #000000;
+    font-weight: 500;
 }
 
 .location-info .distance {
-    font-size: 1.2rem;
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 2px solid rgba(255, 255, 255, 0.3);
+    font-size: 16px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
     text-align: center;
+    color: #dc2626;
+    font-weight: 500;
 }
 
 .all-locations {
-    margin: 60px 0;
-    padding: 40px 20px;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    border-radius: 20px;
+    margin: 80px 0;
+    padding: 60px 40px;
+    background: #F5F5F5;
+    border-radius: 0;
+    border-top: 1px solid #E0E0E0;
+    border-bottom: 1px solid #E0E0E0;
 }
 
 .all-locations h3 {
     text-align: center;
-    font-size: 2rem;
-    margin-bottom: 40px;
-    color: #2d3748;
-    font-weight: 800;
+    font-size: 24px;
+    margin-bottom: 50px;
+    color: #000000;
+    font-weight: 300;
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 4px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
 }
 
 .locations-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: 30px;
     max-width: 1200px;
     margin: 0 auto;
 }
 
 .location-card {
-    background: white;
-    padding: 30px;
-    border-radius: 15px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
+    background: #FFFFFF;
+    padding: 35px;
+    border-radius: 0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border-top: 2px solid #e0e0e0;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 280px;
+    min-height: 300px;
 }
 
 .location-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-    border-color: #667eea;
+    box-shadow: 0 15px 35px rgba(220, 38, 38, 0.3);
+    border-top-color: #dc2626;
 }
 
 .location-card h4 {
-    color: #667eea;
-    margin-bottom: 15px;
-    font-size: 1.4rem;
-    font-weight: 700;
+    color: #000000;
+    margin-bottom: 20px;
+    font-size: 16px;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
 }
 
 .location-card p {
-    margin: 8px 0;
-    color: #4a5568;
-    font-size: 0.95rem;
-    line-height: 1.6;
+    margin: 10px 0;
+    color: #666666;
+    font-size: 13px;
+    line-height: 1.8;
+    font-weight: 300;
+    letter-spacing: 0.3px;
 }
 
 .location-card .location-address {
-    font-weight: 600;
-    color: #2d3748;
-    margin-bottom: 12px;
-    min-height: 45px;
+    font-weight: 400;
+    color: #333333;
+    margin-bottom: 15px;
+    min-height: 50px;
 }
 
 .view-map-btn {
-    margin-top: 15px;
-    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
+    margin-top: 20px;
+    background: #000000;
+    color: #FFFFFF;
+    border: 2px solid #000000;
+    padding: 12px 24px;
+    border-radius: 0;
     cursor: pointer;
-    font-weight: 600;
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     width: 100%;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    position: relative;
+    overflow: hidden;
+}
+
+.view-map-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: #dc2626;
+    transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: -1;
+}
+
+.view-map-btn:hover::before {
+    left: 0;
 }
 
 .view-map-btn:hover {
+    border-color: #dc2626;
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
-    background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
 }
 
 .location-card.selected {
-    border-color: #dc2626;
-    box-shadow: 0 15px 35px rgba(220, 38, 38, 0.3);
+    border-top-color: #dc2626;
+    box-shadow: 0 15px 35px rgba(220, 38, 38, 0.4);
     transform: translateY(-8px) scale(1.02);
+    background: #fafafa;
 }
 
 .contact-map-section {
-    margin-top: 60px;
+    margin-top: 80px;
 }
 
 .contact-map-section h3 {
     text-align: center;
-    font-size: 2rem;
-    margin-bottom: 20px;
-    color: #2d3748;
-    font-weight: 800;
+    font-size: 24px;
+    margin-bottom: 30px;
+    color: #000000;
+    font-weight: 300;
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 4px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
 }
 
 .selected-location-info {
     text-align: center;
-    margin-bottom: 20px;
-    padding: 15px;
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-    border-radius: 10px;
-    animation: pulse 0.5s ease;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: rgba(220, 38, 38, 0.05);
+    border-radius: 0;
+    border-left: 3px solid #dc2626;
+    animation: pulse 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .selected-location-info p {
     margin: 0;
-    font-size: 1.1rem;
-    color: #78350f;
+    font-size: 14px;
+    color: #000000;
+    letter-spacing: 1px;
+    font-weight: 300;
+}
+
+.selected-location-info strong {
+    color: #dc2626;
+    font-weight: 500;
+}
+
+.contact-map {
+    height: 500px;
+    background-color: #F5F5F5;
+    border-radius: 0;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid #E0E0E0;
+}
+
+.contact-map iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    filter: grayscale(20%) contrast(1.1);
 }
 
 @keyframes pulse {
