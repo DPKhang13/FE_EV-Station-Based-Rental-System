@@ -10,16 +10,18 @@ const Footer = () => {
             <div className="footer-container">
                 <div className="footer-grid">
                     <div>
-                        <div className="footer-logo">
-                            <img src="src/assets/logo.jpg" alt="Your Logo" className="footer-logo-image" />
-                        </div>
+                        <h3 className="footer-section-title">VỀ CARRENT</h3>
                         <p className="footer-description">
-                            Nơi những chiếc xe hơi điện không làm nên mùa xuân nhưng đảm bảo bạn có chuyến đi du lịch mùa hè thoải mái con gà tre.
+                            CarRent - Dịch vụ cho thuê xe hàng đầu với đa dạng lựa chọn, giá cả hợp lý và dịch vụ tận tâm. Khám phá ngay hôm nay!
                         </p>
+                        <ul className="footer-links">
+                            <li><a href="/">Câu chuyện của chúng tôi</a></li>
+                            <li><a href="/">Chính sách bảo mật</a></li>
+                        </ul>
                     </div>
 
                     <div>
-                        <h3 className="footer-section-title">Di chuyển nhanh</h3>
+                        <h3 className="footer-section-title">TIỆN ÍCH</h3>
                         <ul className="footer-links">
                             <li>
                                 <a href="/" onClick={e => {
@@ -66,7 +68,7 @@ const Footer = () => {
                     </div>
 
                     <div>
-                        <h3 className="footer-section-title">Contact</h3>
+                        <h3 className="footer-section-title">LIÊN HỆ</h3>
                         <div className="footer-contact-list">
                             <div className="footer-contact-item">
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -89,18 +91,27 @@ const Footer = () => {
                             </div>
                             <div className="footer-contact-item">
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                                <span>carrent HCM</span>
-                            </div>
-                            <div className="footer-contact-item">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                 </svg>
                                 <span>567-888-999</span>
                             </div>
                         </div>
                     </div>
+
+                    <div>
+                        <h3 className="footer-section-title">DỊCH VỤ</h3>
+                        <ul className="footer-links">
+                            <li><a href="/">Đặt lịch hẹn dịch vụ</a></li>
+                            <li><a href="/">Hướng dẫn sử dụng</a></li>
+                            <li><a href="/">Bảo hiểm xe</a></li>
+                            <li><a href="/">Hỗ trợ khách hàng 24/7</a></li>
+                            <li><a href="/">Chương trình ưu đãi</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div className="footer-bottom">
+                    <p className="footer-copyright">© 2025 CarRent. All rights reserved.</p>
                 </div>
             </div>
         </footer>

@@ -4,6 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { authService } from "../services";
 import './LoginPage.css';
+import logo from '../assets/logo2.png';
 
 const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
@@ -61,6 +62,9 @@ export default function LoginPage() {
 
   return (
     <div className="login-container">
+      <div className="login-logo">
+        <img src={logo} alt="CarRent Logo" />
+      </div>
       <form className="login-form" onSubmit={submit}>
         <h2>Đăng nhập</h2>
         <input

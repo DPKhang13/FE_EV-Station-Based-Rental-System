@@ -1,7 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import './App.css';
-import Header from './components/Header';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Offers from './components/Offers';
@@ -85,7 +84,6 @@ function LayoutWrapper({ children }) {
 
   return (
     <>
-      {!hideLayout && <Header />}
       {!hideLayout && <Navbar />}
       {children}
       {!hideLayout && <Footer />}
