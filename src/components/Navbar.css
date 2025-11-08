@@ -16,6 +16,9 @@
 }
 
 .navbar-logo {
+    display: flex;
+    align-items: center;
+    gap: 15px;
     font-size: 24px;
     font-weight: bold;
     letter-spacing: 0.05em;
@@ -23,10 +26,17 @@
 }
 
 .navbar-logo img {
-    width: 50px;
-    /* Adjust the width as needed */
+    width: 65px;
     height: auto;
-    /* Maintain aspect ratio */
+}
+
+.logo-text {
+    font-size: 28px;
+    font-weight: 500;
+    color: #dc2626;
+    letter-spacing: -0.5px;
+    text-transform: none;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
 }
 
 .navbar-menu {

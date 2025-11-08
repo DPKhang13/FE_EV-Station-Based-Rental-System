@@ -20,7 +20,8 @@ const StationManagement = () => {
         vehicleName: '',
         color: '',
         seatCount: '',
-        variant: ''
+        variant: '',
+        imageUrl: ''
     });
     const [stationVehicles, setStationVehicles] = useState([]);
     const [loadingVehicles, setLoadingVehicles] = useState(false);
@@ -337,16 +338,55 @@ const StationManagement = () => {
             vehicleName: '',
             color: '',
             seatCount: '',
-            variant: ''
+            variant: '',
+            imageUrl: ''
         });
     };
 
-    const handleVehicleInputChange = (e) => {
+    const handleVehicleInputChange = async (e) => {
         const { name, value } = e.target;
-        setVehicleFormData(prev => ({
-            ...prev,
+        const newFormData = {
+            ...vehicleFormData,
             [name]: value
-        }));
+        };
+        
+        setVehicleFormData(newFormData);
+        
+        // Tự động fetch ảnh khi đủ 3 trường: vehicleName (brand), color, seatCount
+        if (newFormData.vehicleName && newFormData.color && newFormData.seatCount) {
+            try {
+                const token = localStorage.getItem('accessToken');
+                const API_BASE_URL = 'http://localhost:8080/api';
+                
+                // Convert color name to lowercase for API (White -> white, Blue -> blue)
+                const colorForAPI = newFormData.color.toLowerCase();
+                
+                console.log('🎨 [Auto-fetch image] Brand:', newFormData.vehicleName, 'Color:', colorForAPI, 'Seats:', newFormData.seatCount);
+                
+                const url = `${API_BASE_URL}/vehicles/image-url?brand=${encodeURIComponent(newFormData.vehicleName)}&color=${encodeURIComponent(colorForAPI)}&seatCount=${newFormData.seatCount}`;
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ [Auto-fetch image] Success:', data.imageUrl);
+                    setVehicleFormData(prev => ({
+                        ...prev,
+                        imageUrl: data.imageUrl
+                    }));
+                } else {
+                    const errorData = await response.text();
+                    console.log('⚠️ [Auto-fetch image] No image found. Response:', errorData);
+                }
+            } catch (error) {
+                console.error('❌ [Auto-fetch image] Error:', error);
+            }
+        }
     };
 
     const handleAddVehicle = async (e) => {
@@ -992,7 +1032,7 @@ const StationManagement = () => {
             {/* Add Vehicle Modal */}
             {showAddVehicleModal && selectedStationForVehicle && (
                 <div className="modal-overlay" onClick={handleCloseAddVehicleModal}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px' }}>
                         <div className="modal-header">
                             <h2> Thêm xe vào trạm: {selectedStationForVehicle.name}</h2>
                             <button className="modal-close" onClick={handleCloseAddVehicleModal}>✕</button>
@@ -1068,12 +1108,12 @@ const StationManagement = () => {
                                         required
                                     >
                                         <option value="">-- Chọn màu --</option>
-                                        <option value="White">Trắng ⬜</option>
-                                        <option value="Black">Đen ⬛</option>
-                                        <option value="Silver">Bạc 🔲</option>
-                                        <option value="Red">Đỏ 🟥</option>
-                                        <option value="Blue">Xanh dương 🟦</option>
-                                        <option value="Gray">Xám ⬜</option>
+                                        <option value="White">Trắng</option>
+                                        <option value="Black">Đen</option>
+                                        <option value="Silver">Bạc</option>
+                                        <option value="Red">Đỏ</option>
+                                        <option value="Blue">Xanh dương</option>
+                                        <option value="Gray">Xám</option>
                                     </select>
                                 </div>
 
@@ -1105,6 +1145,47 @@ const StationManagement = () => {
                                         <option value="Pro">Pro</option>
                                     </select>
                                 </div>
+
+                                {/* Preview ảnh xe */}
+                                {vehicleFormData.imageUrl && (
+                                    <div className="form-group full-width" style={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        gap: '12px'
+                                    }}>
+                                        <div style={{
+                                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                            borderRadius: '12px',
+                                            padding: '20px',
+                                            display: 'inline-block',
+                                            maxWidth: '100%'
+                                        }}>
+                                            <label style={{ color: 'white', fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', display: 'block', textAlign: 'center' }}>
+                                                Preview Ảnh Xe
+                                            </label>
+                                            <img 
+                                                src={vehicleFormData.imageUrl} 
+                                                alt="Car Preview" 
+                                                style={{ 
+                                                    maxWidth: '100%',
+                                                    height: 'auto',
+                                                    maxHeight: '400px',
+                                                    display: 'block',
+                                                    borderRadius: '8px',
+                                                    border: '3px solid white',
+                                                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                                                }}
+                                                onError={(e) => {
+                                                    e.target.style.display = 'none';
+                                                }}
+                                            />
+                                            <p style={{ color: 'white', fontSize: '12px', marginTop: '8px', textAlign: 'center' }}>
+                                                {vehicleFormData.vehicleName} - {vehicleFormData.color} - {vehicleFormData.seatCount} chỗ
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="form-actions">
@@ -1200,12 +1281,12 @@ const StationManagement = () => {
                                         required
                                     >
                                         <option value="">-- Chọn màu --</option>
-                                        <option value="White">Trắng ⬜</option>
-                                        <option value="Black">Đen ⬛</option>
-                                        <option value="Silver">Bạc 🔲</option>
-                                        <option value="Red">Đỏ 🟥</option>
-                                        <option value="Blue">Xanh dương 🟦</option>
-                                        <option value="Gray">Xám ⬜</option>
+                                        <option value="White">Trắng</option>
+                                        <option value="Black">Đen</option>
+                                        <option value="Silver">Bạc</option>
+                                        <option value="Red">Đỏ</option>
+                                        <option value="Blue">Xanh dương</option>
+                                        <option value="Gray">Xám</option>
                                     </select>
                                 </div>
 

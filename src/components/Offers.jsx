@@ -88,7 +88,7 @@ const Offers = () => {
 
                         <div className="offers-grid-horizontal">
                             <div className="offer-card" data-seater="4">
-                                <img src="src/assets/4standard.jpg" alt="Air" className="offer-image" />
+                                <img src="src/assets/4standard2.jpg" alt="Air" className="offer-image" />
                                 <div>
                                     <h3 className="offer-title">AIR</h3>
                                     <p className="offer-price">
@@ -110,7 +110,7 @@ const Offers = () => {
                             </div>
 
                             <div className="offer-card" data-seater="4">
-                                <img src="src/assets/4standard.jpg" alt="Plus" className="offer-image" />
+                                <img src="src/assets/4standard1.jpg" alt="Plus" className="offer-image" />
                                 <div>
                                     <h3 className="offer-title">PLUS</h3>
                                     <p className="offer-price">

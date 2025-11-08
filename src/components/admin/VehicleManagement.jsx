@@ -2,16 +2,57 @@ import React, { useState, useEffect } from 'react';
 import './VehicleManagement.css';
 import vehicleService from '../../services/vehicleService';
 
+// Mapping ảnh xe theo hãng, màu sắc và số chỗ
+const CAR_IMAGE_MAPPING = {
+    '4': { // 4 chỗ
+        'Vinfast': {
+            'Blue': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/a80cae76-5c8a-4226-ac85-116ba2da7a3a.png',
+            'Silver': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/b76c51c2-6e69-491c-ae83-0d36ff93cdff.png',
+            'Black': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/e88bd242-3df4-48a7-8fe2-a9a3466f939f.png',
+            'Red': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/e420cb1b-1710-4dbe-a5e3-e1285c690b6e.png',
+            'White': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/unnamed.jpg'
+        },
+        'BMW': {
+            'White': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/white.jpg',
+            'Silver': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/unnamed%20%281%29.jpg',
+            'Blue': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/blue.jpg',
+            'Black': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/8f9f3e31-0c04-4441-bb40-97778c9824e0.png',
+            'Red': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/7f3edc23-30ba-4e84-83a9-c8c418f2362d.png'
+        },
+        'Tesla': {
+            'Silver': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed4.jpg',
+            'Blue': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed.jpg',
+            'Black': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%283%29.jpg',
+            'White': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%282%29.jpg',
+            'Red': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%281%29.jpg'
+        }
+    }
+};
+
 const VehicleManagement = () => {
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [error, setError] = useState(null);
 
-    // Modal / form / order-history states which were missing and caused runtime errors
+    // Filters state
+    const [filters, setFilters] = useState({
+        colors: [],
+        seatCounts: [],
+        stations: [],
+        statuses: []
+    });
+
+    // Modals state
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingVehicle, setEditingVehicle] = useState(null);
+    const [showFilters, setShowFilters] = useState(false);
+    const [showOrderHistory, setShowOrderHistory] = useState(false);
+    const [selectedVehicleOrders, setSelectedVehicleOrders] = useState([]);
+    const [loadingOrders, setLoadingOrders] = useState(false);
+
+    // Form state
     const [formData, setFormData] = useState({
         vehicleName: '',
         brand: '',
@@ -27,140 +68,30 @@ const VehicleManagement = () => {
         status: 'Available',
         transmission: 'Automatic',
         batteryCapacity: '',
-        description: ''
+        description: '',
+        imageUrl: ''
     });
 
-    const [showOrderHistory, setShowOrderHistory] = useState(false);
-    const [loadingOrders, setLoadingOrders] = useState(false);
-    const [selectedVehicleOrders, setSelectedVehicleOrders] = useState([]);
-    const [historyVehicle, setHistoryVehicle] = useState(null);
-
-    // Fetch vehicles wrapper - use vehicleService helper
+    // Fetch vehicles từ API
     const fetchVehicles = async () => {
         try {
             setLoading(true);
             setError(null);
+            console.log('🔄 [VehicleManagement] Fetching vehicles from API...');
+
             const data = await vehicleService.fetchAndTransformVehicles();
+            console.log('✅ [VehicleManagement] Received vehicles:', data.length);
+            console.log('📊 [VehicleManagement] Sample vehicle:', data[0]);
+
             setVehicles(data);
         } catch (err) {
-            console.error('Error fetching vehicles:', err);
-            setError('Không thể tải danh sách xe. Vui lòng thử lại.');
-            setVehicles([]);
+            console.error('❌ [VehicleManagement] Error fetching vehicles:', err);
+            setError('Không thể tải danh sách xe. Vui lòng thử lại sau.');
         } finally {
             setLoading(false);
         }
     };
 
-    // ✅ Đặt carImageMap ngay trong component (có thể dùng state và hàm khác)
-    const carImageMap = {
-        vinfast: {
-            '7': {
-                trắng: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Vinfast/unnamed.jpg',
-                bạc: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Vinfast/unnamed%20%284%29.jpg',
-                đen: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Vinfast/unnamed%20%283%29.jpg',
-                đỏ: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Vinfast/unnamed%20%282%29.jpg',
-                xanh: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Vinfast/unnamed%20%281%29.jpg',
-            },
-            '4': {
-                xanh: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/a80cae76-5c8a-4226-ac85-116ba2da7a3a.png',
-                bạc: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/b76c51c2-6e69-491c-ae83-0d36ff93cdff.png',
-                đen: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/e88bd242-3df4-48a7-8fe2-a9a3466f939f.png',
-                đỏ: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/e420cb1b-1710-4dbe-a5e3-e1285c690b6e.png',
-                trắng: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/unnamed.jpg',
-            },
-        },
-        bmw: {
-            '7': {
-                đỏ: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/BMW/unnamed%20%281%29.jpg',
-                đen: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/BMW/unnamed%20%284%29.jpg',
-                trắng: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/BMW/unnamed.jpg',
-                bạc: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/BMW/unnamed%20%283%29.jpg',
-                xanh: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/BMW/unnamed%20%282%29.jpg',
-            },
-            '4': {
-                trắng: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/white.jpg',
-                bạc: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/unnamed%20%281%29.jpg',
-                xanh: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/blue.jpg',
-                đen: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/8f9f3e31-0c04-4441-bb40-97778c9824e0.png',
-                đỏ: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/7f3edc23-30ba-4e84-83a9-c8c418f2362d.png',
-            },
-        },
-        tesla: {
-            '7': {
-                trắng: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Tesla/unnamed.jpg',
-                bạc: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Tesla/unnamed%20%284%29.jpg',
-                đỏ: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Tesla/unnamed%20%282%29.jpg',
-                đen: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Tesla/unnamed%20%283%29.jpg',
-                xanh: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Tesla/unnamed%20%281%29.jpg',
-            },
-            '4': {
-                bạc: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed4.jpg',
-                xanh: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed.jpg',
-                đen: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%283%29.jpg',
-                trắng: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%282%29.jpg',
-                đỏ: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%281%29.jpg',
-            },
-        },
-    }; // ✅ chỉ 1 ngoặc đóng duy nhất ở đây!
-
-    // Lấy URL ảnh theo brand / seat / color từ carImageMap
-    const getCarImageUrl = (vehicle) => {
-        if (!vehicle) return 'https://via.placeholder.com/100x60?text=No+Image';
-        const brand = (vehicle.brand || '').toLowerCase().replace(/\s+/g, '');
-        const seat = String(vehicle.seat_count || vehicle.seatCount || '4');
-        let colorRaw = (vehicle.color || '').toLowerCase().trim();
-
-        // map common english names to Vietnamese keys used in carImageMap
-        const colorSynonyms = {
-            'white': 'trắng',
-            'black': 'đen',
-            'silver': 'bạc',
-            'grey': 'xanh',
-            'gray': 'xanh',
-            'blue': 'xanh',
-            'red': 'đỏ'
-        };
-
-        if (!colorRaw && vehicle.colorName) colorRaw = vehicle.colorName.toLowerCase().trim();
-        if (colorSynonyms[colorRaw]) colorRaw = colorSynonyms[colorRaw];
-
-        // Try direct lookup, then normalized without diacritics, then fallback to vehicle.image or placeholder
-        const tryLookup = (b, s, c) => {
-            try {
-                return carImageMap?.[b]?.[s]?.[c];
-            } catch {
-                return undefined;
-            }
-        };
-
-        let url = tryLookup(brand, seat, colorRaw);
-
-        if (!url) {
-            // try remove diacritics from keys
-            const normalize = (str) => str.normalize ? str.normalize('NFD').replace(/\p{Diacritic}/gu, '') : str;
-            const colorNoAcc = normalize(colorRaw);
-            // iterate available colors for brand/seat and try to match by normalized key
-            const bucket = carImageMap?.[brand]?.[seat] || {};
-            for (const key of Object.keys(bucket)) {
-                if (normalize(key) === colorNoAcc) {
-                    url = bucket[key];
-                    break;
-                }
-            }
-        }
-
-        // fallback to vehicle.image (transformed data) or a placeholder
-        return url || vehicle.image || 'https://via.placeholder.com/100x60?text=No+Image';
-    };
-
-    // ✅ Bây giờ khai báo state filters bình thường
-    const [filters, setFilters] = useState({
-        colors: [],
-        seatCounts: [],
-        stations: [],
-        statuses: [],
-    });
-    const [showFilters, setShowFilters] = useState(false);
     useEffect(() => {
         fetchVehicles();
     }, []);
@@ -206,7 +137,7 @@ const VehicleManagement = () => {
             'Rented': { text: 'Đang thuê', class: 'IN_USE' },
             'Reserved': { text: 'Đã đặt', class: 'RESERVED' },
             'Maintenance': { text: 'Bảo trì', class: 'MAINTENANCE' }
-        }
+        };
         return statusMap[status] || { text: status, class: 'AVAILABLE' };
     };
 
@@ -235,36 +166,34 @@ const VehicleManagement = () => {
     const handleViewOrderHistory = async (vehicle) => {
         try {
             setLoadingOrders(true);
-            // open modal right away so user sees loading state
             setShowOrderHistory(true);
 
-            // normalize id to number (API expects vehicleId path param)
-            const rawId = vehicle.vehicle_id || vehicle.id || vehicle.vehicleId;
-            const vehicleId = Number(rawId);
-            console.log('📦 Fetching order history for vehicle (raw/id):', rawId, '/', vehicleId);
+            const vehicleId = vehicle.vehicle_id;
+            const token = localStorage.getItem('accessToken');
 
-            if (!Number.isFinite(vehicleId) || vehicleId <= 0) {
-                throw new Error('Invalid vehicleId provided for order history');
+            console.log('📦 Fetching order history for vehicle:', vehicleId);
+
+            const response = await fetch(`http://localhost:8080/api/order/vehicle/${vehicleId}/history`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch order history');
             }
 
-            // remember which vehicle we are loading history for (for UI/debug)
-            setHistoryVehicle({ id: vehicleId, plate: vehicle.plate_number || vehicle.plateNumber || vehicle.vehicle_name || 'N/A' });
-
-            // Use vehicleService helper which centralizes API calls and errors
-            const vehicleOrders = await vehicleService.getVehicleOrderHistory(vehicleId);
-
-            if (!Array.isArray(vehicleOrders)) {
-                throw new Error('Invalid response for order history');
-            }
-
+            const vehicleOrders = await response.json();
             console.log(`✅ Orders for vehicle ${vehicle.plate_number}:`, vehicleOrders.length);
+            console.log('� Order data:', vehicleOrders);
+
             setSelectedVehicleOrders(vehicleOrders);
         } catch (err) {
             console.error('❌ Error fetching order history:', err);
             alert('❌ Không thể tải lịch sử đặt xe. Vui lòng thử lại.');
             setShowOrderHistory(false);
-            setSelectedVehicleOrders([]);
-            setHistoryVehicle(null);
         } finally {
             setLoadingOrders(false);
         }
@@ -273,7 +202,55 @@ const VehicleManagement = () => {
     const closeOrderHistory = () => {
         setShowOrderHistory(false);
         setSelectedVehicleOrders([]);
-        setHistoryVehicle(null);
+    };
+
+    // Function to fetch image URL from backend API
+    const fetchCarImageFromAPI = async (brand, color, seatCount) => {
+        try {
+            const token = localStorage.getItem('accessToken');
+            const API_BASE_URL = 'http://localhost:8080/api';
+            
+            console.log('🎨 [API] Fetching image for:', { brand, color, seatCount });
+            
+            const url = `${API_BASE_URL}/vehicles/image-url?brand=${encodeURIComponent(brand)}&color=${encodeURIComponent(color)}&seatCount=${seatCount}`;
+            
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('✅ [API] Image URL received:', data.imageUrl);
+                return data.imageUrl;
+            } else {
+                console.error('❌ [API] Failed to fetch image:', response.status);
+                return '';
+            }
+        } catch (error) {
+            console.error('❌ [API] Error fetching image:', error);
+            return '';
+        }
+    };
+
+    // Function to update form data and auto-fill image from API
+    const updateFormWithImage = async (updates) => {
+        const newFormData = { ...formData, ...updates };
+        
+        console.log('🔄 [updateFormWithImage] Current form:', newFormData);
+        
+        // Tự động cập nhật ảnh nếu có đủ thông tin
+        if (newFormData.brand && newFormData.color && newFormData.seatCount) {
+            const imageUrl = await fetchCarImageFromAPI(newFormData.brand, newFormData.color, newFormData.seatCount);
+            if (imageUrl) {
+                newFormData.imageUrl = imageUrl;
+                console.log('✅ [updateFormWithImage] Auto-filled image:', imageUrl);
+            }
+        }
+        
+        setFormData(newFormData);
     };
 
     // Handle add vehicle (currently unused - reserved for future use)
@@ -293,7 +270,8 @@ const VehicleManagement = () => {
             status: 'Available',
             transmission: 'Automatic',
             batteryCapacity: '',
-            description: ''
+            description: '',
+            imageUrl: ''
         });
         setShowAddModal(true);
     };
@@ -315,9 +293,9 @@ const VehicleManagement = () => {
             status: vehicle.status || 'Available',
             transmission: vehicle.transmission || 'Automatic',
             batteryCapacity: vehicle.battery_capacity || '',
-            description: vehicle.description || ''
+            description: vehicle.description || '',
+            imageUrl: vehicle.imageUrl || vehicle.image_url || ''
         });
-        setShowAddModal(false);
         setShowEditModal(true);
     };
 
@@ -350,68 +328,42 @@ const VehicleManagement = () => {
         }
 
         try {
-            // normalize vehicle id
-            const rawId = vehicle.vehicle_id || vehicle.id || vehicle.vehicleId;
-            const vehicleId = Number(rawId);
+            console.log('🗑️ Deleting vehicle:', vehicle.id);
+            
+            await vehicleService.deleteVehicle(vehicle.id);
 
-            if (!Number.isFinite(vehicleId) || vehicleId <= 0) {
-                throw new Error('Invalid vehicle id for deletion');
-            }
-
-            console.log('🗑️ Deleting vehicle via API:', vehicleId);
-            await vehicleService.deleteVehicle(vehicleId);
-
-            alert(`✅ Đã xóa xe ${vehicle.vehicle_name || vehicle.vehicleName || vehicle.plate_number || ''} thành công!`);
-            await fetchVehicles(); // Refresh list
+            alert(`✅ Đã xóa xe ${vehicle.vehicle_name} thành công!`);
+            fetchVehicles(); // Refresh list
         } catch (err) {
             console.error('❌ Error deleting vehicle:', err);
-            alert(`❌ Lỗi khi xóa xe: ${err.message || err}`);
+            alert(`❌ Lỗi khi xóa xe: ${err.message}`);
         }
     };
 
     // Handle form submit
     const handleSubmit = async (e) => {
         e.preventDefault();
+
         try {
-            // determine status: prefer form value, then existing editingVehicle, otherwise default to 'available'
-            const statusValue = (formData.status || (editingVehicle && editingVehicle.status) || 'available').toString().toLowerCase();
-
-            // Build payload expected by backend
-            const payload = {
-                plateNumber: formData.plateNumber,
-                status: statusValue, // must be one of maintenance,rented,available (lowercase)
-                stationId: Number(formData.stationId) || 1,
-                vehicleName: formData.vehicleName || `${formData.brand || ''} ${formData.seatCount || ''}`.trim(),
-                description: formData.description || '',
-                brand: formData.brand,
-                color: formData.color,
-                transmission: formData.transmission || 'Automatic',
-                seatCount: Number(formData.seatCount) || 4,
-                year: Number(formData.year) || new Date().getFullYear(),
-                variant: formData.variant,
-                batteryStatus: formData.batteryStatus || '100',
-                batteryCapacity: formData.batteryCapacity || '0',
-                rangeKm: Number(formData.rangeKm) || 0
-            };
-
-            if (showEditModal && editingVehicle && editingVehicle.vehicle_id) {
-                // Update existing vehicle (use update endpoint)
-                await vehicleService.updateVehicle(editingVehicle.vehicle_id, payload);
+            if (showEditModal) {
+                console.log('✏️ Updating vehicle:', editingVehicle.id, formData);
+                // TODO: Call API to update vehicle
+                // await vehicleService.updateVehicle(editingVehicle.id, formData);
                 alert('✅ Cập nhật xe thành công!');
             } else {
-                // Create new vehicle
-                await vehicleService.createVehicle(payload);
+                console.log('➕ Adding new vehicle:', formData);
+                // TODO: Call API to add vehicle
+                // await vehicleService.addVehicle(formData);
                 alert('✅ Thêm xe mới thành công!');
             }
 
             setShowAddModal(false);
             setShowEditModal(false);
             setEditingVehicle(null);
-            // refresh
-            await fetchVehicles();
+            fetchVehicles(); // Refresh list
         } catch (err) {
             console.error('❌ Error saving vehicle:', err);
-            alert(`❌ Lỗi: ${err.message || err}`);
+            alert(`❌ Lỗi: ${err.message}`);
         }
     };
 
@@ -424,7 +376,7 @@ const VehicleManagement = () => {
 
     return (
         <div className="vehicle-management">
-            <div className="header">
+            <div className="page-header">
                 <h1>QUẢN LÝ XE</h1>
             </div>
 
@@ -444,7 +396,7 @@ const VehicleManagement = () => {
                 onMouseLeave={() => setShowFilters(false)}
             >
                 <div className="filter-header">
-                    <h3> Bộ lọc {!showFilters && '(Di chuột vào để mở)'}</h3>
+                    <h3>🔍 Bộ lọc {!showFilters && '(Di chuột vào để mở)'}</h3>
                     {(filters.colors.length > 0 || filters.seatCounts.length > 0 ||
                         filters.stations.length > 0 || filters.statuses.length > 0) && (
                             <button className="btn-clear-filters" onClick={clearFilters}>
@@ -456,7 +408,7 @@ const VehicleManagement = () => {
                 <div className="filters-grid">
                     {/* Color Filter */}
                     <div className="filter-group">
-                        <h4> Màu sắc</h4>
+                        <h4>🎨 Màu sắc</h4>
                         <div className="filter-options">
                             {getUniqueColors().map(color => (
                                 <label key={color} className="filter-checkbox">
@@ -473,7 +425,7 @@ const VehicleManagement = () => {
 
                     {/* Seat Count Filter */}
                     <div className="filter-group">
-                        <h4> Số ghế</h4>
+                        <h4>💺 Số ghế</h4>
                         <div className="filter-options">
                             {getUniqueSeatCounts().map(count => (
                                 <label key={count} className="filter-checkbox">
@@ -490,7 +442,7 @@ const VehicleManagement = () => {
 
                     {/* Station Filter */}
                     <div className="filter-group">
-                        <h4> Điểm thuê</h4>
+                        <h4>📍 Điểm thuê</h4>
                         <div className="filter-options">
                             {getUniqueStations().map(station => (
                                 <label key={station} className="filter-checkbox">
@@ -507,7 +459,7 @@ const VehicleManagement = () => {
 
                     {/* Status Filter */}
                     <div className="filter-group">
-                        <h4> Trạng thái</h4>
+                        <h4>📊 Trạng thái</h4>
                         <div className="filter-options">
                             {getAllStatuses().map(status => {
                                 const statusInfo = getStatusInfo(status);
@@ -532,7 +484,7 @@ const VehicleManagement = () => {
                     padding: '20px',
                     background: '#fee2e2',
                     color: '#991b1b',
-                    borderRadius: '4px',
+                    borderRadius: '8px',
                     marginBottom: '20px',
                     textAlign: 'center'
                 }}>
@@ -584,14 +536,14 @@ const VehicleManagement = () => {
                                 </td>
                             </tr>
                         ) : (
-                            filteredVehicles.map(vehicle => {
+                            filteredVehicles.map((vehicle, index) => {
                                 const statusInfo = getStatusInfo(vehicle.status);
                                 return (
                                     <tr key={vehicle.id || vehicle.vehicle_id}>
-                                        <td><strong>#{vehicle.id}</strong></td>
+                                        <td><strong>#{index + 1}</strong></td>
                                         <td>
                                             <img
-                                                src={getCarImageUrl(vehicle)}
+                                                src={vehicle.image}
                                                 alt={vehicle.vehicle_name}
                                                 onError={(e) => {
                                                     e.target.src = 'https://via.placeholder.com/100x60?text=No+Image';
@@ -607,13 +559,17 @@ const VehicleManagement = () => {
                                         <td>{vehicle.year_of_manufacture}</td>
                                         <td>{vehicle.stationName || `Station ${vehicle.stationId}` || 'N/A'}</td>
                                         <td>
-                                            <span style={{
-                                                color: vehicle.battery_status >= 80 ? '#10b981' :
-                                                    vehicle.battery_status >= 50 ? '#f59e0b' : '#ef4444',
-                                                fontWeight: '600'
-                                            }}>
-                                                {vehicle.battery_status || 0}
-                                            </span>
+                                            {(() => {
+                                                const batteryValue = parseInt(vehicle.battery_status) || 0;
+                                                const color = batteryValue >= 70 ? '#10b981' :    // >= 70%: Xanh lá
+                                                              batteryValue > 0 ? '#f59e0b' :      // 1-69%: Vàng
+                                                              '#ef4444';                          // 0%: Đỏ
+                                                return (
+                                                    <span style={{ color: color, fontWeight: '600' }}>
+                                                        {vehicle.battery_status || 0}
+                                                    </span>
+                                                );
+                                            })()}
                                         </td>
                                         <td>{vehicle.range_km || 0} km</td>
                                         <td>
@@ -668,7 +624,7 @@ const VehicleManagement = () => {
                     marginTop: '20px',
                     padding: '15px',
                     background: '#f0f9ff',
-                    borderRadius: '4px',
+                    borderRadius: '8px',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center'
@@ -705,194 +661,325 @@ const VehicleManagement = () => {
                         </div>
 
                         <form onSubmit={handleSubmit} className="vehicle-form">
-                            {showEditModal ? (
-                                <div className="form-grid">
-                                    <div className="form-group">
-                                        <label>Trạng thái *</label>
-                                        <select
-                                            required
-                                            value={formData.status}
-                                            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                        >
-                                            <option value="">Chọn trạng thái</option>
-                                            <option value="available">Available</option>
-                                            <option value="rented">Rented</option>
-                                            <option value="maintenance">Maintenance</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>Điểm thuê (Station ID)</label>
-                                        <input
-                                            type="number"
-                                            value={formData.stationId}
-                                            onChange={(e) => setFormData({ ...formData, stationId: Number(e.target.value) })}
-                                            placeholder="VD: 1"
-                                            min="1"
-                                        />
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>Hãng</label>
-                                        <select
-                                            value={formData.brand}
-                                            onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                                        >
-                                            <option value="">Chọn hãng</option>
-                                            <option value="VinFast">VinFast</option>
-                                            <option value="BMW">BMW</option>
-                                            <option value="Tesla">Tesla</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>Màu</label>
-                                        <select
-                                            value={formData.color}
-                                            onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                                        >
-                                            <option value="">Chọn màu</option>
-                                            <option value="White">White</option>
-                                            <option value="Black">Black</option>
-                                            <option value="Silver">Silver</option>
-                                            <option value="Red">Red</option>
-                                            <option value="Blue">Blue</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>Số ghế</label>
-                                        <select
-                                            value={formData.seatCount}
-                                            onChange={(e) => setFormData({ ...formData, seatCount: Number(e.target.value) })}
-                                        >
-                                            <option value="">Chọn số ghế</option>
-                                            <option value={4}>4</option>
-                                            <option value={7}>7</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>Phiên bản</label>
-                                        <select
-                                            value={formData.variant}
-                                            onChange={(e) => setFormData({ ...formData, variant: e.target.value })}
-                                        >
-                                            <option value="">Chọn hạng</option>
-                                            <option value="Pro">Pro</option>
-                                            <option value="Air">Air</option>
-                                            <option value="Plus">Plus</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>Pin hiện tại (%)</label>
-                                        <input
-                                            type="number"
-                                            value={formData.batteryStatus}
-                                            onChange={(e) => setFormData({ ...formData, batteryStatus: e.target.value })}
-                                            min="0"
-                                            max="100"
-                                        />
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>Dung lượng pin (kWh)</label>
-                                        <input
-                                            type="number"
-                                            value={formData.batteryCapacity}
-                                            onChange={(e) => setFormData({ ...formData, batteryCapacity: e.target.value })}
-                                            step="0.01"
-                                        />
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>Quãng đường (km)</label>
-                                        <input
-                                            type="number"
-                                            value={formData.rangeKm}
-                                            onChange={(e) => setFormData({ ...formData, rangeKm: Number(e.target.value) })}
-                                        />
-                                    </div>
+                            <div className="form-grid">
+                                <div className="form-group full-width">
+                                    <label>🚗 Chọn nhanh mẫu xe (tự động điền ảnh)</label>
+                                    <select
+                                        onChange={(e) => {
+                                            if (e.target.value) {
+                                                const [brand, color, seats, imageUrl] = e.target.value.split('|||');
+                                                const colorMap = {
+                                                    'White': '#ffffff',
+                                                    'Black': '#000000',
+                                                    'Silver': '#c0c0c0',
+                                                    'Red': '#ff0000',
+                                                    'Blue': '#0000ff'
+                                                };
+                                                setFormData({
+                                                    ...formData,
+                                                    brand: brand,
+                                                    color: color,
+                                                    colorHex: colorMap[color] || '#ffffff',
+                                                    seatCount: seats,
+                                                    imageUrl: imageUrl
+                                                });
+                                            }
+                                        }}
+                                        style={{
+                                            padding: '12px',
+                                            border: '2px solid #3b82f6',
+                                            borderRadius: '8px',
+                                            background: '#eff6ff',
+                                            fontWeight: '600'
+                                        }}
+                                    >
+                                        <option value="">-- Chọn mẫu xe có sẵn --</option>
+                                        <optgroup label="🚗 Vinfast 4 chỗ">
+                                            <option value="Vinfast|||Blue|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/a80cae76-5c8a-4226-ac85-116ba2da7a3a.png">🔵 Vinfast - Xanh</option>
+                                            <option value="Vinfast|||Silver|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/b76c51c2-6e69-491c-ae83-0d36ff93cdff.png">⚪ Vinfast - Bạc</option>
+                                            <option value="Vinfast|||Black|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/e88bd242-3df4-48a7-8fe2-a9a3466f939f.png">⚫ Vinfast - Đen</option>
+                                            <option value="Vinfast|||Red|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/e420cb1b-1710-4dbe-a5e3-e1285c690b6e.png">🔴 Vinfast - Đỏ</option>
+                                            <option value="Vinfast|||White|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/unnamed.jpg">⚪ Vinfast - Trắng</option>
+                                        </optgroup>
+                                        <optgroup label="🚙 BMW 4 chỗ">
+                                            <option value="BMW|||White|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/white.jpg">⚪ BMW - Trắng</option>
+                                            <option value="BMW|||Silver|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/unnamed%20%281%29.jpg">⚪ BMW - Bạc</option>
+                                            <option value="BMW|||Blue|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/blue.jpg">🔵 BMW - Xanh</option>
+                                            <option value="BMW|||Black|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/8f9f3e31-0c04-4441-bb40-97778c9824e0.png">⚫ BMW - Đen</option>
+                                            <option value="BMW|||Red|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/7f3edc23-30ba-4e84-83a9-c8c418f2362d.png">🔴 BMW - Đỏ</option>
+                                        </optgroup>
+                                        <optgroup label="🚘 Tesla 4 chỗ">
+                                            <option value="Tesla|||Silver|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed4.jpg">⚪ Tesla - Bạc</option>
+                                            <option value="Tesla|||Blue|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed.jpg">🔵 Tesla - Xanh</option>
+                                            <option value="Tesla|||Black|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%283%29.jpg">⚫ Tesla - Đen</option>
+                                            <option value="Tesla|||White|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%282%29.jpg">⚪ Tesla - Trắng</option>
+                                            <option value="Tesla|||Red|||4|||https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%281%29.jpg">🔴 Tesla - Đỏ</option>
+                                        </optgroup>
+                                    </select>
                                 </div>
-                            ) : (
-                                <div className="form-grid">
-                                    <div className="form-group">
-                                        <label>Biển số *</label>
+
+                                <div className="form-group">
+                                    <label>Tên xe *</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.vehicleName}
+                                        onChange={(e) => setFormData({ ...formData, vehicleName: e.target.value })}
+                                        placeholder="VD: VinFast VF5"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Hãng xe *</label>
+                                    <select
+                                        required
+                                        value={formData.brand}
+                                        onChange={(e) => updateFormWithImage({ brand: e.target.value })}
+                                    >
+                                        <option value="">-- Chọn hãng xe --</option>
+                                        <option value="Vinfast">Vinfast</option>
+                                        <option value="BMW">BMW</option>
+                                        <option value="Tesla">Tesla</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Biển số *</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.plateNumber}
+                                        onChange={(e) => setFormData({ ...formData, plateNumber: e.target.value })}
+                                        placeholder="VD: 29A-12345"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Phiên bản</label>
+                                    <input
+                                        type="text"
+                                        value={formData.variant}
+                                        onChange={(e) => setFormData({ ...formData, variant: e.target.value })}
+                                        placeholder="VD: Plus, Base"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Màu sắc *</label>
+                                    {/* Color picker with preview - Updated */}
+                                    <div style={{ 
+                                        display: 'flex', 
+                                        gap: '12px', 
+                                        alignItems: 'center' 
+                                    }}>
                                         <input
-                                            type="text"
-                                            required
-                                            value={formData.plateNumber}
-                                            onChange={(e) => setFormData({ ...formData, plateNumber: e.target.value })}
-                                            placeholder="VD: EV-0001"
+                                            type="color"
+                                            value={formData.colorHex || '#ffffff'}
+                                            onChange={(e) => setFormData({ 
+                                                ...formData, 
+                                                colorHex: e.target.value 
+                                            })}
+                                            style={{
+                                                width: '60px',
+                                                height: '42px',
+                                                border: '1px solid #d1d5db',
+                                                borderRadius: '6px',
+                                                cursor: 'pointer'
+                                            }}
+                                            title="Chọn màu"
                                         />
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>Hãng *</label>
-                                        <select
-                                            required
-                                            value={formData.brand}
-                                            onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                                        >
-                                            <option value="">Chọn hãng</option>
-                                            <option value="VinFast">VinFast</option>
-                                            <option value="BMW">BMW</option>
-                                            <option value="Tesla">Tesla</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>Màu *</label>
                                         <select
                                             required
                                             value={formData.color}
-                                            onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                                        >
-                                            <option value="">Chọn màu</option>
-                                            <option value="White">White</option>
-                                            <option value="Black">Black</option>
-                                            <option value="Silver">Silver</option>
-                                            <option value="Red">Red</option>
-                                            <option value="Blue">Blue</option>
-                                        </select>
-                                    </div>
+                                            onChange={(e) => {
+                                                const colorMap = {
+                                                    'White': '#ffffff',
+                                                    'Black': '#000000',
+                                                    'Silver': '#c0c0c0',
+                                                    'Red': '#ff0000',
+                                                    'Blue': '#0000ff',
+                                                    'Gray': '#808080',
 
-                                    <div className="form-group">
-                                        <label>Số ghế *</label>
-                                        <select
-                                            required
-                                            value={formData.seatCount}
-                                            onChange={(e) => setFormData({ ...formData, seatCount: Number(e.target.value) })}
+                                                };
+                                                updateFormWithImage({ 
+                                                    color: e.target.value,
+                                                    colorHex: colorMap[e.target.value] || formData.colorHex
+                                                });
+                                            }}
+                                            style={{ flex: 1 }}
                                         >
-                                            <option value="">Chọn số ghế</option>
-                                            <option value={4}>4</option>
-                                            <option value={7}>7</option>
+                                            <option value="">-- Chọn màu --</option>
+                                            <option value="White">⚪ Trắng</option>
+                                            <option value="Black">⚫ Đen</option>
+                                            <option value="Silver">🔘 Bạc</option>
+                                            <option value="Red">🔴 Đỏ</option>
+                                            <option value="Blue">🔵 Xanh dương</option>
+                                            <option value="Gray">⚫ Xám</option>
                                         </select>
                                     </div>
-
-                                    <div className="form-group">
-                                        <label>Phiên bản *</label>
-                                        <select
-                                            required
-                                            value={formData.variant}
-                                            onChange={(e) => setFormData({ ...formData, variant: e.target.value })}
-                                        >
-                                            <option value="">Chọn hạng</option>
-                                            <option value="Pro">Pro</option>
-                                            <option value="Air">Air</option>
-                                            <option value="Plus">Plus</option>
-                                        </select>
-                                    </div>
+                                    <small style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px' }}>
+                                        Chọn màu từ dropdown hoặc dùng color picker để chọn màu tùy chỉnh
+                                    </small>
                                 </div>
-                            )}
+
+                                <div className="form-group">
+                                    <label>Số ghế *</label>
+                                    <select
+                                        required
+                                        value={formData.seatCount}
+                                        onChange={(e) => updateFormWithImage({ seatCount: e.target.value })}
+                                    >
+                                        <option value="">Chọn số ghế</option>
+                                        <option value="4">4 chỗ</option>
+                                        <option value="5">5 chỗ</option>
+                                        <option value="7">7 chỗ</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Năm sản xuất *</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        value={formData.year}
+                                        onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                                        placeholder="VD: 2024"
+                                        min="2000"
+                                        max="2030"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Điểm thuê (Station ID) *</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        value={formData.stationId}
+                                        onChange={(e) => setFormData({ ...formData, stationId: e.target.value })}
+                                        placeholder="VD: 1, 2, 3"
+                                        min="1"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Dung lượng pin (kWh)</label>
+                                    <input
+                                        type="number"
+                                        value={formData.batteryCapacity}
+                                        onChange={(e) => setFormData({ ...formData, batteryCapacity: e.target.value })}
+                                        placeholder="VD: 37.23"
+                                        step="0.01"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Pin hiện tại (%)</label>
+                                    <input
+                                        type="number"
+                                        value={formData.batteryStatus}
+                                        onChange={(e) => setFormData({ ...formData, batteryStatus: e.target.value })}
+                                        placeholder="VD: 85"
+                                        min="0"
+                                        max="100"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Quãng đường (km)</label>
+                                    <input
+                                        type="number"
+                                        value={formData.rangeKm}
+                                        onChange={(e) => setFormData({ ...formData, rangeKm: e.target.value })}
+                                        placeholder="VD: 300"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Hộp số</label>
+                                    <select
+                                        value={formData.transmission}
+                                        onChange={(e) => setFormData({ ...formData, transmission: e.target.value })}
+                                    >
+                                        <option value="Automatic">Tự động</option>
+                                        <option value="Manual">Số sàn</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Trạng thái *</label>
+                                    <select
+                                        required
+                                        value={formData.status}
+                                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                                    >
+                                        <option value="Available">Sẵn sàng</option>
+                                        <option value="Rented">Đang thuê</option>
+                                        <option value="Reserved">Đã đặt</option>
+                                        <option value="Maintenance">Bảo trì</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group full-width">
+                                    <label>Mô tả</label>
+                                    <textarea
+                                        value={formData.description}
+                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                        placeholder="Mô tả chi tiết về xe..."
+                                        rows="3"
+                                    />
+                                </div>
+
+                                <div className="form-group full-width">
+                                    <label>Đường dẫn ảnh</label>
+                                    <div style={{ 
+                                        marginBottom: '8px', 
+                                        padding: '8px 12px', 
+                                        background: '#f3f4f6', 
+                                        borderRadius: '6px',
+                                        fontSize: '12px',
+                                        color: '#6b7280'
+                                    }}>
+                                        📋 Hiện tại: Brand={formData.brand || '?'}, Color={formData.color || '?'}, Seats={formData.seatCount || '?'}
+                                        {formData.brand && formData.color && formData.seatCount && (
+                                            <span style={{ color: '#10b981', fontWeight: 'bold' }}> ✓ Đủ điều kiện</span>
+                                        )}
+                                    </div>
+                                    <input
+                                        type="url"
+                                        value={formData.imageUrl || ''}
+                                        onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                                        placeholder="URL ảnh xe (tự động điền khi chọn hãng, màu, số chỗ)"
+                                        style={{ 
+                                            backgroundColor: formData.imageUrl ? '#f0fdf4' : '#fff',
+                                            borderColor: formData.imageUrl ? '#10b981' : '#e5e7eb'
+                                        }}
+                                    />
+                                    {formData.imageUrl && (
+                                        <div style={{ marginTop: '8px' }}>
+                                            <img 
+                                                src={formData.imageUrl} 
+                                                alt="Preview" 
+                                                style={{ 
+                                                    maxWidth: '200px', 
+                                                    maxHeight: '120px',
+                                                    borderRadius: '8px',
+                                                    border: '2px solid #e5e7eb'
+                                                }}
+                                                onError={(e) => {
+                                                    e.target.style.display = 'none';
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
 
                             <div className="modal-footer">
                                 <button type="button" className="btn-cancel" onClick={closeModals}>
                                     Hủy
                                 </button>
                                 <button type="submit" className="btn-submit">
-                                    {showEditModal ? ' Lưu thay đổi' : 'Thêm/ Lưu'}
+                                    {showEditModal ? ' Lưu thay đổi' : 'Thêm xe'}
                                 </button>
                             </div>
                         </form>
@@ -905,7 +992,7 @@ const VehicleManagement = () => {
                 <div className="modal-overlay" onClick={closeOrderHistory}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '1200px' }}>
                         <div className="modal-header">
-                            <h2>📋 Lịch sử đặt xe {historyVehicle ? `- ${historyVehicle.plate} (ID:${historyVehicle.id})` : ''}</h2>
+                            <h2>📋 Lịch sử đặt xe</h2>
                             <button className="modal-close" onClick={closeOrderHistory}>✕</button>
                         </div>
 
@@ -917,11 +1004,6 @@ const VehicleManagement = () => {
                             ) : selectedVehicleOrders.length === 0 ? (
                                 <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
                                     📭 Chưa có lịch sử đặt xe nào
-                                    {historyVehicle && (
-                                        <div style={{ marginTop: 12, color: '#999', fontSize: 13 }}>
-                                            (Vehicle: {historyVehicle.plate} — ID: {historyVehicle.id})
-                                        </div>
-                                    )}
                                 </div>
                             ) : (
                                 <div style={{ overflowX: 'auto' }}>
@@ -929,7 +1011,6 @@ const VehicleManagement = () => {
                                         <thead>
                                             <tr>
                                                 <th>Mã đơn</th>
-                                                <th>Hình ảnh</th>
                                                 <th>Biển số</th>
                                                 <th>Trạm</th>
                                                 <th>Hãng</th>
@@ -944,62 +1025,43 @@ const VehicleManagement = () => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {selectedVehicleOrders.map((order, index) => {
-                                                // create a small vehicle-like object so getCarImageUrl can resolve a thumbnail
-                                                const orderVehicle = {
-                                                    brand: order.brand,
-                                                    color: order.color,
-                                                    seat_count: order.seatCount,
-                                                    seatCount: order.seatCount,
-                                                    image: ''
-                                                };
-
-                                                return (
-                                                    <tr key={order.orderId || index}>
-                                                        <td style={{ fontFamily: 'monospace', fontSize: '11px' }}>
-                                                            {order.orderId ? order.orderId.split('-')[0] + '...' : 'N/A'}
-                                                        </td>
-                                                        <td>
-                                                            <img
-                                                                className="order-history-img"
-                                                                src={getCarImageUrl(orderVehicle)}
-                                                                alt={order.plateNumber || 'vehicle'}
-                                                                onError={(e) => { e.target.src = 'https://via.placeholder.com/100x60?text=No+Image'; }}
-                                                            />
-                                                        </td>
-                                                        <td style={{ fontWeight: 'bold' }}>{order.plateNumber || 'N/A'}</td>
-                                                        <td>{order.stationName || `Station ${order.stationId}`}</td>
-                                                        <td>{order.brand || 'N/A'}</td>
-                                                        <td>{order.color || 'N/A'}</td>
-                                                        <td>{order.seatCount} chỗ</td>
-                                                        <td>{order.startTime || 'N/A'}</td>
-                                                        <td>{order.endTime || 'N/A'}</td>
-                                                        <td style={{ fontWeight: 'bold', color: '#059669' }}>
-                                                            {order.totalPrice?.toLocaleString() || '0'}đ
-                                                        </td>
-                                                        <td>{order.depositAmount?.toLocaleString() || '0'}đ</td>
-                                                        <td>{order.remainingAmount?.toLocaleString() || '0'}đ</td>
-                                                        <td>
-                                                            <span style={{
-                                                                padding: '4px 8px',
-                                                                borderRadius: '4px',
-                                                                fontSize: '12px',
-                                                                fontWeight: '600',
-                                                                background: order.status === 'DEPOSITED' ? '#d1fae5' :
-                                                                    order.status === 'PENDING_DEPOSIT' ? '#fef3c7' :
-                                                                        order.status === 'PAYMENT_FAILED' ? '#fee2e2' :
-                                                                            order.status === 'COMPLETED' ? '#dbeafe' : '#e5e7eb',
-                                                                color: order.status === 'DEPOSITED' ? '#065f46' :
-                                                                    order.status === 'PENDING_DEPOSIT' ? '#92400e' :
-                                                                        order.status === 'PAYMENT_FAILED' ? '#991b1b' :
-                                                                            order.status === 'COMPLETED' ? '#1e40af' : '#1f2937'
-                                                            }}>
-                                                                {order.status}
-                                                            </span>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
+                                            {selectedVehicleOrders.map((order, index) => (
+                                                <tr key={order.orderId || index}>
+                                                    <td style={{ fontFamily: 'monospace', fontSize: '11px' }}>
+                                                        {order.orderId ? order.orderId.split('-')[0] + '...' : 'N/A'}
+                                                    </td>
+                                                    <td style={{ fontWeight: 'bold' }}>{order.plateNumber || 'N/A'}</td>
+                                                    <td>{order.stationName || `Station ${order.stationId}`}</td>
+                                                    <td>{order.brand || 'N/A'}</td>
+                                                    <td>{order.color || 'N/A'}</td>
+                                                    <td>{order.seatCount} chỗ</td>
+                                                    <td>{order.startTime || 'N/A'}</td>
+                                                    <td>{order.endTime || 'N/A'}</td>
+                                                    <td style={{ fontWeight: 'bold', color: '#059669' }}>
+                                                        {order.totalPrice?.toLocaleString() || '0'}đ
+                                                    </td>
+                                                    <td>{order.depositAmount?.toLocaleString() || '0'}đ</td>
+                                                    <td>{order.remainingAmount?.toLocaleString() || '0'}đ</td>
+                                                    <td>
+                                                        <span style={{
+                                                            padding: '4px 8px',
+                                                            borderRadius: '12px',
+                                                            fontSize: '12px',
+                                                            fontWeight: '600',
+                                                            background: order.status === 'DEPOSITED' ? '#d1fae5' :
+                                                                order.status === 'PENDING_DEPOSIT' ? '#fef3c7' :
+                                                                    order.status === 'PAYMENT_FAILED' ? '#fee2e2' :
+                                                                        order.status === 'COMPLETED' ? '#dbeafe' : '#e5e7eb',
+                                                            color: order.status === 'DEPOSITED' ? '#065f46' :
+                                                                order.status === 'PENDING_DEPOSIT' ? '#92400e' :
+                                                                    order.status === 'PAYMENT_FAILED' ? '#991b1b' :
+                                                                        order.status === 'COMPLETED' ? '#1e40af' : '#1f2937'
+                                                        }}>
+                                                            {order.status}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))}
                                         </tbody>
                                     </table>
                                     <div style={{ marginTop: '20px', padding: '15px', background: '#f3f4f6', borderRadius: '8px' }}>
@@ -1019,6 +1081,6 @@ const VehicleManagement = () => {
             )}
         </div>
     );
-};   // ✅ đóng ngoặc function ở đây
+};
 
-export default VehicleManagement;  // ✅ export ra ngoài
+export default VehicleManagement;

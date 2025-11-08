@@ -1,97 +1,165 @@
+/* ===== MERCEDES STYLE - BLACK RED WHITE ===== */
 .hero {
     position: relative;
-    min-height: 100vh;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+    min-height: 70vh;
+    background: #000000;
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
+}
+
+/* Video Background */
+.hero-video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    object-fit: cover;
 }
 
 .hero-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5));
+    background: linear-gradient(135deg, 
+        rgba(0, 0, 0, 0.4) 0%, 
+        rgba(20, 20, 20, 0.3) 50%, 
+        rgba(0, 0, 0, 0.45) 100%
+    );
+    backdrop-filter: blur(1px);
 }
 
 .hero-content {
     position: relative;
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
-    padding: 60px 24px;
+    padding: 80px 40px;
     height: 100%;
     display: flex;
     align-items: center;
+    z-index: 10;
 }
 
 .hero-content-inner {
     width: 100%;
+    animation: fadeInUp 1.2s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .hero-title {
-    font-size: 72px;
-    font-weight: 900;
-    color: white;
-    margin-bottom: 20px;
-    text-align: center;
-    letter-spacing: 4px;
-    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+    font-size: 84px;
+    font-weight: 300;
+    color: #FFFFFF;
+    margin-bottom: 30px;
+    text-align: left;
+    letter-spacing: 8px;
+    text-transform: uppercase;
+    line-height: 1.1;
+    font-family: 'Corporate A', 'Helvetica Neue', Arial, sans-serif;
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
 }
 
 .separator {
-    width: 100px;
-    height: 4px;
-    background-color: #dc2626;
-    margin: 20px auto;
+    width: 120px;
+    height: 2px;
+    background: linear-gradient(90deg, 
+        #DC0000 0%, 
+        #FF0000 50%, 
+        #DC0000 100%
+    );
+    margin: 30px 0;
+    box-shadow: 0 2px 8px rgba(220, 0, 0, 0.4);
 }
 
 .about-title {
-    font-size: 48px;
-    font-weight: 700;
-    color: white;
-    text-align: center;
-    margin: 20px 0;
-    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+    font-size: 56px;
+    font-weight: 200;
+    color: #FFFFFF;
+    text-align: left;
+    margin: 40px 0 20px 0;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+    font-family: 'Corporate A', 'Helvetica Neue', Arial, sans-serif;
 }
 
 .about-text {
-    font-size: 18px;
-    color: white;
-    text-align: center;
-    max-width: 8000px;
-    margin: 0 auto;
-    line-height: 1.6;
-    margin-bottom: 20px;
+    font-size: 20px;
+    color: #CCCCCC;
+    text-align: left;
+    max-width: 800px;
+    margin: 0 0 30px 0;
+    line-height: 1.8;
+    font-weight: 300;
+    letter-spacing: 0.5px;
 }
 
 .sigma-highlight {
-    color: #dc2626;
+    color: #DC0000;
     font-weight: 700;
-    font-size: 1.2em;
-    text-shadow: 2px 2px 8px rgba(220, 38, 38, 0.5);
+    font-size: 1.3em;
+    letter-spacing: 2px;
+    text-shadow: 0 0 12px rgba(220, 0, 0, 0.6);
 }
 
 .sigma-list {
-    list-style: disc;
-    color: white;
-    margin: 0 auto 150px auto;
-    line-height: 2;
-    max-width: 600px;
+    list-style: none;
+    color: #E0E0E0;
+    margin: 0 0 100px 0;
+    line-height: 2.2;
+    max-width: 750px;
     text-align: left;
     font-size: 18px;
-    padding-left: 40px;
+    padding-left: 0;
+    font-weight: 300;
 }
 
 .sigma-list li {
-    margin-bottom: 8px;
+    margin-bottom: 16px;
+    padding-left: 30px;
+    position: relative;
+    letter-spacing: 0.3px;
+    transition: all 0.3s ease;
+}
+
+.sigma-list li:before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 12px;
+    width: 6px;
+    height: 6px;
+    background: #DC0000;
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(220, 0, 0, 0.6);
+}
+
+.sigma-list li:hover {
+    transform: translateX(10px);
+    color: #FFFFFF;
 }
 
 .highlight-letter {
-    color: #dc2626;
+    color: #DC0000;
     font-weight: 700;
-    font-size: 1.15em;
-    text-shadow: 1px 1px 4px rgba(220, 38, 38, 0.4);
+    font-size: 1.2em;
+    letter-spacing: 1px;
+    text-shadow: 0 0 8px rgba(220, 0, 0, 0.5);
 }
 
 .hero-form {
@@ -235,6 +303,15 @@
     .hero-form-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+    
+    .hero-title {
+        font-size: 64px;
+        letter-spacing: 6px;
+    }
+    
+    .about-title {
+        font-size: 44px;
+    }
 }
 
 @media (max-width: 768px) {
@@ -245,8 +322,29 @@
 
     .hero-title {
         font-size: 42px;
-        margin-bottom: 32px;
-        letter-spacing: 2px;
+        margin-bottom: 24px;
+        letter-spacing: 3px;
+        text-align: center;
+    }
+    
+    .about-title {
+        font-size: 32px;
+        text-align: center;
+    }
+    
+    .about-text {
+        text-align: center;
+        font-size: 16px;
+    }
+    
+    .separator {
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .sigma-list {
+        max-width: 100%;
+        font-size: 16px;
     }
 
     .hero-form {
@@ -257,4 +355,31 @@
         grid-template-columns: 1fr;
         gap: 16px;
     }
+}
+
+/* ===== LUXURY SCROLL INDICATOR ===== */
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+.scroll-indicator {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: bounce 2s infinite;
+    opacity: 0.7;
+    transition: opacity 0.3s;
+}
+
+.scroll-indicator:hover {
+    opacity: 1;
 }
