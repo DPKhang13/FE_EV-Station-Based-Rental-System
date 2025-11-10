@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import { orderService, authService } from "../services";
 import "./XacThucKhachHang.css";
 import PopupXacThucHoSoCaNhan from "../components/staff/PopupXacThucHoSoCaNhan";
@@ -10,6 +11,7 @@ const fmtRange = (s, e) => `${fmtVN(s)} - ${fmtVN(e)}`;
 
 export default function VerifyCustomerPage() {
   const { user } = useContext(AuthContext);
+  const nav = useNavigate();
   const [orders, setOrders] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -64,24 +66,6 @@ export default function VerifyCustomerPage() {
     }
   };
 
-  // 🚗 Bàn giao xe
-  const handleDeliver = async (row) => {
-    if (!window.confirm(`Bàn giao xe cho ${row.customerName}?`)) return;
-    try {
-      await orderService.pickup(row.orderId, { note: "Bàn giao xe" });
-      setOrders((prev) =>
-        prev.map((r) =>
-          r.orderId === row.orderId
-            ? { ...r, status: "RENTAL", pickedUpAt: new Date().toISOString() }
-            : r
-        )
-      );
-      alert(`✅ Đã bàn giao xe cho ${row.customerName}`);
-    } catch {
-      alert("❌ Không thể bàn giao xe, vui lòng thử lại.");
-    }
-  };
-
   // ✅ Duyệt hồ sơ
   const handleVerify = async () => {
     if (!selectedRow?.userId) return;
@@ -102,6 +86,11 @@ export default function VerifyCustomerPage() {
     } finally {
       setVerifyLoading(false);
     }
+  };
+
+  // 📄 Xem chi tiết đơn hàng → truyền cả orderId + userId
+  const handleViewOrderDetail = (orderId, userId) => {
+    nav(`/staff/chitiet/${orderId}/${userId}`);
   };
 
   if (loading)
@@ -133,7 +122,7 @@ export default function VerifyCustomerPage() {
           <table className="verify-table">
             <thead>
               <tr>
-                <th>MÃ ĐƠN</th>
+                
                 <th>KHÁCH HÀNG</th>
                 <th>XE THUÊ</th>
                 <th>THỜI GIAN THUÊ</th>
@@ -144,14 +133,19 @@ export default function VerifyCustomerPage() {
             </thead>
             <tbody>
               {filtered.map((row) => {
-                const verified = row.profileVerified || row.userStatus?.includes("ĐÃ XÁC THỰC");
-                const delivered = !!row.pickedUpAt || ["RENTAL", "Rented"].includes(row.status);
+                const verified =
+                  row.profileVerified ||
+                  row.userStatus?.includes("ĐÃ XÁC THỰC");
+                const delivered =
+                  !!row.pickedUpAt ||
+                  ["RENTAL", "Rented"].includes(row.status);
                 const deposit =
-                  row.depositAmount ?? Math.round(Number(row.totalPrice || 0) * 0.3);
+                  row.depositAmount ??
+                  Math.round(Number(row.totalPrice || 0) * 0.3);
 
                 return (
                   <tr key={row.orderId}>
-                    <td>{row.orderId}</td>
+                    
                     <td>
                       {row.customerName}
                       <br />
@@ -169,7 +163,11 @@ export default function VerifyCustomerPage() {
                       </small>
                     </td>
                     <td>
-                      <span className={`verify-status ${verified ? "success" : "warning"}`}>
+                      <span
+                        className={`verify-status ${
+                          verified ? "success" : "warning"
+                        }`}
+                      >
                         {row.userStatus || "Chưa xác thực"}
                       </span>
                       {row.pickedUpAt && (
@@ -180,34 +178,28 @@ export default function VerifyCustomerPage() {
                       )}
                     </td>
                     <td>
-                      {delivered ? (
-                        <button className="verify-btn secondary" disabled>
-                          ☑ Đã bàn giao
+                      {!verified && (
+                        <button
+                          className="verify-btn primary"
+                          onClick={() => handleOpenProfile(row)}
+                        >
+                          Xác thực hồ sơ
                         </button>
-                      ) : (
-                        <>
-                          {!verified && (
-                            <button
-                              className="verify-btn primary"
-                              onClick={() => handleOpenProfile(row)}
-                            >
-                              Xác thực hồ sơ
-                            </button>
-                          )}
-                          {verified && (
-                            <button
-                              className="verify-btn success"
-                              onClick={() => handleDeliver(row)}
-                              style={{ marginLeft: 8 }}
-                            >
-                              Bàn giao xe
-                            </button>
-                          )}
-                          <button className="verify-btn danger" style={{ marginLeft: 8 }}>
-                            Từ chối bàn giao
-                          </button>
-                        </>
                       )}
+
+                      {/* ✅ Nếu đã xác thực (ĐÃ XÁC THỰC (HỒ SƠ)) thì chỉ hiển thị nút Chi tiết đơn hàng */}
+                      {verified &&
+                        row.userStatus === "ĐÃ XÁC THỰC (HỒ SƠ)" && (
+                          <button
+                            className="verify-btn info"
+                            onClick={() =>
+                              handleViewOrderDetail(row.orderId, row.userId)
+                            }
+                            style={{ marginLeft: 8 }}
+                          >
+                            📄 Chi tiết đơn hàng
+                          </button>
+                        )}
                     </td>
                   </tr>
                 );
@@ -230,4 +222,4 @@ export default function VerifyCustomerPage() {
       )}
     </>
   );
-}
+}  

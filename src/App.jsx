@@ -167,7 +167,8 @@ function App() {
               <Route path="quanlyxe" element={<QuanLyXePage />} />
               <Route path="banggia" element={<BangGiaPage />} />
               <Route path="dichvu" element={<DichVuPage/>} />
-              <Route path="chitiet" element={<OrderDetailPage/>}/>
+            <Route path="/staff/chitiet/:orderId/:userId" element={<OrderDetailPage />} />
+
 
             </Route>
 

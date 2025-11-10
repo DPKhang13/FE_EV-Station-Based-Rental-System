@@ -57,10 +57,10 @@ const ForgotPage = () => {
     try {
       // backend cần OTP trong query param
       await authService.resetPassword(email, password, otp);
-      setMsg("✅ Đặt lại mật khẩu thành công! Quay lại đăng nhập nhé.");
+      setMsg("Đặt lại mật khẩu thành công! Quay lại đăng nhập nhé.");
       setStep(4); // step 4 = done
     } catch (err) {
-      setMsg(err.response?.data?.message || "❌ Không thể đặt lại mật khẩu.");
+      setMsg(err.response?.data?.message || " Không thể đặt lại mật khẩu.");
     } finally {
       setLoading(false);
     }
@@ -137,7 +137,7 @@ const ForgotPage = () => {
         <div className="forgot-form">
           <h2>Hoàn Tất!</h2>
           <p>{msg}</p>
-          <a href="/login">👉 Quay lại trang đăng nhập</a>
+          <a href="/login">Quay lại trang đăng nhập</a>
         </div>
       )}
     </div>

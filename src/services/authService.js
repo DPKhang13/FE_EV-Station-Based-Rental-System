@@ -16,11 +16,13 @@ export const authService = {
         console.log('📥 API Login Response:', response);
 
         // ✅ Lưu token vào localStorage VÀ Cookie
-        if (response.accessToken || response.jwtToken) {
-            const token = response.accessToken || response.jwtToken;
-            setAuthToken(token); // ← Set cả localStorage và cookie
-        }
-      
+      if (response.accessToken || response.jwtToken || response.token) {
+  const token = response.accessToken || response.jwtToken || response.token;
+  setAuthToken(token); // ✅ token giờ chắc chắn có
+} else {
+  console.error("❌ Không tìm thấy accessToken trong phản hồi:", response);
+}
+
 
         // Normalize response format for AuthContext
         const normalizedResponse = {
@@ -120,6 +122,9 @@ export const authService = {
     verifyProfileByUserId: async (userId) => {
         // PUT /api/auth/verify-profile/{userId}
         return await api.put(`/auth/verify-profile/${userId}`);
+    },
+    getAllCustomer: async   ()=>{
+        return await api.get('/auth/getAll/customer');
     }
 };
 

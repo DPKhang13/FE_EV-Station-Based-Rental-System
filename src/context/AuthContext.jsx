@@ -36,26 +36,33 @@ export const AuthProvider = ({ children }) => {
 
   // 🔹 Đăng nhập
   const login = (data) => {
-    const userData = {
-      userId: data.userId || data.customerId || data.id,
-      name: data.fullName || data.username || data.name,
-      email: data.email,
-      role: data.role,
-      phone: data.phone || data.phoneNumber,
-      address: data.address,
-      dateOfBirth: data.dateOfBirth || data.dob,
-      stationId: data.stationId || data.tramId,
-    };
-
-    localStorage.setItem("accessToken", data.jwtToken);
-    localStorage.setItem("role", data.role);
-    localStorage.setItem("user", JSON.stringify(userData));
-
-    setToken(data.jwtToken);
-    setUser(userData);
-
-    console.log("✅ User logged in:", userData);
+  const userData = {
+    userId: data.userId || data.customerId || data.id,
+    name: data.fullName || data.username || data.name,
+    email: data.email,
+    role: data.role,
+    phone: data.phone || data.phoneNumber,
+    address: data.address,
+    dateOfBirth: data.dateOfBirth || data.dob,
+    stationId: data.stationId || data.tramId,
   };
+
+  // ✅ Fix chỗ này — chọn token đúng key backend trả về
+  const token = data.accessToken || data.jwtToken || data.token;
+  if (!token) {
+    console.error("❌ Không tìm thấy token hợp lệ trong login response:", data);
+  }
+
+  localStorage.setItem("accessToken", token);
+  localStorage.setItem("role", data.role);
+  localStorage.setItem("user", JSON.stringify(userData));
+
+  setToken(token);
+  setUser(userData);
+
+  console.log("✅ User logged in:", userData);
+  console.log("🔑 Token saved:", token?.substring(0, 25) + "...");
+};
 
   // 🔹 Đăng xuất
   const logout = () => {

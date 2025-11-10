@@ -4,14 +4,17 @@ const API_BASE_URL = 'http://localhost:8080/api';
 /**
  * Set token as cookie
  */
+// ✅ KHÔNG thêm "Secure" khi đang chạy HTTP local
 const setTokenCookie = (token) => {
-    if (token) {
-        // ✅ Set cookie với thời gian 15 phút (khớp với backend JWT_ACCESSEXPIRATION)
-        const expiryDate = new Date();
-        expiryDate.setTime(expiryDate.getTime() + 15 * 60 * 1000); // 15 phút = 900000ms
-        document.cookie = `AccessToken=${token}; path=/; expires=${expiryDate.toUTCString()}; SameSite=Lax; Secure`;
-        console.log('✅ Token set in cookie (expires in 15 minutes)');
-    }
+  if (token) {
+    const expiryDate = new Date();
+    expiryDate.setTime(expiryDate.getTime() + 15 * 60 * 1000); // 15 phút
+    const isLocal = window.location.hostname === "localhost";
+
+    // ⚡ Nếu chạy local → KHÔNG dùng Secure
+    document.cookie = `AccessToken=${token}; path=/; expires=${expiryDate.toUTCString()}; SameSite=Lax${isLocal ? "" : "; Secure"}`;
+    console.log("✅ Token set in cookie (expires in 15 minutes)");
+  }
 };
 
 /**
