@@ -1,210 +1,185 @@
-/* ===== Toàn bộ trang ===== */
-.xacThuc-container {
-  padding: 60px 40px;
-  background-color: #f8fafc;
+.verify-container {
+  padding: 30px;
+  font-family: "Poppins", sans-serif;
+  background-color: #f5f7fb;
+  color: #222;
   min-height: 100vh;
-  font-family: "Inter", sans-serif;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 
-/* ===== Tiêu đề ===== */
-.title {
-  font-size: 28px;
+.verify-title {
+  font-size: 24px;
   font-weight: 700;
-  color: #0f172a;
-  margin-bottom: 4px;
-  text-align: center;
+  margin-bottom: 6px;
+  color: #333;
 }
 
-.subtitle {
+.verify-subtitle {
   font-size: 15px;
-  color: #475569;
-  margin-bottom: 30px;
-  text-align: center;
+  color: #666;
+  margin-bottom: 20px;
 }
 
-/* ===== Ô tìm kiếm ===== */
-.search-box {
-  width: 600px;
-  max-width: 90%;
-  padding: 14px 18px;
-  border: 1.8px solid #d1d5db;
-  border-radius: 12px;
-  font-size: 15px;
-  transition: all 0.3s ease;
-  background-color: white;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-  margin-bottom: 40px;
-}
-
-.search-box:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 6px rgba(37, 99, 235, 0.4);
-}
-
-/* ===== Phần bảng hồ sơ ===== */
-.section {
+.verify-search {
   width: 100%;
-  max-width: 1200px;
-  background-color: #fff;
-  border-radius: 14px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  padding: 24px 28px;
+  max-width: 420px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: #fff;
+  font-size: 15px;
+  margin-bottom: 28px;
+  transition: 0.2s;
 }
 
-.section h2 {
+.verify-search:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+  outline: none;
+}
+
+.verify-section {
+  background: #fff;
+  padding: 22px 26px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.verify-section h2 {
   font-size: 18px;
   font-weight: 600;
-  color: #0f172a;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
-/* ===== Bảng ===== */
-.table {
+/* Table */
+.verify-table {
   width: 100%;
   border-collapse: collapse;
-  background-color: #fff;
+  background: #fff;
   border-radius: 12px;
   overflow: hidden;
 }
 
-.table thead {
-  background-color: #f1f5f9;
-  color: #1e293b;
-  font-weight: 600;
-}
-
-.table th {
+.verify-table th {
+  background-color: #007bff;
+  color: white;
   text-align: left;
-  padding: 14px 16px;
+  padding: 14px;
   font-size: 15px;
-  border-bottom: 1px solid #e2e8f0;
 }
 
-.table td {
-  padding: 14px 16px;
-  font-size: 15px;
-  color: #334155;
-  border-bottom: 1px solid #f1f5f9;
-  vertical-align: top;
-}
-
-/* ===== Ô dữ liệu đặc biệt ===== */
-.phone {
-  color: #64748b;
-  font-size: 13px;
-}
-
-/* ===== Trạng thái hồ sơ ===== */
-.status {
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 6px;
-  display: inline-block;
-  font-size: 13px;
-}
-
-.status.success {
-  color: #16a34a;
-  background-color: #dcfce7;
-}
-
-.status.warning {
-  color: #ca8a04;
-  background-color: #fef9c3;
-}
-
-/* ===== Nút hành động ===== */
-.btn-primary,
-.btn-success,
-.btn-danger,
-.btn-secondary {
-  border: none;
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
+.verify-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #eee;
   font-size: 14px;
-  transition: all 0.25s ease;
 }
 
-.btn-primary {
-  background-color: #2563eb;
+.verify-table tr:hover {
+  background-color: #f2f6ff;
+}
+
+/* Status */
+.verify-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 40px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid #bdeac3;
+  background-color: #d6f5dc;
+  color: #155724;
+}
+
+.verify-status::before {
+  content: "●";
+  font-size: 12px;
+  color: #198754;
+}
+
+.verify-status.warning {
+  background-color: #fff3cd;
+  color: #856404;
+  border-color: #ffeeba;
+}
+
+.verify-status.warning::before {
+  color: #ffc107;
+}
+
+/* Buttons */
+.verify-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.verify-btn.primary {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.verify-btn.primary:hover {
+  background-color: #0069d9;
+}
+
+.verify-btn.success {
+  background-color: #28a745;
   color: white;
 }
 
-.btn-primary:hover {
-  background-color: #1e40af;
+.verify-btn.success:hover {
+  background-color: #218838;
 }
 
-.btn-success {
-  background-color: #16a34a;
+.verify-btn.danger {
+  background-color: #dc3545;
   color: white;
 }
 
-.btn-success:hover {
-  background-color: #15803d;
+.verify-btn.danger:hover {
+  background-color: #c82333;
 }
 
-.btn-danger {
-  background-color: #dc2626;
-  color: white;
+.verify-btn.secondary {
+  background: #ffffff;
+  color: #333;
+  border: 1.5px solid #cfd4da;
 }
 
-.btn-danger:hover {
-  background-color: #b91c1c;
+.verify-btn.secondary::before {
+
+  color: #28a745;
 }
 
-.btn-secondary {
-  background-color: #94a3b8;
-  color: white;
+.verify-btn.secondary:hover {
+  background-color: #f8f9fa;
 }
 
-/* ===== Responsive ===== */
+/* Phone text */
+.verify-phone {
+  color: #555;
+  font-size: 13px;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .xacThuc-container {
-    padding: 30px 16px;
+  .verify-table th,
+  .verify-table td {
+    font-size: 13px;
+    padding: 10px;
   }
 
-  .search-box {
-    width: 100%;
+  .verify-btn {
+    padding: 6px 10px;
+    font-size: 12px;
   }
 
-  .section {
+  .verify-section {
     padding: 16px;
   }
-
-  .table th,
-  .table td {
-    padding: 10px 12px;
-    font-size: 14px;
-  }
-
-  .btn-primary,
-  .btn-success,
-  .btn-danger {
-    padding: 6px 10px;
-    font-size: 13px;
-  }
-}
-.search-box {
-  width: 500px;                /* giảm nhẹ chiều ngang */
-  max-width: 90%;
-  padding: 10px 14px;          /* giảm chiều cao */
-  border: 1.6px solid #d1d5db; /* viền mảnh hơn */
-  border-radius: 8px;          /* bo góc nhẹ hơn */
-  font-size: 14.5px;           /* chữ nhỏ hơn chút */
-  transition: all 0.25s ease;
-  background-color: white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  margin-bottom: 32px;
-}
-
-.search-box:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 4px rgba(37, 99, 235, 0.3);
 }

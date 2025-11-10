@@ -11,7 +11,6 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
 
-  // ✅ Đặt check user bên trong hàm
   if (!user) return <p>Đang tải dữ liệu người dùng...</p>;
 
   const name = user.name || "Nhân viên";
@@ -33,8 +32,8 @@ export default function Sidebar() {
               isActive ? "sidebar__btn active" : "sidebar__btn"
             }
           >
-            <IoReturnDownBack />
-            <span>Quản lí giao và nhận xe</span>
+             <FaMotorcycle />
+            <span>Quản lí xe</span>
           </NavLink>
 
           <NavLink
@@ -44,7 +43,7 @@ export default function Sidebar() {
             }
           >
             <MdVerified />
-            <span>Thủ tục bàn giao </span>
+            <span>Quản lí đơn hàng</span>
           </NavLink>
 
           <NavLink
@@ -57,14 +56,25 @@ export default function Sidebar() {
             <span>Tra cứu lịch sử giao dịch</span>
           </NavLink>
 
+          {/* ✅ Mục mới: Bảng giá */}
           <NavLink
-            to="/staff/quanlyxe"
+            to="/staff/banggia"
             className={({ isActive }) =>
               isActive ? "sidebar__btn active" : "sidebar__btn"
             }
           >
             <FaMotorcycle />
-            <span>Quản lí xe tại trạm</span>
+            <span>Bảng giá</span>
+          </NavLink>
+
+           <NavLink
+            to="/staff/dichvu"
+            className={({ isActive }) =>
+              isActive ? "sidebar__btn active" : "sidebar__btn"
+            }
+          >
+           <IoReturnDownBack />
+            <span>Quản lí dịch vụ</span>
           </NavLink>
         </nav>
       </div>

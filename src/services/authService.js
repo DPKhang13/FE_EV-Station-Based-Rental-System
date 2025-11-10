@@ -20,9 +20,7 @@ export const authService = {
             const token = response.accessToken || response.jwtToken;
             setAuthToken(token); // ← Set cả localStorage và cookie
         }
-        if (response.refreshToken) {
-            localStorage.setItem('refreshToken', response.refreshToken);
-        }
+      
 
         // Normalize response format for AuthContext
         const normalizedResponse = {
@@ -83,58 +81,39 @@ export const authService = {
      * POST /api/auth/refresh
      * Backend đọc RefreshToken từ Cookie, trả về AccessToken mới trong Cookie
      */
-    refreshToken: async () => {
-        try {
-            // ✅ Backend đọc RefreshToken từ cookie (@CookieValue)
-            // Không cần gửi refreshToken trong body
-            const response = await api.post('/auth/refresh', {});
-
-            console.log('✅ Token refreshed successfully');
-
-            // Backend tự set AccessToken cookie mới, frontend chỉ cần đọc lại
-            // Nhưng vẫn lưu vào localStorage để restore sau reload
-            const cookies = document.cookie.split(';');
-            const accessTokenCookie = cookies.find(c => c.trim().startsWith('AccessToken='));
-            if (accessTokenCookie) {
-                const token = accessTokenCookie.split('=')[1];
-                localStorage.setItem('accessToken', token);
-                console.log('✅ New AccessToken saved to localStorage');
-            }
-
-            return response;
-        } catch (error) {
-            console.error('❌ Failed to refresh token:', error);
-            throw error;
-        }
-    },
+   
 
     /**
      * Gửi OTP quên mật khẩu
      * POST /api/auth/account/forget
      */
     forgotPassword: async (email) => {
-        return await api.post('/auth/account/forget', { email });
-    },
+  return await api.post(`/auth/account/forget?email=${encodeURIComponent(email)}`);
+}
+,
 
     /**
      * Xác thực OTP quên mật khẩu
      * POST /api/auth/account/verify
      */
-    verifyForgotPasswordOTP: async (email, otp) => {
-        return await api.post('/auth/account/verify', { email, otp });
-    },
+   verifyForgotPasswordOTP: async (email, otp) => {
+  return await api.post(
+    `/auth/account/verify?email=${encodeURIComponent(email)}&inputOtp=${encodeURIComponent(otp)}`
+  );
+},
+
 
     /**
      * Đặt lại mật khẩu
      * POST /api/auth/account/reset-password
      */
-    resetPassword: async (email, newPassword, confirmPassword) => {
-        return await api.post('/auth/account/reset-password', {
-            email,
-            newPassword,
-            confirmPassword
-        });
-    },
+  resetPassword: async (email, password, otp) => {
+  return await api.post(`/auth/account/reset-password?inputOtp=${otp}`, {
+    email,
+    password
+  });
+},
+
     getProfilePendingVerification: async () => {
         return await api.get('/auth/verify-profile/pending');
     },
