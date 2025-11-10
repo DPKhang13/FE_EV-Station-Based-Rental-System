@@ -4,7 +4,6 @@ import './App.css';
 import Navbar from './components/Navbar';
 import CarShowcase from './components/CarShowcase';
 import Offers from './components/Offers';
-import Testimonials from './components/Testimonials';
 import Stats from './components/Stats';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
@@ -42,7 +41,6 @@ const HomePage = () => (
   <ScrollToSectionWrapper>
     <CarShowcase />
     <Offers />
-    <Testimonials />
     <Stats />
     <Contact />
   </ScrollToSectionWrapper>

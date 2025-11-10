@@ -15,7 +15,14 @@ const Footer = () => {
                             CarRent - Dịch vụ cho thuê xe hàng đầu với đa dạng lựa chọn, giá cả hợp lý và dịch vụ tận tâm. Khám phá ngay hôm nay!
                         </p>
                         <ul className="footer-links">
-                            <li><a href="/">Câu chuyện của chúng tôi</a></li>
+                            <li>
+                                <a href="/about" onClick={e => {
+                                    e.preventDefault();
+                                    navigate('/about');
+                                }}>
+                                    Câu chuyện của chúng tôi
+                                </a>
+                            </li>
                             <li><a href="/">Chính sách bảo mật</a></li>
                         </ul>
                     </div>
@@ -102,7 +109,6 @@ const Footer = () => {
                         <h3 className="footer-section-title">DỊCH VỤ</h3>
                         <ul className="footer-links">
                             <li><a href="/">Đặt lịch hẹn dịch vụ</a></li>
-                            <li><a href="/">Hướng dẫn sử dụng</a></li>
                             <li><a href="/">Bảo hiểm xe</a></li>
                             <li><a href="/">Hỗ trợ khách hàng 24/7</a></li>
                             <li><a href="/">Chương trình ưu đãi</a></li>
