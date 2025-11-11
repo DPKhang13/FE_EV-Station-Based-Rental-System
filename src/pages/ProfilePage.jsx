@@ -2,10 +2,15 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { profileService } from '../services';
+import photoService from '../services/photoService';
 import './ProfilePage.css';
 
 const ProfilePage = () => {
     const navigate = useNavigate();
+    const [idCard, setIdCard] = useState(null);
+const [driverLicense, setDriverLicense] = useState(null);
+const [idPreview, setIdPreview] = useState("");
+const [dlPreview, setDlPreview] = useState("");
     const { user, logout } = useContext(AuthContext);
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -30,6 +35,15 @@ const ProfilePage = () => {
         // Load user data from context/localStorage
         loadUserProfile();
     }, [user, navigate]);
+
+const pickImage = (setter, setPrev) => (e) => {
+  const f = e.target.files?.[0];
+  if (!f) { setter(null); setPrev(""); return; }
+  if (!f.type?.startsWith('image/')) return alert('Please choose an image');
+  if (f.size > 5 * 1024 * 1024) return alert('Image > 5MB');
+  setter(f);
+  setPrev(URL.createObjectURL(f));
+};
 
     const loadUserProfile = () => {
         // Prioritize context user over localStorage
@@ -79,41 +93,46 @@ const ProfilePage = () => {
         }
         setIsEditing(!isEditing);
     };
+const handleUpdateProfile = async (e) => {
+  e.preventDefault();
+  setLoading(true);
 
-    const handleUpdateProfile = async (e) => {
-        e.preventDefault();
-        setLoading(true);
+  try {
+    const userId = user?.userId || user?.id || user?.data?.id;
+    let idCardUrl = null;
+    let driverLicenseUrl = null;
 
-        try {
-            console.log('📤 Updating profile with:', formData);
+    // 📸 Upload ảnh trước
+    if (idCard) {
+      const res1 = await photoService.uploadIdCard(idCard, userId);
+      idCardUrl = res1?.url || res1?.photoUrl;
+    }
 
-            const response = await profileService.update(formData);
-            console.log('✅ Profile updated:', response);
+    if (driverLicense) {
+      const res2 = await photoService.uploadDriverLicense(driverLicense, userId);
+      driverLicenseUrl = res2?.url || res2?.photoUrl;
+    }
 
-            // Update localStorage with new data
-            const savedUser = localStorage.getItem('user');
-            if (savedUser) {
-                const parsedUser = JSON.parse(savedUser);
-                const updatedUser = {
-                    ...parsedUser,
-                    fullName: formData.fullName,
-                    email: formData.email,
-                    phone: formData.phone,
-                    address: formData.address,
-                    dateOfBirth: formData.dateOfBirth
-                };
-                localStorage.setItem('user', JSON.stringify(updatedUser));
-            }
-
-            alert('Profile updated successfully!');
-            setIsEditing(false);
-        } catch (err) {
-            console.error('❌ Error updating profile:', err);
-            alert('Failed to update profile: ' + (err.message || 'Unknown error'));
-        } finally {
-            setLoading(false);
-        }
+    // 🧠 Build payload mới để gửi update
+    const payload = {
+      ...formData,
+      idCardUrl,
+      driverLicenseUrl,
     };
+
+    console.log("📤 Updating profile with:", payload);
+    const response = await profileService.update(payload);
+
+    console.log("✅ Profile updated:", response);
+    alert("Profile updated successfully!");
+    setIsEditing(false);
+  } catch (err) {
+    console.error("❌ Error updating profile:", err);
+    alert("Failed to update profile: " + (err.message || "Unknown error"));
+  } finally {
+    setLoading(false);
+  }
+};
 
     const handleLogout = () => {
         if (window.confirm('Are you sure you want to logout?')) {
@@ -221,19 +240,52 @@ const ProfilePage = () => {
 
                             </div>
 
-                            {isEditing && (
-                                <div className="form-actions">
-                                    <button
-                                        type="submit"
-                                        className="btn-save"
-                                        disabled={loading}
-                                    >
-                                        {loading ? 'Saving...' : '💾 Save Changes'}
-                                    </button>
-                                </div>
-                            )}
-                        </form>
-                    </div>
+                           {isEditing && (
+                <>
+                  <div className="form-group">
+                    <label>CCCD (ID Card)</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={pickImage(setIdCard, setIdPreview)}
+                    />
+                    {idPreview && (
+                      <img
+                        src={idPreview}
+                        alt="id"
+                        style={{ width: 120, height: 80, marginTop: 8, borderRadius: 6, objectFit: 'cover' }}
+                      />
+                    )}
+                  </div>
+
+                  <div className="form-group">
+                    <label>Bằng lái (Driver License)</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={pickImage(setDriverLicense, setDlPreview)}
+                    />
+                    {dlPreview && (
+                      <img
+                        src={dlPreview}
+                        alt="dl"
+                        style={{ width: 120, height: 80, marginTop: 8, borderRadius: 6, objectFit: 'cover' }}
+                      />
+                    )}
+                  </div>
+                </>
+              )}
+
+              {isEditing && (
+                <div className="form-actions">
+                  <button type="submit" className="btn-save" disabled={loading}>
+                    {loading ? 'Saving...' : '💾 Save Changes'}
+                  </button>
+                </div>
+              )}
+            </form>
+          </div>
+
 
                     {/* Additional Info */}
                     <div className="profile-stats">
