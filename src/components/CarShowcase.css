@@ -1,0 +1,507 @@
+/* ===== GENESIS STYLE CAR SHOWCASE ===== */
+.car-showcase {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    background: #000000;
+}
+
+/* Background Media */
+.showcase-media {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.showcase-video,
+.showcase-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    animation: fadeIn 1s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(1.1);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.showcase-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        to right,
+        rgba(0, 0, 0, 0.7) 0%,
+        rgba(0, 0, 0, 0.4) 50%,
+        rgba(0, 0, 0, 0.2) 100%
+    );
+    z-index: 2;
+}
+
+/* Logo */
+.showcase-logo {
+    position: absolute;
+    top: 30px;
+    left: 50px;
+    z-index: 10;
+    animation: slideInLeft 1s ease-out;
+}
+
+.showcase-logo img {
+    width: 100px;
+    height: auto;
+    filter: brightness(0) invert(1);
+    opacity: 0.95;
+    transition: all 0.3s ease;
+}
+
+.showcase-logo img:hover {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Content */
+.showcase-content {
+    position: absolute;
+    top: 50%;
+    left: 50px;
+    transform: translateY(-50%);
+    max-width: 650px;
+    z-index: 10;
+    color: #FFFFFF;
+    animation: slideInContent 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideInContent {
+    from {
+        opacity: 0;
+        transform: translateY(-40%) translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(-50%) translateX(0);
+    }
+}
+
+.showcase-year {
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: 3px;
+    margin-bottom: 10px;
+    color: #CCCCCC;
+    text-transform: uppercase;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+.showcase-model {
+    font-size: 22px;
+    font-weight: 300;
+    letter-spacing: 4px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    color: #FFFFFF;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+.showcase-title {
+    font-size: 56px;
+    font-weight: 200;
+    letter-spacing: 2px;
+    line-height: 1.2;
+    margin-bottom: 25px;
+    text-transform: uppercase;
+    color: #FFFFFF;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+.showcase-description {
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 1.8;
+    margin-bottom: 30px;
+    color: #E0E0E0;
+    max-width: 550px;
+    letter-spacing: 0.5px;
+}
+
+/* Features */
+.showcase-features {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+}
+
+.feature-tag {
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #FFFFFF;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.feature-tag:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px);
+}
+
+/* Action Buttons */
+.showcase-actions {
+    display: flex;
+    gap: 20px;
+}
+
+.btn-primary,
+.btn-secondary {
+    padding: 16px 40px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border: 2px solid;
+    border-radius: 0;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary {
+    background: #FFFFFF;
+    color: #000000;
+    border-color: #FFFFFF;
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: #DC0000;
+    transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: -1;
+}
+
+.btn-primary:hover::before {
+    left: 0;
+}
+
+.btn-primary:hover {
+    color: #FFFFFF;
+    border-color: #DC0000;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(220, 0, 0, 0.3);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: #FFFFFF;
+    border-color: #FFFFFF;
+}
+
+.btn-secondary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: #FFFFFF;
+    transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: -1;
+}
+
+.btn-secondary:hover::before {
+    left: 0;
+}
+
+.btn-secondary:hover {
+    color: #000000;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(255, 255, 255, 0.2);
+}
+
+/* Navigation Controls */
+.showcase-controls {
+    position: absolute;
+    bottom: 50px;
+    right: 50px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    z-index: 10;
+}
+
+.control-btn {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    color: #FFFFFF;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.control-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.control-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: scale(1.1);
+}
+
+.control-btn:active {
+    transform: scale(0.95);
+}
+
+/* Slide Indicators */
+.slide-indicators {
+    display: flex;
+    gap: 8px;
+    margin: 0 10px;
+}
+
+.indicator {
+    width: 40px;
+    height: 3px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.indicator-bar {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.indicator:hover .indicator-bar {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.indicator.active .indicator-bar {
+    background: #FFFFFF;
+    animation: fillBar 8s linear;
+}
+
+@keyframes fillBar {
+    from {
+        transform: scaleX(0);
+        transform-origin: left;
+    }
+    to {
+        transform: scaleX(1);
+        transform-origin: left;
+    }
+}
+
+/* Slide Counter */
+.slide-counter {
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+.current-slide {
+    font-weight: 600;
+}
+
+.divider {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.total-slides {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Optional Notice */
+.optional-notice {
+    position: absolute;
+    bottom: 50px;
+    left: 50px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 0.5px;
+    z-index: 10;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .showcase-content {
+        left: 30px;
+        max-width: 500px;
+    }
+
+    .showcase-title {
+        font-size: 42px;
+    }
+
+    .showcase-logo {
+        left: 30px;
+    }
+
+    .showcase-controls {
+        right: 30px;
+        bottom: 30px;
+    }
+
+    .optional-notice {
+        left: 30px;
+        bottom: 30px;
+    }
+}
+
+@media (max-width: 768px) {
+    .car-showcase {
+        height: 100vh;
+    }
+
+    .showcase-content {
+        left: 20px;
+        right: 20px;
+        max-width: none;
+        top: 40%;
+    }
+
+    .showcase-title {
+        font-size: 32px;
+        margin-bottom: 15px;
+    }
+
+    .showcase-model {
+        font-size: 16px;
+        margin-bottom: 15px;
+    }
+
+    .showcase-description {
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+
+    .showcase-features {
+        gap: 10px;
+        margin-bottom: 25px;
+    }
+
+    .feature-tag {
+        padding: 8px 15px;
+        font-size: 10px;
+    }
+
+    .showcase-actions {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        width: 100%;
+        padding: 14px 30px;
+        font-size: 12px;
+    }
+
+    .showcase-logo {
+        top: 20px;
+        left: 20px;
+    }
+
+    .showcase-logo img {
+        width: 70px;
+    }
+
+    .showcase-controls {
+        bottom: 20px;
+        right: 20px;
+        gap: 10px;
+    }
+
+    .control-btn {
+        width: 40px;
+        height: 40px;
+    }
+
+    .control-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .slide-indicators {
+        gap: 6px;
+    }
+
+    .indicator {
+        width: 30px;
+    }
+
+    .slide-counter {
+        font-size: 12px;
+    }
+
+    .optional-notice {
+        left: 20px;
+        bottom: 20px;
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .showcase-title {
+        font-size: 24px;
+    }
+
+    .showcase-controls {
+        scale: 0.9;
+    }
+}

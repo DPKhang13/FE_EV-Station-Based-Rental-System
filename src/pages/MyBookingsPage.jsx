@@ -17,6 +17,9 @@ const MyBookingsPage = () => {
     const [cancelReason, setCancelReason] = useState('');
     const [searchOrderId, setSearchOrderId] = useState('');
     const [orderStatuses, setOrderStatuses] = useState({}); // Store status của từng order
+    const [showPaymentMethodModal, setShowPaymentMethodModal] = useState(false);
+    const [selectedOrderId, setSelectedOrderId] = useState(null);
+
 
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'instant' });
@@ -75,7 +78,7 @@ const MyBookingsPage = () => {
         }
 
         setOrderStatuses(statusMap);
-        console.log('✅ Order statuses loaded:', statusMap);
+        console.log('Order statuses loaded:', statusMap);
     };
 
     const loadMyBookings = async () => {
@@ -88,9 +91,9 @@ const MyBookingsPage = () => {
             let orders = [];
             try {
                 orders = await orderService.getMyOrders();
-                console.log('📦 [MyBookings] Raw response:', orders);
+                console.log('[MyBookings] Raw response:', orders);
             } catch (apiErr) {
-                console.error('❌ API Error details:', {
+                console.error('API Error details:', {
                     message: apiErr.message,
                     response: apiErr.response?.data,
                     status: apiErr.response?.status
@@ -99,7 +102,7 @@ const MyBookingsPage = () => {
                 if (apiErr.response?.status >= 500 ||
                     apiErr.message?.includes('500') ||
                     apiErr.message?.includes('Internal Server Error')) {
-                    console.warn('⚠️ Server error detected, showing empty bookings');
+                    console.warn('Server error detected, showing empty bookings');
                     setBookings([]);
                     setLoading(false);
                     return;
@@ -179,7 +182,7 @@ const MyBookingsPage = () => {
     };
 
     const handleViewDetails = (booking) => {
-        console.log('👁️ [MyBookings] View details:', booking);
+        console.log(' [MyBookings] View details:', booking);
         setSelectedBooking(booking);
         setShowModal(true);
     };
@@ -248,9 +251,52 @@ const MyBookingsPage = () => {
     };
 
     const handlePayment = (orderId) => {
-        console.log('Navigating to payment page for order:', orderId);
-        navigate(`/payment/${orderId}`);
+        console.log('🟢 [MyBookings] Mở lựa chọn thanh toán cho đơn:', orderId);
+        setSelectedOrderId(orderId);
+        setShowPaymentMethodModal(true);
     };
+    const handleSelectPaymentMethod = async (method) => {
+        try {
+            if (method === 'CASH') {
+                alert('Bạn đã chọn thanh toán bằng tiền mặt khi nhận xe.');
+                setShowPaymentMethodModal(false);
+                return;
+            }
+
+            if (method === 'VNPay') {
+                console.log('💳 [VNPay] Tạo link thanh toán cho đơn:', selectedOrderId);
+                const payload = {
+                    orderId: selectedOrderId,
+                    method: 'VNPay',
+                    paymentType: 1
+                };
+
+                const response = await fetch('http://localhost:8080/api/payment/vnpay', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const data = await response.json();
+                console.log('✅ [VNPay] Payment link:', data.paymentUrl);
+
+                if (data.paymentUrl) {
+                    window.location.href = data.paymentUrl;
+                } else {
+                    alert('Không nhận được link thanh toán từ server.');
+                }
+            }
+        } catch (err) {
+            console.error('❌ [Payment] Error:', err);
+            alert('Không thể xử lý thanh toán. Vui lòng thử lại sau.');
+        } finally {
+            setShowPaymentMethodModal(false);
+            setSelectedOrderId(null);
+        }
+    };
+
 
     // ✅ Thanh toán phần còn lại cho AWAIT_FINAL
     const handleFinalPayment = async (orderId) => {
@@ -261,7 +307,7 @@ const MyBookingsPage = () => {
                 return;
             }
 
-            console.log('💰 Processing final payment for order:', orderId);
+            console.log(' Processing final payment for order:', orderId);
             console.log('Amount to pay:', orderStatus.remainingAmount);
 
             // Gọi VNPay payment API
@@ -284,14 +330,14 @@ const MyBookingsPage = () => {
             });
 
         } catch (err) {
-            console.error('❌ Final payment error:', err);
+            console.error(' Final payment error:', err);
             alert('Không thể xử lý thanh toán: ' + err.message);
         }
     };
 
     // ✅ Mở trang feedback cho COMPLETED
     const handleFeedback = (orderId) => {
-        console.log('📝 Opening feedback for order:', orderId);
+        console.log('Opening feedback for order:', orderId);
         navigate('/feedback', { state: { orderId } });
     };
 
@@ -308,7 +354,7 @@ const MyBookingsPage = () => {
         }
 
         try {
-            console.log('🗑️ Cancelling order:', cancelOrderId);
+            console.log(' Cancelling order:', cancelOrderId);
 
             // 1. Gọi API xóa đơn hàng
             await orderService.delete(cancelOrderId);
@@ -334,7 +380,7 @@ const MyBookingsPage = () => {
                     });
                     console.log('✅ Notification sent successfully');
                 } catch (notifErr) {
-                    console.error('⚠️ Failed to send notification:', notifErr);
+                    console.error(' Failed to send notification:', notifErr);
                     // Không block việc hủy đơn nếu notification fail
                 }
             }
@@ -399,7 +445,6 @@ const MyBookingsPage = () => {
                 {/* Search Box */}
                 <div className="search-container">
                     <div className="search-box">
-                        <span className="search-icon">🔍</span>
                         <input
                             type="text"
                             className="search-input"
@@ -556,7 +601,7 @@ const MyBookingsPage = () => {
                                                         borderRadius: '8px',
                                                         fontSize: '14px'
                                                     }}>
-                                                        🚗 Đang thuê - Không thể đặt xe khác
+                                                        Đang thuê - Không thể đặt xe khác
                                                     </span>
                                                 );
                                             }
@@ -573,7 +618,7 @@ const MyBookingsPage = () => {
                                                             borderRadius: '8px',
                                                             fontSize: '14px'
                                                         }}>
-                                                            💰 Còn lại: {orderStatus.remainingAmount.toLocaleString()} VND
+                                                            Còn lại: {orderStatus.remainingAmount.toLocaleString()} VND
                                                         </span>
                                                         <button
                                                             onClick={() => handleFinalPayment(booking.orderId)}
@@ -607,7 +652,7 @@ const MyBookingsPage = () => {
                                                             borderRadius: '8px',
                                                             fontSize: '14px'
                                                         }}>
-                                                            ✅ Hoàn thành
+                                                            Hoàn thành
                                                         </span>
                                                         <button
                                                             onClick={() => handleFeedback(booking.orderId)}
@@ -623,7 +668,7 @@ const MyBookingsPage = () => {
                                                                 transition: 'all 0.2s'
                                                             }}
                                                         >
-                                                            📝 Đánh giá
+                                                            Đánh giá
                                                         </button>
                                                     </>
                                                 );
@@ -705,7 +750,7 @@ const MyBookingsPage = () => {
                                                     padding: '4px 8px',
                                                     borderRadius: '4px'
                                                 }}>
-                                                    ⏰ Còn {checkExpiry(booking.createdAt)} để thanh toán
+                                                    Còn {checkExpiry(booking.createdAt)} để thanh toán
                                                 </span>
                                             )}
                                     </div>
@@ -721,7 +766,7 @@ const MyBookingsPage = () => {
                 <div className="modal-overlay" onClick={handleCloseModal}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>📋 Chi tiết đơn hàng</h2>
+                            <h2>Chi tiết đơn hàng</h2>
                             <button className="modal-close" onClick={handleCloseModal}>✕</button>
                         </div>
 
@@ -881,17 +926,67 @@ const MyBookingsPage = () => {
                                     Thanh toán ngay
                                 </button>
                             )}
+
                         </div>
                     </div>
                 </div>
             )}
+            {showPaymentMethodModal && (
+                <div className="modal-overlay" onClick={() => setShowPaymentMethodModal(false)}>
+                    <div className="modal-content payment-method-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>Chọn Phương Thức Thanh Toán</h2>
+                            <button className="modal-close" onClick={() => setShowPaymentMethodModal(false)}>✕</button>
+                        </div>
+
+                        <div className="modal-body" style={{ textAlign: 'center', padding: '24px' }}>
+                            <p>Vui lòng chọn phương thức thanh toán cho đơn hàng:</p>
+
+                            <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '24px' }}>
+                                <button
+                                    onClick={() => handleSelectPaymentMethod('CASH')}
+                                    style={{
+                                        background: '#10b981',
+                                        color: 'white',
+                                        padding: '12px 28px',
+                                        borderRadius: '8px',
+                                        fontSize: '16px',
+                                        fontWeight: '600',
+                                        border: 'none',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    💵 Tiền mặt
+                                </button>
+
+                                <button
+                                    onClick={() => handleSelectPaymentMethod('VNPay')}
+                                    style={{
+                                        background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                                        color: 'white',
+                                        padding: '12px 28px',
+                                        borderRadius: '8px',
+                                        fontSize: '16px',
+                                        fontWeight: '600',
+                                        border: 'none',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    💳 VNPay
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
 
             {/* Modal Hủy Đơn Hàng */}
             {showCancelModal && (
                 <div className="modal-overlay" onClick={() => setShowCancelModal(false)}>
                     <div className="modal-content cancel-modal" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>❌ Hủy Đơn Hàng</h2>
+                            <h2> Hủy Đơn Hàng</h2>
                             <button className="modal-close" onClick={() => setShowCancelModal(false)}>✕</button>
                         </div>
 

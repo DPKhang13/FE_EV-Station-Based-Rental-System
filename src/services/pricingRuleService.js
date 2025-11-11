@@ -11,7 +11,7 @@ export const pricingRuleService = {
      * GET /api/pricingrules/get
      */
     getAll: async () => {
-        return await api.get('/pricingrules/get');
+        return await api.get('/pricing-rules');
     },
 
     /**
@@ -19,7 +19,7 @@ export const pricingRuleService = {
      * PUT /api/pricingrules/update/{seatCount}/{variant}
      */
     update: async (seatCount, variant, pricingData) => {
-        return await api.put(`/pricingrules/update/${seatCount}/${variant}`, pricingData);
+        return await api.put(`/pricing-rules/${seatCount}/${variant}`, pricingData);
     }
 };
 
