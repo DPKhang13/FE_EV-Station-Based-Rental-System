@@ -81,7 +81,7 @@ const ThanhToanPage = () => {
   return (
     <div className="page-container">
       {/* 🔍 Form tìm kiếm */}
-      <div className="search-box">
+      <div className="search-boxs">
         <h2>Tra cứu lịch sử giao dịch</h2>
         <div className="search-form">
           <input

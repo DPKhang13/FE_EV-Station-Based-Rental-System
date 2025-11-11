@@ -38,21 +38,22 @@ const GiaoTraXe = () => {
       const vehicles = await vehicleService.fetchAndTransformVehicles();
       const ordersRes = await orderService.getAll();
 
-      const vehiclesAtStation = vehicles
-        .filter((v) => Number(v.stationId) === Number(stationId))
-        .map((v) => ({
-          id: v.id || v.vehicleId,
-          ten: v.vehicle_name || v.vehicleName,
-          bienSo: v.plate_number || v.plateNumber,
-          pin: parseInt(v.battery_status?.replace("%", "") || "100"),
-          trangThai: formatStatus(v.status),
-          mau: v.color,
-          hang: v.brand,
-          nam: v.year_of_manufacture || v.year,
-          tram: v.stationName,
-          hinhAnh: v.image,
-        }))
-        .sort((a, b) => a.id - b.id);
+   const vehiclesAtStation = vehicles
+  .filter((v) => Number(v.stationId) === Number(stationId))
+  .map((v) => ({
+    id: v.id || v.vehicleId,
+    ten: v.vehicle_name || v.vehicleName,
+    bienSo: v.plate_number || v.plateNumber,
+    pin: parseInt(v.battery_status?.replace("%", "") || v.batteryStatus?.replace("%", "") || "100"),
+    trangThai: formatStatus(v.status),
+    mau: v.color,
+    hang: v.brand,
+    nam: v.year_of_manufacture || v.year,
+    tram: v.stationName,
+    hinhAnh: getCarImage(v.brand, v.color, v.seatCount), // ✅ gắn ảnh tự động
+  }))
+  .sort((a, b) => a.id - b.id);
+
 
       setVehicleList(vehiclesAtStation);
       setOrders(Array.isArray(ordersRes?.data) ? ordersRes.data : ordersRes);
@@ -169,6 +170,80 @@ const GiaoTraXe = () => {
 
     return matchTab && matchSearch;
   });
+  // 🖼️ Map ảnh theo hãng + màu + loại xe
+const getCarImage = (brand, color, seatCount) => {
+  const base = "https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar";
+  const seatType = seatCount > 4 ? "7_Cho" : "4_Cho";
+  const brandKey = brand?.toLowerCase();
+
+  // 🧠 Chuẩn hóa màu về tiếng Việt
+  const colorMap = {
+    white: "trắng",
+    silver: "bạc",
+    black: "đen",
+    red: "đỏ",
+    blue: "xanh",
+  };
+  const colorKey = colorMap[color?.toLowerCase()] || "trắng"; // fallback trắng nếu không match
+
+  const imgMap = {
+    vinfast: {
+      "7_Cho": {
+        trắng: `${base}/7_Cho/Vinfast/unnamed.jpg`,
+        bạc: `${base}/7_Cho/Vinfast/unnamed%20(4).jpg`,
+        đen: `${base}/7_Cho/Vinfast/unnamed%20(3).jpg`,
+        đỏ: `${base}/7_Cho/Vinfast/unnamed%20(2).jpg`,
+        xanh: `${base}/7_Cho/Vinfast/unnamed%20(1).jpg`,
+      },
+      "4_Cho": {
+        trắng: `${base}/4_Cho/Vinfast/unnamed.jpg`,
+        bạc: `${base}/4_Cho/Vinfast/b76c51c2-6e69-491c-ae83-0d36ff93cdff.png`,
+        đen: `${base}/4_Cho/Vinfast/e88bd242-3df4-48a7-8fe2-a9a3466f939f.png`,
+        đỏ: `${base}/4_Cho/Vinfast/e420cb1b-1710-4dbe-a5e3-e1285c690b6e.png`,
+        xanh: `${base}/4_Cho/Vinfast/a80cae76-5c8a-4226-ac85-116ba2da7a3a.png`,
+      },
+    },
+    bmw: {
+      "7_Cho": {
+        trắng: `${base}/7_Cho/BMW/unnamed.jpg`,
+        bạc: `${base}/7_Cho/BMW/unnamed%20(3).jpg`,
+        đen: `${base}/7_Cho/BMW/unnamed%20(4).jpg`,
+        đỏ: `${base}/7_Cho/BMW/unnamed%20(1).jpg`,
+        xanh: `${base}/7_Cho/BMW/unnamed%20(2).jpg`,
+      },
+      "4_Cho": {
+        trắng: `${base}/4_Cho/BMW/white.jpg`,
+        bạc: `${base}/4_Cho/BMW/unnamed%20(1).jpg`,
+        đen: `${base}/4_Cho/BMW/8f9f3e31-0c04-4441-bb40-97778c9824e0.png`,
+        đỏ: `${base}/4_Cho/BMW/7f3edc23-30ba-4e84-83a9-c8c418f2362d.png`,
+        xanh: `${base}/4_Cho/BMW/blue.jpg`,
+      },
+    },
+    tesla: {
+      "7_Cho": {
+        trắng: `${base}/7_Cho/Tesla/unnamed.jpg`,
+        bạc: `${base}/7_Cho/Tesla/unnamed%20(4).jpg`,
+        đen: `${base}/7_Cho/Tesla/unnamed%20(3).jpg`,
+        đỏ: `${base}/7_Cho/Tesla/unnamed%20(2).jpg`,
+        xanh: `${base}/7_Cho/Tesla/unnamed%20(1).jpg`,
+      },
+      "4_Cho": {
+        trắng: `${base}/4_Cho/Tesla/unnamed%20(2).jpg`,
+        bạc: `${base}/4_Cho/Tesla/unnamed4.jpg`,
+        đen: `${base}/4_Cho/Tesla/unnamed%20(3).jpg`,
+        đỏ: `${base}/4_Cho/Tesla/unnamed%20(1).jpg`,
+        xanh: `${base}/4_Cho/Tesla/unnamed.jpg`,
+      },
+    },
+  };
+
+  return (
+    imgMap[brandKey]?.[seatType]?.[colorKey] ||
+    "https://live.staticflickr.com/65535/49932658111_30214a4229_b.jpg"
+  );
+};
+
+
 
   /** ================================
    * 🧱 JSX giao diện chính
@@ -217,14 +292,13 @@ const GiaoTraXe = () => {
         <div className="xe-grid">
           {filteredVehicles.map((xe) => (
             <div className="xe-card" key={xe.id}>
-              <img
-                src={
-                  xe.hinhAnh ||
-                  "https://live.staticflickr.com/65535/49932658111_30214a4229_b.jpg"
-                }
-                alt={xe.ten}
-                className="xe-img"
-              />
+           <img
+  src={xe.hinhAnh}
+  alt={`${xe.hang} ${xe.mau}`}
+  className="xe-img"
+/>
+
+
               <h3>{xe.ten}</h3>
               <p>Biển số: {xe.bienSo}</p>
               <p>Pin: {xe.pin}%</p>

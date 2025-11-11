@@ -32,6 +32,11 @@ const StationManagement = () => {
     const [orderHistory, setOrderHistory] = useState([]);
     const [loadingOrderHistory, setLoadingOrderHistory] = useState(false);
 
+    // Vehicle details modal state
+    const [showVehicleDetailsModal, setShowVehicleDetailsModal] = useState(false);
+    const [vehicleDetails, setVehicleDetails] = useState(null);
+    const [loadingVehicleDetails, setLoadingVehicleDetails] = useState(false);
+
     const [formData, setFormData] = useState({
         name: '',
         city: '',
@@ -39,6 +44,101 @@ const StationManagement = () => {
         ward: '',
         street: ''
     });
+
+    // Local car image mapping (same logic as VehicleManagement) to show thumbnails
+    const carImageMap = {
+        vinfast: {
+            '7': {
+                trắng: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Vinfast/unnamed.jpg',
+                bạc: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Vinfast/unnamed%20%284%29.jpg',
+                đen: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Vinfast/unnamed%20%283%29.jpg',
+                đỏ: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Vinfast/unnamed%20%282%29.jpg',
+                xanh: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Vinfast/unnamed%20%281%29.jpg',
+            },
+            '4': {
+                xanh: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/a80cae76-5c8a-4226-ac85-116ba2da7a3a.png',
+                bạc: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/b76c51c2-6e69-491c-ae83-0d36ff93cdff.png',
+                đen: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/e88bd242-3df4-48a7-8fe2-a9a3466f939f.png',
+                đỏ: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/e420cb1b-1710-4dbe-a5e3-e1285c690b6e.png',
+                trắng: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/unnamed.jpg',
+            },
+        },
+        bmw: {
+            '7': {
+                đỏ: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/BMW/unnamed%20%281%29.jpg',
+                đen: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/BMW/unnamed%20%284%29.jpg',
+                trắng: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/BMW/unnamed.jpg',
+                bạc: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/BMW/unnamed%20%283%29.jpg',
+                xanh: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/BMW/unnamed%20%282%29.jpg',
+            },
+            '4': {
+                trắng: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/white.jpg',
+                bạc: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/unnamed%20%281%29.jpg',
+                xanh: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/blue.jpg',
+                đen: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/8f9f3e31-0c04-4441-bb40-97778c9824e0.png',
+                đỏ: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/7f3edc23-30ba-4e84-83a9-c8c418f2362d.png',
+            },
+        },
+        tesla: {
+            '7': {
+                trắng: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Tesla/unnamed.jpg',
+                bạc: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Tesla/unnamed%20%284%29.jpg',
+                đỏ: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Tesla/unnamed%20%282%29.jpg',
+                đen: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Tesla/unnamed%20%283%29.jpg',
+                xanh: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/7_Cho/Tesla/unnamed%20%281%29.jpg',
+            },
+            '4': {
+                bạc: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed4.jpg',
+                xanh: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed.jpg',
+                đen: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%283%29.jpg',
+                trắng: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%282%29.jpg',
+                đỏ: 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%281%29.jpg',
+            },
+        },
+    };
+
+    const getCarImageUrl = (vehicle) => {
+        if (!vehicle) return 'https://via.placeholder.com/100x60?text=No+Image';
+        const brand = (vehicle.brand || '').toLowerCase().replace(/\s+/g, '');
+        const seat = String(vehicle.seat_count || vehicle.seatCount || '4');
+        let colorRaw = (vehicle.color || '').toLowerCase().trim();
+
+        const colorSynonyms = {
+            'white': 'trắng',
+            'black': 'đen',
+            'silver': 'bạc',
+            'grey': 'xanh',
+            'gray': 'xanh',
+            'blue': 'xanh',
+            'red': 'đỏ'
+        };
+
+        if (!colorRaw && vehicle.colorName) colorRaw = vehicle.colorName.toLowerCase().trim();
+        if (colorSynonyms[colorRaw]) colorRaw = colorSynonyms[colorRaw];
+
+        const tryLookup = (b, s, c) => {
+            try {
+                return carImageMap?.[b]?.[s]?.[c];
+            } catch {
+                return undefined;
+            }
+        };
+
+        let url = tryLookup(brand, seat, colorRaw);
+        if (!url) {
+            const normalize = (str) => str.normalize ? str.normalize('NFD').replace(/\p{Diacritic}/gu, '') : str;
+            const colorNoAcc = normalize(colorRaw);
+            const bucket = carImageMap?.[brand]?.[seat] || {};
+            for (const key of Object.keys(bucket)) {
+                if (normalize(key) === colorNoAcc) {
+                    url = bucket[key];
+                    break;
+                }
+            }
+        }
+
+        return url || vehicle.image || 'https://via.placeholder.com/100x60?text=No+Image';
+    };
 
     // Fetch stations on component mount
     useEffect(() => {
@@ -481,6 +581,37 @@ const StationManagement = () => {
         }
     };
 
+    // Fetch full vehicle details (from GET /api/vehicles/get) and show modal
+    const handleShowVehicleDetails = async (vehicle) => {
+        setShowVehicleDetailsModal(true);
+        setVehicleDetails(null);
+        setLoadingVehicleDetails(true);
+
+        try {
+            const vehicleId = vehicle.vehicleId || vehicle.id;
+            console.log('🔍 Fetching full vehicle list to locate vehicle ID:', vehicleId);
+
+            const resp = await vehicleService.getVehicles();
+            let list = [];
+            if (Array.isArray(resp)) list = resp;
+            else if (resp?.data && Array.isArray(resp.data)) list = resp.data;
+            else if (resp?.result && Array.isArray(resp.result)) list = resp.result;
+
+            const found = list.find(v => String(v.vehicleId) === String(vehicleId) || String(v.id) === String(vehicleId) || (v.plateNumber && v.plateNumber === vehicle.plateNumber));
+            if (found) {
+                setVehicleDetails(found);
+            } else {
+                // Fallback: show the passed-in object
+                setVehicleDetails(vehicle);
+            }
+        } catch (err) {
+            console.error('❌ Error fetching vehicle details:', err);
+            setVehicleDetails(vehicle);
+        } finally {
+            setLoadingVehicleDetails(false);
+        }
+    };
+
     const handleCloseOrderHistoryModal = () => {
         setShowOrderHistoryModal(false);
         setSelectedVehicleForHistory(null);
@@ -776,11 +907,12 @@ const StationManagement = () => {
                                         <thead>
                                             <tr>
                                                 <th>ID</th>
+                                                <th>HÌNH ẢNH</th>
                                                 <th>BIỂN SỐ</th>
                                                 <th>TÊN XE</th>
                                                 <th>MÀU SẮC</th>
                                                 <th>SỐ CHỖ</th>
-                                                <th>VARIANT</th>
+                                                <th>Loại xe</th>
                                                 <th>TRẠNG THÁI</th>
                                                 <th>THAO TÁC</th>
                                             </tr>
@@ -796,6 +928,14 @@ const StationManagement = () => {
                                                 stationVehicles.map((vehicle, index) => (
                                                     <tr key={vehicle.id || index}>
                                                         <td>{vehicle.id}</td>
+                                                        <td>
+                                                            <img
+                                                                src={getCarImageUrl(vehicle)}
+                                                                alt={vehicle.vehicleName || vehicle.plateNumber}
+                                                                style={{ width: 84, height: 50, objectFit: 'cover', borderRadius: 4 }}
+                                                                onError={(e) => { e.target.src = 'https://via.placeholder.com/100x60?text=No+Image'; }}
+                                                            />
+                                                        </td>
                                                         <td style={{ fontWeight: 'bold', color: '#1f2937' }}>{vehicle.plateNumber}</td>
                                                         <td>{vehicle.vehicleName}</td>
                                                         <td>
@@ -830,8 +970,8 @@ const StationManagement = () => {
                                                             <div className="action-buttons">
                                                                 <button
                                                                     className="btn-view"
-                                                                    onClick={() => handleViewOrderHistory(vehicle)}
-                                                                    title="Xem lịch sử đặt xe"
+                                                                    onClick={() => handleShowVehicleDetails(vehicle)}
+                                                                    title="Xem chi tiết xe"
                                                                     style={{
                                                                         background: '#dbeafe',
                                                                         color: '#1e40af',
@@ -843,7 +983,7 @@ const StationManagement = () => {
                                                                         fontWeight: '600'
                                                                     }}
                                                                 >
-                                                                    Lịch sử
+                                                                    Xem chi tiết
                                                                 </button>
                                                                 <button
                                                                     className="btn-edit"
@@ -896,6 +1036,38 @@ const StationManagement = () => {
                         <div className="modal-header">
                             <h2> Thêm xe vào trạm: {selectedStationForVehicle.name}</h2>
                             <button className="modal-close" onClick={handleCloseAddVehicleModal}>✕</button>
+                        </div>
+
+                        {/* Preview based on selected brand/color/seat */}
+                        {/* Reduce horizontal padding and let image be responsive to remove white side bars */}
+                        <div style={{ textAlign: 'center', padding: '12px 0 0 0', width: '100%' }}>
+                            {(() => {
+                                const previewVehicle = {
+                                    brand: vehicleFormData.vehicleName,
+                                    color: vehicleFormData.color,
+                                    seatCount: Number(vehicleFormData.seatCount) || 4,
+                                    image: ''
+                                };
+                                return (
+                                    <img
+                                        src={getCarImageUrl(previewVehicle)}
+                                        alt="Preview"
+                                        style={{
+                                            width: '35%',
+                                            maxWidth: 720,
+                                            height: 'auto',
+                                            objectFit: 'contain',
+                                            borderRadius: 8,
+                                            border: '1px solid #eee',
+                                            background: 'transparent',
+                                            boxShadow: '0 6px 18px rgba(0,0,0,0.08)',
+                                            display: 'block',
+                                            margin: '0 auto'
+                                        }}
+                                        onError={(e) => { e.target.src = 'https://via.placeholder.com/420x400?text=No+Image'; }}
+                                    />
+                                );
+                            })()}
                         </div>
 
                         <form onSubmit={handleAddVehicle} className="station-form">
@@ -960,14 +1132,14 @@ const StationManagement = () => {
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Variant <span className="required">*</span></label>
+                                    <label>Loại xe <span className="required">*</span></label>
                                     <select
                                         name="variant"
                                         value={vehicleFormData.variant}
                                         onChange={handleVehicleInputChange}
                                         required
                                     >
-                                        <option value="">-- Chọn variant --</option>
+                                        <option value="">-- Chọn loại xe --</option>
                                         <option value="Air">Air</option>
                                         <option value="Plus">Plus</option>
                                         <option value="Pro">Pro</option>
@@ -1038,6 +1210,38 @@ const StationManagement = () => {
                             <button className="modal-close" onClick={handleCloseEditVehicleModal}>✕</button>
                         </div>
 
+                        {/* Preview for edit modal */}
+                        {/* Reduce horizontal padding and let image be responsive to remove white side bars */}
+                        <div style={{ textAlign: 'center', padding: '12px 0 0 0', width: '100%' }}>
+                            {(() => {
+                                const previewVehicle = {
+                                    brand: vehicleFormData.vehicleName || editingVehicle.brand,
+                                    color: vehicleFormData.color || editingVehicle.color,
+                                    seatCount: Number(vehicleFormData.seatCount) || editingVehicle.seatCount || 4,
+                                    image: editingVehicle.image || ''
+                                };
+                                return (
+                                    <img
+                                        src={getCarImageUrl(previewVehicle)}
+                                        alt="Preview"
+                                        style={{
+                                            width: '35%',
+                                            maxWidth: 720,
+                                            height: 'auto',
+                                            objectFit: 'contain',
+                                            borderRadius: 8,
+                                            border: '1px solid #eee',
+                                            background: 'transparent',
+                                            boxShadow: '0 6px 18px rgba(0,0,0,0.08)',
+                                            display: 'block',
+                                            margin: '0 auto'
+                                        }}
+                                        onError={(e) => { e.target.src = 'https://via.placeholder.com/420x400?text=No+Image'; }}
+                                    />
+                                );
+                            })()}
+                        </div>
+
                         <form onSubmit={handleUpdateVehicle} className="station-form">
                             <div className="form-grid">
                                 <div className="form-group full-width">
@@ -1101,14 +1305,14 @@ const StationManagement = () => {
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Variant <span className="required">*</span></label>
+                                    <label>Loại xe <span className="required">*</span></label>
                                     <select
                                         name="variant"
                                         value={vehicleFormData.variant}
                                         onChange={handleVehicleInputChange}
                                         required
                                     >
-                                        <option value="">-- Chọn variant --</option>
+                                        <option value="">-- Chọn loại xe --</option>
                                         <option value="AIR">Air</option>
                                         <option value="PLUS">Plus</option>
                                         <option value="PRO">Pro</option>
@@ -1213,8 +1417,8 @@ const StationManagement = () => {
                                                     <td>{new Date(order.endTime).toLocaleString('vi-VN')}</td>
                                                     <td>
                                                         <span className={`status-badge ${order.status === 'COMPLETED' ? 'status-active' :
-                                                                order.status === 'CANCELLED' ? 'status-inactive' :
-                                                                    'status-maintenance'
+                                                            order.status === 'CANCELLED' ? 'status-inactive' :
+                                                                'status-maintenance'
                                                             }`}>
                                                             {order.status}
                                                         </span>
@@ -1234,6 +1438,98 @@ const StationManagement = () => {
 
                         <div className="detail-actions">
                             <button className="btn-cancel" onClick={handleCloseOrderHistoryModal}>
+                                Đóng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Vehicle Details Modal */}
+            {showVehicleDetailsModal && (
+                <div className="modal-overlay" onClick={() => { setShowVehicleDetailsModal(false); setVehicleDetails(null); }}>
+                    <div className="modal-content detail-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>🔍 Thông tin xe</h2>
+                            <button className="modal-close" onClick={() => { setShowVehicleDetailsModal(false); setVehicleDetails(null); }}>✕</button>
+                        </div>
+
+                        <div className="detail-content">
+                            {loadingVehicleDetails ? (
+                                <div style={{ textAlign: 'center', padding: '40px' }}>⏳ Đang tải thông tin xe...</div>
+                            ) : !vehicleDetails ? (
+                                <div style={{ textAlign: 'center', padding: '40px' }}>Không tìm thấy thông tin xe.</div>
+                            ) : (
+                                <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
+                                    <div style={{ flex: '0 0 360px', textAlign: 'center' }}>
+                                        <img
+                                            src={getCarImageUrl(vehicleDetails)}
+                                            alt={vehicleDetails.vehicleName || vehicleDetails.plateNumber}
+                                            style={{ width: '100%', maxWidth: 360, height: 'auto', objectFit: 'contain', borderRadius: 8 }}
+                                            onError={(e) => { e.target.src = 'https://via.placeholder.com/420x300?text=No+Image'; }}
+                                        />
+                                    </div>
+
+                                    <div style={{ flex: 1 }}>
+                                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                            <tbody>
+                                                <tr>
+                                                    <td style={{ padding: '8px 12px', fontWeight: 700, width: 160 }}>Mã xe</td>
+                                                    <td style={{ padding: '8px 12px' }}>{vehicleDetails.vehicleId || vehicleDetails.id || 'N/A'}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ padding: '8px 12px', fontWeight: 700 }}>Biển số</td>
+                                                    <td style={{ padding: '8px 12px' }}>{vehicleDetails.plateNumber || 'N/A'}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ padding: '8px 12px', fontWeight: 700 }}>Tên xe</td>
+                                                    <td style={{ padding: '8px 12px' }}>{vehicleDetails.vehicleName || 'N/A'}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ padding: '8px 12px', fontWeight: 700 }}>Hãng</td>
+                                                    <td style={{ padding: '8px 12px' }}>{vehicleDetails.brand || 'N/A'}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ padding: '8px 12px', fontWeight: 700 }}>Màu</td>
+                                                    <td style={{ padding: '8px 12px' }}>{vehicleDetails.color || vehicleDetails.colorName || 'N/A'}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ padding: '8px 12px', fontWeight: 700 }}>Số chỗ</td>
+                                                    <td style={{ padding: '8px 12px' }}>{vehicleDetails.seatCount || vehicleDetails.seat_count || 'N/A'}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ padding: '8px 12px', fontWeight: 700 }}>Loại xe</td>
+                                                    <td style={{ padding: '8px 12px' }}>{formatVariant(vehicleDetails.variant || vehicleDetails.variantName || '')}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ padding: '8px 12px', fontWeight: 700 }}>Trạng thái</td>
+                                                    <td style={{ padding: '8px 12px' }}>{vehicleDetails.status || 'N/A'}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ padding: '8px 12px', fontWeight: 700 }}>Pin</td>
+                                                    <td style={{ padding: '8px 12px' }}>{vehicleDetails.batteryStatus || 'N/A'}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ padding: '8px 12px', fontWeight: 700 }}>Dung lượng pin</td>
+                                                    <td style={{ padding: '8px 12px' }}>{vehicleDetails.batteryCapacity || 'N/A'}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ padding: '8px 12px', fontWeight: 700 }}>Phạm vi (km)</td>
+                                                    <td style={{ padding: '8px 12px' }}>{vehicleDetails.rangeKm || vehicleDetails.range_km || 'N/A'}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style={{ padding: '8px 12px', fontWeight: 700 }}>Mô tả</td>
+                                                    <td style={{ padding: '8px 12px' }}>{vehicleDetails.description || '—'}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="detail-actions">
+                            <button className="btn-cancel" onClick={() => { setShowVehicleDetailsModal(false); setVehicleDetails(null); }}>
                                 Đóng
                             </button>
                         </div>

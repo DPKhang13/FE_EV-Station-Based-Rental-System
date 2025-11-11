@@ -1,0 +1,178 @@
+/* ===== MERCEDES FORGOT PAGE - BLACK RED WHITE ===== */
+.forgot-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #000000;
+  background-image: 
+    linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(20, 20, 20, 0.9) 100%),
+    url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1920&q=80');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  position: relative;
+  overflow: hidden;
+  padding: 40px 20px;
+}
+
+.forgot-container::before {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 20% 50%, rgba(220, 0, 0, 0.03) 0%, transparent 50%),
+              radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
+  animation: particles 20s linear infinite;
+}
+
+@keyframes particles {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.login-logo {
+  position: relative;
+  margin: 0 auto 3px;
+  text-align: center;
+  z-index: 20;
+  animation: logoFadeIn 1s ease-out;
+}
+
+.login-logo img {
+  width: 120px;
+  height: auto;
+  filter: brightness(0) invert(1);
+  opacity: 1;
+  transition: all 0.3s ease;
+}
+
+.login-logo img:hover {
+  opacity: 0.8;
+  transform: scale(1.05);
+}
+
+.forgot-form {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  padding: 60px 50px;
+  border-top: 3px solid #DC0000;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5),
+              0 0 1px rgba(220, 0, 0, 0.3);
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+  animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: center;
+}
+
+.forgot-form h2 {
+  margin-bottom: 40px;
+  color: #000;
+  font-weight: 200;
+  font-size: 32px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  font-family: 'Corporate A', 'Helvetica Neue', Arial, sans-serif;
+  position: relative;
+  padding-bottom: 20px;
+}
+
+.forgot-form h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #DC0000, transparent);
+}
+
+.forgot-form input {
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  border: none;
+  border-bottom: 2px solid #E0E0E0;
+  font-size: 15px;
+  background: transparent;
+  transition: all 0.3s;
+  font-weight: 300;
+  color: #000;
+}
+
+.forgot-form input::placeholder {
+  color: #999;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.forgot-form input:focus {
+  border-bottom-color: #DC0000;
+  outline: none;
+  background: rgba(220, 0, 0, 0.02);
+}
+
+.forgot-form button {
+  background: #000;
+  color: #fff;
+  border: 2px solid #000;
+  padding: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: 0.4s;
+}
+
+.forgot-form button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: #DC0000;
+  transition: left 0.4s;
+  z-index: -1;
+}
+
+.forgot-form button:hover:not(:disabled)::before {
+  left: 0;
+}
+
+.forgot-form button:hover:not(:disabled) {
+  border-color: #DC0000;
+  color: #fff;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(220, 0, 0, 0.3);
+}
+
+.forgot-form p {
+  color: #DC0000;
+  margin-top: 20px;
+  font-size: 13px;
+  background: rgba(220, 0, 0, 0.05);
+  border-left: 3px solid #DC0000;
+  padding: 10px;
+}
+
+.forgot-form a {
+  margin-top: 24px;
+  text-decoration: none;
+  color: #666;
+  font-size: 13px;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+.forgot-form a:hover {
+  color: #DC0000;
+  letter-spacing: 1px;
+}

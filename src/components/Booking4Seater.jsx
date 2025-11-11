@@ -5,8 +5,6 @@ import { AuthContext } from '../context/AuthContext';
 import { validateVehicleForBooking } from '../utils/vehicleValidator';
 import { orderService } from '../services';
 import './Booking4Seater.css';
-
-// Import car images by color
 import car4SeatBlack from '../assets/4seatblack.png';
 import car4SeatBlue from '../assets/4seatblue.png';
 import car4SeatRed from '../assets/4seatred.png';
@@ -14,587 +12,316 @@ import car4SeatSilver from '../assets/4seatsilver.png';
 import car4SeatWhite from '../assets/4seatwhite.png';
 
 const Booking4Seater = () => {
-    const location = useLocation();
-    const navigate = useNavigate();
-    const { user } = useContext(AuthContext);
-    const { vehicles: cars, loading } = useVehicles();
-    const preSelectedCar = location.state?.car;
-    const gradeFilter = location.state?.gradeFilter; // For filtering by grade from Offers
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
+  const { vehicles: cars, loading } = useVehicles();
+  const preSelectedCar = location.state?.car;
+  const gradeFilter = location.state?.gradeFilter;
 
-    // Function to get car image based on color
-    const getCarImageByColor = (color) => {
-        if (!color) return car4SeatSilver; // Default image
+  const getCarImageByColor = (color) => {
+    if (!color) return car4SeatSilver;
+    const c = color.toLowerCase();
+    if (c.includes('black') || c.includes('đen')) return car4SeatBlack;
+    if (c.includes('blue') || c.includes('xanh')) return car4SeatBlue;
+    if (c.includes('red') || c.includes('đỏ')) return car4SeatRed;
+    if (c.includes('silver') || c.includes('bạc')) return car4SeatSilver;
+    if (c.includes('white') || c.includes('trắng')) return car4SeatWhite;
+    return car4SeatSilver;
+  };
 
-        const colorLower = color.toLowerCase();
+  const [selectedCarId, setSelectedCarId] = useState(preSelectedCar?.id || '');
+  const [selectedCar, setSelectedCar] = useState(preSelectedCar || null);
+  const [selectedColor, setSelectedColor] = useState('');
+  const [hasActiveRental, setHasActiveRental] = useState(false);
+  const [checkingRental, setCheckingRental] = useState(true);
+  const [formData, setFormData] = useState({
+    startTime: '',
+    endTime: '',
+    couponCode: '',
+  });
 
-        if (colorLower.includes('black') || colorLower.includes('đen')) {
-            return car4SeatBlack;
-        } else if (colorLower.includes('blue') || colorLower.includes('xanh')) {
-            return car4SeatBlue;
-        } else if (colorLower.includes('red') || colorLower.includes('đỏ')) {
-            return car4SeatRed;
-        } else if (colorLower.includes('silver') || colorLower.includes('bạc')) {
-            return car4SeatSilver;
-        } else if (colorLower.includes('white') || colorLower.includes('trắng')) {
-            return car4SeatWhite;
-        } else {
-            return car4SeatSilver; // Default fallback
-        }
-    };
+  // ✅ Format thời gian đúng "yyyy-MM-dd HH:mm:ss"
+  const formatDateTimeForBackend = (dateStr, isStart = true) => {
+    if (!dateStr) return null;
+    if (dateStr.includes('T')) {
+      const [date, time] = dateStr.split('T');
+      const formatted = time.length === 5 ? `${time}:00` : time;
+      return `${date} ${formatted}`;
+    }
+    if (dateStr.length === 10)
+      return isStart ? `${dateStr} 00:00:00` : `${dateStr} 23:59:59`;
+    return dateStr;
+  };
 
-    const [selectedCarId, setSelectedCarId] = useState(preSelectedCar?.id || '');
-    const [selectedCar, setSelectedCar] = useState(preSelectedCar || null);
-    const [submitting, setSubmitting] = useState(false);
-    const [selectedColor, setSelectedColor] = useState('');
-    const [hasActiveRental, setHasActiveRental] = useState(false);
-    const [checkingRental, setCheckingRental] = useState(true);
+  const availableCars = cars.filter((car) => {
+    const isFourSeater = car.type === '4-seater';
+    const isAvailable = car.status === 'Available';
+    const matchesGrade = gradeFilter ? car.grade === gradeFilter : true;
+    const matchesColor = selectedColor ? car.color === selectedColor : true;
+    return isFourSeater && isAvailable && matchesGrade && matchesColor;
+  });
 
-    const [formData, setFormData] = useState({
-        startTime: '',
-        plannedHours: '',
-        couponCode: ''
-    });
-
-    // Filter 4-seater available cars, optionally by grade and color
-    const availableCars = cars.filter(car => {
-        const isFourSeater = car.type === '4-seater';
-        const isAvailable = car.status === 'Available';
-        const matchesGrade = gradeFilter ? car.grade === gradeFilter : true;
-        const matchesColor = selectedColor ? car.color === selectedColor : true;
-        return isFourSeater && isAvailable && matchesGrade && matchesColor;
-    });
-
-    // Get unique colors from 4-seater available cars
-    const availableColors = [...new Set(
-        cars.filter(car =>
+  const availableColors = [
+    ...new Set(
+      cars
+        .filter(
+          (car) =>
             car.type === '4-seater' &&
             car.status === 'Available' &&
             car.color &&
             car.color !== 'N/A' &&
             car.color !== 'null' &&
             (!gradeFilter || car.grade === gradeFilter)
-        ).map(car => car.color)
-    )].sort();
+        )
+        .map((car) => car.color)
+    ),
+  ].sort();
 
-    // Scroll to top when component mounts
-    useEffect(() => {
-        window.scrollTo({ top: 0, behavior: 'instant' });
-    }, []);
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
 
-    // ✅ Check if user has active RENTAL order
-    useEffect(() => {
-        const checkActiveRental = async () => {
-            try {
-                setCheckingRental(true);
-                const orders = await orderService.getMyOrders();
-
-                if (!Array.isArray(orders)) {
-                    setCheckingRental(false);
-                    return;
-                }
-
-                // Check each order's status using preview-return API
-                for (const order of orders) {
-                    try {
-                        const preview = await orderService.getReturnPreview(order.orderId);
-                        if (preview.status === 'RENTAL') {
-                            setHasActiveRental(true);
-                            console.log('⚠️ User has active RENTAL order:', order.orderId);
-                            break;
-                        }
-                    } catch (err) {
-                        // If preview fails, fallback to order status
-                        if (order.status === 'RENTAL') {
-                            setHasActiveRental(true);
-                            break;
-                        }
-                    }
-                }
-            } catch (err) {
-                console.error('❌ Error checking active rental:', err);
-            } finally {
-                setCheckingRental(false);
+  useEffect(() => {
+    const checkActiveRental = async () => {
+      try {
+        setCheckingRental(true);
+        const orders = await orderService.getMyOrders();
+        if (!Array.isArray(orders)) {
+          setCheckingRental(false);
+          return;
+        }
+        for (const order of orders) {
+          try {
+            const preview = await orderService.getReturnPreview(order.orderId);
+            if (preview.status === 'RENTAL') {
+              setHasActiveRental(true);
+              break;
             }
-        };
-
-        if (user) {
-            checkActiveRental();
-        } else {
-            setCheckingRental(false);
-        }
-    }, [user]);
-
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
-    };
-
-    const handleCarSelect = (e) => {
-        const carId = e.target.value;
-        setSelectedCarId(carId);
-        if (carId) {
-            const car = availableCars.find(c => c.id === parseInt(carId));
-            setSelectedCar(car);
-        } else {
-            setSelectedCar(null);
-        }
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-
-        // 1. Validate car selection
-        if (!selectedCar) {
-            alert('Vui lòng chọn xe trước khi xác nhận đặt xe.');
-            return;
-        }
-
-        // 2. Validate dates and hours
-        if (!formData.startTime) {
-            alert('Vui lòng chọn ngày và giờ nhận xe.');
-            return;
-        }
-
-        if (!formData.plannedHours || formData.plannedHours < 1) {
-            alert('Vui lòng nhập số giờ thuê (tối thiểu 1 giờ).');
-            return;
-        }
-
-        // ✅ Validate vehicle has all required data for backend
-        console.log('🔍 [DEBUG] Selected car object:', selectedCar);
-        console.log('🔍 [DEBUG] Car fields:', Object.keys(selectedCar));
-
-        const validation = validateVehicleForBooking(selectedCar);
-
-        if (!validation.valid) {
-            console.error('❌ Vehicle validation failed:', validation.errors);
-            alert(
-                `❌ Xe này không thể đặt do thiếu thông tin:\n\n${validation.errors.join('\n')}\n\n` +
-                `Vui lòng chọn xe khác hoặc liên hệ hỗ trợ.\n\n` +
-                `Vehicle ID: ${selectedCar.id || selectedCar.vehicleId}`
-            );
-            return;
-        }
-
-        console.log('✅ Vehicle validation passed');
-
-        // 3. Validate time logic
-        const start = new Date(formData.startTime);
-        const now = new Date();
-
-        if (start < now) {
-            alert('Thời gian nhận xe phải là thời điểm trong tương lai!');
-            return;
-        }
-
-        // 4. Calculate end time from start time + planned hours
-        const plannedHours = parseInt(formData.plannedHours);
-        const end = new Date(start.getTime() + (plannedHours * 60 * 60 * 1000));
-
-        // 5. Get user ID and token
-        const token = localStorage.getItem('accessToken');
-
-        let customerId = user?.userId;
-
-        // Fallback: try to get from localStorage if user context not available
-        if (!customerId) {
-            const savedUser = localStorage.getItem('user');
-            if (savedUser) {
-                try {
-                    const parsedUser = JSON.parse(savedUser);
-                    customerId = parsedUser.userId;
-                } catch (e) {
-                    console.error('Failed to parse user from localStorage:', e);
-                }
+          } catch {
+            if (order.status === 'RENTAL') {
+              setHasActiveRental(true);
+              break;
             }
+          }
         }
+      } finally {
+        setCheckingRental(false);
+      }
+    };
+    if (user) checkActiveRental();
+    else setCheckingRental(false);
+  }, [user]);
 
-        console.log('🔍 [Booking] Checking auth:', {
-            hasUser: !!user,
-            userId: user?.userId,
-            customerId: customerId,
-            hasToken: !!token
-        });
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
-        if (!customerId || !token) {
-            alert('Vui lòng đăng nhập để tiếp tục!');
-            navigate('/login');
-            return;
-        }
+  const handleCarSelect = (e) => {
+    const carId = e.target.value;
+    setSelectedCarId(carId);
+    setSelectedCar(carId ? availableCars.find((c) => c.id === parseInt(carId)) : null);
+  };
 
-        // 6. Convert datetime to backend format (add seconds)
-        const startTimeFormatted = formData.startTime
-            .replace('T', ' ')  // Đổi T thành dấu cách
-            + ':00';
-        const year = end.getFullYear();
-        const month = String(end.getMonth() + 1).padStart(2, '0');
-        const day = String(end.getDate()).padStart(2, '0');
-        const hours = String(end.getHours()).padStart(2, '0');
-        const minutes = String(end.getMinutes()).padStart(2, '0');
-        const seconds = String(end.getSeconds()).padStart(2, '0');
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
-        // Format end time (calculated from startTime + plannedHours)
-        const endTimeFormatted = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-        console.log('📅 Formatted times:', {
-            start: startTimeFormatted,
-            end: endTimeFormatted,
-            plannedHours: plannedHours
-        });
-        // 7. Prepare booking data
-        const bookingData = {
-            car: selectedCar,
-            orderData: {
-                customerId: customerId,
-                vehicleId: selectedCar.id,
-                startTime: startTimeFormatted,
-                plannedHours: plannedHours,
-                couponCode: formData.couponCode || null,
-                actualHours: null
-            },
-            plannedHours: plannedHours,
-            startTime: startTimeFormatted,
-            endTime: endTimeFormatted,
-            customerName: user?.fullname || user?.fullName || user?.username || user?.name || 'N/A',
-            customerPhone: user?.phonenumber || user?.phoneNumber || user?.phone || 'N/A'
-        };
+    if (!selectedCar) {
+      alert('Vui lòng chọn xe trước khi xác nhận đặt xe.');
+      return;
+    }
 
-        console.log('👤 Customer info being sent:', {
-            customerName: bookingData.customerName,
-            customerPhone: bookingData.customerPhone,
-            userObject: user
-        });
+    if (!formData.startTime) {
+      alert('Vui lòng chọn ngày & giờ nhận xe.');
+      return;
+    }
 
-        console.log('📦 Navigating to confirm page with data:', bookingData);
+    if (!formData.endTime) {
+      alert('Vui lòng chọn ngày & giờ trả xe.');
+      return;
+    }
 
-        // 8. Navigate to Confirm Booking Page
-        navigate('/confirm-booking', { state: { bookingData } });
+    const start = new Date(formData.startTime);
+    const end = new Date(formData.endTime);
+    const now = new Date();
+    if (start < now) {
+      alert('Thời gian nhận xe phải là thời điểm trong tương lai!');
+      return;
+    }
+    if (end <= start) {
+      alert('Thời gian trả xe phải sau thời gian nhận xe!');
+      return;
+    }
+
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      alert('Vui lòng đăng nhập để tiếp tục.');
+      navigate('/login');
+      return;
+    }
+
+    const validation = validateVehicleForBooking(selectedCar);
+    if (!validation.valid) {
+      alert(`Xe không đủ thông tin để đặt:\n${validation.errors.join('\n')}`);
+      return;
+    }
+
+    const startTimeFormatted = formatDateTimeForBackend(formData.startTime, true);
+    const endTimeFormatted = formatDateTimeForBackend(formData.endTime, false);
+
+    const bookingData = {
+      car: selectedCar,
+      orderData: {
+        vehicleId: selectedCar.id,
+        startTime: startTimeFormatted,
+        endTime: endTimeFormatted,
+        couponCode: formData.couponCode || null,
+        holiday: false,
+      },
+      startTime: startTimeFormatted,
+      endTime: endTimeFormatted,
+      customerName:
+        user?.fullname || user?.fullName || user?.username || user?.name || 'N/A',
+      customerPhone: user?.phonenumber || user?.phoneNumber || user?.phone || 'N/A',
     };
 
-    // Show loading state
-    if (loading) {
-        return (
-            <div className="booking-container">
-                <div style={{ textAlign: 'center', padding: 60, fontSize: 18, color: '#888' }}>
-                    Đang tải dữ liệu xe...
-                </div>
-            </div>
-        );
-    }
+    navigate('/confirm-booking', { state: { bookingData } });
+  };
 
-    // ✅ Show blocking message if user has active RENTAL
-    if (checkingRental) {
-        return (
-            <div className="booking-container">
-                <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-                    <div className="spinner" style={{ margin: '0 auto 20px' }}></div>
-                    <p>Đang kiểm tra trạng thái đặt xe...</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (hasActiveRental) {
-        return (
-            <div className="booking-container">
-                <div style={{
-                    maxWidth: '600px',
-                    margin: '60px auto',
-                    padding: '40px',
-                    background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
-                    borderRadius: '20px',
-                    textAlign: 'center',
-                    boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
-                }}>
-                    <div style={{ fontSize: '64px', marginBottom: '20px' }}>🚗</div>
-                    <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#92400e', marginBottom: '16px' }}>
-                        Bạn đang có chuyến thuê xe
-                    </h2>
-                    <p style={{ fontSize: '16px', color: '#78350f', marginBottom: '24px', lineHeight: '1.6' }}>
-                        Bạn hiện đang có một chuyến thuê xe đang hoạt động.
-                        Vui lòng hoàn thành hoặc trả xe trước khi đặt xe mới.
-                    </p>
-                    <button
-                        onClick={() => navigate('/my-bookings')}
-                        style={{
-                            padding: '14px 32px',
-                            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '12px',
-                            fontSize: '16px',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            boxShadow: '0 4px 12px rgba(245, 158, 11, 0.4)'
-                        }}
-                    >
-                        Xem đơn đặt xe
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
+  if (loading) return <div className="booking-container">Đang tải dữ liệu xe...</div>;
+  if (checkingRental)
     return (
-        <div className="booking-container">
-            <h1 className="booking-title">Đặt Xe 4 Chỗ</h1>
-
-            <div className="booking-content">
-                {/* Left side - Booking Form */}
-                <div className="booking-form-section">
-                    <form onSubmit={handleSubmit} className="booking-form">
-                        {/* Color Filter - Color Boxes */}
-                        {!preSelectedCar && availableColors.length > 0 && (
-                            <div className="form-group">
-                                <label>Chọn Màu</label>
-                                <div style={{
-                                    display: 'flex',
-                                    gap: '12px',
-                                    flexWrap: 'wrap',
-                                    marginTop: '8px'
-                                }}>
-                                    {availableColors.map(color => {
-                                        const colorMap = {
-                                            'Black': '#000000',
-                                            'White': '#FFFFFF',
-                                            'Red': '#DC2626',
-                                            'Blue': '#2563EB',
-                                            'Silver': '#9CA3AF',
-                                            'Gray': '#6B7280',
-                                            'Yellow': '#EAB308'
-                                        };
-                                        const bgColor = colorMap[color] || '#6B7280';
-                                        const isSelected = selectedColor === color;
-
-                                        return (
-                                            <div
-                                                key={color}
-                                                onClick={() => {
-                                                    setSelectedColor(color);
-                                                    setSelectedCarId('');
-                                                    setSelectedCar(null);
-                                                }}
-                                                style={{
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    alignItems: 'center',
-                                                    gap: '6px',
-                                                    cursor: 'pointer',
-                                                    transition: 'all 0.3s'
-                                                }}
-                                            >
-                                                <div style={{
-                                                    width: '50px',
-                                                    height: '50px',
-                                                    backgroundColor: bgColor,
-                                                    border: color === 'White' ? '2px solid #e5e7eb' : 'none',
-                                                    borderRadius: '8px',
-                                                    boxShadow: isSelected
-                                                        ? '0 0 0 3px #667eea, 0 4px 12px rgba(102, 126, 234, 0.4)'
-                                                        : '0 2px 4px rgba(0,0,0,0.1)',
-                                                    transform: isSelected ? 'scale(1.1)' : 'scale(1)',
-                                                    transition: 'all 0.3s ease'
-                                                }}
-                                                />
-                                                <span style={{
-                                                    fontSize: '13px',
-                                                    fontWeight: isSelected ? 700 : 500,
-                                                    color: isSelected ? '#667eea' : '#6b7280'
-                                                }}>{color}</span>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                                {selectedColor && (
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setSelectedColor('');
-                                            setSelectedCarId('');
-                                            setSelectedCar(null);
-                                        }}
-                                        style={{
-                                            marginTop: 12,
-                                            padding: '6px 16px',
-                                            background: '#dc2626',
-                                            color: 'white',
-                                            border: 'none',
-                                            borderRadius: 6,
-                                            fontSize: 13,
-                                            fontWeight: 600,
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        Xóa bộ lọc màu
-                                    </button>
-                                )}
-                            </div>
-                        )}
-
-                        <div className="form-group">
-                            <label htmlFor="carSelect">Chọn Xe *</label>
-                            <select
-                                id="carSelect"
-                                value={selectedCarId}
-                                onChange={handleCarSelect}
-                                required
-                            >
-                                <option value="">Chọn một xe</option>
-                                {availableCars.map(car => (
-                                    <option key={car.id} value={car.id}>
-                                        {car.vehicle_name}
-                                    </option>
-                                ))}
-                            </select>
-
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="startTime">Ngày & Giờ Nhận Xe *</label>
-                            <input
-                                type="datetime-local"
-                                id="startTime"
-                                name="startTime"
-                                value={formData.startTime}
-                                onChange={handleChange}
-                                min={new Date().toISOString().slice(0, 16)}
-                                required
-                            />
-                            <small style={{ color: '#666', fontSize: '12px', display: 'block', marginTop: '4px' }}>
-                                Chọn thời điểm bạn muốn nhận xe
-                            </small>
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="plannedHours">Số Giờ Thuê * (Thuê 3 giờ giá rẻ hơn)</label>
-                            <input
-                                type="number"
-                                id="plannedHours"
-                                name="plannedHours"
-                                value={formData.plannedHours}
-                                onChange={handleChange}
-                                min="1"
-                                step="1"
-                                placeholder="Nhập số giờ (ví dụ: 24)"
-                                required
-                            />
-                            <small style={{ color: '#666', fontSize: '12px', display: 'block', marginTop: '4px' }}>
-                                Thời gian thuê tối thiểu là 1 giờ
-                            </small>
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="couponCode">Mã Giảm Giá (Không bắt buộc)</label>
-                            <input
-                                type="text"
-                                id="couponCode"
-                                name="couponCode"
-                                value={formData.couponCode}
-                                onChange={handleChange}
-                                placeholder="Nhập mã giảm giá nếu bạn có"
-                            />
-                            <small style={{ color: '#666', fontSize: '12px', display: 'block', marginTop: '4px' }}>
-                                Để trống nếu bạn không có mã giảm giá
-                            </small>
-                        </div>
-
-                        <button type="submit" className="submit-button">
-                            XÁC NHẬN ĐẶT XE
-                        </button>
-                    </form>
-                </div>
-
-                {/* Right side - Selected Car Display */}
-                <div className="booking-car-display">
-                    <h2 className="car-display-title">Xe Đã Chọn</h2>
-
-                    {!selectedCar ? (
-                        <div className="no-car-selected">
-                            <p>Vui lòng chọn xe từ danh sách để xem chi tiết</p>
-                        </div>
-                    ) : (
-                        <>
-                            <img
-                                src={getCarImageByColor(selectedCar.color)}
-                                alt={selectedCar.vehicle_name}
-                                className="car-display-image"
-                            />
-
-                            <div className="car-display-details">
-                                <h3 className="car-name">{selectedCar.vehicle_name}</h3>
-
-                                <div className="car-info-grid">
-                                    <div className="car-info-item">
-                                        <span className="info-label">Vehicle ID:</span>
-                                        <span className="info-value">{selectedCar.vehicle_id}</span>
-                                    </div>
-
-                                    <div className="car-info-item">
-                                        <span className="info-label">Brand:</span>
-                                        <span className="info-value">{selectedCar.brand}</span>
-                                    </div>
-
-                                    <div className="car-info-item">
-                                        <span className="info-label">Color:</span>
-                                        <span className="info-value">{selectedCar.color}</span>
-                                    </div>
-
-                                    <div className="car-info-item">
-                                        <span className="info-label">Seats:</span>
-                                        <span className="info-value">{selectedCar.seat_count} seats</span>
-                                    </div>
-
-                                    <div className="car-info-item">
-                                        <span className="info-label">Year:</span>
-                                        <span className="info-value">{selectedCar.year_of_manufacture}</span>
-                                    </div>
-
-                                    <div className="car-info-item">
-                                        <span className="info-label">Plate Number:</span>
-                                        <span className="info-value">{selectedCar.plate_number}</span>
-                                    </div>
-
-                                    <div className="car-info-item">
-                                        <span className="info-label">Transmission:</span>
-                                        <span className="info-value">{selectedCar.transmission}</span>
-                                    </div>
-
-                                    <div className="car-info-item">
-                                        <span className="info-label">Battery:</span>
-                                        <span className="info-value battery">{selectedCar.battery_status}</span>
-                                    </div>
-
-                                    <div className="car-info-item">
-                                        <span className="info-label">Capacity:</span>
-                                        <span className="info-value">{selectedCar.battery_capacity}</span>
-                                    </div>
-
-                                    <div className="car-info-item">
-                                        <span className="info-label">Range:</span>
-                                        <span className="info-value">{selectedCar.range_km} km</span>
-                                    </div>
-
-                                    <div className="car-info-item full-width">
-                                        <span className="info-label">Status:</span>
-                                        <span className={`info-value status ${selectedCar.status === 'Available' ? 'available' : 'unavailable'}`}>
-                                            {selectedCar.status}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="car-description">
-                                    <span className="info-label">Description:</span>
-                                    <p>{selectedCar.description}</p>
-                                </div>
-                            </div>
-                        </>
-                    )}
-                </div>
-            </div>
-        </div>
+      <div className="booking-container">
+        <p>Đang kiểm tra trạng thái thuê xe...</p>
+      </div>
     );
+  if (hasActiveRental)
+    return (
+      <div className="booking-container">
+        <p>Bạn đang có đơn thuê xe đang hoạt động. Hãy hoàn thành trước khi đặt xe mới.</p>
+        <button onClick={() => navigate('/my-bookings')}>Xem đơn đặt xe</button>
+      </div>
+    );
+
+  return (
+    <div className="booking-container">
+      <h1 className="booking-title">Đặt Xe 4 Chỗ</h1>
+      <div className="booking-content">
+        <div className="booking-form-section">
+          <form onSubmit={handleSubmit} className="booking-form">
+            {!preSelectedCar && availableColors.length > 0 && (
+              <div className="form-group">
+                <label>Chọn Màu</label>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  {availableColors.map((color) => (
+                    <div
+                      key={color}
+                      onClick={() => {
+                        setSelectedColor(color);
+                        setSelectedCarId('');
+                        setSelectedCar(null);
+                      }}
+                      style={{
+                        width: 50,
+                        height: 50,
+                        backgroundColor: color.toLowerCase(),
+                        border:
+                          selectedColor === color ? '3px solid #667eea' : '1px solid #ccc',
+                        borderRadius: 8,
+                        cursor: 'pointer',
+                      }}
+                    ></div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="form-group">
+              <label htmlFor="carSelect">Chọn Xe *</label>
+              <select
+                id="carSelect"
+                value={selectedCarId}
+                onChange={handleCarSelect}
+                required
+              >
+                <option value="">Chọn một xe</option>
+                {availableCars.map((car) => (
+                  <option key={car.id} value={car.id}>
+                    {car.vehicle_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="startTime">Ngày & Giờ Nhận Xe *</label>
+              <input
+                type="datetime-local"
+                id="startTime"
+                name="startTime"
+                value={formData.startTime}
+                onChange={handleChange}
+                min={new Date().toISOString().slice(0, 16)}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="endTime">Ngày & Giờ Trả Xe *</label>
+              <input
+                type="datetime-local"
+                id="endTime"
+                name="endTime"
+                value={formData.endTime}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="couponCode">Mã Giảm Giá (Không bắt buộc)</label>
+              <input
+                type="text"
+                id="couponCode"
+                name="couponCode"
+                value={formData.couponCode}
+                onChange={handleChange}
+                placeholder="Nhập mã giảm giá nếu có"
+              />
+            </div>
+
+            <button type="submit" className="submit-button">
+              XÁC NHẬN ĐẶT XE
+            </button>
+          </form>
+        </div>
+
+        <div className="booking-car-display">
+          <h2>Xe Đã Chọn</h2>
+          {!selectedCar ? (
+            <p>Vui lòng chọn xe từ danh sách để xem chi tiết.</p>
+          ) : (
+            <>
+              <img
+                src={getCarImageByColor(selectedCar.color)}
+                alt={selectedCar.vehicle_name}
+                className="car-display-image"
+              />
+              <div className="car-display-details">
+                <h3>{selectedCar.vehicle_name}</h3>
+                <p>Hãng: {selectedCar.brand}</p>
+                <p>Màu: {selectedCar.color}</p>
+                <p>Số chỗ: {selectedCar.seat_count}</p>
+                <p>Biển số: {selectedCar.plate_number}</p>
+                <p>Pin: {selectedCar.battery_status}</p>
+                <p>Quãng đường: {selectedCar.range_km} km</p>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default Booking4Seater;

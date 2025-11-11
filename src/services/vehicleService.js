@@ -322,7 +322,13 @@ export const getVehicleOrderHistory = async (vehicleId) => {
 
         console.log('🚀 [API] Đang lấy lịch sử đặt xe:', vehicleId);
 
-        const response = await fetch(`${API_BASE_URL}/order/vehicle/${vehicleId}/history`, {
+        // Validate vehicleId
+        const idNum = Number(vehicleId);
+        if (!Number.isFinite(idNum) || idNum <= 0) {
+            throw new Error('Invalid or missing vehicleId for getVehicleOrderHistory');
+        }
+
+        const response = await fetch(`${API_BASE_URL}/order/vehicle/${encodeURIComponent(idNum)}/history`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -339,9 +345,19 @@ export const getVehicleOrderHistory = async (vehicleId) => {
         }
 
         const data = await response.json();
-        console.log('✅ [API] Lịch sử đặt xe:', data);
+        // Normalize response: some backends wrap array in { value: [...], Count: n }
+        console.log('✅ [API] Lịch sử đặt xe (raw):', data);
 
-        return data;
+        if (Array.isArray(data)) {
+            return data;
+        }
+
+        if (data && Array.isArray(data.value)) {
+            return data.value;
+        }
+
+        // fallback to empty array to keep frontend safe
+        return [];
     } catch (error) {
         console.error('❌ [API] Lỗi khi lấy lịch sử đặt xe:', error);
         throw error;

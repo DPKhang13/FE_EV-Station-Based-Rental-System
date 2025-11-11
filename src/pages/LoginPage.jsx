@@ -1,16 +1,17 @@
-// Login.jsx
+// LoginPage.jsx
 import { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { authService } from "../services";
-import './LoginPage.css';
-import logo from '../assets/logo2.png';
+import "./LoginPage.css";
+import logo from "../assets/logo2.png";
 
 const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 export default function LoginPage() {
   const { login } = useContext(AuthContext);
-  const nav = useNavigate();
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
@@ -25,36 +26,37 @@ export default function LoginPage() {
 
     try {
       setLoading(true);
-      console.log('🚀 Đang gọi authService.login...');
       const data = await authService.login(email, password);
 
-      console.log('✅ Login thành công:', data);
-
       if (data.needOtp || data.verifyUrl) {
-        nav(data.verifyUrl || "/verify-otp", { state: { type: "LOGIN", email } });
-        return;
+        return navigate(data.verifyUrl || "/verify-otp", {
+          state: { type: "LOGIN", email },
+        });
       }
 
-      // Store token and login
+      // ✅ Save token + user to context
       login(data);
 
-      // Navigate based on role
-      if (data.role.toLowerCase() === 'customer') {
-        nav("/"); // Customer goes to home page
-      } else {
-        nav("/" + data.role.toLowerCase()); // Admin/Staff go to their dashboard
-      }
+      // ✅ Navigate by role
+      const role = data.role?.toLowerCase();
+      navigate(role === "customer" ? "/" : `/${role}`);
     } catch (err) {
-      console.error('❌ Login error:', err);
       const s = err.response?.status;
-      setMsg(
-        s === 400 ? "Sai email hoặc mật khẩu."
-          : s === 401 ? "Phiên đăng nhập không hợp lệ."
-            : s === 423 ? "Tài khoản bị khoá tạm."
-              : s === 429 ? "Thử quá nhiều lần. Thử lại sau."
-                : err.code === "ERR_NETWORK" ? "Không thể kết nối server."
-                  : err.message || "Đăng nhập thất bại."
-      );
+let errorMsg = "Đăng nhập thất bại.";
+
+if (s === 400) errorMsg = "Sai email hoặc mật khẩu.";
+else if (s === 401) errorMsg = "Phiên đăng nhập không hợp lệ.";
+else if (s === 404) {
+  // lấy message trong response.data nếu có
+  const backendMsg = err.response?.data?.message;
+  errorMsg = backendMsg || "Không tìm thấy người dùng.";
+} 
+else if (s === 423) errorMsg = "Tài khoản bị khoá tạm thời.";
+else if (s === 429) errorMsg = "Thử quá nhiều lần. Thử lại sau.";
+else if (err.code === "ERR_NETWORK") errorMsg = "Không thể kết nối server.";
+
+setMsg(errorMsg);
+
     } finally {
       setLoading(false);
     }
@@ -65,8 +67,10 @@ export default function LoginPage() {
       <div className="login-logo">
         <img src={logo} alt="CarRent Logo" />
       </div>
+
       <form className="login-form" onSubmit={submit}>
         <h2>Đăng nhập</h2>
+
         <input
           type="email"
           value={email}
@@ -81,15 +85,19 @@ export default function LoginPage() {
           placeholder="Mật khẩu"
           required
         />
+
         <button disabled={loading}>
           {loading ? "Đang đăng nhập..." : "Đăng nhập"}
         </button>
-        {msg && <p>{msg}</p>}
+
+        {msg && <p className="error-msg">{msg}</p>}
+
         <Link to="/forgot-password">Quên mật khẩu?</Link>
+
         <button
           type="button"
           className="home-button"
-          onClick={() => nav("/")}
+          onClick={() => navigate("/")}
         >
           ← Quay lại Trang chủ
         </button>

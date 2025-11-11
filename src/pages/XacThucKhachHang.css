@@ -1,210 +1,189 @@
-/* ===== Toàn bộ trang ===== */
-.xacThuc-container {
-  padding: 60px 40px;
-  background-color: #f8fafc;
+/* ======================= 🌈 TOÀN TRANG ======================= */
+.verify-container {
+  background: #f9fafb;
+  padding: 40px 60px;
+  border-radius: 18px;
   min-height: 100vh;
   font-family: "Inter", sans-serif;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 
-/* ===== Tiêu đề ===== */
-.title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #0f172a;
-  margin-bottom: 4px;
-  text-align: center;
+.verify-title {
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 0.3rem;
+  background: linear-gradient(90deg, #2563eb, #10b981);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.subtitle {
-  font-size: 15px;
-  color: #475569;
+.verify-subtitle {
+  color: #64748b;
+  font-size: 1rem;
   margin-bottom: 30px;
-  text-align: center;
 }
 
-/* ===== Ô tìm kiếm ===== */
-.search-box {
-  width: 600px;
-  max-width: 90%;
-  padding: 14px 18px;
-  border: 1.8px solid #d1d5db;
-  border-radius: 12px;
-  font-size: 15px;
-  transition: all 0.3s ease;
-  background-color: white;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-  margin-bottom: 40px;
-}
-
-.search-box:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 6px rgba(37, 99, 235, 0.4);
-}
-
-/* ===== Phần bảng hồ sơ ===== */
-.section {
+/* ======================= 🔍 Ô TÌM KIẾM ======================= */
+.verify-search {
   width: 100%;
-  max-width: 1200px;
-  background-color: #fff;
-  border-radius: 14px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  padding: 24px 28px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  outline: none;
+  transition: 0.3s ease;
+  margin-bottom: 28px;
+  font-size: 1rem;
+  background: #fff;
 }
 
-.section h2 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #0f172a;
-  margin-bottom: 18px;
+.verify-search:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 8px rgba(37, 99, 235, 0.25);
 }
 
-/* ===== Bảng ===== */
-.table {
+/* ======================= 📋 BẢNG DỮ LIỆU ======================= */
+.verify-section {
+  background: white;
+  padding: 26px;
+  border-radius: 16px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.05);
+}
+
+.verify-section h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 22px;
+  background: linear-gradient(90deg, #2563eb, #10b981);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.verify-table {
   width: 100%;
   border-collapse: collapse;
-  background-color: #fff;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
 }
 
-.table thead {
-  background-color: #f1f5f9;
-  color: #1e293b;
+.verify-table thead tr {
+  background: linear-gradient(90deg, #2563eb, #10b981);
+  color: #ffffff;
+}
+
+.verify-table th {
+  padding: 16px 18px;
+  text-align: center;
+  font-size: 0.95rem;
   font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
-.table th {
-  text-align: left;
-  padding: 14px 16px;
-  font-size: 15px;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.table td {
-  padding: 14px 16px;
-  font-size: 15px;
-  color: #334155;
-  border-bottom: 1px solid #f1f5f9;
-  vertical-align: top;
-}
-
-/* ===== Ô dữ liệu đặc biệt ===== */
-.phone {
-  color: #64748b;
-  font-size: 13px;
-}
-
-/* ===== Trạng thái hồ sơ ===== */
-.status {
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 6px;
-  display: inline-block;
-  font-size: 13px;
-}
-
-.status.success {
-  color: #16a34a;
-  background-color: #dcfce7;
-}
-
-.status.warning {
-  color: #ca8a04;
-  background-color: #fef9c3;
-}
-
-/* ===== Nút hành động ===== */
-.btn-primary,
-.btn-success,
-.btn-danger,
-.btn-secondary {
-  border: none;
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  font-size: 14px;
+.verify-table tbody tr {
+  border-bottom: 1px solid #e5e7eb;
   transition: all 0.25s ease;
 }
 
-.btn-primary {
-  background-color: #2563eb;
-  color: white;
+.verify-table tbody tr:hover {
+  background-color: #f1f5f9;
+  transform: scale(1.002);
 }
 
-.btn-primary:hover {
-  background-color: #1e40af;
+.verify-table td {
+  padding: 14px 18px;
+  text-align: center;
+  font-size: 0.94rem;
+  color: #1e293b;
+  vertical-align: middle;
 }
 
-.btn-success {
-  background-color: #16a34a;
-  color: white;
+/* ======================= 📞 KHÁCH HÀNG ======================= */
+.verify-phone {
+  color: #475569;
+  font-size: 0.9rem;
 }
 
-.btn-success:hover {
-  background-color: #15803d;
+/* ======================= ✅ TRẠNG THÁI ======================= */
+.verify-status {
+  display: inline-block;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
 }
 
-.btn-danger {
-  background-color: #dc2626;
-  color: white;
+.verify-status.success {
+  background: linear-gradient(90deg, #00c853, #00e676);
+  color: #fff;
 }
 
-.btn-danger:hover {
-  background-color: #b91c1c;
+.verify-status.warning {
+  background: linear-gradient(90deg, #ffb300, #ffcc80);
+  color: #333;
 }
 
-.btn-secondary {
-  background-color: #94a3b8;
-  color: white;
+/* ======================= 🔘 NÚT HÀNH ĐỘNG ======================= */
+.verify-btn {
+  border: none;
+  border-radius: 24px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
-/* ===== Responsive ===== */
-@media (max-width: 768px) {
-  .xacThuc-container {
-    padding: 30px 16px;
+.verify-btn.primary {
+  background: linear-gradient(90deg, #2563eb, #10b981);
+  color: #fff;
+  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.25);
+}
+
+.verify-btn.info {
+  background: linear-gradient(90deg, #007bff, #00b8d9);
+  color: #fff;
+  box-shadow: 0 3px 8px rgba(0, 123, 255, 0.25);
+}
+
+.verify-btn:hover {
+  transform: translateY(-2px);
+  opacity: 0.95;
+}
+
+/* ======================= 🪶 RESPONSIVE ======================= */
+@media (max-width: 992px) {
+  .verify-container {
+    padding: 20px;
   }
 
-  .search-box {
-    width: 100%;
+  .verify-table th,
+  .verify-table td {
+    font-size: 0.85rem;
+    padding: 10px;
   }
 
-  .section {
-    padding: 16px;
-  }
-
-  .table th,
-  .table td {
-    padding: 10px 12px;
-    font-size: 14px;
-  }
-
-  .btn-primary,
-  .btn-success,
-  .btn-danger {
-    padding: 6px 10px;
+  .verify-btn {
+    padding: 8px 14px;
     font-size: 13px;
   }
 }
-.search-box {
-  width: 500px;                /* giảm nhẹ chiều ngang */
-  max-width: 90%;
-  padding: 10px 14px;          /* giảm chiều cao */
-  border: 1.6px solid #d1d5db; /* viền mảnh hơn */
-  border-radius: 8px;          /* bo góc nhẹ hơn */
-  font-size: 14.5px;           /* chữ nhỏ hơn chút */
-  transition: all 0.25s ease;
-  background-color: white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  margin-bottom: 32px;
-}
-
-.search-box:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 4px rgba(37, 99, 235, 0.3);
+.verify-table th {
+  padding: 16px 18px;
+  text-align: center;
+  font-size: 0.95rem;
+  color: #fefefe;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }

@@ -1,0 +1,128 @@
+.banggia-container {
+  padding: 30px;
+  font-family: "Poppins", sans-serif;
+  background-color: #f5f7fb;
+  color: #222;
+  min-height: 100vh;
+}
+
+/* Tiêu đề + nút thêm */
+.table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.page-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #333;
+}
+
+.mt-40 {
+  margin-top: 40px;
+}
+
+/* Bảng */
+.pricing-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.pricing-table th {
+  background: #007bff;
+  color: white;
+  text-align: left;
+  padding: 14px;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.pricing-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+.pricing-table tr:hover {
+  background: #f2f6ff;
+  transition: 0.2s ease;
+}
+
+/* Badge trạng thái */
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.status-badge.active {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-badge.inactive {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Nút hành động */
+.btn {
+  border: none;
+  padding: 6px 12px;
+  margin-right: 6px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+/* Nút thêm */
+.btn.add {
+  background-color: #007bff;
+  color: white;
+  font-weight: 500;
+}
+
+.btn.add:hover {
+  background-color: #0069d9;
+}
+
+/* Nút sửa / xóa */
+.btn.edit {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+}
+
+.btn.delete {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.btn.edit:hover {
+  background-color: #ffe8a1;
+}
+
+.btn.delete:hover {
+  background-color: #f1b0b7;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .pricing-table {
+    font-size: 13px;
+  }
+  .btn {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+}

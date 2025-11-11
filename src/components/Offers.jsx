@@ -17,8 +17,6 @@ const Offers = () => {
                 setLoading(true);
                 const rules = await pricingRuleService.getAll();
                 console.log('✅ Pricing Rules:', rules);
-                console.log('📋 First rule structure:', rules[0]);
-                console.log('🔑 Available keys:', rules[0] ? Object.keys(rules[0]) : 'No rules');
                 setPricingRules(rules);
             } catch (error) {
                 console.error('❌ Lỗi khi lấy pricing rules:', error);
@@ -30,40 +28,34 @@ const Offers = () => {
         fetchPricingRules();
     }, []);
 
-    // Hàm lấy giá extra_hour_price (giá mỗi giờ thêm)
-    const getPricePerHour = (seatCount, variant) => {
-        console.log(`🔍 getPricePerHour called: seatCount=${seatCount}, variant=${variant}`);
-        console.log(`📊 State: loading=${loading}, pricingRules.length=${pricingRules.length}`);
-
-        if (loading) {
-            console.log('⏳ Still loading...');
-            return null;
-        }
-
-        if (pricingRules.length === 0) {
-            console.log('⚠️ No pricing rules available');
-            return null;
-        }
-
+    // 🔹 Hàm lấy giá thuê theo ngày (dailyPrice) theo seatCount + variant
+    const getDailyPrice = (seatCount, variant) => {
+        if (loading || pricingRules.length === 0) return null;
         const rule = pricingRules.find(
-            r => r.seatCount === seatCount && r.variant === variant
+            (r) => r.seatCount === seatCount && r.variant === variant
         );
+        return rule ? rule.dailyPrice : null;
+    };
 
-        console.log(`✅ Found rule:`, rule);
+    // 🔹 Hàm lấy phụ phí trễ hạn (lateFeePerDay)
+    const getLateFee = (seatCount, variant) => {
+        const rule = pricingRules.find(
+            (r) => r.seatCount === seatCount && r.variant === variant
+        );
+        return rule ? rule.lateFeePerDay : null;
+    };
 
-        if (!rule) {
-            console.log('⚠️ No rule found');
-            return null;
-        }
-
-        // Trả về extraHourPrice (giá mỗi giờ thêm)
-        console.log(`💰 Returning: ${rule.extraHourPrice} VNĐ/giờ`);
-        return rule.extraHourPrice;
+    // 🔹 Hàm lấy giá lễ tết (holidayPrice)
+    const getHolidayPrice = (seatCount, variant) => {
+        const rule = pricingRules.find(
+            (r) => r.seatCount === seatCount && r.variant === variant
+        );
+        return rule ? rule.holidayPrice : null;
     };
 
     const handleBooking = (path, gradeFilter) => {
         if (!user) {
-            alert('Please login to book a vehicle!');
+            alert('Vui lòng đăng nhập để thuê xe!');
             navigate('/login');
             return;
         }
@@ -73,163 +65,152 @@ const Offers = () => {
     return (
         <section className="offers">
             <div className="offers-header">
-                <h2 className="offers-title">OFFERS</h2>
+                <h2 className="offers-title">BẢNG GIÁ THUÊ XE</h2>
                 <div className="offers-divider"></div>
             </div>
 
             <div className="offers-container">
-                {/* 4-Seater Cars Section */}
+                {/* ==== XE 4 CHỖ ==== */}
                 <div id="4-seater-cars" className="offers-category-section">
                     <div className="offers-big-card">
                         <div className="category-header">
                             <h3 className="category-title">XE 4 CHỖ</h3>
-                            <p className="category-description">Hoàn hảo cho gia đình nhỏ hoặc du khách cá nhân</p>
+                            <p className="category-description">
+                                Hoàn hảo cho gia đình nhỏ hoặc du khách cá nhân
+                            </p>
                         </div>
 
                         <div className="offers-grid-horizontal">
-                            <div className="offer-card" data-seater="4">
-                                <img src="src/assets/4standard2.jpg" alt="Air" className="offer-image" />
-                                <div>
-                                    <h3 className="offer-title">AIR</h3>
-                                    <p className="offer-price">
-                                        {(() => {
-                                            const price = getPricePerHour(4, 'Air');
-                                            return price ? (
-                                                <><span>{price.toLocaleString('vi-VN')}</span> VNĐ/giờ</>
-                                            ) : 'Đang cập nhật...';
-                                        })()}
-                                    </p>
-                                    <p className="offer-description">Phiên bản cơ bản với các tính năng thiết yếu, phù hợp cho những chuyến đi thông thường</p>
-                                    <button
-                                        className="rent-now-button"
-                                        onClick={() => handleBooking('/booking-4seater', 'Air')}
-                                    >
-                                        Thuê Ngay
-                                    </button>
-                                </div>
-                            </div>
+                            {['Air', 'Plus', 'Pro'].map((variant, i) => (
+                                <div className="offer-card" key={i}>
+                                    <img
+                                        src={
+                                            i === 0
+                                                ? 'src/assets/4standard1.jpg'
+                                                : i === 1
+                                                    ? 'src/assets/4standard2.jpg'
+                                                    : 'src/assets/4standard.jpg'
+                                        }
+                                        alt={variant}
+                                        className="offer-image"
+                                    />
 
-                            <div className="offer-card" data-seater="4">
-                                <img src="src/assets/4standard1.jpg" alt="Plus" className="offer-image" />
-                                <div>
-                                    <h3 className="offer-title">PLUS</h3>
-                                    <p className="offer-price">
-                                        {(() => {
-                                            const price = getPricePerHour(4, 'Plus');
-                                            return price ? (
-                                                <><span>{price.toLocaleString('vi-VN')}</span> VNĐ/giờ</>
-                                            ) : 'Đang cập nhật...';
-                                        })()}
-                                    </p>
-                                    <p className="offer-description">Nâng cấp trải nghiệm với nhiều tính năng tiện nghi và an toàn cao hơn</p>
-                                    <button
-                                        className="rent-now-button"
-                                        onClick={() => handleBooking('/booking-4seater', 'Plus')}
-                                    >
-                                        Thuê Ngay
-                                    </button>
-                                </div>
-                            </div>
+                                    <div>
+                                        <h3 className="offer-title">{variant}</h3>
+                                        <p className="offer-price">
+                                            {(() => {
+                                                const price = getDailyPrice(4, variant);
+                                                return price ? (
+                                                    <>
+                                                        <span>{price.toLocaleString('vi-VN')}</span> VNĐ/ngày
+                                                    </>
+                                                ) : (
+                                                    'Đang cập nhật...'
+                                                );
+                                            })()}
+                                        </p>
+                                        <p className="offer-description">
+                                            {variant === 'Air'
+                                                ? 'Phiên bản cơ bản, tiết kiệm cho các chuyến đi thông thường'
+                                                : variant === 'Plus'
+                                                    ? 'Nâng cấp tiện nghi, phù hợp cho chuyến đi dài'
+                                                    : 'Cao cấp nhất, trang bị đầy đủ và sang trọng'}
+                                        </p>
 
-                            <div className="offer-card" data-seater="4">
-                                <img src="src/assets/4standard.jpg" alt="Pro" className="offer-image" />
-                                <div>
-                                    <h3 className="offer-title">PRO</h3>
-                                    <p className="offer-price">
-                                        {(() => {
-                                            const price = getPricePerHour(4, 'Pro');
-                                            return price ? (
-                                                <><span>{price.toLocaleString('vi-VN')}</span> VNĐ/giờ</>
-                                            ) : 'Đang cập nhật...';
-                                        })()}
-                                    </p>
-                                    <p className="offer-description">Phiên bản cao cấp nhất với đầy đủ tính năng hiện đại và sang trọng</p>
-                                    <button
-                                        className="rent-now-button"
-                                        onClick={() => handleBooking('/booking-4seater', 'Pro')}
-                                    >
-                                        Thuê Ngay
-                                    </button>
+                                        <div className="offer-subinfo">
+
+                                            <p>
+                                                Giá ngày lễ:{' '}
+                                                <b>
+                                                    {getHolidayPrice(4, variant)
+                                                        ? getHolidayPrice(4, variant).toLocaleString('vi-VN')
+                                                        : '...'}{' '}
+                                                    VNĐ/ngày
+                                                </b>
+                                            </p>
+                                        </div>
+
+                                        <button
+                                            className="rent-now-button"
+                                            onClick={() => handleBooking('/booking-4seater', variant)}
+                                        >
+                                            Thuê Ngay
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
+                            ))}
                         </div>
                     </div>
                 </div>
 
-                {/* 7-Seater Cars Section */}
+                {/* ==== XE 7 CHỖ ==== */}
                 <div id="7-seater-cars" className="offers-category-section">
                     <div className="offers-big-card">
                         <div className="category-header">
                             <h3 className="category-title">XE 7 CHỖ</h3>
-                            <p className="category-description">Lý tưởng cho gia đình lớn hoặc nhóm đông người</p>
+                            <p className="category-description">
+                                Lý tưởng cho gia đình lớn hoặc nhóm bạn đông người
+                            </p>
                         </div>
 
                         <div className="offers-grid-horizontal">
-                            <div className="offer-card" data-seater="7">
-                                <img src="src/assets/7standard.jpg" alt="Air" className="offer-image" />
-                                <div>
-                                    <h3 className="offer-title">AIR</h3>
-                                    <p className="offer-price">
-                                        {(() => {
-                                            const price = getPricePerHour(7, 'Air');
-                                            return price ? (
-                                                <><span>{price.toLocaleString('vi-VN')}</span> VNĐ/giờ</>
-                                            ) : 'Đang cập nhật...';
-                                        })()}
-                                    </p>
-                                    <p className="offer-description">Phiên bản cơ bản với không gian rộng rãi, phù hợp cho gia đình và nhóm đông người</p>
-                                    <button
-                                        className="rent-now-button"
-                                        onClick={() => handleBooking('/booking-7seater', 'Air')}
-                                    >
-                                        Thuê Ngay
-                                    </button>
-                                </div>
-                            </div>
+                            {['Air', 'Plus', 'Pro'].map((variant, i) => (
+                                <div className="offer-card" key={i}>
+                                    <img
+                                        src={
+                                            i === 0
+                                                ? 'src/assets/7standard.jpg'
+                                                : i === 1
+                                                    ? 'src/assets/7proplus.jpg'
+                                                    : 'src/assets/7pro.jpg'
+                                        }
+                                        alt={variant}
+                                        className="offer-image"
+                                    />
+                                    <div>
+                                        <h3 className="offer-title">{variant}</h3>
+                                        <p className="offer-price">
+                                            {(() => {
+                                                const price = getDailyPrice(7, variant);
+                                                return price ? (
+                                                    <>
+                                                        <span>{price.toLocaleString('vi-VN')}</span> VNĐ/ngày
+                                                    </>
+                                                ) : (
+                                                    'Đang cập nhật...'
+                                                );
+                                            })()}
+                                        </p>
+                                        <p className="offer-description">
+                                            {variant === 'Air'
+                                                ? 'Phiên bản cơ bản, không gian thoải mái cho gia đình'
+                                                : variant === 'Plus'
+                                                    ? 'Nâng cấp tiện nghi, chỗ ngồi sang trọng hơn'
+                                                    : 'Dòng xe cao cấp nhất với công nghệ hiện đại'}
+                                        </p>
 
-                            <div className="offer-card" data-seater="7">
-                                <img src="src/assets/7pro.jpg" alt="Plus" className="offer-image" />
-                                <div>
-                                    <h3 className="offer-title">PLUS</h3>
-                                    <p className="offer-price">
-                                        {(() => {
-                                            const price = getPricePerHour(7, 'Plus');
-                                            return price ? (
-                                                <><span>{price.toLocaleString('vi-VN')}</span> VNĐ/giờ</>
-                                            ) : 'Đang cập nhật...';
-                                        })()}
-                                    </p>
-                                    <p className="offer-description">Nâng cấp tiện nghi với ghế ngồi cao cấp và hệ thống giải trí hiện đại</p>
-                                    <button
-                                        className="rent-now-button"
-                                        onClick={() => handleBooking('/booking-7seater', 'Plus')}
-                                    >
-                                        Thuê Ngay
-                                    </button>
-                                </div>
-                            </div>
+                                        <div className="offer-subinfo">
+                                           
+                                            <p>
+                                                 Giá ngày lễ:{' '}
+                                                <b>
+                                                    {getHolidayPrice(7, variant)
+                                                        ? getHolidayPrice(7, variant).toLocaleString('vi-VN')
+                                                        : '...'}{' '}
+                                                    VNĐ/ngày
+                                                </b>
+                                            </p>
+                                        </div>
 
-                            <div className="offer-card" data-seater="7">
-                                <img src="src/assets/7proplus.jpg" alt="Pro" className="offer-image" />
-                                <div>
-                                    <h3 className="offer-title">PRO</h3>
-                                    <p className="offer-price">
-                                        {(() => {
-                                            const price = getPricePerHour(7, 'Pro');
-                                            return price ? (
-                                                <><span>{price.toLocaleString('vi-VN')}</span> VNĐ/giờ</>
-                                            ) : 'Đang cập nhật...';
-                                        })()}
-                                    </p>
-                                    <p className="offer-description">Dòng xe sang trọng nhất với đầy đủ tiện nghi và công nghệ tiên tiến</p>
-                                    <button
-                                        className="rent-now-button"
-                                        onClick={() => handleBooking('/booking-7seater', 'Pro')}
-                                    >
-                                        Thuê Ngay
-                                    </button>
+                                        <button
+                                            className="rent-now-button"
+                                            onClick={() => handleBooking('/booking-7seater', variant)}
+                                        >
+                                            Thuê Ngay
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
+                            ))}
                         </div>
                     </div>
                 </div>

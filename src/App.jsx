@@ -36,6 +36,10 @@ import PaymentSuccessPage from './pages/PaymentSuccess.jsx';
 import PaymentFailedPage from './pages/PaymentFailedPage.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import FeedbackPage from './pages/FeedbackPage.jsx';
+import BangGiaPage from './pages/BangGiaPage.jsx';
+import DichVuPage from './pages/DichVuPage.jsx';
+import OrderDetailPage from './pages/OrderDetailPage.jsx'; 
+import  ForgotPage from './pages/ForgotPage.jsx'
 
 const HomePage = () => (
   <ScrollToSectionWrapper>
@@ -78,7 +82,8 @@ function LayoutWrapper({ children }) {
     location.pathname.startsWith('/admin') ||
     location.pathname.startsWith('/payment-callback') || // ✅ Thêm
     location.pathname.startsWith('/payment-success') ||  // ✅ Thêm
-    location.pathname.startsWith('/payment-failed');     // ✅ Thêm
+    location.pathname.startsWith('/payment-failed')||    // ✅ Thêm
+    location.pathname ==='/forgot-password';
 
   return (
     <>
@@ -149,6 +154,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/verify-otp" element={<VerifyOtpPage />} />
+            <Route path="/forgot-password" element={<ForgotPage/>}/>
 
             {/* Staff Routes */}
             <Route path="/staff" element={<StaffPage />}>
@@ -157,6 +163,11 @@ function App() {
               <Route path="xacthuc" element={<XacThucKhachHangPage />} />
               <Route path="thanhtoan" element={<ThanhToanPage />} />
               <Route path="quanlyxe" element={<QuanLyXePage />} />
+              <Route path="banggia" element={<BangGiaPage />} />
+              <Route path="dichvu" element={<DichVuPage/>} />
+            <Route path="/staff/chitiet/:orderId/:userId" element={<OrderDetailPage />} />
+
+
             </Route>
 
             {/* Admin Routes */}

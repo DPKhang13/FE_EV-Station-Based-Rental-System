@@ -11,7 +11,7 @@ export const getAllUsers = async () => {
 
         console.log('🚀 [API] Đang lấy danh sách người dùng');
 
-        const response = await fetch(`${API_BASE_URL}/auth/getAll/user`, {
+        const response = await fetch(`${API_BASE_URL}/auth/getAll/customer`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
