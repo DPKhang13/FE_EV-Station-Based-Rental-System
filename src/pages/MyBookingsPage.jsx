@@ -75,7 +75,7 @@ const MyBookingsPage = () => {
         }
 
         setOrderStatuses(statusMap);
-        console.log('✅ Order statuses loaded:', statusMap);
+        console.log('Order statuses loaded:', statusMap);
     };
 
     const loadMyBookings = async () => {
@@ -88,9 +88,9 @@ const MyBookingsPage = () => {
             let orders = [];
             try {
                 orders = await orderService.getMyOrders();
-                console.log('📦 [MyBookings] Raw response:', orders);
+                console.log('[MyBookings] Raw response:', orders);
             } catch (apiErr) {
-                console.error('❌ API Error details:', {
+                console.error('API Error details:', {
                     message: apiErr.message,
                     response: apiErr.response?.data,
                     status: apiErr.response?.status
@@ -99,7 +99,7 @@ const MyBookingsPage = () => {
                 if (apiErr.response?.status >= 500 ||
                     apiErr.message?.includes('500') ||
                     apiErr.message?.includes('Internal Server Error')) {
-                    console.warn('⚠️ Server error detected, showing empty bookings');
+                    console.warn('Server error detected, showing empty bookings');
                     setBookings([]);
                     setLoading(false);
                     return;
@@ -179,7 +179,7 @@ const MyBookingsPage = () => {
     };
 
     const handleViewDetails = (booking) => {
-        console.log('👁️ [MyBookings] View details:', booking);
+        console.log(' [MyBookings] View details:', booking);
         setSelectedBooking(booking);
         setShowModal(true);
     };
@@ -261,7 +261,7 @@ const MyBookingsPage = () => {
                 return;
             }
 
-            console.log('💰 Processing final payment for order:', orderId);
+            console.log(' Processing final payment for order:', orderId);
             console.log('Amount to pay:', orderStatus.remainingAmount);
 
             // Gọi VNPay payment API
@@ -284,14 +284,14 @@ const MyBookingsPage = () => {
             });
 
         } catch (err) {
-            console.error('❌ Final payment error:', err);
+            console.error(' Final payment error:', err);
             alert('Không thể xử lý thanh toán: ' + err.message);
         }
     };
 
     // ✅ Mở trang feedback cho COMPLETED
     const handleFeedback = (orderId) => {
-        console.log('📝 Opening feedback for order:', orderId);
+        console.log('Opening feedback for order:', orderId);
         navigate('/feedback', { state: { orderId } });
     };
 
@@ -308,7 +308,7 @@ const MyBookingsPage = () => {
         }
 
         try {
-            console.log('🗑️ Cancelling order:', cancelOrderId);
+            console.log(' Cancelling order:', cancelOrderId);
 
             // 1. Gọi API xóa đơn hàng
             await orderService.delete(cancelOrderId);
@@ -334,7 +334,7 @@ const MyBookingsPage = () => {
                     });
                     console.log('✅ Notification sent successfully');
                 } catch (notifErr) {
-                    console.error('⚠️ Failed to send notification:', notifErr);
+                    console.error(' Failed to send notification:', notifErr);
                     // Không block việc hủy đơn nếu notification fail
                 }
             }
@@ -399,7 +399,6 @@ const MyBookingsPage = () => {
                 {/* Search Box */}
                 <div className="search-container">
                     <div className="search-box">
-                        <span className="search-icon">🔍</span>
                         <input
                             type="text"
                             className="search-input"
@@ -556,7 +555,7 @@ const MyBookingsPage = () => {
                                                         borderRadius: '8px',
                                                         fontSize: '14px'
                                                     }}>
-                                                        🚗 Đang thuê - Không thể đặt xe khác
+                                                        Đang thuê - Không thể đặt xe khác
                                                     </span>
                                                 );
                                             }
@@ -573,7 +572,7 @@ const MyBookingsPage = () => {
                                                             borderRadius: '8px',
                                                             fontSize: '14px'
                                                         }}>
-                                                            💰 Còn lại: {orderStatus.remainingAmount.toLocaleString()} VND
+                                                            Còn lại: {orderStatus.remainingAmount.toLocaleString()} VND
                                                         </span>
                                                         <button
                                                             onClick={() => handleFinalPayment(booking.orderId)}
@@ -607,7 +606,7 @@ const MyBookingsPage = () => {
                                                             borderRadius: '8px',
                                                             fontSize: '14px'
                                                         }}>
-                                                            ✅ Hoàn thành
+                                                            Hoàn thành
                                                         </span>
                                                         <button
                                                             onClick={() => handleFeedback(booking.orderId)}
@@ -623,7 +622,7 @@ const MyBookingsPage = () => {
                                                                 transition: 'all 0.2s'
                                                             }}
                                                         >
-                                                            📝 Đánh giá
+                                                            Đánh giá
                                                         </button>
                                                     </>
                                                 );
@@ -705,7 +704,7 @@ const MyBookingsPage = () => {
                                                     padding: '4px 8px',
                                                     borderRadius: '4px'
                                                 }}>
-                                                    ⏰ Còn {checkExpiry(booking.createdAt)} để thanh toán
+                                                    Còn {checkExpiry(booking.createdAt)} để thanh toán
                                                 </span>
                                             )}
                                     </div>
@@ -721,7 +720,7 @@ const MyBookingsPage = () => {
                 <div className="modal-overlay" onClick={handleCloseModal}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>📋 Chi tiết đơn hàng</h2>
+                            <h2>Chi tiết đơn hàng</h2>
                             <button className="modal-close" onClick={handleCloseModal}>✕</button>
                         </div>
 
@@ -891,7 +890,7 @@ const MyBookingsPage = () => {
                 <div className="modal-overlay" onClick={() => setShowCancelModal(false)}>
                     <div className="modal-content cancel-modal" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>❌ Hủy Đơn Hàng</h2>
+                            <h2> Hủy Đơn Hàng</h2>
                             <button className="modal-close" onClick={() => setShowCancelModal(false)}>✕</button>
                         </div>
 

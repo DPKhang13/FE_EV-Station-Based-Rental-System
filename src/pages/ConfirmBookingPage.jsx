@@ -406,19 +406,19 @@ ${backendError?.message === 'Unexpected error' ? `
                             className="btn-confirm"
                             disabled={loading}
                         >
-                            {loading ? 'Đang xử lý...' : 'Xác Nhận Đặt Xe ✓'}
+                            {loading ? 'Đang xử lý...' : 'Xác Nhận Đặt Xe '}
                         </button>
                     </div>
 
                     {/* Debug Info */}
                     <div style={{ marginTop: '20px', padding: '15px', background: '#f0f0f0', borderRadius: '8px', fontSize: '13px' }}>
                         <strong>🔍 Thông Tin Debug:</strong><br />
-                        - Có Token: {!!localStorage.getItem('accessToken') ? '✅ CÓ' : '❌ KHÔNG - CẦN ĐĂNG NHẬP'}<br />
-                        - Người dùng: {user ? `${user.name} (${user.role})` : '❌ Chưa đăng nhập'}<br />
+                        - Có Token: {localStorage.getItem('accessToken') ? 'CÓ' : ' KHÔNG - CẦN ĐĂNG NHẬP'}<br />
+                        - Người dùng: {user ? `${user.name} (${user.role})` : 'Chưa đăng nhập'}<br />
                         - ID Người dùng: {user?.userId || 'N/A'}<br />
                         {!localStorage.getItem('accessToken') && (
                             <div style={{ marginTop: '10px', padding: '10px', background: '#ffebee', borderRadius: '4px' }}>
-                                <strong style={{ color: '#c62828' }}>⚠️ BẠN CHƯA ĐĂNG NHẬP!</strong><br />
+                                <strong style={{ color: '#c62828' }}> BẠN CHƯA ĐĂNG NHẬP!</strong><br />
                                 <button
                                     onClick={() => navigate('/login')}
                                     style={{ marginTop: '8px', padding: '8px 16px', background: '#1976d2', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
