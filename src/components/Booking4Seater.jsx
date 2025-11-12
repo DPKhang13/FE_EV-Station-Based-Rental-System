@@ -5,15 +5,15 @@ import { AuthContext } from "../context/AuthContext";
 import { validateVehicleForBooking } from "../utils/vehicleValidator";
 import { orderService } from "../services";
 import { vehicleTimelineService } from "../services/vehicleTimelineService";
-
-import "./Booking4Seater.css";
-import "./BookingCalendar.css";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import "./Booking4Seater.css";
+import "./BookingCalendar.css";
+
 
 import car4SeatBlack from "../assets/4seatblack.png";
 import car4SeatBlue from "../assets/4seatblue.png";
-import car4SeatRed from "../assets/4seatred.png";
+import car4SeatRed from "../assets/4seatred.png"; 
 import car4SeatSilver from "../assets/4seatsilver.png";
 import car4SeatWhite from "../assets/4seatwhite.png";
 
