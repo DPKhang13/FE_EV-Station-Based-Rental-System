@@ -40,6 +40,7 @@ import BangGiaPage from './pages/BangGiaPage.jsx';
 import DichVuPage from './pages/DichVuPage.jsx';
 import OrderDetailPage from './pages/OrderDetailPage.jsx'; 
 import  ForgotPage from './pages/ForgotPage.jsx'
+import OrderDetailCusPage from './pages/OrderDetailCusPage.jsx';
 
 const HomePage = () => (
   <ScrollToSectionWrapper>
@@ -112,6 +113,13 @@ function App() {
                 <Booking4Seater />
               </ProtectedRoute>
             } />
+            
+             <Route path="/order-detail-cus/:orderId" element={
+              <ProtectedRoute>
+                <OrderDetailCusPage />
+              </ProtectedRoute>
+            } />
+            
             <Route path="/booking-7seater" element={
               <ProtectedRoute>
                 <Booking7Seater />

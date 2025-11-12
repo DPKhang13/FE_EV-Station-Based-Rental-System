@@ -37,21 +37,23 @@ const ConfirmBookingPage = () => {
   }, [bookingData, navigate]);
 
   // --- Chuẩn hóa format thời gian ---
-  const formatDateTimeForBackend = (dateStr, isStart = true) => {
-    if (!dateStr) return null;
-    // nếu có dạng "2025-11-12T23:45"
-    if (dateStr.includes('T')) {
-      const [date, time] = dateStr.split('T');
-      const formatted = time.length === 5 ? `${time}:00` : time; // thêm giây nếu cần
-      return `${date} ${formatted}`;
-    }
-    // nếu chỉ có ngày
-    if (dateStr.length === 10) {
-      return isStart ? `${dateStr} 00:00:00` : `${dateStr} 23:59:59`;
-    }
-    // mặc định
-    return dateStr;
-  };
+ // --- Giữ đúng định dạng "yyyy-MM-dd HH:mm:ss"
+const formatDateTimeForBackend = (dateStr, isStart = true) => {
+  if (!dateStr) return null;
+
+  // nếu là ISO string từ DatePicker hoặc toISOString()
+  const date = new Date(dateStr);
+
+  // đảm bảo lấy đúng local time, không bị +7 hoặc -7
+  const yyyy = date.getFullYear();
+  const MM = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  const HH = String(date.getHours()).padStart(2, "0");
+  const mm = String(date.getMinutes()).padStart(2, "0");
+  const ss = "00";
+
+  return `${yyyy}-${MM}-${dd} ${HH}:${mm}:${ss}`;
+};
 
   const handleConfirmBooking = async () => {
     setLoading(true);
@@ -63,7 +65,14 @@ const ConfirmBookingPage = () => {
         return;
       }
 
-      const vehicleId = Number(bookingData.orderData.vehicleId);
+      // ✅ Lấy vehicleId chuẩn từ dữ liệu (dù backend trả id hay vehicleId)
+      const vehicleId = Number(
+        bookingData.orderData.vehicleId ??
+        bookingData.car?.vehicleId ??
+        bookingData.car?.id ??
+        bookingData.car?.vehicle_id
+      );
+
       const startDateRaw = bookingData.startTime || bookingData.orderData.startTime;
       const endDateRaw = bookingData.endTime || bookingData.orderData.endTime;
 
