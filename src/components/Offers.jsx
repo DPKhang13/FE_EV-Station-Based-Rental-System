@@ -38,6 +38,7 @@ const Offers = () => {
     };
 
     // 🔹 Hàm lấy phụ phí trễ hạn (lateFeePerDay)
+    // eslint-disable-next-line no-unused-vars
     const getLateFee = (seatCount, variant) => {
         const rule = pricingRules.find(
             (r) => r.seatCount === seatCount && r.variant === variant
@@ -159,10 +160,10 @@ const Offers = () => {
                                     <img
                                         src={
                                             i === 0
-                                                ? 'src/assets/7standard.jpg'
+                                                ? 'src/assets/vinfast7.jpg'
                                                 : i === 1
-                                                    ? 'src/assets/7proplus.jpg'
-                                                    : 'src/assets/7pro.jpg'
+                                                    ? 'src/assets/tesla7.jpg'
+                                                    : 'src/assets/bmw7.jpg'
                                         }
                                         alt={variant}
                                         className="offer-image"

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './CarShowcase.css';
-import logo from '../assets/logo2.png';
+// import logo from '../assets/logo2.png';
 
 const CarShowcase = () => {
     const [currentSlide, setCurrentSlide] = useState(0);

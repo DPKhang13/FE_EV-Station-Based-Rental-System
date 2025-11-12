@@ -40,6 +40,7 @@ export default function VerifyCustomerPage() {
 
   useEffect(() => {
     fetchOrders();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 🔍 Tìm kiếm
@@ -136,7 +137,8 @@ export default function VerifyCustomerPage() {
                 const verified =
                   row.profileVerified ||
                   row.userStatus?.includes("ĐÃ XÁC THỰC");
-                const delivered =
+                // eslint-disable-next-line no-unused-vars
+                const isDelivered =
                   !!row.pickedUpAt ||
                   ["RENTAL", "Rented"].includes(row.status);
                 const deposit =

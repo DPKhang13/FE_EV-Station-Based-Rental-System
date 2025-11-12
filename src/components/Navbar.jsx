@@ -6,7 +6,7 @@ import logo from '../assets/logo2.png';
 
 const Navbar = () => {
     const [activeNav, setActiveNav] = useState('home');
-    const [activeCars, setActiveCars] = useState('');
+    const [, setActiveCars] = useState('');
     const [showDropdown, setShowDropdown] = useState(false);
     const navigate = useNavigate();
     const { user, logout } = useContext(AuthContext);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import "./GiaoTraXe.css";
 
 import vehicleService from "../services/vehicleService";
@@ -15,7 +15,7 @@ import PopupNhanChecking from "../components/staff/PopupNhanChecking";
 
 const GiaoTraXe = () => {
   const { user } = useContext(AuthContext);
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const [currentTab, setCurrentTab] = useState("tatca");
   const [searchTerm, setSearchTerm] = useState("");
@@ -66,6 +66,7 @@ const GiaoTraXe = () => {
 
   useEffect(() => {
     fetchData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   /** ================================

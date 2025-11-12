@@ -986,6 +986,23 @@ const StationManagement = () => {
                                                                     Xem chi tiết
                                                                 </button>
                                                                 <button
+                                                                    className="btn-view"
+                                                                    onClick={() => handleViewOrderHistory(vehicle)}
+                                                                    title="Lịch sử đơn hàng"
+                                                                    style={{
+                                                                        background: '#fef3c7',
+                                                                        color: '#92400e',
+                                                                        padding: '8px 12px',
+                                                                        border: 'none',
+                                                                        borderRadius: '6px',
+                                                                        cursor: 'pointer',
+                                                                        fontSize: '14px',
+                                                                        fontWeight: '600'
+                                                                    }}
+                                                                >
+                                                                    Lịch sử
+                                                                </button>
+                                                                <button
                                                                     className="btn-edit"
                                                                     onClick={() => handleEditVehicle(vehicle)}
                                                                     title="Chỉnh sửa"

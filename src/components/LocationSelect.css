@@ -1,0 +1,498 @@
+/* LocationSelect - Mercedes Luxury Theme (Red, White, Black) */
+
+.location-select-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #FFFFFF 0%, #F5F5F5 100%);
+    padding: 80px 20px;
+}
+
+/* Header Section */
+.location-header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.location-title {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 48px;
+    font-weight: 200;
+    letter-spacing: 8px;
+    text-transform: uppercase;
+    color: #000000;
+    margin: 0;
+    margin-bottom: 20px;
+    position: relative;
+    display: inline-block;
+}
+
+.location-title::after {
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 150px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent 0%, #DC0000 50%, transparent 100%);
+}
+
+.location-subtitle {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 300;
+    letter-spacing: 2px;
+    color: #666666;
+    margin: 30px 0 0 0;
+}
+
+/* Nearest Branch Card */
+.nearest-branch-card {
+    max-width: 700px;
+    margin: 0 auto 60px;
+    padding: 32px;
+    background: #FFFFFF;
+    border: 2px solid #DC0000;
+    border-radius: 0;
+    box-shadow: 0 8px 24px rgba(220, 0, 0, 0.15);
+    position: relative;
+    overflow: hidden;
+}
+
+.nearest-branch-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #DC0000 0%, #FF0000 100%);
+}
+
+.nearest-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #DC0000;
+    color: #FFFFFF;
+    padding: 8px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    border-radius: 0;
+}
+
+.nearest-branch-name {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 24px;
+    font-weight: 400;
+    letter-spacing: 3px;
+    color: #000000;
+    margin: 0 0 20px 0;
+    text-transform: uppercase;
+}
+
+.nearest-branch-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.nearest-info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 14px;
+    color: #333333;
+    line-height: 1.6;
+}
+
+.nearest-info-label {
+    font-weight: 600;
+    color: #000000;
+    min-width: 100px;
+}
+
+.nearest-distance {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #E5E5E5;
+    text-align: center;
+}
+
+.distance-text {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    color: #DC0000;
+    letter-spacing: 2px;
+}
+
+/* Branches Grid */
+.branches-grid {
+    max-width: 1200px;
+    margin: 0 auto 60px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 30px;
+}
+
+/* Branch Card */
+.branch-card {
+    background: #FFFFFF;
+    border: 2px solid #E5E5E5;
+    border-radius: 0;
+    padding: 28px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    min-height: 280px;
+}
+
+.branch-card:hover {
+    border-color: #DC0000;
+    box-shadow: 0 8px 24px rgba(220, 0, 0, 0.15);
+    transform: translateY(-4px);
+}
+
+.branch-card.selected {
+    background: #000000;
+    border-color: #DC0000;
+    box-shadow: 0 12px 32px rgba(220, 0, 0, 0.25);
+    transform: translateY(-4px);
+}
+
+.branch-card.selected::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #DC0000 0%, #FF0000 100%);
+}
+
+/* Selected Badge */
+.selected-badge {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: #DC0000;
+    color: #FFFFFF;
+    padding: 6px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    border-radius: 0;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(220, 0, 0, 0.7);
+    }
+    50% {
+        opacity: 0.9;
+        box-shadow: 0 0 0 8px rgba(220, 0, 0, 0);
+    }
+}
+
+/* Branch Content */
+.branch-name {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    color: #000000;
+    margin: 0px;
+    text-transform: uppercase;
+    padding-top: 1.5%;
+    padding-left: 1%;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+}
+
+.branch-card.selected .branch-name {
+    color: #FFFFFF;
+}
+
+.branch-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex: 1;
+}
+
+.branch-info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 14px;
+    color: #333333;
+    line-height: 1.6;
+    min-height: 44px;
+}
+
+.branch-card.selected .branch-info-item {
+    color: #E5E5E5;
+}
+
+.branch-icon {
+    font-size: 16px;
+    min-width: 20px;
+}
+
+/* Branch Button */
+.branch-button {
+    width: 100%;
+    padding: 14px 24px;
+    background: #FFFFFF;
+    color: #000000;
+    border: 2px solid #000000;
+    border-radius: 0;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.branch-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: #DC0000;
+    transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 0;
+}
+
+.branch-button:hover::before {
+    left: 0;
+}
+
+.branch-button:hover {
+    color: #FFFFFF;
+    border-color: #DC0000;
+}
+
+.branch-button span {
+    position: relative;
+    z-index: 1;
+}
+
+.branch-button:disabled {
+    background: #999999;
+    color: #FFFFFF;
+    border-color: #999999;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.branch-button:disabled::before {
+    display: none;
+}
+
+.branch-card.selected .branch-button {
+    background: #DC0000;
+    color: #FFFFFF;
+    border-color: #DC0000;
+}
+
+.branch-card.selected .branch-button:disabled {
+    background: #666666;
+    border-color: #666666;
+}
+
+/* View Cars Button */
+.view-cars-container {
+    text-align: center;
+}
+
+.view-cars-button {
+    padding: 18px 60px;
+    background: #DC0000;
+    color: #FFFFFF;
+    border: 2px solid #DC0000;
+    border-radius: 0;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 16px rgba(220, 0, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.view-cars-button::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: #000000;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.5s, height 0.5s;
+}
+
+.view-cars-button:hover::before {
+    width: 300%;
+    height: 300%;
+}
+
+.view-cars-button:hover {
+    box-shadow: 0 6px 20px rgba(220, 0, 0, 0.4);
+}
+
+.view-cars-button span {
+    position: relative;
+    z-index: 1;
+}
+
+/* Loading State */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+    gap: 20px;
+}
+
+.loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid #E5E5E5;
+    border-top: 4px solid #DC0000;
+    border-radius: 50%;
+    animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    letter-spacing: 2px;
+    color: #666666;
+    text-transform: uppercase;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .branches-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 24px;
+    }
+}
+
+@media (max-width: 768px) {
+    .location-select-container {
+        padding: 60px 16px;
+    }
+
+    .location-header {
+        margin-bottom: 40px;
+    }
+
+    .location-title {
+        font-size: 36px;
+        letter-spacing: 4px;
+    }
+
+    .location-subtitle {
+        font-size: 14px;
+        letter-spacing: 1.5px;
+    }
+
+    .nearest-branch-card {
+        padding: 24px;
+        margin-bottom: 40px;
+    }
+
+    .nearest-branch-name {
+        font-size: 20px;
+        letter-spacing: 2px;
+    }
+
+    .branches-grid {
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+
+    .branch-card {
+        padding: 24px;
+    }
+
+    .branch-name {
+        font-size: 16px;
+        letter-spacing: 1.5px;
+        padding-right: 70px;
+    }
+
+    .view-cars-button {
+        padding: 16px 48px;
+        font-size: 14px;
+        letter-spacing: 2px;
+    }
+}
+
+@media (max-width: 480px) {
+    .location-select-container {
+        padding: 40px 12px;
+    }
+
+    .location-title {
+        font-size: 28px;
+        letter-spacing: 3px;
+    }
+
+    .location-title::after {
+        width: 100px;
+    }
+
+    .nearest-branch-card {
+        padding: 20px;
+    }
+
+    .nearest-branch-name {
+        font-size: 18px;
+    }
+
+    .branches-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .branch-card {
+        padding: 20px;
+    }
+
+    .view-cars-button {
+        width: 100%;
+        padding: 14px 32px;
+    }
+}

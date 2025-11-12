@@ -50,6 +50,7 @@ const MyBookingsPage = () => {
                 }
             }, 500);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [navigate, location]);
 
     // ✅ Fetch status chi tiết từ preview-return API
@@ -311,11 +312,13 @@ const MyBookingsPage = () => {
             console.log('Amount to pay:', orderStatus.remainingAmount);
 
             // Gọi VNPay payment API
-            const paymentData = {
+            // const paymentData = {
+            const _paymentData = {
                 orderId: orderId,
                 amount: orderStatus.remainingAmount,
                 returnUrl: window.location.origin + '/payment-callback'
             };
+            console.log('Payment data:', _paymentData);
 
             // TODO: Call your VNPay API here
             // const response = await paymentService.createPayment(paymentData);
