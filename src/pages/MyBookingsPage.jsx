@@ -182,10 +182,9 @@ const MyBookingsPage = () => {
     };
 
     const handleViewDetails = (booking) => {
-        console.log(' [MyBookings] View details:', booking);
-        setSelectedBooking(booking);
-        setShowModal(true);
-    };
+  navigate(`/order-detail-cus/${booking.orderId}`);
+};
+
 
     const handleCloseModal = () => {
         setShowModal(false);
@@ -678,22 +677,7 @@ const MyBookingsPage = () => {
                                             if (['PENDING', 'PENDING_DEPOSIT'].includes(currentStatus)) {
                                                 return (
                                                     <>
-                                                        <button
-                                                            onClick={() => handlePayment(booking.orderId)}
-                                                            className="btn-payment"
-                                                            style={{
-                                                                background: '#10b981',
-                                                                color: 'white',
-                                                                border: 'none',
-                                                                padding: '10px 20px',
-                                                                borderRadius: '8px',
-                                                                fontSize: '14px',
-                                                                fontWeight: '600',
-                                                                cursor: 'pointer'
-                                                            }}
-                                                        >
-                                                            Đặt Cọc
-                                                        </button>
+                                                       
                                                         <button
                                                             onClick={() => handleCancelOrder(booking.orderId)}
                                                             className="btn-cancel"
@@ -708,7 +692,7 @@ const MyBookingsPage = () => {
                                                                 cursor: 'pointer'
                                                             }}
                                                         >
-                                                            Hủy
+                                                            Hủy đơn hàng 
                                                         </button>
                                                     </>
                                                 );
