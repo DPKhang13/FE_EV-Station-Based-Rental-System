@@ -1,29 +1,66 @@
+/* ================================
+   STAFF PAGE - Mercedes Professional Design
+   ================================ */
+
 .staff-wrap {
   display: flex;
   min-height: 100vh;
-  background-color: #f6f8fb;
+  background-color: #FFFFFF;
 }
 
-/* 🟦 Sidebar cố định */
+/* Sidebar cố định */
 .staff-wrap > .sidebar {
   position: fixed;
   top: 0;
   left: 0;
-  height: 100vh; /* chiếm toàn bộ chiều cao màn hình */
-  width: 240px;  /* tùy theo thiết kế của bạn */
-  background-color: #0f172a; /* nền tối */
-  color: white;
+  height: 100vh;
+  width: 260px;
+  background-color: #000000;
+  color: #FFFFFF;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  border-right: 3px solid #DC0000;
+  z-index: 100;
 }
 
-/* 🟩 Phần main có margin-left để không bị sidebar che */
+/* Main content */
 .staff-main {
   flex: 1;
-  margin-left: 240px; /* bằng đúng chiều rộng sidebar */
-  padding: 20px;
+  margin-left: 260px;
+  padding: 40px;
   overflow-y: auto;
-  background-color: #f6f8fb;
+  background-color: #FFFFFF;
   min-height: 100vh;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .staff-wrap > .sidebar {
+    width: 220px;
+  }
+
+  .staff-main {
+    margin-left: 220px;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .staff-wrap {
+    flex-direction: column;
+  }
+
+  .staff-wrap > .sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 3px solid #DC0000;
+  }
+
+  .staff-main {
+    margin-left: 0;
+    padding: 20px;
+  }
 }

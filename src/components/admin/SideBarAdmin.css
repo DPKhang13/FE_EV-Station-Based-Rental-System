@@ -1,158 +1,160 @@
-:root {
-  --slate-900: #0f172a;
-  --slate-800: #1e293b;
-  --slate-700: #334155;
-  --white: #ffffff;
-  --gray-300: #d1d5db;
-  --blue-500: #3b82f6;
-  --red-500: #ef4444;
-  --radius-full: 9999px;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
+/* ================================
+   SIDEBAR ADMIN - Mercedes Professional Design
+   ================================ */
 
-/* Layout chính */
 .sidebar {
-  background: var(--slate-900);
-  color: var(--white);
-  width: 16rem;
+  width: 260px;
+  background-color: #000000;
+  color: #FFFFFF;
+  padding: 30px 20px;
+  border-right: 3px solid #DC0000;
+  position: fixed;
   height: 100vh;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  font-family: "Poppins", -apple-system, sans-serif;
 }
 
-/* Tiêu đề */
 .sidebar__title {
-  padding: 1rem;
-  font-size: 1.125rem;
-  font-weight: 600;
-  border-bottom: 1px solid var(--slate-800);
+  font-size: 20px;
+  font-weight: 300;
+  margin-bottom: 30px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #FFFFFF;
+  border-bottom: 2px solid #DC0000;
+  padding-bottom: 15px;
 }
 
-/* Nav */
 .sidebar__nav {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  margin-top: 1rem;
-  padding: 0 0.25rem;
+  gap: 8px;
 }
 
-/* Nút menu */
+.sidebar__section-title {
+  margin-top: 20px;
+  font-size: 11px;
+  font-weight: 400;
+  color: #999999;
+  text-transform: uppercase;
+  padding-left: 20px;
+  letter-spacing: 1.5px;
+}
+
 .sidebar__btn {
+  background: transparent;
+  color: #FFFFFF;
+  border: none;
+  padding: 14px 20px;
+  text-align: left;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+  text-decoration: none;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1rem;
-  background: transparent;
-  color: inherit;
-  text-decoration: none;
-  border-radius: 0.5rem;
-  transition: background-color 150ms ease, transform 120ms ease;
-  text-align: left;
-  font-size: 0.95rem;
+  gap: 8px;
 }
 
 .sidebar__btn:hover {
-  background: var(--slate-700);
+  background: #1A1A1A;
+  border-left-color: #DC0000;
+  padding-left: 25px;
 }
 
 .sidebar__btn.active {
-  background-color: var(--blue-500);
-  font-weight: bold;
+  background: #1A1A1A;
+  border-left-color: #DC0000;
+  font-weight: 400;
 }
 
-.sidebar__btn:active {
-  transform: translateY(1px);
-}
-
-/* Footer */
 .sidebar__footer {
-  background: var(--slate-800);
-  padding: 1rem;
+  background: #1A1A1A;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  box-shadow: var(--shadow-sm);
+  gap: 15px;
+  border-top: 1px solid #333333;
+  margin: 0 -20px -30px;
 }
 
-/* User info */
 .sidebar__user {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 12px;
 }
 
 .sidebar__avatar {
-  width: 2rem;
-  height: 2rem;
-  background: var(--blue-500);
-  border-radius: var(--radius-full);
+  width: 40px;
+  height: 40px;
+  background: #DC0000;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--white);
-  font-weight: 600;
+  color: #FFFFFF;
+  font-weight: 400;
+  font-size: 16px;
+  letter-spacing: 1px;
 }
 
 .sidebar__user-name {
   margin: 0;
-  font-weight: 600;
-  font-size: 0.95rem;
+  font-weight: 400;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  color: #FFFFFF;
 }
 
 .sidebar__user-role {
   margin: 0;
-  font-size: 0.875rem;
-  color: var(--gray-300);
+  font-size: 11px;
+  color: #999999;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
-/* Logout */
 .sidebar__logout {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
   background: transparent;
-  border: none;
-  color: var(--gray-300);
-  font-size: 0.95rem;
+  border: 2px solid #666666;
+  border-radius: 0;
+  color: #CCCCCC;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  text-transform: uppercase;
   cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  transition: background 0.2s, color 0.2s;
+  padding: 10px 16px;
+  transition: all 0.3s ease;
 }
 
 .sidebar__logout:hover {
-  background: var(--red-500);
-  color: white;
+  background: #DC0000;
+  border-color: #DC0000;
+  color: #FFFFFF;
+  transform: translateY(-2px);
 }
-.sidebar__section-title {
-  margin-top: 1.2rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #aaa;
-  text-transform: uppercase;
-  padding-left: 1rem;
-}
+
 .sidebar-admin {
   width: 260px;
-  min-height: 100vh;
-  background-color: #0f172a;
-  color: white;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-}
-.sidebar-admin {
-  width: 260px;
-  height: 100vh; /* ⚡ bắt buộc để bằng chiều cao màn hình */
-  background-color: #0f172a;
-  color: white;
+  height: 100vh;
+  background-color: #000000;
+  color: #FFFFFF;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  overflow-y: auto; /* nếu menu dài thì scroll */
+  overflow-y: auto;
 }
 
 

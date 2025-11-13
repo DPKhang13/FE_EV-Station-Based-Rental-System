@@ -6,25 +6,25 @@ import { validateVehicleForBooking } from '../utils/vehicleValidator';
 import './Booking7Seater.css';
 
 // BMW 7-seater
-import bmw7Black from '../assets/BMW7/đen.jpg';
-import bmw7White from '../assets/BMW7/trắng.jpg';
-import bmw7Silver from '../assets/BMW7/bạc.jpg';
-import bmw7Blue from '../assets/BMW7/xanh.jpg';
-import bmw7Red from '../assets/BMW7/đỏ.jpg';
+import bmw7Black from '../assets/BMW7/black.jpg';
+import bmw7White from '../assets/BMW7/white.jpg';
+import bmw7Silver from '../assets/BMW7/silver.jpg';
+import bmw7Blue from '../assets/BMW7/blue.jpg';
+import bmw7Red from '../assets/BMW7/red.jpg';
 
 // Tesla 7-seater
-import tesla7Black from '../assets/Tes7/đen.jpg';
-import tesla7White from '../assets/Tes7/trắng.jpg';
-import tesla7Silver from '../assets/Tes7/bạc.jpg';
-import tesla7Blue from '../assets/Tes7/xanh.jpg';
-import tesla7Red from '../assets/Tes7/đỏ.jpg';
+import tesla7Black from '../assets/Tes7/black.jpg';
+import tesla7White from '../assets/Tes7/white.jpg';
+import tesla7Silver from '../assets/Tes7/silver.jpg';
+import tesla7Blue from '../assets/Tes7/blue.jpg';
+import tesla7Red from '../assets/Tes7/red.jpg';
 
 // VinFast 7-seater
-import vinfast7Black from '../assets/Vin7/đen.jpg';
-import vinfast7White from '../assets/Vin7/trắng.jpg';
-import vinfast7Silver from '../assets/Vin7/bạc.jpg';
-import vinfast7Blue from '../assets/Vin7/xanh.jpg';
-import vinfast7Red from '../assets/Vin7/đỏ.jpg';
+import vinfast7Black from '../assets/Vin7/black.jpg';
+import vinfast7White from '../assets/Vin7/white.jpg';
+import vinfast7Silver from '../assets/Vin7/silver.jpg';
+import vinfast7Blue from '../assets/Vin7/blue.jpg';
+import vinfast7Red from '../assets/Vin7/red.jpg';
 
 
 const Booking7Seater = () => {

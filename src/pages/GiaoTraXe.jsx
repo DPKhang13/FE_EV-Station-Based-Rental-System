@@ -29,36 +29,58 @@ const GiaoTraXe = () => {
    * 🚀 Lấy dữ liệu xe và đơn hàng
    * ================================ */
   const fetchData = async () => {
-    if (!user) return;
-    const stationId = user.stationId ;
+    if (!user) {
+      console.warn("⚠️ User chưa đăng nhập, không thể load dữ liệu");
+      setLoading(false);
+      return;
+    }
+    const stationId = user.stationId || 1;
 
     try {
       setLoading(true);
 
+      console.log("🔄 Bắt đầu fetch vehicles...");
       const vehicles = await vehicleService.fetchAndTransformVehicles();
+      console.log("✅ Vehicles loaded:", vehicles?.length || 0);
+
+      console.log("🔄 Bắt đầu fetch orders...");
       const ordersRes = await orderService.getAll();
+      console.log("✅ Orders loaded:", ordersRes?.data?.length || ordersRes?.length || 0);
 
-   const vehiclesAtStation = vehicles
-  .filter((v) => Number(v.stationId) === Number(stationId))
-  .map((v) => ({
-    id: v.id || v.vehicleId,
-    ten: v.vehicle_name || v.vehicleName,
-    bienSo: v.plate_number || v.plateNumber,
-    pin: parseInt(v.battery_status?.replace("%", "") || v.batteryStatus?.replace("%", "") || "100"),
-    trangThai: formatStatus(v.status),
-    mau: v.color,
-    hang: v.brand,
-    nam: v.year_of_manufacture || v.year,
-    tram: v.stationName,
-    hinhAnh: getCarImage(v.brand, v.color, v.seatCount), // ✅ gắn ảnh tự động
-  }))
-  .sort((a, b) => a.id - b.id);
+      const vehiclesAtStation = (vehicles || [])
+        .filter((v) => Number(v.stationId) === Number(stationId))
+        .map((v) => {
+          const seatCount = v.seatCount || v.seat_count || 4;
+          return {
+            id: v.id || v.vehicleId,
+            ten: v.vehicle_name || v.vehicleName || v.name || "Xe điện",
+            bienSo: v.plate_number || v.plateNumber || "N/A",
+            pin: parseInt(v.battery_status?.replace("%", "") || v.batteryStatus?.replace("%", "") || "100"),
+            trangThai: formatStatus(v.status),
+            mau: v.color || "White",
+            hang: v.brand || "VinFast",
+            nam: v.year_of_manufacture || v.year || 2024,
+            tram: v.stationName || user?.stationName || `Trạm ${stationId}`,
+            seatCount: seatCount,
+            hinhAnh: getCarImage(v.brand || "VinFast", v.color || "White", seatCount),
+          };
+        })
+        .sort((a, b) => a.id - b.id);
 
+      console.log("✅ Vehicles at station:", vehiclesAtStation.length);
 
       setVehicleList(vehiclesAtStation);
-      setOrders(Array.isArray(ordersRes?.data) ? ordersRes.data : ordersRes);
+      setOrders(Array.isArray(ordersRes?.data) ? ordersRes.data : (Array.isArray(ordersRes) ? ordersRes : []));
     } catch (err) {
       console.error("❌ Lỗi khi tải dữ liệu:", err);
+      console.error("❌ Chi tiết lỗi:", err.message);
+      
+      // Set empty data để tránh crash
+      setVehicleList([]);
+      setOrders([]);
+      
+      // Hiển thị thông báo lỗi cho user
+      alert("⚠️ Không thể tải dữ liệu xe. Vui lòng kiểm tra kết nối backend hoặc thử lại sau.");
     } finally {
       setLoading(false);
     }
@@ -156,6 +178,8 @@ const GiaoTraXe = () => {
    * 🔍 Lọc xe theo tab + tìm kiếm
    * ================================ */
   const stationId = user?.stationId || 1;
+  const stationName = user?.stationName || vehicleList[0]?.tram || `Trạm ${stationId}`;
+  
   const filteredVehicles = vehicleList.filter((xe) => {
     const matchSearch = xe.bienSo
       ?.toLowerCase()
@@ -171,13 +195,13 @@ const GiaoTraXe = () => {
 
     return matchTab && matchSearch;
   });
-  // 🖼️ Map ảnh theo hãng + màu + loại xe
+  // Map ảnh theo hãng + màu + loại xe
 const getCarImage = (brand, color, seatCount) => {
   const base = "https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar";
   const seatType = seatCount > 4 ? "7_Cho" : "4_Cho";
   const brandKey = brand?.toLowerCase();
 
-  // 🧠 Chuẩn hóa màu về tiếng Việt
+  // Chuẩn hóa màu về tiếng Việt
   const colorMap = {
     white: "trắng",
     silver: "bạc",
@@ -251,7 +275,7 @@ const getCarImage = (brand, color, seatCount) => {
    * ================================ */
   return (
     <div className="giaoTraXe-container">
-      <h1 className="title">Quản lý giao - nhận xe (Trạm ID {stationId})</h1>
+      <h1 className="title">Quản lý giao - nhận xe ({stationName})</h1>
 
       {/* Tìm kiếm */}
       <div className="search-bar">

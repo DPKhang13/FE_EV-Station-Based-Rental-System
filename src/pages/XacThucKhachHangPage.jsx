@@ -105,18 +105,23 @@ export default function VerifyCustomerPage() {
   return (
     <>
       <div className="verify-container">
-        <h1 className="verify-title">Xác thực khách hàng</h1>
-        <p className="verify-subtitle">
-          Kiểm tra giấy tờ và xử lý hồ sơ đặt xe
-        </p>
+        {/* Box tìm kiếm với viền đỏ */}
+        <div className="verify-section" style={{ marginBottom: '40px' }}>
+          <div style={{ padding: '40px 50px' }}>
+            <h1 className="verify-title">Xác thực khách hàng</h1>
+            <p className="verify-subtitle">
+              Kiểm tra giấy tờ và xử lý hồ sơ đặt xe
+            </p>
 
-        <input
-          className="verify-search"
-          type="text"
-          placeholder="Tìm kiếm theo họ tên, SĐT, mã đơn..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+            <input
+              className="verify-search"
+              type="text"
+              placeholder="Tìm kiếm theo họ tên, SĐT, mã đơn..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
 
         <div className="verify-section">
           <h2>Hồ sơ đặt xe cần xử lý ({filtered.length})</h2>

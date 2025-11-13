@@ -40,7 +40,7 @@ const ListCarPage = () => {
                 }
                 console.log('✅ Loaded branch name:', station?.name);
             } catch (error) {
-                console.error('❌ Error loading branch name:', error);
+                console.error(' Error loading branch name:', error);
                 setBranchName(`Chi nhánh ${selectedBranch}`);
             } finally {
                 setLoading(false);

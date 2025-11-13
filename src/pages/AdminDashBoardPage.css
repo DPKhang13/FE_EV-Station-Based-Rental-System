@@ -1,4 +1,4 @@
- cho xanh và đỏ thôi /* AdminDashboard.css */
+﻿┬ácho xanh v├á ─æß╗Å th├┤i /* AdminDashboard.css */
 
 .dashboard-container {
   padding: 24px;
@@ -222,7 +222,7 @@ tr:hover {
   color: #e74c3c;
   font-weight: 600;
 }
-/* 🚗 Thanh tỷ lệ sử dụng xe */
+/* ≡ƒÜù Thanh tß╗╖ lß╗ç sß╗¡ dß╗Ñng xe */
 .usage-item {
   margin-bottom: 20px;
 }
@@ -236,7 +236,7 @@ tr:hover {
 .bar {
   width: 100%;
   height: 10px;
-  background-color: #e2e8f0; /* xám nhạt */
+  background-color: #e2e8f0; /* x├ím nhß║ít */
   border-radius: 6px;
   overflow: hidden;
   margin-bottom: 6px;
@@ -248,17 +248,17 @@ tr:hover {
   transition: width 0.8s ease-in-out, background-color 0.5s ease;
 }
 
-/* 💚 Màu gradient đẹp tuỳ theo mức sử dụng */
+/* ≡ƒÆÜ M├áu gradient ─æß║╣p tuß╗│ theo mß╗⌐c sß╗¡ dß╗Ñng */
 .fill.low {
-  background: linear-gradient(90deg, #60a5fa, #3b82f6); /* xanh dương nhạt */
+  background: linear-gradient(90deg, #60a5fa, #3b82f6); /* xanh d╞░╞íng nhß║ít */
 }
 
 .fill.medium {
-  background: linear-gradient(90deg, #34d399, #10b981); /* xanh lá */
+  background: linear-gradient(90deg, #34d399, #10b981); /* xanh l├í */
 }
 
 .fill.high {
-  background: linear-gradient(90deg, #facc15, #f59e0b); /* vàng/cam cảnh báo */
+  background: linear-gradient(90deg, #facc15, #f59e0b); /* v├áng/cam cß║únh b├ío */
 }
 
 .usage-item span {
@@ -270,7 +270,7 @@ tr:hover {
   background: linear-gradient(90deg, #facc15, #f97316);
   box-shadow: 0 0 10px rgba(250, 204, 21, 0.6);
 }
-/* 🚫 Xoá khung / viền vàng sau các thẻ KPI */
+/* ≡ƒÜ½ Xo├í khung / viß╗ün v├áng sau c├íc thß║╗ KPI */
 .summary {
   border: none !important;
   background: transparent !important;

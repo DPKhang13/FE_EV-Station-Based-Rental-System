@@ -97,13 +97,13 @@ const CarFilter = ({ selectedBranch }) => {
 
     // Debug log
     useEffect(() => {
-        console.log('🔍 [CarFilter] Debug Info:');
-        console.log('  📍 Branch:', selectedBranch || 'All');
-        console.log('  🏭 Brand:', brand || 'All');
-        console.log('  ⭐ Grade:', grade || 'All');
-        console.log('  🎨 Colors:', selectedColors.length > 0 ? selectedColors.join(', ') : 'All');
-        console.log('  📊 Total cars:', cars.length);
-        console.log('  ✅ Filtered cars:', filteredCars.length);
+        console.log(' [CarFilter] Debug Info:');
+        console.log('   Branch:', selectedBranch || 'All');
+        console.log('   Brand:', brand || 'All');
+        console.log('   Grade:', grade || 'All');
+        console.log('   Colors:', selectedColors.length > 0 ? selectedColors.join(', ') : 'All');
+        console.log('   Total cars:', cars.length);
+        console.log('   Filtered cars:', filteredCars.length);
     }, [selectedBranch, brand, grade, selectedColors, sortBy, cars.length, filteredCars.length, cars]);
 
     // Xử lý khi thay đổi hãng xe

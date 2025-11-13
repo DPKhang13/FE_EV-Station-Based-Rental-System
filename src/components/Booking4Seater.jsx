@@ -8,25 +8,25 @@ import './Booking4Seater.css';
 
 // Import ảnh xe theo brand và màu
 // BMW 4-seater
-import bmw4Black from '../assets/BMW4/đen.png';
-import bmw4White from '../assets/BMW4/trắng.jpg';
-import bmw4Silver from '../assets/BMW4/bạc.jpg';
-import bmw4Blue from '../assets/BMW4/xanh.jpg';
-import bmw4Red from '../assets/BMW4/đỏ.png';
+import bmw4Black from '../assets/BMW4/black.png';
+import bmw4White from '../assets/BMW4/white.jpg';
+import bmw4Silver from '../assets/BMW4/silver.jpg';
+import bmw4Blue from '../assets/BMW4/blue.jpg';
+import bmw4Red from '../assets/BMW4/red.png';
 
 // Tesla 4-seater
-import tesla4Black from '../assets/Tes4/đen.jpg';
-import tesla4White from '../assets/Tes4/trắng.jpg';
-import tesla4Silver from '../assets/Tes4/bạc.jpg';
-import tesla4Blue from '../assets/Tes4/xanh.jpg';
-import tesla4Red from '../assets/Tes4/đỏ.jpg';
+import tesla4Black from '../assets/Tes4/black.jpg';
+import tesla4White from '../assets/Tes4/white.jpg';
+import tesla4Silver from '../assets/Tes4/silver.jpg';
+import tesla4Blue from '../assets/Tes4/blue.jpg';
+import tesla4Red from '../assets/Tes4/red.jpg';
 
 // VinFast 4-seater
-import vinfast4Black from '../assets/Vin4/đen.png';
-import vinfast4White from '../assets/Vin4/trắng.jpg';
-import vinfast4Silver from '../assets/Vin4/bạc.png';
-import vinfast4Blue from '../assets/Vin4/xanh.jpg';
-import vinfast4Red from '../assets/Vin4/đỏ.png';
+import vinfast4Black from '../assets/Vin4/black.png';
+import vinfast4White from '../assets/Vin4/white.jpg';
+import vinfast4Silver from '../assets/Vin4/silver.png';
+import vinfast4Blue from '../assets/Vin4/blue.jpg';
+import vinfast4Red from '../assets/Vin4/red.png';
 
 // Images
 import car4SeatDefault from '../assets/4seatsilver.png';
@@ -41,26 +41,33 @@ const Booking4Seater = () => {
 
   // Mapping ảnh xe theo brand và màu
   const getCarImageByBrandAndColor = (brand, color) => {
-    if (!brand || !color) return car4SeatDefault;
+    console.log(' [getCarImage] Input - Brand:', brand, 'Color:', color);
+    
+    if (!brand || !color) {
+      console.log(' [getCarImage] Missing brand or color, using default');
+      return car4SeatDefault;
+    }
 
-    const brandLower = brand.toLowerCase();
-    const colorLower = color.toLowerCase();
+    const brandLower = brand.toLowerCase().trim();
+    const colorLower = color.toLowerCase().trim();
+    
+    console.log('🔍 [getCarImage] Input after trim/lower - Brand:', brandLower, 'Color:', colorLower);
 
-    // Object chứa mapping ảnh theo brand và color
+    
     const carImages = {
-      bmw: {
-        black: bmw4Black,
-        white: bmw4White,
-        silver: bmw4Silver, 
-        blue: bmw4Blue, 
-        red: bmw4Red, 
-      },
       tesla: {
         black: tesla4Black,
         white: tesla4White,
         silver: tesla4Silver,
         blue: tesla4Blue,
         red: tesla4Red, 
+      },
+      bmw: {
+        black: bmw4Black,
+        white: bmw4White,
+        silver: bmw4Silver, 
+        blue: bmw4Blue, 
+        red: bmw4Red, 
       },
       vinfast: {
         black: vinfast4Black,
@@ -71,19 +78,18 @@ const Booking4Seater = () => {
       },
     };
 
-    // Normalize color name
-    let normalizedColor = 'silver'; // default
-    if (colorLower.includes('black') || colorLower.includes('đen')) normalizedColor = 'black';
-    else if (colorLower.includes('white') || colorLower.includes('trắng')) normalizedColor = 'white';
-    else if (colorLower.includes('silver') || colorLower.includes('bạc')) normalizedColor = 'silver';
-    else if (colorLower.includes('blue') || colorLower.includes('xanh')) normalizedColor = 'blue';
-    else if (colorLower.includes('red') || colorLower.includes('đỏ')) normalizedColor = 'red';
+    // Normalize color name - DB stores "Black", "White", "Red", "Blue", "Silver"
+    const normalizedColor = colorLower; // Already lowercase from DB colors
+
+    console.log('🎨 [getCarImage] Looking for image:', brandLower, normalizedColor);
 
     // Return image based on brand and color
     if (carImages[brandLower] && carImages[brandLower][normalizedColor]) {
+      console.log('✅ [getCarImage] Found image for', brandLower, normalizedColor);
       return carImages[brandLower][normalizedColor];
     }
 
+    console.log('⚠️ [getCarImage] No image found for', brandLower, normalizedColor, '- using default');
     return car4SeatDefault;
   };
 
@@ -117,25 +123,53 @@ const Booking4Seater = () => {
     const isAvailable = car.status === 'Available';
     const matchesGrade = gradeFilter ? car.grade === gradeFilter : true;
     const matchesColor = selectedColor ? car.color === selectedColor : true;
-    const matchesBrand = selectedBrand ? (car.brand === selectedBrand || car.vehicle_name?.includes(selectedBrand)) : true;
+    
+    // Case-insensitive brand matching
+    const matchesBrand = selectedBrand 
+      ? (car.brand?.toLowerCase().trim() === selectedBrand.toLowerCase().trim() || 
+         car.vehicle_name?.toLowerCase().includes(selectedBrand.toLowerCase()))
+      : true;
+    
     return isFourSeater && isAvailable && matchesGrade && matchesColor && matchesBrand;
   });
 
+  console.log('🚗 [Booking4Seater] Selected Brand:', selectedBrand);
+  console.log('🎨 [Booking4Seater] Selected Color:', selectedColor);
+  console.log('📋 [Booking4Seater] Available Cars:', availableCars.length, availableCars.map(c => ({ id: c.id, brand: c.brand, color: c.color, name: c.vehicle_name })));
+  console.log('📦 [Booking4Seater] Total cars from API/sample:', cars.length);
+  console.log('🔎 [Booking4Seater] All cars brands:', [...new Set(cars.map(c => c.brand))]);
+  console.log('🔎 [Booking4Seater] 4-seater cars:', cars.filter(c => c.type === '4-seater').map(c => ({ brand: c.brand, color: c.color, name: c.vehicle_name })));
+
+  // Filter available colors based on selected brand (KHÔNG filter theo grade để hiển thị tất cả màu)
   const availableColors = [
     ...new Set(
       cars
         .filter(
-          (car) =>
-            car.type === '4-seater' &&
-            car.status === 'Available' &&
-            car.color &&
-            car.color !== 'N/A' &&
-            car.color !== 'null' &&
-            (!gradeFilter || car.grade === gradeFilter)
+          (car) => {
+            const isFourSeater = car.type === '4-seater';
+            const isAvailable = car.status === 'Available';
+            const hasValidColor = car.color && car.color !== 'N/A' && car.color !== 'null';
+            // REMOVED: const matchesGrade = !gradeFilter || car.grade === gradeFilter;
+            
+            // Match brand - simplified: if selectedBrand exists, check if car.brand matches
+            let matchesBrand = true;
+            if (selectedBrand) {
+              const carBrandLower = (car.brand || '').toLowerCase().trim();
+              const selectedBrandLower = selectedBrand.toLowerCase().trim();
+              matchesBrand = carBrandLower === selectedBrandLower;
+              
+              console.log(`🔍 Checking car: ${car.vehicle_name} | car.brand: "${car.brand}" (${carBrandLower}) vs selected: "${selectedBrand}" (${selectedBrandLower}) = ${matchesBrand}`);
+            }
+            
+            const passes = isFourSeater && isAvailable && hasValidColor && matchesBrand;
+            return passes;
+          }
         )
         .map((car) => car.color)
     ),
   ].sort();
+  
+  console.log('🎨 [Booking4Seater] Available Colors for brand', selectedBrand, ':', availableColors);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -176,17 +210,41 @@ const Booking4Seater = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Reset selected car when brand changes
+  useEffect(() => {
+    setSelectedCarId('');
+    setSelectedCar(null);
+  }, [selectedBrand]);
+
   // Auto-select car when both color and brand are selected
   useEffect(() => {
-    if (selectedColor && selectedBrand && availableCars.length > 0) {
-      const firstMatchingCar = availableCars[0];
-      setSelectedCarId(firstMatchingCar.id);
-      setSelectedCar(firstMatchingCar);
+    if (selectedColor && selectedBrand) {
+      // Filter cars inside useEffect to avoid dependency
+      const matchingCars = cars.filter((car) => {
+        const isFourSeater = car.type === '4-seater';
+        const isAvailable = car.status === 'Available';
+        const matchesGrade = gradeFilter ? car.grade === gradeFilter : true;
+        const matchesColor = car.color === selectedColor;
+        const matchesBrand = car.brand?.toLowerCase().trim() === selectedBrand.toLowerCase().trim() ||
+                           car.vehicle_name?.toLowerCase().includes(selectedBrand.toLowerCase());
+        return isFourSeater && isAvailable && matchesGrade && matchesColor && matchesBrand;
+      });
+
+      if (matchingCars.length > 0) {
+        const firstMatchingCar = matchingCars[0];
+        setSelectedCarId(firstMatchingCar.id);
+        setSelectedCar(firstMatchingCar);
+        console.log('✅ Auto-selected car:', firstMatchingCar.vehicle_name, firstMatchingCar.brand, firstMatchingCar.color);
+      } else {
+        setSelectedCarId('');
+        setSelectedCar(null);
+        console.log('⚠️ No matching cars found');
+      }
     } else if (!selectedColor || !selectedBrand) {
       setSelectedCarId('');
       setSelectedCar(null);
     }
-  }, [selectedColor, selectedBrand, availableCars]);
+  }, [selectedColor, selectedBrand, cars, gradeFilter]);
 
   const handleCarSelect = (e) => {
     const carId = e.target.value;
