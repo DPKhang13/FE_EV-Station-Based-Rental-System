@@ -4,58 +4,46 @@
     min-height: 100vh;
 }
 
-.vehicle-management .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.vehicle-management .page-header {
     margin-bottom: 30px;
-    padding-bottom: 15px;
-    border-bottom: 3px solid #DC0000;
+    text-align: center;
+    position: relative;
 }
 
-.vehicle-management h1 {
+.vehicle-management .page-header h1 {
     font-size: 28px;
     color: #000000;
-    margin: 0;
+    margin: 0 auto;
     font-weight: 300;
     letter-spacing: 2px;
     text-transform: uppercase;
+    padding-bottom: 15px;
+    border-bottom: 3px solid #DC0000;
+    display: inline-block;
+    width: auto;
+    max-width: fit-content;
 }
 
 .btn-add {
-    background: #000000;
+    background: #10b981;
     color: #FFFFFF;
-    padding: 12px 30px;
-    border: 2px solid #000000;
-    border-radius: 0;
-    font-size: 14px;
-    font-weight: 400;
-    letter-spacing: 1.5px;
+    padding: 10px 24px;
+    border: 2px solid #10b981;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
     text-transform: uppercase;
     cursor: pointer;
     transition: all 0.3s;
-    position: relative;
-    overflow: hidden;
-}
-
-.btn-add::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: #DC0000;
-    transition: left 0.3s ease;
-    z-index: -1;
-}
-
-.btn-add:hover::before {
-    left: 0;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
 }
 
 .btn-add:hover {
-    border-color: #DC0000;
+    background: #059669;
+    border-color: #059669;
+    box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+    transform: translateY(-1px);
 }
 
 .search-bar {
@@ -141,22 +129,25 @@
 }
 
 .btn-clear-filters {
-    background: transparent;
+    background: #FFFFFF;
     color: #DC0000;
     border: 2px solid #DC0000;
-    border-radius: 0;
+    border-radius: 4px;
     padding: 6px 16px;
     font-size: 12px;
-    font-weight: 400;
-    letter-spacing: 1.5px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
     text-transform: uppercase;
     cursor: pointer;
     transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(220, 0, 0, 0.1);
 }
 
 .btn-clear-filters:hover {
     background: #DC0000;
     color: #FFFFFF;
+    box-shadow: 0 4px 8px rgba(220, 0, 0, 0.3);
+    transform: translateY(-1px);
 }
 
 .filters-grid {
@@ -312,81 +303,76 @@
 
 .vehicle-actions-buttons {
     display: flex;
-    gap: 8px;
+    gap: 12px;
     flex-wrap: wrap;
 }
 
 .vehicle-actions-buttons button {
     flex: 1;
     min-width: 100px;
-    padding: 10px 14px;
-    border: 2px solid #000000;
-    border-radius: 0;
-    font-size: 11px;
-    font-weight: 400;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
+    padding: 8px 12px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
     cursor: pointer;
     transition: all 0.3s;
-    position: relative;
-    overflow: hidden;
+    border-radius: 6px;
+    margin-right: 8px;
+}
+
+.vehicle-actions-buttons button:last-child {
+    margin-right: 0;
 }
 
 .btn-view-details {
-    background: #000000;
-    color: #FFFFFF;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
-.btn-view-details::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: #DC0000;
-    transition: left 0.3s ease;
-    z-index: 0;
-}
-
-.btn-view-details:hover::before {
-    left: 0;
-}
-
-.btn-view-details span {
-    position: relative;
-    z-index: 1;
+.btn-view-details:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    transform: translateY(-2px);
 }
 
 .btn-edit-vehicle {
-    background: transparent;
-    color: #000000;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
 .btn-edit-vehicle:hover {
-    background: #000000;
-    color: #FFFFFF;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    transform: translateY(-2px);
 }
 
 .btn-delete-vehicle {
-    background: transparent;
+    background: #FFFFFF;
     color: #DC0000;
-    border-color: #DC0000;
+    border: 2px solid #DC0000 !important;
+    box-shadow: 0 2px 8px rgba(220, 0, 0, 0.15);
 }
 
 .btn-delete-vehicle:hover {
     background: #DC0000;
     color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(220, 0, 0, 0.4);
+    transform: translateY(-2px);
 }
 
 .btn-view-orders {
-    background: transparent;
-    color: #000000;
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
 .btn-view-orders:hover {
-    background: #000000;
-    color: #FFFFFF;
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    transform: translateY(-2px);
 }
 
 /* ================================
@@ -410,7 +396,7 @@
     padding: 16px;
     text-align: left;
     font-weight: 400;
-    color: #FFFFFF;
+    color: #ffffff;
     letter-spacing: 1.5px;
     text-transform: uppercase;
     font-size: 12px;
@@ -425,7 +411,11 @@
 }
 
 .vehicle-table tbody tr:hover {
-    background: #F5F5F5;
+    background: #ffffff;
+}
+
+.vehicle-table tbody tr:hover td {
+    color: #000000;
 }
 
 .vehicle-table img {
@@ -468,38 +458,58 @@
 }
 
 .btn-edit,
-.btn-delete {
-    padding: 8px 20px;
-    border: 2px solid #000000;
-    border-radius: 0;
-    font-size: 11px;
-    font-weight: 400;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
+.btn-delete,
+.btn-history {
+    padding: 6px 10px;
+    border: none;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
     cursor: pointer;
-    margin-right: 8px;
+    margin-right: 0;
     transition: all 0.3s;
+    border-radius: 0;
+    flex: 1;
+    white-space: nowrap;
 }
 
 .btn-edit {
-    background: transparent;
-    color: #000000;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
 }
 
 .btn-edit:hover {
-    background: #000000;
-    color: #FFFFFF;
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-history {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+    box-shadow: 0 2px 6px rgba(139, 92, 246, 0.3);
+    border-radius: 6px;
+}
+
+.btn-history:hover {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    box-shadow: 0 4px 10px rgba(139, 92, 246, 0.4);
+    transform: translateY(-1px);
 }
 
 .btn-delete {
-    background: transparent;
+    background: #FFFFFF;
     color: #DC0000;
-    border-color: #DC0000;
+    border: 2px solid #DC0000 !important;
+    box-shadow: 0 2px 8px rgba(220, 0, 0, 0.15);
 }
 
 .btn-delete:hover {
     background: #DC0000;
     color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(220, 0, 0, 0.4);
+    transform: translateY(-2px);
 }
 
 .loading,
@@ -538,7 +548,6 @@
 
 .modal-content {
     background: #FFFFFF;
-    padding: 30px;
     border: 2px solid #E0E0E0;
     border-top: 3px solid #DC0000;
     border-radius: 0;
@@ -546,6 +555,8 @@
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
 .modal-content h2 {
@@ -555,6 +566,83 @@
     margin-bottom: 20px;
     letter-spacing: 2px;
     text-transform: uppercase;
+}
+
+.modal-header {
+    padding: 30px 30px 20px;
+    border-bottom: 1px solid #E0E0E0;
+}
+
+.modal-close {
+    background: transparent;
+    border: 2px solid #DC0000;
+    color: #DC0000;
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    float: right;
+    margin-top: -5px;
+}
+
+.modal-close:hover {
+    background: #DC0000;
+    color: #FFFFFF;
+}
+
+.vehicle-form {
+    flex: 1;
+    padding: 30px;
+}
+
+.modal-footer {
+    bottom: 0;
+    background: #FFFFFF;
+    padding: 20px 30px;
+    border-top: 2px solid #E0E0E0;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.btn-cancel,
+.btn-submit {
+    padding: 12px 32px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s;
+    flex: 1;
+    max-width: 200px;
+}
+
+.btn-cancel {
+    background: #FFFFFF;
+    color: #000000;
+    border: 2px solid #000000;
+}
+
+.btn-cancel:hover {
+    background: #000000;
+    color: #FFFFFF;
+}
+
+.btn-submit {
+    background: #DC0000;
+    color: #FFFFFF;
+    border: 2px solid #DC0000;
+}
+
+.btn-submit:hover {
+    background: #B00000;
+    border-color: #B00000;
 }
 
 .form-group {
@@ -588,6 +676,16 @@
 .form-group textarea:focus {
     outline: none;
     border-color: #DC0000;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
 }
 
 /* ================================

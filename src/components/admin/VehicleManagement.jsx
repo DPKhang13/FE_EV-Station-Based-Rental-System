@@ -577,32 +577,23 @@ const VehicleManagement = () => {
                                                 {statusInfo.text}
                                             </span>
                                         </td>
-                                        <td>
-                                            <button
-                                                className="btn-edit"
-                                                title="Chỉnh sửa thông tin xe"
-                                                onClick={() => handleEditVehicle(vehicle)}
-                                            >
-                                                Sửa
-                                            </button>
-                                            <button
-                                                className="btn-history"
-                                                title="Xem lịch sử đặt xe"
-                                                onClick={() => handleViewOrderHistory(vehicle)}
-                                                style={{
-                                                    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-                                                    color: 'white',
-                                                    padding: '8px 12px',
-                                                    border: 'none',
-                                                    borderRadius: '6px',
-                                                    cursor: 'pointer',
-                                                    fontSize: '14px',
-                                                    fontWeight: '600',
-                                                    marginRight: '8px'
-                                                }}
-                                            >
-                                                📋 Lịch sử
-                                            </button>
+                                        <td style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '160px' }}>
+                                            <div style={{ display: 'flex', gap: '6px' }}>
+                                                <button
+                                                    className="btn-edit"
+                                                    title="Chỉnh sửa thông tin xe"
+                                                    onClick={() => handleEditVehicle(vehicle)}
+                                                >
+                                                    Sửa
+                                                </button>
+                                                <button
+                                                    className="btn-history"
+                                                    title="Xem lịch sử đặt xe"
+                                                    onClick={() => handleViewOrderHistory(vehicle)}
+                                                >
+                                                    Lịch sử
+                                                </button>
+                                            </div>
                                             <button
                                                 className="btn-delete"
                                                 title="Xóa xe khỏi hệ thống"

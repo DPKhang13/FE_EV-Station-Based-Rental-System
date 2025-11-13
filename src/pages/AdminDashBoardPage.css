@@ -1,69 +1,105 @@
-﻿┬ácho xanh v├á ─æß╗Å th├┤i /* AdminDashboard.css */
+﻿/* AdminDashBoardPage.css - Mercedes-Benz Style */
 
 .dashboard-container {
-  padding: 24px;
+  padding: 30px;
   font-family: Arial, sans-serif;
-  background-color: #f5f6fa;
-  color: #333;
+  background-color: #FFFFFF;
+  color: #000000;
+  min-height: 100vh;
 }
 
 h1 {
   font-size: 28px;
-  font-weight: bold;
+  font-weight: 300;
   margin-bottom: 8px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-bottom: 3px solid #DC0000;
+  padding-bottom: 15px;
 }
 
 .subtitle {
-  color: #666;
-  margin-bottom: 24px;
+  color: #6b7280;
+  margin-bottom: 30px;
+  font-size: 14px;
+  letter-spacing: 1px;
 }
 
 .summary {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 32px;
+  gap: 20px;
+  margin-bottom: 40px;
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 
 .card {
-  border-radius: 16px;
-  color: #fff;
-  padding: 16px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border: 2px solid #E0E0E0;
+  border-top: 3px solid #DC0000;
+  border-radius: 0;
+  color: #000000;
+  background: #FFFFFF;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
 }
 
 .card h2 {
-  font-size: 14px;
-  margin-bottom: 4px;
+  font-size: 12px;
+  margin-bottom: 8px;
+  font-weight: 400;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #6b7280;
 }
 
 .card .value {
-  font-size: 24px;
-  font-weight: bold;
+  font-size: 32px;
+  font-weight: 300;
+  color: #000000;
+  letter-spacing: 1px;
 }
 
 .card span {
-  font-size: 12px;
-  opacity: 0.9;
+  font-size: 11px;
+  opacity: 0.8;
+  letter-spacing: 1px;
+  color: #6b7280;
 }
 
-.card.blue { background-color: #3498db; }
-.card.green { background-color: #2ecc71; }
-.card.purple { background-color: #9b59b6; }
-.card.orange { background-color: #e67e22; }
+/* ================================
+   SECTION CONTAINERS
+   ================================ */
 
 .section {
-  background: #fff;
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 32px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+  background: #FFFFFF;
+  border: 2px solid #E0E0E0;
+  border-top: 3px solid #DC0000;
+  border-radius: 0;
+  padding: 25px;
+  margin-bottom: 40px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .section h2 {
-  font-size: 18px;
-  margin-bottom: 12px;
+  font-size: 16px;
+  margin-bottom: 20px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #000000;
 }
+
+/* ================================
+   TABLES
+   ================================ */
 
 table {
   width: 100%;
@@ -71,213 +107,263 @@ table {
 }
 
 th, td {
-  padding: 10px;
+  padding: 14px 16px;
   text-align: left;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #E0E0E0;
+  font-size: 13px;
 }
 
 th {
-  color: #666;
-  font-weight: 600;
+  color: #ffffff;
+  font-weight: 400;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-size: 12px;
+  background: #000000;
 }
 
 tr:hover {
-  background-color: #f9f9f9;
+  background-color: #F5F5F5;
+}
+
+tbody tr:hover td {
+  color: #000000;
 }
 
 .up {
-  color: #27ae60;
-  font-weight: bold;
+  color: #000000;
+  font-weight: 600;
 }
 
 .down {
-  color: #e74c3c;
-  font-weight: bold;
+  color: #DC0000;
+  font-weight: 600;
 }
+
+/* ================================
+   USAGE & TRENDS SECTION
+   ================================ */
 
 .usage-trend {
   display: grid;
   grid-template-columns: 2fr 1fr;
-  gap: 20px;
+  gap: 25px;
 }
 
 .usage, .trends {
-  background: #fff;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+  background: #FFFFFF;
+  border: 2px solid #E0E0E0;
+  border-top: 3px solid #DC0000;
+  border-radius: 0;
+  padding: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .usage h2, .trends h2 {
-  font-size: 18px;
-  margin-bottom: 16px;
+  font-size: 16px;
+  margin-bottom: 20px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #000000;
 }
 
 .usage-item {
-  margin-bottom: 12px;
+  margin-bottom: 20px;
+}
+
+.usage-item p {
+  font-weight: 400;
+  margin-bottom: 8px;
+  color: #000000;
+  font-size: 13px;
+  letter-spacing: 1px;
 }
 
 .bar {
   width: 100%;
-  background: #ddd;
   height: 8px;
-  border-radius: 4px;
-  margin: 4px 0;
+  background-color: #E0E0E0;
+  border-radius: 0;
+  overflow: hidden;
+  margin-bottom: 8px;
 }
 
 .fill {
-  height: 8px;
-  border-radius: 4px;
+  height: 100%;
+  border-radius: 0;
+  transition: width 0.8s ease-in-out, background-color 0.5s ease;
 }
 
-.fill.high {
-  background: #2ecc71;
+.fill.low {
+  background: #6b7280;
 }
 
 .fill.medium {
-  background: #f1c40f;
+  background: #000000;
 }
+
+.fill.high {
+  background: #DC0000;
+  box-shadow: 0 0 10px rgba(220, 0, 0, 0.4);
+}
+
+.usage-item span {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 400;
+  letter-spacing: 1px;
+}
+
+/* ================================
+   TREND CARDS
+   ================================ */
 
 .trend-cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: 15px;
 }
 
 .trend {
   text-align: center;
-  border-radius: 16px;
+  border: 2px solid #E0E0E0;
+  border-radius: 0;
   padding: 20px;
-  color: #fff;
-  font-weight: bold;
+  color: #000000;
+  background: #FFFFFF;
+  font-weight: 400;
+  transition: all 0.3s ease;
 }
 
-.trend.blue { background-color: #3498db; }
-.trend.green { background-color: #2ecc71; }
-.trend.purple { background-color: #9b59b6; }
+.trend:hover {
+  transform: translateY(-3px);
+  border-color: #DC0000;
+}
 
 .percent {
-  font-size: 24px;
-  margin-bottom: 4px;
+  font-size: 28px;
+  margin-bottom: 6px;
+  font-weight: 300;
+  color: #DC0000;
+  letter-spacing: 1px;
 }
+
+.trend p {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+/* ================================
+   PEAK TIME SECTION
+   ================================ */
+
 .peak-time {
-  background: #fff;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-  margin-top: 32px;
+  background: #FFFFFF;
+  border: 2px solid #E0E0E0;
+  border-top: 3px solid #DC0000;
+  border-radius: 0;
+  padding: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-top: 40px;
 }
 
 .peak-time h2 {
-  font-size: 18px;
-  margin-bottom: 16px;
+  font-size: 16px;
+  margin-bottom: 20px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #000000;
 }
 
 .peak-time-container {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  gap: 20px;
 }
 
 .peak-time-branch {
-  border: 1px solid #eee;
-  border-radius: 12px;
-  background: #fafafa;
-  padding: 16px;
+  border: 2px solid #E0E0E0;
+  border-radius: 0;
+  background: #F5F5F5;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.peak-time-branch:hover {
+  border-color: #DC0000;
 }
 
 .peak-time-branch h3 {
-  margin: 0 0 8px;
-  font-size: 16px;
-  font-weight: 600;
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #000000;
 }
 
 .time-slot {
   display: inline-block;
-  background: #e3f2fd;
-  color: #1976d2;
-  padding: 4px 10px;
-  border-radius: 12px;
-  margin: 3px;
-  font-size: 13px;
+  background: #000000;
+  color: #FFFFFF;
+  padding: 6px 12px;
+  border-radius: 0;
+  margin: 4px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+}
+
+.time-slot:hover {
+  background: #DC0000;
 }
 
 .peak-usage {
-  font-size: 13px;
-  color: #555;
-  margin-top: 8px;
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 12px;
+  letter-spacing: 1px;
+}
+
+/* ================================
+   RESPONSIVE
+   ================================ */
+
+@media (max-width: 1200px) {
+  .summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .usage-trend {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 900px) {
   .peak-time-container {
     grid-template-columns: 1fr;
   }
-}
-.up {
-  color: #27ae60;
-  font-weight: 600;
+
+  .trend-cards {
+    grid-template-columns: 1fr;
+  }
 }
 
-.down {
-  color: #e74c3c;
-  font-weight: 600;
-}
-/* ≡ƒÜù Thanh tß╗╖ lß╗ç sß╗¡ dß╗Ñng xe */
-.usage-item {
-  margin-bottom: 20px;
-}
+@media (max-width: 768px) {
+  .summary {
+    grid-template-columns: 1fr;
+  }
 
-.usage-item p {
-  font-weight: 500;
-  margin-bottom: 6px;
-  color: #334155;
-}
+  h1 {
+    font-size: 22px;
+  }
 
-.bar {
-  width: 100%;
-  height: 10px;
-  background-color: #e2e8f0; /* x├ím nhß║ít */
-  border-radius: 6px;
-  overflow: hidden;
-  margin-bottom: 6px;
-}
-
-.fill {
-  height: 100%;
-  border-radius: 6px;
-  transition: width 0.8s ease-in-out, background-color 0.5s ease;
-}
-
-/* ≡ƒÆÜ M├áu gradient ─æß║╣p tuß╗│ theo mß╗⌐c sß╗¡ dß╗Ñng */
-.fill.low {
-  background: linear-gradient(90deg, #60a5fa, #3b82f6); /* xanh d╞░╞íng nhß║ít */
-}
-
-.fill.medium {
-  background: linear-gradient(90deg, #34d399, #10b981); /* xanh l├í */
-}
-
-.fill.high {
-  background: linear-gradient(90deg, #facc15, #f59e0b); /* v├áng/cam cß║únh b├ío */
-}
-
-.usage-item span {
-  font-size: 14px;
-  color: #475569;
-  font-weight: 500;
-}
-.fill.high {
-  background: linear-gradient(90deg, #facc15, #f97316);
-  box-shadow: 0 0 10px rgba(250, 204, 21, 0.6);
-}
-/* ≡ƒÜ½ Xo├í khung / viß╗ün v├áng sau c├íc thß║╗ KPI */
-.summary {
-  border: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-.card {
-  border: none !important;
+  .dashboard-container {
+    padding: 20px;
+  }
 }
 
