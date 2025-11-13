@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';        // 👈 thêm
 import userService from '../../services/userService';
 import './CustomerManagement.css';
 
@@ -9,6 +10,8 @@ const CustomerManagement = () => {
     const [filterRole, setFilterRole] = useState('all');
     const [filterStatus, setFilterStatus] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
+
+    const navigate = useNavigate();                   // 👈 thêm
 
     useEffect(() => {
         fetchUsers();
@@ -75,6 +78,19 @@ const CustomerManagement = () => {
         }
     };
 
+    // 👇 hàm xem chi tiết
+    const handleViewDetail = (user) => {
+        const id = user.userId || user.id;
+        if (!id) {
+            console.warn("Không có ID user để điều hướng");
+            return;
+        }
+        // tuỳ cấu trúc route của bạn – sửa path nếu cần
+        navigate(`/admin/customers/${id}`);
+        // hoặc nếu chưa có route thì tạm:
+        // alert(`Xem chi tiết khách hàng: ${user.fullName}`);
+    };
+
     if (loading) {
         return <div className="customer-loading">⏳ Đang tải danh sách người dùng...</div>;
     }
@@ -86,7 +102,6 @@ const CustomerManagement = () => {
                     <h1>QUẢN LÝ KHÁCH HÀNG</h1>
                     <p className="customer-subtitle">Danh sách tất cả người dùng trong hệ thống</p>
                 </div>
-                {/* search moved into filters */}
             </div>
 
             {error && (
@@ -138,12 +153,13 @@ const CustomerManagement = () => {
                             <th>Số điện thoại</th>
                             <th>Vai trò</th>
                             <th>Trạng thái</th>
+                            <th>Hành động</th> {/* 👈 thêm cột */}
                         </tr>
                     </thead>
                     <tbody>
                         {filteredUsers.length === 0 ? (
                             <tr>
-                                <td colSpan="7" className="no-data">
+                                <td colSpan="6" className="no-data">
                                     Không tìm thấy người dùng nào
                                 </td>
                             </tr>
@@ -162,6 +178,15 @@ const CustomerManagement = () => {
                                         <span className={`status-badge ${getStatusBadgeClass(user.status)}`}>
                                             {getStatusText(user.status)}
                                         </span>
+                                    </td>
+                                    <td>
+                                        <button
+                                            className="btn-view-customer"
+                                            onClick={() => handleViewDetail(user)}
+                                        >
+                                            Xem chi tiết
+                                        </button>
+
                                     </td>
                                 </tr>
                             ))

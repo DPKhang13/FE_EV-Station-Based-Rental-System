@@ -41,6 +41,8 @@ import DichVuPage from './pages/DichVuPage.jsx';
 import OrderDetailPage from './pages/OrderDetailPage.jsx'; 
 import  ForgotPage from './pages/ForgotPage.jsx'
 import OrderDetailCusPage from './pages/OrderDetailCusPage.jsx';
+import QuanLiXeTaiTram from './pages/QuanLiXeTaiTram.jsx';
+import TrangHienThiXeTheoTram from './pages/TrangHienThiXeTheoTram.jsx';
 
 const HomePage = () => (
   <ScrollToSectionWrapper>
@@ -172,7 +174,7 @@ function App() {
               <Route path="thanhtoan" element={<ThanhToanPage />} />
               <Route path="quanlyxe" element={<QuanLyXePage />} />
               <Route path="banggia" element={<BangGiaPage />} />
-              <Route path="dichvu" element={<DichVuPage/>} />
+            
             <Route path="/staff/chitiet/:orderId/:userId" element={<OrderDetailPage />} />
 
 
@@ -186,6 +188,8 @@ function App() {
               <Route path="vehicles" element={<VehicleManagement />} />
               <Route path="locations" element={<StationManagement />} />
               <Route path="customers" element={<CustomerManagement />} />
+              <Route path="quanlixe" element={<QuanLiXeTaiTram/>}/>
+              <Route path="hienthiXe/:station" element={<TrangHienThiXeTheoTram/>}/>
             </Route>
           </Routes >
         </LayoutWrapper >
