@@ -131,80 +131,78 @@ export default function VerifyCustomerPage() {
                 <th>THAO TÁC</th>
               </tr>
             </thead>
-            <tbody>
-              {filtered.map((row) => {
-                const verified =
-                  row.profileVerified ||
-                  row.userStatus?.includes("ĐÃ XÁC THỰC");
-                const delivered =
-                  !!row.pickedUpAt ||
-                  ["RENTAL", "Rented"].includes(row.status);
-                const deposit =
-                  row.depositAmount ??
-                  Math.round(Number(row.totalPrice || 0) * 0.3);
+           <tbody>
+  {filtered.map((row) => {
+    // ✅ Nếu userStatus là ACTIVE hoặc ĐÃ XÁC THỰC thì coi là đã xác thực
+    const verified =
+      row.profileVerified ||
+      ["ACTIVE", "ĐÃ XÁC THỰC", "ĐÃ XÁC THỰC (HỒ SƠ)"].includes(
+        row.userStatus?.toUpperCase?.()
+      );
 
-                return (
-                  <tr key={row.orderId}>
-                    
-                    <td>
-                      {row.customerName}
-                      <br />
-                      <span className="verify-phone">{row.phone}</span>
-                    </td>
-                    <td>
-                      {(row.vehicleName || "Xe")} ({row.plateNumber || "N/A"})
-                    </td>
-                    <td>{fmtRange(row.startTime, row.endTime)}</td>
-                    <td>
-                      {Number(row.totalPrice).toLocaleString("vi-VN")} VND
-                      <br />
-                      <small>
-                        Cọc: {Number(deposit).toLocaleString("vi-VN")} VND
-                      </small>
-                    </td>
-                    <td>
-                      <span
-                        className={`verify-status ${
-                          verified ? "success" : "warning"
-                        }`}
-                      >
-                        {row.userStatus || "Chưa xác thực"}
-                      </span>
-                      {row.pickedUpAt && (
-                        <small>
-                          <br />
-                          Đã bàn giao: {fmtVN(row.pickedUpAt)}
-                        </small>
-                      )}
-                    </td>
-                    <td>
-                      {!verified && (
-                        <button
-                          className="verify-btn primary"
-                          onClick={() => handleOpenProfile(row)}
-                        >
-                          Xác thực hồ sơ
-                        </button>
-                      )}
+    const delivered =
+      !!row.pickedUpAt ||
+      ["RENTAL", "RENTED"].includes(row.status?.toUpperCase?.());
+    const deposit =
+      row.depositAmount ?? Math.round(Number(row.totalPrice || 0) * 0.3);
 
-                      {/* ✅ Nếu đã xác thực (ĐÃ XÁC THỰC (HỒ SƠ)) thì chỉ hiển thị nút Chi tiết đơn hàng */}
-                      {verified &&
-                        row.userStatus === "ĐÃ XÁC THỰC (HỒ SƠ)" && (
-                          <button
-                            className="verify-btn info"
-                            onClick={() =>
-                              handleViewOrderDetail(row.orderId, row.userId)
-                            }
-                            style={{ marginLeft: 8 }}
-                          >
-                            📄 Chi tiết đơn hàng
-                          </button>
-                        )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
+    return (
+      <tr key={row.orderId}>
+        <td>
+          {row.customerName}
+          <br />
+          <span className="verify-phone">{row.phone}</span>
+        </td>
+        <td>
+          {(row.vehicleName || "Xe")} ({row.plateNumber || "N/A"})
+        </td>
+        <td>{fmtRange(row.startTime, row.endTime)}</td>
+        <td>
+          {Number(row.totalPrice).toLocaleString("vi-VN")} VND
+          <br />
+          <small>
+            Cọc: {Number(deposit).toLocaleString("vi-VN")} VND
+          </small>
+        </td>
+        <td>
+          <span
+            className={`verify-status ${verified ? "success" : "warning"}`}
+          >
+            {row.userStatus || "Chưa xác thực"}
+          </span>
+          {row.pickedUpAt && (
+            <small>
+              <br />
+              Đã bàn giao: {fmtVN(row.pickedUpAt)}
+            </small>
+          )}
+        </td>
+        <td>
+          {/* ❌ Nếu chưa xác thực thì mới cho bấm xác thực */}
+          {!verified ? (
+            <button
+              className="verify-btn primary"
+              onClick={() => handleOpenProfile(row)}
+            >
+              Xác thực hồ sơ
+            </button>
+          ) : (
+            // ✅ Nếu đã xác thực thì chỉ cho xem chi tiết đơn hàng
+            <button
+              className="verify-btn info"
+              onClick={() =>
+                handleViewOrderDetail(row.orderId, row.userId)
+              }
+            >
+              📄 Chi tiết đơn hàng
+            </button>
+          )}
+        </td>
+      </tr>
+    );
+  })}
+</tbody>
+
           </table>
         </div>
       </div>
