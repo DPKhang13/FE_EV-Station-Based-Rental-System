@@ -13,34 +13,22 @@ export default function OrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // ========================
-  // ⭐ RETURN PREVIEW
-  // ========================
   const [returnPreview, setReturnPreview] = useState(null);
   const [returnTime, setReturnTime] = useState("");
   const [showReturnModal, setShowReturnModal] = useState(false);
 
-  // ========================
-  // ⭐ ADD SERVICE STATES
-  // ========================
   const [service, setService] = useState({
     serviceType: "",
     cost: 0,
     description: ""
   });
 
-  // ========================
-  // ⭐ TOAST
-  // ========================
   const [toast, setToast] = useState(null);
   const showToast = (type, text, ms = 4000) => {
     setToast({ type, text });
     setTimeout(() => setToast(null), ms);
   };
 
-  // ========================
-  // ⭐ PARSE API ERROR
-  // ========================
   const getApiMessage = (err) => {
     if (!err) return "Đã có lỗi xảy ra.";
     if (err.message) {
@@ -59,9 +47,6 @@ export default function OrderDetailPage() {
     return String(err);
   };
 
-  // ========================
-  // ⭐ REFRESH DETAILS
-  // ========================
   const refetchDetails = async () => {
     const res = await fetch(
       `http://localhost:8080/api/order-details/order/${orderId}`
@@ -80,9 +65,6 @@ export default function OrderDetailPage() {
     }
   };
 
-  // ========================
-  // ⭐ HANDLE PREVIEW RETURN
-  // ========================
   const handlePreviewReturn = async () => {
     try {
       const res = await fetch(
@@ -98,9 +80,6 @@ export default function OrderDetailPage() {
     }
   };
 
-  // ========================
-  // ⭐ HANDLE CONFIRM RETURN
-  // ========================
   const handleConfirmReturn = async () => {
     const time =
       returnTime.trim() !== ""
@@ -123,9 +102,6 @@ export default function OrderDetailPage() {
     }
   };
 
-  // ========================
-  // ⭐ HANDLE ADD SERVICE
-  // ========================
   const handleAddService = async () => {
     if (!service.serviceType.trim()) {
       return showToast("error", "Vui lòng nhập loại dịch vụ!");
@@ -155,9 +131,6 @@ export default function OrderDetailPage() {
     }
   };
 
-  // ========================
-  // ⭐ HANDLE HANDOVER
-  // ========================
   const handleConfirmHandover = async () => {
     const ok = window.confirm("Xác nhận bàn giao xe cho khách?");
     if (!ok) return;
@@ -193,9 +166,6 @@ export default function OrderDetailPage() {
     }
   };
 
-  // ========================
-  // ⭐ INITIAL FETCH
-  // ========================
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -243,6 +213,11 @@ export default function OrderDetailPage() {
     (d) => d.type === "PICKUP" && d.status === "SUCCESS"
   );
 
+  // ⭐⭐ NƠI THÊM MỚI — CHECK GIAO DỊCH PENDING ⭐⭐
+  const hasPendingOrderDetail = orderDetails.some(
+    (d) => String(d.status).toUpperCase() === "PENDING"
+  );
+
   if (loading)
     return (
       <div className="order-detail-page">
@@ -265,9 +240,7 @@ export default function OrderDetailPage() {
         <h1>Chi tiết đơn hàng</h1>
       </div>
 
-      {/* ======================== */}
-      {/* ⭐ CUSTOMER */}
-      {/* ======================== */}
+      {/* CUSTOMER */}
       {customer && (
         <div className="info-card">
           <h2>Thông tin khách hàng</h2>
@@ -280,9 +253,7 @@ export default function OrderDetailPage() {
         </div>
       )}
 
-      {/* ======================== */}
-      {/* ⭐ VEHICLE INFO */}
-      {/* ======================== */}
+      {/* VEHICLE */}
       {vehicle && (
         <div className="info-card">
           <h2>Thông tin xe</h2>
@@ -306,9 +277,7 @@ export default function OrderDetailPage() {
         </div>
       )}
 
-      {/* ======================== */}
-      {/* ⭐ ORDER DETAILS */}
-      {/* ======================== */}
+      {/* ORDER DETAILS */}
       <div className="info-card">
         <h2>Các giao dịch trong đơn hàng</h2>
 
@@ -336,140 +305,31 @@ export default function OrderDetailPage() {
         ))}
       </div>
 
-      {/* ======================== */}
-{/* ⭐ SERVICE FORM — FIXED */}
-{/* ======================== */}
-<div className="info-card">
-  <h2>Dịch vụ phát sinh</h2>
-
-  {/* --- Danh sách dịch vụ cố định --- */}
-  <div className="fixed-services">
-    {[
-      { label: "Giao thông", defaultCost: 50000 },
-      { label: "Sửa chữa", defaultCost: 150000 },
-      { label: "Bảo dưỡng", defaultCost: 100000 },
-      { label: "Vệ sinh", defaultCost: 30000 }
-    ].map((sv) => (
-      <div key={sv.label} className="service-row">
-        <label className="checkbox-line">
-          <input
-            type="checkbox"
-            checked={service.description === sv.label}
-            onChange={() =>
-              setService({
-                serviceType: "SERVICE",      // 🔥 luôn SERVICE
-                cost: sv.defaultCost,
-                description: sv.label        // 🔥 mô tả = tên dịch vụ
-              })
-            }
-          />
-          {sv.label}
-        </label>
-
-        <input
-          type="number"
-          className="service-price-input"
-          value={
-            service.description === sv.label ? service.cost : sv.defaultCost
-          }
-          onChange={(e) => {
-            if (service.description === sv.label) {
-              setService({
-                ...service,
-                cost: Number(e.target.value)
-              });
-            }
-          }}
-        />
-
-        <span>VND</span>
-      </div>
-    ))}
-  </div>
-
-  <hr />
-
-  {/* --- Thêm dịch vụ khác --- */}
-  <h3>➕ Thêm dịch vụ khác</h3>
-
-  <div className="service-form">
-    <label>Loại dịch vụ</label>
-    <input
-      type="text"
-      value={service.description}
-      placeholder="Nhập tên dịch vụ"
-      onChange={(e) =>
-        setService({
-          ...service,
-          description: e.target.value,
-          serviceType: "SERVICE"          // 🔥 luôn SERVICE
-        })
-      }
-    />
-
-    <label>Giá tiền (VND)</label>
-    <input
-      type="number"
-      value={service.cost}
-      onChange={(e) =>
-        setService({
-          ...service,
-          cost: Number(e.target.value)
-        })
-      }
-    />
-
-    <button className="btn btn-add-service" onClick={async () => {
-      if (!service.description.trim()) {
-        return showToast("error", "Vui lòng nhập tên dịch vụ!");
-      }
-
-      try {
-        const payload = {
-          orderId,
-          serviceType: "SERVICE",            // 🔥 cố định
-          cost: Number(service.cost) || 0,
-          description: service.description   // 🔥 mô tả dịch vụ
-        };
-
-        await fetch("http://localhost:8080/api/order-services", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-
-        showToast("success", "➕ Đã thêm dịch vụ!");
-
-        // Reset
-        setService({
-          serviceType: "SERVICE",
-          cost: 0,
-          description: ""
-        });
-
-        refetchDetails();
-      } catch (err) {
-        console.error(err);
-        showToast("error", "Không thể thêm dịch vụ!");
-      }
-    }}>
-      ➕ Thêm dịch vụ
-    </button>
-  </div>
-</div>
-
-
-      {/* ======================== */}
-      {/* ⭐ HANDOVER */}
-      {/* ======================== */}
+      {/* HANDOVER */}
       <div className="info-card">
         <h2>Hành động bàn giao</h2>
 
         <div className="handover-actions">
           {vehicle?.status === "RENTAL" ? (
-            <button className="btn-receive" onClick={handlePreviewReturn}>
-              🚗 Nhận xe
-            </button>
+            <>
+              <button
+                className="btn-receive"
+                onClick={handlePreviewReturn}
+                disabled={hasPendingOrderDetail}
+                style={{
+                  opacity: hasPendingOrderDetail ? 0.5 : 1,
+                  cursor: hasPendingOrderDetail ? "not-allowed" : "pointer"
+                }}
+              >
+                🚗 Nhận xe
+              </button>
+
+              {hasPendingOrderDetail && (
+                <p style={{ color: "red", marginTop: 8, fontWeight: "600" }}>
+                  ⚠ Vui lòng chờ khách hàng thanh toán các giao dịch đang chờ xử lý!
+                </p>
+              )}
+            </>
           ) : (
             <>
               <button
@@ -492,16 +352,10 @@ export default function OrderDetailPage() {
         </div>
       </div>
 
-      {/* ======================== */}
-      {/* ⭐ BACK BUTTON */}
-      {/* ======================== */}
       <button className="back-btn" onClick={() => navigate(-1)}>
         ← Quay lại
       </button>
 
-      {/* ======================== */}
-      {/* ⭐ RETURN MODAL */}
-      {/* ======================== */}
       {showReturnModal && returnPreview && (
         <div className="modal-overlay">
           <div className="modal">
