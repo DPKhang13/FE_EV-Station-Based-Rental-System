@@ -628,46 +628,25 @@ const StationManagement = () => {
                 <div>
                     <h1>QUẢN LÝ ĐIỂM THUÊ</h1>
                     <p className="station-subtitle">Quản lý các điểm cho thuê xe điện</p>
-                    <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                    </p>
                 </div>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <div>
                     <input
                         type="text"
+                        className="station-search-input"
                         placeholder="Tìm kiếm điểm thuê..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                        style={{
-                            padding: '10px 15px',
-                            borderRadius: '8px',
-                            border: '2px solid #e5e7eb',
-                            fontSize: '14px',
-                            minWidth: '250px'
-                        }}
                     />
                     <button
                         className="btn-add-station"
                         onClick={handleSearch}
-                        style={{ 
-                            background: '#3b82f6',
-                            padding: '0px 13px'
-                        }}
                     >
                         Tìm kiếm
                     </button>
                 </div>
             </div>            {error && (
-                <div className="error-message" style={{
-                    background: '#fee',
-                    border: '2px solid #f44',
-                    padding: '20px',
-                    borderRadius: '12px',
-                    margin: '20px 0',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                }}>
+                <div className="error-message">
                     <div>
                         <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
                             ⚠️ Lỗi tải dữ liệu
@@ -679,19 +658,7 @@ const StationManagement = () => {
                             💡 Kiểm tra: Backend có chạy không? (http://localhost:8080)
                         </div>
                     </div>
-                    <button
-                        onClick={fetchStations}
-                        style={{
-                            background: '#10b981',
-                            color: 'white',
-                            border: 'none',
-                            padding: '12px 24px',
-                            borderRadius: '8px',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            cursor: 'pointer'
-                        }}
-                    >
+                    <button onClick={fetchStations}>
                         Thử lại
                     </button>
                 </div>
@@ -722,7 +689,7 @@ const StationManagement = () => {
                     <tbody>
                         {stations.length === 0 ? (
                             <tr>
-                                <td colSpan="7" className="no-data" style={{ padding: '40px', textAlign: 'center' }}>
+                                <td colSpan="7" className="no-data">
                                     <div style={{ fontSize: '18px', marginBottom: '10px' }}>
                                         Chưa có điểm thuê nào
                                     </div>
@@ -749,19 +716,6 @@ const StationManagement = () => {
                                                 className="btn-add-vehicle"
                                                 onClick={() => handleOpenAddVehicle(station)}
                                                 title="Thêm xe"
-                                                style={{
-                                                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                                                    color: 'white',
-                                                    padding: '8px 12px',
-                                                    border: 'none',
-                                                    borderRadius: '6px',
-                                                    cursor: 'pointer',
-                                                    fontSize: '14px',
-                                                    fontWeight: '600',
-                                                    transition: 'all 0.2s'
-                                                }}
-                                                onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
-                                                onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
                                             >
                                                 Thêm xe
                                             </button>

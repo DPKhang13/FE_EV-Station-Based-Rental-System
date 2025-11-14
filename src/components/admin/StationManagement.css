@@ -1,330 +1,693 @@
 /* ================================
-   STATION MANAGEMENT - Mercedes Professional Design
+   STATION MANAGEMENT - Mercedes Style
+   White - Red - Black Theme
    ================================ */
 
 .station-management {
-  padding: 0;
-  font-family: "Poppins", -apple-system, sans-serif;
+    padding: 30px;
+    background: #FFFFFF;
+    min-height: 100vh;
 }
 
-/* Section Headers */
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
+.station-loading {
+    text-align: center;
+    padding: 60px;
+    font-size: 18px;
+    color: #000000;
+    letter-spacing: 2px;
+    text-transform: uppercase;
 }
 
-.section-header h2 {
-  font-size: 20px;
-  font-weight: 300;
-  color: #000000;
-  letter-spacing: 3px;
-  text-transform: uppercase;
+/* Page Header */
+.station-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 20px;
 }
 
-/* Buttons */
-.btn-primary,
-.btn-secondary,
-.btn-danger,
-.btn-success {
-  border: 2px solid #000000;
-  padding: 12px 24px;
-  border-radius: 0;
-  font-size: 12px;
-  font-weight: 400;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
+.station-header > div:first-child {
+    flex: 1;
+    min-width: 300px;
 }
 
-.btn-primary {
-  background: #000000;
-  color: #FFFFFF;
+.station-header h1 {
+    font-size: 28px;
+    color: #000000;
+    margin: 0;
+    font-weight: 300;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding-bottom: 15px;
+    border-bottom: 3px solid #DC0000;
+    display: inline-block;
+    width: auto;
+    max-width: fit-content;
 }
 
-.btn-primary::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: #DC0000;
-  transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: -1;
+.station-subtitle {
+    color: #000000;
+    font-size: 13px;
+    margin-top: 15px;
+    letter-spacing: 1px;
+    font-weight: 400;
 }
 
-.btn-primary:hover::before {
-  left: 0;
+/* Search Bar */
+.station-header > div:last-child {
+    display: flex;
+    gap: 10px;
+    align-items: center;
 }
 
-.btn-primary:hover {
-  border-color: #DC0000;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(220, 0, 0, 0.3);
+.station-search-input {
+    padding: 12px 16px;
+    border: 2px solid #000000;
+    border-radius: 0;
+    font-size: 14px;
+    min-width: 250px;
+    background: #FFFFFF;
+    color: #000000;
+    letter-spacing: 0.5px;
+    transition: all 0.3s;
+    box-sizing: border-box;
+    height: 48px;
 }
 
-.btn-secondary {
-  background: transparent;
-  color: #666666;
-  border-color: #CCCCCC;
+.station-search-input:focus {
+    outline: none;
+    border-color: #DC0000;
+    background: #F9FAFB;
 }
 
-.btn-secondary:hover {
-  background: #666666;
-  border-color: #666666;
-  color: #FFFFFF;
-  transform: translateY(-2px);
+.station-search-input::placeholder {
+    color: #9CA3AF;
+    letter-spacing: 0.5px;
 }
 
-.btn-danger {
-  background: transparent;
-  color: #DC0000;
-  border-color: #DC0000;
+.btn-add-station {
+    padding: 12px 16px;
+    border: 2px solid #000000;
+    border-radius: 0;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: #000000;
+    color: #FFFFFF;
+    box-sizing: border-box;
+    height: 48px;
+    white-space: nowrap;
 }
 
-.btn-danger:hover {
-  background: #DC0000;
-  color: #FFFFFF;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(220, 0, 0, 0.3);
+.btn-add-station:hover {
+    background: #DC0000;
+    border-color: #DC0000;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(220, 0, 0, 0.3);
 }
 
-.btn-success {
-  background: transparent;
-  color: #2ECC71;
-  border-color: #2ECC71;
+/* Error Message - Mercedes Style */
+.error-message {
+    background: #FFFFFF;
+    border: 2px solid #DC0000;
+    border-top: 3px solid #DC0000;
+    border-radius: 0;
+    padding: 20px 24px;
+    margin-bottom: 25px;
+    color: #DC0000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.btn-success:hover {
-  background: #2ECC71;
-  color: #FFFFFF;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
+.error-message button {
+    background: #DC0000;
+    color: #FFFFFF;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 0;
+    cursor: pointer;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-size: 11px;
+    transition: all 0.3s;
 }
 
-/* Tables */
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #FFFFFF;
-  border-radius: 0;
-  overflow: hidden;
-  box-shadow: none;
-  border: 2px solid #E0E0E0;
-  border-top: 3px solid #DC0000;
-  margin-bottom: 40px;
+.error-message button:hover {
+    background: #000000;
 }
 
-.data-table th {
-  background: #000000;
-  color: #FFFFFF;
-  text-align: left;
-  padding: 18px 20px;
-  font-weight: 400;
-  font-size: 13px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  border-bottom: 2px solid #DC0000;
+/* Stats Cards - Mercedes Style */
+.station-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    margin-bottom: 35px;
 }
 
-.data-table td {
-  padding: 16px 20px;
-  border-bottom: 1px solid #E0E0E0;
-  font-size: 14px;
-  font-weight: 300;
-  color: #333333;
-  letter-spacing: 0.5px;
+.stat-card {
+    background: #FFFFFF;
+    border: 2px solid #000000;
+    border-radius: 0;
+    padding: 30px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
 
-.data-table tr:hover {
-  background-color: #F5F5F5;
-  transition: all 0.3s ease;
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 3px;
+    background: #DC0000;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
 }
 
-.data-table tr:last-child td {
-  border-bottom: none;
+.stat-card:hover {
+    border-color: #DC0000;
+    transform: translateY(-2px);
 }
 
-/* Status Badges */
+.stat-info {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 42px;
+    font-weight: 300;
+    color: #000000;
+    margin-bottom: 8px;
+    letter-spacing: -1px;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #000000;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 700;
+}
+
+/* Table - Mercedes Style */
+.station-table-container {
+    background: #FFFFFF;
+    border: 2px solid #E0E0E0;
+    border-top: 3px solid #DC0000;
+    border-radius: 0;
+    overflow: hidden;
+}
+
+.station-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.station-table thead {
+    background: #000000 !important;
+}
+
+.station-table th {
+    padding: 16px 14px !important;
+    text-align: left !important;
+    font-weight: 500 !important;
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+    color: #FFFFFF !important;
+    background: #000000 !important;
+    border: none !important;
+    border-radius: 0 !important;
+}
+
+/* Column widths */
+.station-table th:nth-child(1),
+.station-table td:nth-child(1) {
+    width: 5%;
+}
+
+.station-table th:nth-child(2),
+.station-table td:nth-child(2) {
+    width: 18%;
+}
+
+.station-table th:nth-child(3),
+.station-table td:nth-child(3) {
+    width: 15%;
+}
+
+.station-table th:nth-child(4),
+.station-table td:nth-child(4) {
+    width: 12%;
+}
+
+.station-table th:nth-child(5),
+.station-table td:nth-child(5) {
+    width: 12%;
+}
+
+.station-table th:nth-child(6),
+.station-table td:nth-child(6) {
+    width: 12%;
+}
+
+.station-table th:nth-child(7),
+.station-table td:nth-child(7) {
+    width: 26%;
+    text-align: center;
+}
+
+/* Center align for status column (8th column in detail modal) */
+.station-table th:nth-child(8),
+.station-table td:nth-child(8) {
+    text-align: center;
+}
+
+/* Center align for action column (9th column in detail modal) */
+.station-table th:nth-child(9),
+.station-table td:nth-child(9) {
+    text-align: center;
+}
+
+.station-table tbody tr {
+    border-bottom: 1px solid #E0E0E0;
+    transition: background 0.2s;
+}
+
+.station-table tbody tr:hover {
+    background: #F9FAFB;
+}
+
+.station-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.station-table td {
+    padding: 14px;
+    color: #000000;
+    font-size: 13px;
+    vertical-align: middle;
+    word-wrap: break-word;
+}
+
+
+.station-table td:nth-child(8) {
+    padding: 14px;
+    text-align: center;
+}
+
+
+.station-table td:nth-child(9) {
+    padding: 14px;
+    text-align: center;
+}
+
+.station-name {
+    font-weight: 700;
+    color: #000000;
+    letter-spacing: 0.3px;
+}
+
+.station-address {
+    font-size: 12px;
+    color: #6B7280;
+    letter-spacing: 0.2px;
+}
+
+.no-data {
+    text-align: center;
+    padding: 60px !important;
+    color: #000000;
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 300;
+}
+
+/* Action Buttons - Mercedes Style */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.action-buttons button {
+    padding: 8px 16px;
+    border: 2px solid;
+    border-radius: 0;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s;
+    white-space: nowrap;
+    min-width: 90px;
+    text-align: center;
+}
+
+/* Thêm xe - Green/Black */
+.btn-add-vehicle {
+    background: #FFFFFF;
+    color: #000000;
+    border-color: #000000;
+}
+
+.btn-add-vehicle:hover {
+    background: #000000;
+    color: #FFFFFF;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Quản lý - Red */
+.btn-view {
+    background: #FFFFFF;
+    color: #DC0000;
+    border-color: #DC0000;
+}
+
+.btn-view:hover {
+    background: #DC0000;
+    color: #FFFFFF;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 0, 0, 0.3);
+}
+
+/* Chỉnh sửa - Blue/Black */
+.btn-edit {
+    background: #FFFFFF;
+    color: #000000;
+    border-color: #000000;
+}
+
+.btn-edit:hover {
+    background: #000000;
+    color: #FFFFFF;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Xóa - Red outline */
+.btn-delete {
+    background: #FFFFFF;
+    color: #DC0000;
+    border-color: #DC0000;
+}
+
+.btn-delete:hover {
+    background: #DC0000;
+    color: #FFFFFF;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 0, 0, 0.3);
+}
+
+/* Status Badge - Mercedes Style */
 .status-badge {
-  display: inline-block;
-  padding: 6px 14px;
-  border-radius: 0;
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  border: 1px solid;
+    padding: 7px 10px;
+    border-radius: 0;
+    border: 2px solid;
+    font-size: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: inline-block;
+    transition: all 0.3s;
+    background: #FFFFFF;
+    max-width: 70px;
+    text-align: center;
+    white-space: normal;
+    word-wrap: break-word;
+    line-height: 1.4;
 }
 
 .status-active {
-  background: #E8F5E9;
-  color: #2E7D32;
-  border-color: #4CAF50;
+    border-color: #000000;
+    color: #000000;
+}
+
+.status-active:hover {
+    background: #000000;
+    color: #FFFFFF;
 }
 
 .status-inactive {
-  background: #FFEBEE;
-  color: #C62828;
-  border-color: #EF5350;
+    border-color: #DC0000;
+    color: #DC0000;
 }
 
-.status-pending {
-  background: #FFF9C4;
-  color: #F57F17;
-  border-color: #FBC02D;
+.status-inactive:hover {
+    background: #DC0000;
+    color: #FFFFFF;
 }
 
-/* Filters */
-.filter-container {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 30px;
-  flex-wrap: wrap;
+.status-maintenance {
+    border-color: #6B7280;
+    color: #6B7280;
 }
 
-.filter-container select,
-.filter-container input {
-  padding: 12px 20px;
-  border: 2px solid #E0E0E0;
-  border-radius: 0;
-  font-size: 13px;
-  font-weight: 300;
-  letter-spacing: 0.5px;
-  background: #FFFFFF;
-  transition: all 0.3s ease;
+.status-maintenance:hover {
+    background: #6B7280;
+    color: #FFFFFF;
 }
 
-.filter-container select:focus,
-.filter-container input:focus {
-  outline: none;
-  border-color: #000000;
-}
-
-/* Cards */
-.info-card {
-  background: #FFFFFF;
-  padding: 30px;
-  border: 2px solid #E0E0E0;
-  border-top: 3px solid #DC0000;
-  border-radius: 0;
-  margin-bottom: 30px;
-}
-
-.info-card h3 {
-  font-size: 16px;
-  font-weight: 300;
-  color: #000000;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin-bottom: 20px;
-}
-
-.info-card p {
-  font-size: 14px;
-  font-weight: 300;
-  color: #666666;
-  line-height: 1.6;
-  letter-spacing: 0.3px;
-}
-
-/* Modal/Popup */
+/* Modal Styles */
 .modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  backdrop-filter: blur(4px);
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
 }
 
 .modal-content {
-  background: #FFFFFF;
-  padding: 40px 50px;
-  border-radius: 0;
-  max-width: 600px;
-  width: 90%;
-  border-top: 3px solid #DC0000;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    background: #FFFFFF;
+    padding: 40px 50px;
+    border-radius: 0;
+    max-width: 600px;
+    width: 90%;
+    border-top: 3px solid #DC0000;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
-.modal-content h2 {
-  font-size: 20px;
-  font-weight: 300;
-  color: #000000;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  margin-bottom: 30px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #E0E0E0;
+.modal-content.detail-modal {
+    max-width: 1200px;
 }
 
-/* Form Elements */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #E0E0E0;
+}
+
+.modal-header h2 {
+    font-size: 20px;
+    font-weight: 300;
+    color: #000000;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.modal-close {
+    background: transparent;
+    border: 2px solid #000000;
+    color: #000000;
+    width: 32px;
+    height: 32px;
+    border-radius: 0;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    padding: 0;
+}
+
+.modal-close:hover {
+    background: #DC0000;
+    border-color: #DC0000;
+    color: #FFFFFF;
+}
+
+/* Form Styles */
+.station-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
 .form-group {
-  margin-bottom: 25px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
 }
 
 .form-group label {
-  display: block;
-  font-size: 12px;
-  font-weight: 400;
-  color: #000000;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  margin-bottom: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #000000;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+}
+
+.form-group .required {
+    color: #DC0000;
 }
 
 .form-group input,
 .form-group select,
 .form-group textarea {
-  width: 100%;
-  padding: 14px 20px;
-  border: 2px solid #E0E0E0;
-  border-radius: 0;
-  font-size: 14px;
-  font-weight: 300;
-  letter-spacing: 0.5px;
-  background: #FFFFFF;
-  transition: all 0.3s ease;
+    padding: 12px 16px;
+    border: 2px solid #000000;
+    border-radius: 0;
+    font-size: 14px;
+    background: #FFFFFF;
+    color: #000000;
+    letter-spacing: 0.5px;
+    transition: all 0.3s;
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
-  outline: none;
-  border-color: #000000;
+    outline: none;
+    border-color: #DC0000;
+    background: #F9FAFB;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #E0E0E0;
+}
+
+.btn-cancel {
+    padding: 12px 24px;
+    border: 2px solid #000000;
+    border-radius: 0;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: #FFFFFF;
+    color: #000000;
+}
+
+.btn-cancel:hover {
+    background: #000000;
+    color: #FFFFFF;
+    transform: translateY(-2px);
+}
+
+.btn-submit {
+    padding: 12px 24px;
+    border: 2px solid #000000;
+    border-radius: 0;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: #000000;
+    color: #FFFFFF;
+}
+
+.btn-submit:hover {
+    background: #DC0000;
+    border-color: #DC0000;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(220, 0, 0, 0.3);
+}
+
+.detail-content {
+    margin-bottom: 20px;
+}
+
+.detail-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #E0E0E0;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .section-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }
+    .station-management {
+        padding: 20px;
+    }
 
-  .filter-container {
-    flex-direction: column;
-  }
+    .station-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
 
-  .data-table th,
-  .data-table td {
-    font-size: 12px;
-    padding: 12px;
-  }
+    .station-stats {
+        grid-template-columns: 1fr;
+    }
 
-  .btn-primary,
-  .btn-secondary,
-  .btn-danger,
-  .btn-success {
-    padding: 10px 20px;
-    font-size: 11px;
-  }
+    .station-table-container {
+        overflow-x: auto;
+    }
+
+    .station-table {
+        min-width: 900px;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .action-buttons button {
+        width: 100%;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
 }

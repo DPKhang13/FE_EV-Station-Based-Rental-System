@@ -1,288 +1,446 @@
 /* ================================
-   EMPLOYEES PAGE - Mercedes Professional Design
+   EMPLOYEES PAGE - Mercedes Style
+   White - Red - Black Theme
    ================================ */
 
-.employees-container {
-  padding: 40px 60px;
-  font-family: "Poppins", -apple-system, sans-serif;
-  background-color: #FFFFFF;
-  color: #000000;
-  min-height: 100vh;
+.container {
+    padding: 30px;
+    background: #FFFFFF;
+    min-height: 100vh;
 }
 
-/* Header */
-.employees-header {
-  margin-bottom: 40px;
-  border-bottom: 1px solid #E0E0E0;
-  padding-bottom: 20px;
+/* Page Header */
+.container > h2 {
+    font-size: 28px;
+    color: #000000;
+    margin: 0 0 30px 0;
+    font-weight: 300;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding-bottom: 15px;
+    border-bottom: 3px solid #DC0000;
+    display: inline-block;
+    width: auto;
+    max-width: fit-content;
 }
 
-.employees-header h1 {
-  font-size: 24px;
-  font-weight: 300;
-  color: #000000;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  margin-bottom: 10px;
+/* Actions */
+.actions {
+    margin-bottom: 30px;
 }
 
-.employees-header p {
-  color: #666666;
-  font-size: 14px;
-  font-weight: 300;
-  letter-spacing: 0.5px;
+.add-btn {
+    padding: 12px 24px;
+    border: 2px solid #000000;
+    border-radius: 0;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: #000000;
+    color: #FFFFFF;
 }
 
-/* Stats */
-.employees-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 30px;
-  margin-bottom: 40px;
+.add-btn:hover {
+    background: #DC0000;
+    border-color: #DC0000;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(220, 0, 0, 0.3);
+}
+
+/* Stats Cards - Mercedes Style */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    margin-bottom: 35px;
 }
 
 .stat-card {
-  background: #FFFFFF;
-  padding: 25px 30px;
-  border: 2px solid #E0E0E0;
-  border-top: 3px solid #DC0000;
-  border-radius: 0;
-  transition: all 0.3s ease;
+    background: #FFFFFF;
+    border: 2px solid #000000;
+    border-radius: 0;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 3px;
+    background: #DC0000;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
 }
 
 .stat-card:hover {
-  border-color: #000000;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
-
-.stat-card h3 {
-  font-size: 32px;
-  font-weight: 300;
-  color: #000000;
-  letter-spacing: 2px;
-  margin-bottom: 10px;
+    border-color: #DC0000;
+    transform: translateY(-2px);
 }
 
 .stat-card p {
-  font-size: 12px;
-  font-weight: 400;
-  color: #666666;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
+    font-size: 12px;
+    color: #000000;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 700;
+    margin: 0;
 }
 
-/* Filters */
-.employees-filters {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 30px;
-  flex-wrap: wrap;
+.stat-card h3 {
+    font-size: 42px;
+    font-weight: 300;
+    color: #000000;
+    margin: 0;
+    letter-spacing: -1px;
 }
 
-.employees-filters input,
-.employees-filters select {
-  padding: 12px 20px;
-  border: 2px solid #E0E0E0;
-  border-radius: 0;
-  font-size: 13px;
-  font-weight: 300;
-  letter-spacing: 0.5px;
-  background: #FFFFFF;
-  transition: all 0.3s ease;
-  flex: 1;
-  min-width: 200px;
+/* Table Container */
+.employee-table {
+    margin-top: 30px;
 }
 
-.employees-filters input:focus,
-.employees-filters select:focus {
-  outline: none;
-  border-color: #000000;
+.employee-table > h3 {
+    font-size: 18px;
+    color: #000000;
+    margin-bottom: 20px;
+    font-weight: 300;
+    letter-spacing: 2px;
+    text-transform: uppercase;
 }
 
-.employees-filters input::placeholder {
-  color: #999999;
+.employee-table-container {
+    background: #FFFFFF;
+    border: 2px solid #E0E0E0;
+    border-top: 3px solid #DC0000;
+    border-radius: 0;
+    overflow: hidden;
 }
 
-/* Table */
-.employees-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #FFFFFF;
-  border-radius: 0;
-  overflow: hidden;
-  box-shadow: none;
-  border: 2px solid #E0E0E0;
-  border-top: 3px solid #DC0000;
+.employee-table table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
 }
 
-.employees-table th {
-  background: #000000;
-  color: #FFFFFF;
-  text-align: left;
-  padding: 18px 20px;
-  font-weight: 400;
-  font-size: 13px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  border-bottom: 2px solid #DC0000;
+.employee-table thead {
+    background: #000000 !important;
 }
 
-.employees-table td {
-  padding: 16px 20px;
-  border-bottom: 1px solid #E0E0E0;
-  font-size: 14px;
-  font-weight: 300;
-  color: #333333;
-  letter-spacing: 0.5px;
+.employee-table th {
+    padding: 16px 14px !important;
+    text-align: left !important;
+    font-weight: 500 !important;
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+    color: #FFFFFF !important;
+    background: #000000 !important;
+    border: none !important;
+    border-radius: 0 !important;
 }
 
-.employees-table tr:hover {
-  background-color: #F5F5F5;
-  transition: all 0.3s ease;
+/* Column widths */
+.employee-table th:nth-child(1),
+.employee-table td:nth-child(1) {
+    width: 25%;
 }
 
-.employees-table tr:last-child td {
-  border-bottom: none;
+.employee-table th:nth-child(2),
+.employee-table td:nth-child(2) {
+    width: 12%;
+    text-align: center;
 }
 
-/* Status Badges */
-.status-badge {
-  display: inline-block;
-  padding: 6px 14px;
-  border-radius: 0;
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  border: 1px solid;
+.employee-table th:nth-child(3),
+.employee-table td:nth-child(3) {
+    width: 18%;
 }
 
-.status-badge.active {
-  background: #E8F5E9;
-  color: #2E7D32;
-  border-color: #4CAF50;
+.employee-table th:nth-child(4),
+.employee-table td:nth-child(4) {
+    width: 15%;
+    text-align: center;
 }
 
-.status-badge.inactive {
-  background: #FFEBEE;
-  color: #C62828;
-  border-color: #EF5350;
+.employee-table th:nth-child(5),
+.employee-table td:nth-child(5) {
+    width: 15%;
+    text-align: center;
 }
 
-/* Buttons */
-.btn {
-  border: 2px solid #000000;
-  padding: 10px 20px;
-  margin-right: 8px;
-  border-radius: 0;
-  font-size: 12px;
-  font-weight: 400;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
+.employee-table th:nth-child(6),
+.employee-table td:nth-child(6) {
+    width: 15%;
+    text-align: center;
 }
 
-.btn-primary {
-  background: #000000;
-  color: #FFFFFF;
+.employee-table tbody tr {
+    border-bottom: 1px solid #E0E0E0;
+    transition: background 0.2s;
 }
 
-.btn-primary::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: #DC0000;
-  transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: -1;
+.employee-table tbody tr:hover {
+    background: #F9FAFB;
 }
 
-.btn-primary:hover::before {
-  left: 0;
+.employee-table tbody tr:last-child {
+    border-bottom: none;
 }
 
-.btn-primary:hover {
-  border-color: #DC0000;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(220, 0, 0, 0.3);
+.employee-table td {
+    padding: 14px;
+    color: #000000;
+    font-size: 13px;
+    vertical-align: middle;
+    word-wrap: break-word;
 }
 
-.btn-edit {
-  background: transparent;
-  color: #F39C12;
-  border-color: #F39C12;
+/* Employee Info */
+.employee-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
-.btn-edit:hover {
-  background: #F39C12;
-  color: #FFFFFF;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 0;
+    background: #000000;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 1px;
+    flex-shrink: 0;
 }
 
-.btn-delete {
-  background: transparent;
-  color: #DC0000;
-  border-color: #DC0000;
+.employee-info strong {
+    font-weight: 700;
+    color: #000000;
+    letter-spacing: 0.3px;
+    display: block;
+    margin-bottom: 4px;
 }
 
-.btn-delete:hover {
-  background: #DC0000;
-  color: #FFFFFF;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(220, 0, 0, 0.3);
+.employee-info .email {
+    font-size: 12px;
+    color: #6B7280;
+    letter-spacing: 0.2px;
+    margin: 0;
 }
 
-/* Empty State */
-.employees-empty {
-  text-align: center;
-  padding: 60px 20px;
-  color: #999999;
-  font-size: 14px;
-  font-weight: 300;
-  letter-spacing: 0.5px;
+/* Tag/Performance Badge */
+.tag {
+    display: inline-block;
+    padding: 6px 12px;
+    border: 2px solid #000000;
+    border-radius: 0;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: #FFFFFF;
+    color: #000000;
+    margin-bottom: 4px;
+}
+
+.small-text {
+    font-size: 11px;
+    color: #6B7280;
+    margin: 4px 0 0 0;
+    letter-spacing: 0.2px;
+}
+
+/* Status Badge - Mercedes Style */
+.status {
+    padding: 7px 14px;
+    border-radius: 0;
+    border: 2px solid;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: inline-block;
+    transition: all 0.3s;
+    background: #FFFFFF;
+    text-align: center;
+}
+
+.status.active {
+    border-color: #000000;
+    color: #000000;
+}
+
+.status.active:hover {
+    background: #000000;
+    color: #FFFFFF;
+}
+
+.status.inactive {
+    border-color: #DC0000;
+    color: #DC0000;
+}
+
+.status.inactive:hover {
+    background: #DC0000;
+    color: #FFFFFF;
+}
+
+/* Delete Button - Mercedes Style */
+.delete-btn {
+    padding: 8px 12px;
+    border: 2px solid #DC0000;
+    border-radius: 0;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: #FFFFFF;
+    color: #DC0000;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+}
+
+.delete-btn:hover {
+    background: #DC0000;
+    color: #FFFFFF;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 0, 0, 0.3);
+}
+
+/* Center align for specific columns */
+.employee-table th:nth-child(2),
+.employee-table th:nth-child(4),
+.employee-table th:nth-child(5),
+.employee-table th:nth-child(6) {
+    text-align: center !important;
+}
+
+.employee-table td:nth-child(2),
+.employee-table td:nth-child(4),
+.employee-table td:nth-child(5),
+.employee-table td:nth-child(6) {
+    text-align: center;
+}
+
+/* Bottom Section */
+.bottom-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 25px;
+    margin-top: 40px;
+}
+
+.performance-card,
+.top-employee-card {
+    background: #FFFFFF;
+    border: 2px solid #000000;
+    border-radius: 0;
+    padding: 30px;
+    position: relative;
+    overflow: hidden;
+}
+
+.performance-card::before,
+.top-employee-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 3px;
+    background: #DC0000;
+    box-sizing: border-box;
+}
+
+.performance-card h3,
+.top-employee-card h3 {
+    font-size: 16px;
+    font-weight: 300;
+    color: #000000;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin: 0 0 20px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #E0E0E0;
+}
+
+.performance-card ul,
+.top-employee-card ol {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.performance-card li,
+.top-employee-card li {
+    padding: 12px 0;
+    border-bottom: 1px solid #E0E0E0;
+    font-size: 14px;
+    color: #000000;
+    letter-spacing: 0.3px;
+}
+
+.performance-card li:last-child,
+.top-employee-card li:last-child {
+    border-bottom: none;
+}
+
+.rank {
+    font-weight: 700;
+    color: #DC0000;
+    margin-right: 8px;
+}
+
+/* No Data */
+.no-data {
+    text-align: center;
+    padding: 60px !important;
+    color: #000000;
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 300;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .employees-container {
-    padding: 30px 20px;
-  }
+    .container {
+        padding: 20px;
+    }
 
-  .employees-header h1 {
-    font-size: 20px;
-    letter-spacing: 2px;
-  }
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
 
-  .employees-stats {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
+    .bottom-section {
+        grid-template-columns: 1fr;
+    }
 
-  .employees-filters {
-    flex-direction: column;
-  }
+    .employee-table-container {
+        overflow-x: auto;
+    }
 
-  .employees-filters input,
-  .employees-filters select {
-    min-width: 100%;
-  }
-
-  .employees-table th,
-  .employees-table td {
-    font-size: 12px;
-    padding: 12px;
-  }
-
-  .btn {
-    padding: 8px 16px;
-    font-size: 11px;
-    margin-right: 4px;
-  }
+    .employee-table table {
+        min-width: 900px;
+    }
 }
