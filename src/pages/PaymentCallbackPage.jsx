@@ -1,111 +1,117 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { paymentService } from '../services/paymentService';
-import './PaymentCallback.css';
+import React, { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { paymentService } from "../services/paymentService";
+import "./PaymentCallback.css";
 
 const PaymentCallbackPage = () => {
-    const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const [processing, setProcessing] = useState(true);
-    const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-    useEffect(() => {
-        handleCallback();
-    }, []);
+  const [processing, setProcessing] = useState(true);
+  const [error, setError] = useState(null);
 
-    const handleCallback = async () => {
-        try {
-            console.log('📞 [PaymentCallback] Processing VNPay callback...');
+  useEffect(() => {
+    setTimeout(() => {
+      handleMoMoCallback();
+    }, 500); 
+  }, []);
 
-            // ✅ Lấy tất cả params từ VNPay
-            const vnpParams = {};
-            for (let [key, value] of searchParams.entries()) {
-                vnpParams[key] = value;
-            }
+  const handleMoMoCallback = async () => {
+    try {
+      console.log("📞 [MoMoCallback] Processing callback...");
 
-            console.log('📦 [PaymentCallback] VNPay params:', vnpParams);
-            console.log('🔍 [PaymentCallback] Response Code:', vnpParams.vnp_ResponseCode);
+      const momoParams = {};
+      for (let [key, value] of searchParams.entries()) {
+        momoParams[key] = value;
+      }
 
-            // ✅ Gọi API Backend để verify và xử lý payment
-            const response = await paymentService.verifyVNPayPayment(vnpParams);
+      console.log("📦 [MoMoCallback] Params:", momoParams);
 
-            console.log('✅ [PaymentCallback] Backend response:', response);
-            console.log('✅ [PaymentCallback] Backend response.message:', response.message);
+      // Không có resultCode => lỗi ngay
+      if (!momoParams.resultCode) {
+        navigate("/payment-failed?error=no-resultCode");
+        return;
+      }
 
-            // ✅ Kiểm tra kết quả thanh toán từ responseCode
-            const responseCode = vnpParams.vnp_ResponseCode;
+      let verifyResult = null;
 
-            console.log('🎯 [PaymentCallback] DECISION LOGIC:');
-            console.log('  - responseCode:', responseCode);
-            console.log('  - responseCode === "00"?', responseCode === '00');
-            console.log('  - typeof responseCode:', typeof responseCode);
+      try {
+        console.log("📤 [MoMoCallback] Sending verify request...");
+        verifyResult = await paymentService.verifyMoMoPayment(momoParams);
+        console.log("🎯 [Verified from BE]:", verifyResult);
+      } catch (err) {
+        console.error("❌ Backend verify error:", err);
 
-            // ✅ CHECK: Nếu không có responseCode → redirect failed
-            if (!responseCode) {
-                console.error('❌ [PaymentCallback] NO RESPONSE CODE - Redirect to failed');
-                window.location.href = '/payment-failed?error=no-response-code';
-                return;
-            }
+        const backendMsg =
+          err?.message ||
+          err?.raw?.message ||
+          "Máy chủ đang bận hoặc gặp lỗi khi xác minh thanh toán.";
 
-            if (responseCode === '00') {
-                // ✅ Thanh toán thành công
-                console.log('✅✅✅ [PaymentCallback] CODE 00 - GOING TO SUCCESS');
+        setError(backendMsg);
+        setProcessing(false);
+        return;
+      }
 
-                const queryParams = new URLSearchParams({
-                    orderId: response.orderId,
-                    amount: vnpParams.vnp_Amount,
-                    method: 'VNPAY',
-                    txnRef: vnpParams.vnp_TxnRef,
-                    responseCode: responseCode
-                }).toString();
+      // Nếu BE không trả orderId => fallback an toàn
+      const orderId = verifyResult?.orderId || momoParams.orderId || "unknown";
 
-                // ✅ Use window.location.href to avoid CORS/secure context issues
-                window.location.href = `/payment-success?${queryParams}`;
-            } else {
-                // ❌ Thanh toán thất bại
-                console.log('❌❌❌ [PaymentCallback] CODE ' + responseCode + ' - GOING TO FAILED');
+      // ==== SUCCESS ====
+      const successFromMoMo = momoParams.resultCode === "0";
+      const successFromBE = verifyResult?.message === "PAYMENT_SUCCESS";
 
-                const queryParams = new URLSearchParams({
-                    orderId: response.orderId || 'unknown',
-                    responseCode: responseCode,
-                    txnRef: vnpParams.vnp_TxnRef
-                }).toString();
+     if (successFromMoMo || successFromBE) {
+ navigate(
+  `/payment-success` +
+    `?orderId=${orderId}` +
+    `&amount=${verifyResult?.amount || momoParams.amount || ""}` +
+    `&txnRef=${verifyResult?.transId || momoParams.transId || ""}` +
+    `&method=${verifyResult?.method || momoParams.payType || "MoMo"}` +
+    `&orderInfo=${encodeURIComponent(momoParams.orderInfo || "")}` +
+    `&payType=${momoParams.payType || ""}` +
+    `&status=SUCCESS`
+);
+  return;
+}
 
-                // ✅ Use window.location.href to avoid CORS/secure context issues
-                window.location.href = `/payment-failed?${queryParams}`;
-            }
+      // ==== FAILED ====
+      navigate(`/payment-failed?orderId=${orderId}&status=FAILED`);
+    } catch (err) {
+      console.error("❌ [MoMoCallback] Error:", err);
 
-        } catch (err) {
-            console.error('❌ [PaymentCallback] Error:', err);
-            setError(err.message || 'Có lỗi xảy ra khi xử lý thanh toán');
-            setProcessing(false);
-        }
-    };
+      const msg =
+        err?.message ||
+        err?.raw?.message ||
+        "Có lỗi xảy ra khi xử lý thanh toán MoMo.";
 
-    if (error) {
-        return (
-            <div className="payment-callback-page">
-                <div className="callback-container error">
-                    <div className="error-icon">❌</div>
-                    <h2>Lỗi xử lý thanh toán</h2>
-                    <p>{error}</p>
-                    <button onClick={() => navigate('/my-bookings')}>
-                        Quay lại đơn hàng
-                    </button>
-                </div>
-            </div>
-        );
+      setError(msg);
+      setProcessing(false);
     }
+  };
 
+  if (error) {
     return (
-        <div className="payment-callback-page">
-            <div className="callback-container">
-                <div className="spinner"></div>
-                <h2>Đang xử lý thanh toán...</h2>
-                <p>Vui lòng chờ trong giây lát</p>
-            </div>
+      <div className="payment-callback-page">
+        <div className="callback-container error">
+          <div className="error-icon">❌</div>
+          <h2>Lỗi xử lý thanh toán</h2>
+          <p>{error}</p>
+          <button onClick={() => navigate("/my-bookings")}>
+            Quay lại đơn hàng
+          </button>
         </div>
+      </div>
     );
+  }
+
+  return (
+    <div className="payment-callback-page">
+      <div className="callback-container">
+        <div className="spinner"></div>
+        <h2>Đang xử lý thanh toán MoMo...</h2>
+        <p>Vui lòng đợi vài giây</p>
+      </div>
+    </div>
+  );
 };
 
 export default PaymentCallbackPage;

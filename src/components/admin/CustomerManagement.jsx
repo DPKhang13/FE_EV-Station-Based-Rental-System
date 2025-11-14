@@ -86,7 +86,7 @@ const CustomerManagement = () => {
             return;
         }
         // tuỳ cấu trúc route của bạn – sửa path nếu cần
-        navigate(`/admin/customers/${id}`);
+        navigate(`/admin/chitiet/${id}`);
         // hoặc nếu chưa có route thì tạm:
         // alert(`Xem chi tiết khách hàng: ${user.fullName}`);
     };

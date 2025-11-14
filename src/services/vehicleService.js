@@ -121,21 +121,24 @@ export const transformVehicleData = (apiVehicle) => {
 
 /**
  * Map status từ API sang format frontend
+ * ✅ GIỮ NGUYÊN status BOOKED, RENTAL, CHECKING để FE có thể hiển thị và xử lý timeline
  */
 const mapStatus = (apiStatus) => {
-    // API trả về lowercase: 'available', 'rented', 'maintenance'
+    if (!apiStatus) return 'Available';
+    
+    // Normalize về uppercase để so sánh
+    const normalized = apiStatus.toUpperCase();
+    
+    // Chỉ map các status cơ bản, giữ nguyên BOOKED/RENTAL/CHECKING
     const statusMap = {
-        'available': 'Available',
-        'rented': 'Rented',
-        'maintenance': 'Maintenance',
-        'reserved': 'Reserved',
-        // Fallback cho uppercase (nếu có)
         'AVAILABLE': 'Available',
-        'RENTED': 'Rented',
+        'RENTED': 'Rented', 
         'MAINTENANCE': 'Maintenance',
         'RESERVED': 'Reserved'
     };
-    return statusMap[apiStatus] || apiStatus;
+    
+    // Nếu có trong map thì map, không thì giữ nguyên (cho BOOKED, RENTAL, CHECKING, etc.)
+    return statusMap[normalized] || apiStatus;
 };
 
 /**

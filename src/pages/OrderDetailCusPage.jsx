@@ -50,7 +50,7 @@ const OrderDetailCusPage = () => {
 
       const payload = {
         orderId,
-        method: "VNPay",
+        method: "captureWallet",
         paymentType,
       };
 
@@ -94,18 +94,19 @@ const OrderDetailCusPage = () => {
   }
 
   return (
-    <div className="order-detail-page">
-      <h1>Chi tiết đơn hàng</h1>
-      <p>
-        <strong>Mã đơn hàng:</strong> {orderId}
-      </p>
-      <p>
-        <strong>Trạng thái:</strong> {orderStatus || "N/A"}
-      </p>
+  <div className="order-detail-page">
+    <h1>Chi tiết đơn hàng</h1>
+    <p>
+      <strong>Mã đơn hàng:</strong> {orderId}
+    </p>
+    <p>
+      <strong>Trạng thái:</strong> {orderStatus || "N/A"}
+    </p>
 
-      {orderDetails.length === 0 ? (
-        <p>Không có dữ liệu chi tiết cho đơn hàng này.</p>
-      ) : (
+    {orderDetails.length === 0 ? (
+      <p>Không có dữ liệu chi tiết cho đơn hàng này.</p>
+    ) : (
+      <>
         <table className="order-detail-table">
           <thead>
             <tr>
@@ -123,7 +124,9 @@ const OrderDetailCusPage = () => {
               const type = String(d.type).toUpperCase();
               const status = String(d.status).toUpperCase();
               const isPaid = status === "SUCCESS";
-              const paymentType = type === "RENTAL" ? 1 : 2; // 🔥 mapping logic
+              const paymentType = type === "RENTAL" ? 1 : 2;
+
+              const isService = type.startsWith("SERVICE");
 
               return (
                 <tr key={d.detailId}>
@@ -136,44 +139,50 @@ const OrderDetailCusPage = () => {
                   </td>
                   <td>{d.price?.toLocaleString("vi-VN")} VND</td>
                   <td>{status}</td>
+
                   <td style={{ textAlign: "center" }}>
-                    {isPaid ? (
-                      <span
-                        style={{
-                          background: "#dcfce7",
-                          color: "#166534",
-                          padding: "6px 10px",
-                          borderRadius: "6px",
-                          fontWeight: "600",
-                        }}
-                      >
-                        ✅ Đã thanh toán
-                      </span>
-                    ) : (
-                      <button
-                        disabled={processing}
-                        onClick={() => handlePayment(paymentType)}
-                        style={{
-                          background:
-                            paymentType === 1
-                              ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
-                              : "linear-gradient(135deg, #16a34a 0%, #15803d 100%)",
-                          color: "white",
-                          border: "none",
-                          padding: "8px 14px",
-                          borderRadius: "8px",
-                          fontWeight: "600",
-                          cursor: "pointer",
-                          boxShadow:
-                            paymentType === 1
-                              ? "0 4px 10px rgba(245,158,11,0.4)"
-                              : "0 4px 10px rgba(22,163,74,0.4)",
-                        }}
-                      >
-                        {paymentType === 1
-                          ? "💰 Thanh toán cọc"
-                          : "💳 Thanh toán còn lại"}
-                      </button>
+                    {/* ❌ Không hiển thị nút cho SERVICE */}
+                    {!isService && (
+                      <>
+                        {isPaid ? (
+                          <span
+                            style={{
+                              background: "#dcfce7",
+                              color: "#166534",
+                              padding: "6px 10px",
+                              borderRadius: "6px",
+                              fontWeight: "600",
+                            }}
+                          >
+                            ✅ Đã thanh toán
+                          </span>
+                        ) : (
+                          <button
+                            disabled={processing}
+                            onClick={() => handlePayment(paymentType)}
+                            style={{
+                              background:
+                                paymentType === 1
+                                  ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
+                                  : "linear-gradient(135deg, #16a34a 0%, #15803d 100%)",
+                              color: "white",
+                              border: "none",
+                              padding: "8px 14px",
+                              borderRadius: "8px",
+                              fontWeight: "600",
+                              cursor: "pointer",
+                              boxShadow:
+                                paymentType === 1
+                                  ? "0 4px 10px rgba(245,158,11,0.4)"
+                                  : "0 4px 10px rgba(22,163,74,0.4)",
+                            }}
+                          >
+                            {paymentType === 1
+                              ? "💰 Thanh toán cọc"
+                              : "💳 Thanh toán còn lại"}
+                          </button>
+                        )}
+                      </>
                     )}
                   </td>
                 </tr>
@@ -181,15 +190,66 @@ const OrderDetailCusPage = () => {
             })}
           </tbody>
         </table>
-      )}
 
-      <div style={{ marginTop: "24px" }}>
-        <button className="btn-back" onClick={() => navigate(-1)}>
-          ⬅ Quay lại
-        </button>
-      </div>
+        {/* ⭐ THANH TOÁN DỊCH VỤ ⭐ */}
+        {(() => {
+          const serviceItems = orderDetails.filter((d) =>
+            String(d.type).toUpperCase().startsWith("SERVICE")
+          );
+          const serviceTotal = serviceItems.reduce(
+            (sum, item) => sum + (item.price || 0),
+            0
+          );
+
+          if (serviceTotal <= 0) return null;
+
+          return (
+            <div
+              style={{
+                marginTop: "20px",
+                padding: "16px",
+                textAlign: "center",
+                background: "#f8fafc",
+                borderRadius: "10px",
+              }}
+            >
+              <h3>
+                Tổng tiền dịch vụ:{" "}
+                <span style={{ color: "#2563eb" }}>
+                  {serviceTotal.toLocaleString("vi-VN")} VND
+                </span>
+              </h3>
+
+              <button
+                disabled={processing}
+                onClick={() => handlePayment(5)}
+                style={{
+                  marginTop: "12px",
+                  background: "linear-gradient(135deg, #2563eb, #1e40af)",
+                  color: "white",
+                  padding: "10px 20px",
+                  borderRadius: "10px",
+                  fontWeight: "700",
+                  cursor: "pointer",
+                  border: "none",
+                }}
+              >
+                🛠 Thanh toán dịch vụ
+              </button>
+            </div>
+          );
+        })()}
+      </>
+    )}
+
+    <div style={{ marginTop: "24px" }}>
+      <button className="btn-back" onClick={() => navigate(-1)}>
+        ⬅ Quay lại
+      </button>
     </div>
-  );
+  </div>
+);
+
 };
 
 export default OrderDetailCusPage;

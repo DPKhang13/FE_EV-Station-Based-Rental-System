@@ -1,0 +1,159 @@
+/* ================================
+   CHI TIẾT KHÁCH HÀNG - PREMIUM UI
+   ================================ */
+
+.ct-container {
+  padding: 40px;
+  max-width: 650px;
+  margin: auto;
+  font-family: "Inter", sans-serif;
+  color: #1f2937;
+}
+
+.ct-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 30px;
+  color: #111827;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ct-card {
+  background: #ffffff;
+  padding: 28px;
+  border-radius: 14px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  border: 1px solid #e5e7eb;
+}
+
+.ct-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.ct-row:last-child {
+  border-bottom: none;
+}
+
+.ct-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 15px;
+}
+
+.ct-value {
+  font-size: 15px;
+  font-weight: 500;
+  color: #111827;
+}
+
+/* Badges */
+.ct-badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Roles */
+.role-admin {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.role-staff {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.role-customer {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+/* Status */
+.status-ACTIVE {
+  background: #bbf7d0;
+  color: #166534;
+}
+.status-ACTIVE_PENDING {
+  background: #fef9c3;
+  color: #ca8a04;
+}
+.status-INACTIVE {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* Loading + Error */
+.ct-loading,
+.ct-error {
+  margin-top: 50px;
+  text-align: center;
+  font-size: 18px;
+  color: #374151;
+}
+/* Nút quay lại */
+.btn-back {
+  background: #1f2937;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  font-size: 14px;
+  transition: 0.2s ease;
+}
+
+.btn-back:hover {
+  background: #111827;
+  transform: translateX(-3px);
+}
+
+/* Khung card action */
+.ct-actions {
+  margin-top: 22px;
+  text-align: center;
+}
+
+/* Nút xem lịch sử thuê */
+.btn-history {
+  background: #2563eb;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: 0.25s ease;
+}
+
+.btn-history:hover {
+  background: #1e40af;
+  transform: translateY(-2px);
+}
+/* Nút quay lại */
+.btn-back {
+  background: #111827;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: 0.2s ease;
+  margin-top: 24px;     /* 🔥 cách xa khung */
+  display: inline-block;
+}
+
+.btn-back:hover {
+  background: #0f172a;
+  transform: translateX(-3px);
+}
+

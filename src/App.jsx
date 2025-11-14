@@ -43,6 +43,9 @@ import  ForgotPage from './pages/ForgotPage.jsx'
 import OrderDetailCusPage from './pages/OrderDetailCusPage.jsx';
 import QuanLiXeTaiTram from './pages/QuanLiXeTaiTram.jsx';
 import TrangHienThiXeTheoTram from './pages/TrangHienThiXeTheoTram.jsx';
+import ChiTietKhachHang from './pages/ChiTietKhachHang.jsx';
+import LichSuThue from './pages/LichSuThue.jsx';
+import ChiTietDonTrongAdmin from './pages/ChiTietDonTrongAdmin.jsx';
 
 const HomePage = () => (
   <ScrollToSectionWrapper>
@@ -190,6 +193,9 @@ function App() {
               <Route path="customers" element={<CustomerManagement />} />
               <Route path="quanlixe" element={<QuanLiXeTaiTram/>}/>
               <Route path="hienthiXe/:station" element={<TrangHienThiXeTheoTram/>}/>
+              <Route path="chitiet/:id" element={<ChiTietKhachHang/>}/>
+              <Route path="lichsu-thue/:userId" element={<LichSuThue/>}/>
+              <Route path="order-detail/:orderId" element={<ChiTietDonTrongAdmin/>}/>
             </Route>
           </Routes >
         </LayoutWrapper >
