@@ -74,8 +74,16 @@ export const AuthProvider = ({ children }) => {
     console.log("👋 User logged out");
   };
 
+  // 🔹 Cập nhật thông tin user
+  const updateUser = (updatedData) => {
+    const updatedUser = { ...user, ...updatedData };
+    setUser(updatedUser);
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+    console.log("✅ User updated:", updatedUser);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, updateUser, loading }}>
       {children}
     </AuthContext.Provider>
   );
