@@ -12,6 +12,7 @@ import PopupNhanXe from "../components/staff/PopUpNhanXe";
 import PopupXacThuc from "../components/staff/PopUpXacThuc";
 import PopupDaXacThuc from "../components/staff/PopUpDaXacThuc";
 import PopupNhanChecking from "../components/staff/PopupNhanChecking";
+import PopupXemChiTietXe from "../components/staff/PopupXemChiTietXe";
 
 const GiaoTraXe = () => {
   const { user } = useContext(AuthContext);
@@ -350,28 +351,20 @@ const getCarImage = (brand, color, seatCount) => {
 
               {/* Nút hành động */}
               {xe.trangThai === "Đang cho thuê" && (
-                <div style={{ display: 'flex', gap: '6px', marginTop: '10px' }}>
-                  <button
-                    className="btn-action-compact"
-                    onClick={() => handleVehicleAction(xe)}
-                    style={{ flex: 1 }}
-                  >
-                    Nhận xe trả
-                  </button>
-                  <button
-                    className="btn-action-compact btn-secondary"
-                    onClick={() => handleVehicleAction(xe)}
-                    style={{ flex: 1 }}
-                  >
-                    Xem chi tiết
-                  </button>
-                </div>
+                <button
+                  className="btn-action"
+                  onClick={() => handleVehicleAction(xe)}
+                  style={{ marginTop: '10px' }}
+                >
+                  Nhận xe trả
+                </button>
               )}
 
               {xe.trangThai === "Đã đặt trước" && (
                 <button
                   className="btn-action"
                   onClick={() => handleVehicleAction(xe)}
+                  style={{ marginTop: '10px' }}
                 >
                   Đang chờ bàn giao
                 </button>
@@ -381,10 +374,24 @@ const getCarImage = (brand, color, seatCount) => {
                 <button
                   className="btn-action checking"
                   onClick={() => handleVehicleAction(xe)}
+                  style={{ marginTop: '10px' }}
                 >
                   Nhận Checking
                 </button>
               )}
+
+              {/* Nút Xem chi tiết - Hiển thị cho TẤT CẢ các xe */}
+              <button
+                className="btn-action-compact btn-secondary"
+                onClick={() => {
+                  // Mở popup xem chi tiết xe với API
+                  setSelectedVehicle(xe);
+                  setPopupType("xemChiTiet");
+                }}
+                style={{ marginTop: '10px', width: '100%' }}
+              >
+                📋 Xem chi tiết
+              </button>
             </div>
           ))}
         </div>
@@ -412,6 +419,13 @@ const getCarImage = (brand, color, seatCount) => {
           xe={selectedVehicle}
           onClose={() => setPopupType(null)}
           onReload={fetchData} // ✅ callback reload
+        />
+      )}
+      {popupType === "xemChiTiet" && selectedVehicle && (
+        <PopupXemChiTietXe
+          vehicleId={selectedVehicle.id}
+          onClose={() => setPopupType(null)}
+          onReload={fetchData}
         />
       )}
     </div>

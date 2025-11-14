@@ -24,7 +24,8 @@ const translateStatus = (status = "") => {
 const translateType = (type = "") => {
   const map = {
     DEPOSITED: "Đã cọc tiền",
-    FINAL:"Đã thanh toán hết",
+    FINAL: "Đã thanh toán hết",
+    FULL_PAYMENT: "Đã thanh toán toàn bộ",
     DEPOSIT: "Đã cọc tiền",
     WITHDRAW: "Rút tiền",
     RENTAL_PAYMENT: "Thanh toán thuê xe",
@@ -105,7 +106,9 @@ const ThanhToanPage = () => {
       <table className="transaction-table">
         <thead>
           <tr>
-            <th>Mã giao dịch</th>
+            <th>Tên khách hàng</th>
+            <th>Số điện thoại</th>
+            <th>Tên trạm</th>
             <th>Số tiền</th>
             <th>Trạng thái</th>
             <th>Loại</th>
@@ -117,7 +120,9 @@ const ThanhToanPage = () => {
           {transactions.length > 0 ? (
             transactions.map((t) => (
               <tr key={t.transactionId}>
-                <td>{t.transactionId}</td>
+                <td>{t.customerName || "N/A"}</td>
+                <td>{t.customerPhone || "N/A"}</td>
+                <td>{t.stationName || "N/A"}</td>
                 <td>{formatVND(t.amount)}</td>
                 <td className={`status ${t.status?.toLowerCase()}`}>
                   {translateStatus(t.status)}
@@ -134,7 +139,7 @@ const ThanhToanPage = () => {
             ))
           ) : (
             <tr>
-              <td colSpan={5} className="no-data-cell">
+              <td colSpan={7} className="no-data-cell">
                 Không có dữ liệu giao dịch.
               </td>
             </tr>

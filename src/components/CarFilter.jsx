@@ -4,12 +4,13 @@ import { useVehicles } from '../hooks/useVehicles';
 
 import './CarFilter.css';
 
-const CarFilter = ({ selectedBranch, vehicles: propsVehicles }) => {
+const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [] }) => {
     const navigate = useNavigate();
     const { vehicles: cars, loading, error, refetch } = useVehicles();
     
     // Use vehicles from props if available, otherwise use hook data
     const vehicleData = propsVehicles && propsVehicles.length > 0 ? propsVehicles : cars;
+    const isLoadingData = propsVehicles && propsVehicles.length > 0 ? false : loading;
     
     const [brand, setBrand] = useState('');
     const [grade, setGrade] = useState('');
@@ -37,8 +38,7 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles }) => {
         }
 
         // 2. LỌC THEO CHI NHÁNH (nếu có chọn)
-        if (selectedBranch && !propsVehicles) {
-            // Chỉ lọc nếu không có vehicles từ props (props đã filtered)
+        if (selectedBranch) {
             const carStationId = String(car.stationId || car.branch || '');
             const selectedStationId = String(selectedBranch);
             if (carStationId !== selectedStationId) {
@@ -154,6 +154,42 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles }) => {
         return colorMap[colorName] || '#999999';
     };
 
+    // Helper function to get car image URL
+    const getCarImage = (car) => {
+        if (car.image) return car.image;
+        
+        const brand = (car.brand || '').toLowerCase();
+        const seats = car.seatCount || 4;
+        const seatStr = seats === 7 ? '7' : '4';
+        const color = (car.color || 'red').toLowerCase();
+        
+        // Map brands to folder names
+        const brandFolder = {
+            'tesla': `Tes${seatStr}`,
+            'bmw': `BMW${seatStr}`,
+            'vinfast': `Vin${seatStr}`
+        };
+        
+        // Map colors to image filenames
+        const colorMap = {
+            'red': 'red.jpg',
+            'blue': 'blue.jpg',
+            'white': 'white.jpg',
+            'black': 'black.jpg',
+            'silver': 'silver.jpg',
+            'đỏ': 'red.jpg',
+            'xanh dương': 'blue.jpg',
+            'trắng': 'white.jpg',
+            'đen': 'black.jpg',
+            'bạc': 'silver.jpg'
+        };
+        
+        const folder = brandFolder[brand] || `Tes${seatStr}`;
+        const imageFile = colorMap[color] || 'red.jpg';
+        
+        return `/src/assets/${folder}/${imageFile}`;
+    };
+
     // Điều hướng đến trang booking - Truyền đầy đủ thông tin xe
     const handleRentCar = (car) => {
         if (car) {
@@ -175,7 +211,7 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles }) => {
     return (
         <div className="car-filter-container">
             {/* Loading state */}
-            {loading && (
+            {isLoadingData && (
                 <div className="loading-container">
                     <div className="loading-spinner"></div>
                     <p className="loading-text">Đang tải dữ liệu xe...</p>
@@ -195,7 +231,7 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles }) => {
             )}
 
             {/* Main content - only show when not loading */}
-            {!loading && (
+            {!isLoadingData && (
                 <>
                     {/* Filters Compact Box */}
                     <div className="filters-compact-box">
@@ -328,25 +364,32 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles }) => {
                             </div>
                         ) : (
                             sortedCars.map(car => (
-                                <div key={car.id} className="car-card">
+                                <div key={car.vehicleId || car.id} className="car-card">
                                     {/* Car Image */}
                                     <div className="car-image-container">
                                         <img
-                                            src={car.image}
-                                            alt={car.vehicle_name}
+                                            src={getCarImage(car)}
+                                            alt={car.vehicleName || car.vehicle_name}
                                             className="car-image"
+                                            onError={(e) => {
+                                                e.target.src = '/src/assets/Tes4/red.jpg';
+                                            }}
                                         />
-                                        <div className="car-status-badge">Available</div>
+                                        <div className="car-status-badge">{car.status || 'Available'}</div>
                                     </div>
 
                                     {/* Car Info */}
                                     <div className="car-info">
-                                        <h3 className="car-name">{car.vehicle_name}</h3>
+                                        <h3 className="car-name">{car.vehicleName || car.vehicle_name}</h3>
 
                                         <div className="car-details">
                                             <div className="car-detail-item">
                                                 <span className="car-detail-label">Biển số:</span>
-                                                <span>{car.plate_number}</span>
+                                                <span>{car.plateNumber || car.plate_number}</span>
+                                            </div>
+                                            <div className="car-detail-item">
+                                                <span className="car-detail-label">Hãng xe:</span>
+                                                <span>{car.brand || 'N/A'}</span>
                                             </div>
                                             <div className="car-detail-item">
                                                 <span className="car-detail-label">Hạng xe:</span>
@@ -366,7 +409,7 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles }) => {
                                             </div>
                                             <div className="car-detail-item">
                                                 <span className="car-detail-label">Loại xe:</span>
-                                                <span>{car.type === '4-seater' ? '4 Chỗ' : '7 Chỗ'}</span>
+                                                <span>{car.seatCount === 4 ? '4 Chỗ' : car.seatCount === 7 ? '7 Chỗ' : (car.type === '4-seater' ? '4 Chỗ' : '7 Chỗ')}</span>
                                             </div>
                                         </div>
 

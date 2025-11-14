@@ -97,7 +97,10 @@ setMsg(errorMsg);
         <button
           type="button"
           className="home-button"
-          onClick={() => navigate("/")}
+          onClick={() => {
+            // Force reload để tránh routing issue
+            window.location.href = "/";
+          }}
         >
           ← Quay lại Trang chủ
         </button>

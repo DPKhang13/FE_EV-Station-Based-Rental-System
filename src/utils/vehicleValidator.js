@@ -35,11 +35,12 @@ export const validateVehicleForBooking = (vehicle) => {
         // Don't add to errors - let backend handle it
     }
 
-    // Check vehicle status
-    const status = vehicle.status?.toUpperCase();
-    if (status !== 'AVAILABLE') {
-        errors.push(`Xe không sẵn sàng (status: ${vehicle.status})`);
-    }
+    // ✅ KHÔNG KIỂM TRA STATUS - Cho phép đặt xe dù đang RENTAL/BOOKED/CHECKING
+    // Backend sẽ kiểm tra overlap timeline thay vì status
+    // const status = vehicle.status?.toUpperCase();
+    // if (status !== 'AVAILABLE') {
+    //     errors.push(`Xe không sẵn sàng (status: ${vehicle.status})`);
+    // }
 
     // Check vehicle has station
     const stationId = vehicle.stationId || vehicle.station_id || vehicle.station;

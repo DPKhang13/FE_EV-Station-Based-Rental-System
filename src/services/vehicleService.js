@@ -315,6 +315,82 @@ export const updateVehicle = async (vehicleId, vehicleData) => {
 };
 
 /**
+ * Cập nhật trạng thái và/hoặc pin của xe
+ * @param {Number} vehicleId - ID của xe
+ * @param {Object} statusData - { status?: string, batteryStatus?: string }
+ * @returns {Promise<Object>} Xe đã cập nhật
+ */
+export const updateVehicleStatus = async (vehicleId, statusData) => {
+    try {
+        const token = localStorage.getItem('accessToken');
+
+        console.log('🚀 [API] Đang cập nhật trạng thái xe:', vehicleId, statusData);
+
+        const response = await fetch(`${API_BASE_URL}/vehicles/updateStatus/${vehicleId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(statusData)
+        });
+
+        console.log('📡 [API] Response status:', response.status);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ [API] Error response:', errorText);
+            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ [API] Trạng thái xe đã được cập nhật:', data);
+
+        return data;
+    } catch (error) {
+        console.error('❌ [API] Lỗi khi cập nhật trạng thái xe:', error);
+        throw error;
+    }
+};
+
+/**
+ * Lấy chi tiết một xe theo vehicleId
+ * @param {Number} vehicleId - ID của xe
+ * @returns {Promise<Object>} Chi tiết xe
+ */
+export const getVehicleDetail = async (vehicleId) => {
+    try {
+        const token = localStorage.getItem('accessToken');
+
+        console.log('🚀 [API] Đang lấy chi tiết xe:', vehicleId);
+
+        const response = await fetch(`${API_BASE_URL}/vehicles/${vehicleId}/detail`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        console.log('📡 [API] Response status:', response.status);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ [API] Error response:', errorText);
+            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ [API] Chi tiết xe:', data);
+
+        return data;
+    } catch (error) {
+        console.error('❌ [API] Lỗi khi lấy chi tiết xe:', error);
+        throw error;
+    }
+};
+
+/**
  * Lấy lịch sử đặt xe theo vehicleId
  * @param {Number} vehicleId - ID của xe
  * @returns {Promise<Array>} Danh sách lịch sử đặt xe
@@ -376,6 +452,8 @@ const vehicleService = {
     deleteVehicle,
     getVehiclesByStation,
     updateVehicle,
+    updateVehicleStatus,
+    getVehicleDetail,
     getVehicleOrderHistory
 };
 
