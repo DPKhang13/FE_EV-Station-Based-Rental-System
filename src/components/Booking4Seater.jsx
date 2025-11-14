@@ -32,10 +32,13 @@ import vinfast4Silver from '../assets/Vin4/silver.png';
 import vinfast4Blue from '../assets/Vin4/blue.jpg';
 import vinfast4Red from '../assets/Vin4/red.png';
 
-// Images
+// Images - color-based fallback
 import car4SeatDefault from '../assets/4seatsilver.png';
-import { vehicleTimelineService } from "../services/vehicleTimelineService";
-
+import car4SeatBlack from '../assets/4seatblack.png';
+import car4SeatBlue from '../assets/4seatblue.png';
+import car4SeatRed from '../assets/4seatred.png';
+import car4SeatSilver from '../assets/4seatsilver.png';
+import car4SeatWhite from '../assets/4seatwhite.png';
 
 const Booking4Seater = () => {
   const location = useLocation();
@@ -47,27 +50,19 @@ const Booking4Seater = () => {
   const gradeFilter = location.state?.gradeFilter;
 
   // ✅ Sử dụng hook để fetch timeline cho tất cả xe
-  const { 
-    getVehicleTimeline, 
-    hasOverlap, 
-    getTimelineMessage,
-    loading: timelinesLoading 
-  } = useVehicleTimelines(cars);
+  const { getVehicleTimeline, hasOverlap, getTimelineMessage, loading: timelinesLoading } = useVehicleTimelines(cars);
 
   // Mapping ảnh xe theo brand và màu
   const getCarImageByBrandAndColor = (brand, color) => {
-    console.log(' [getCarImage] Input - Brand:', brand, 'Color:', color);
+    console.log('🔍 [getCarImage] Input - Brand:', brand, 'Color:', color);
     
     if (!brand || !color) {
-      console.log(' [getCarImage] Missing brand or color, using default');
+      console.log('⚠️ [getCarImage] Missing brand or color, using default');
       return car4SeatDefault;
     }
 
     const brandLower = brand.toLowerCase().trim();
     const colorLower = color.toLowerCase().trim();
-    
-    console.log('🔍 [getCarImage] Input after trim/lower - Brand:', brandLower, 'Color:', colorLower);
-
     
     const carImages = {
       tesla: {
@@ -87,11 +82,13 @@ const Booking4Seater = () => {
       vinfast: {
         black: vinfast4Black,
         white: vinfast4White, 
-        silver: vinfast4Silver, 
-        blue: vinfast4Blue, 
+        silver: vinfast4Silver,
+        blue: vinfast4Blue,
         red: vinfast4Red, 
       },
     };
+    
+    console.log('🔍 [getCarImage] Input after trim/lower - Brand:', brandLower, 'Color:', colorLower);
 
     // Normalize color name - DB stores "Black", "White", "Red", "Blue", "Silver"
     const normalizedColor = colorLower; // Already lowercase from DB colors
@@ -109,7 +106,7 @@ const Booking4Seater = () => {
   };
 
   const [bookedSlots, setBookedSlots] = useState([]);
-  const [selectedCarId, setSelectedCarId] = useState(preSelectedCar?.id || '');
+  const [selectedCarId, setSelectedCarId] = useState(preSelectedCar?.vehicleId || preSelectedCar?.id || '');
   const [selectedCar, setSelectedCar] = useState(preSelectedCar || null);
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
@@ -121,7 +118,17 @@ const Booking4Seater = () => {
     couponCode: '',
   });
 
-  // ✅ Format thời gian đúng "yyyy-MM-dd HH:mm:ss"
+  const getCarImageByColor = (color) => {
+    if (!color) return car4SeatSilver;
+    const c = color.toLowerCase();
+    if (c.includes("black") || c.includes("đen")) return car4SeatBlack;
+    if (c.includes("blue") || c.includes("xanh")) return car4SeatBlue;
+    if (c.includes("red") || c.includes("đỏ")) return car4SeatRed;
+    if (c.includes("silver") || c.includes("bạc")) return car4SeatSilver;
+    if (c.includes("white") || c.includes("trắng")) return car4SeatWhite;
+    return car4SeatSilver;
+  };
+
   const formatDateTimeForBackend = (dateStr, isStart = true) => {
     if (!dateStr) return null;
     if (dateStr.includes("T")) {
@@ -151,43 +158,49 @@ const Booking4Seater = () => {
     return isFourSeater && isAvailable && matchesGrade && matchesColor && matchesBrand;
   });
 
-  console.log('🚗 [Booking4Seater] Selected Brand:', selectedBrand);
-  console.log('🎨 [Booking4Seater] Selected Color:', selectedColor);
-  console.log('📋 [Booking4Seater] Available Cars:', availableCars.length, availableCars.map(c => ({ id: c.id, brand: c.brand, color: c.color, name: c.vehicle_name })));
-  console.log('📦 [Booking4Seater] Total cars from API/sample:', cars.length);
-  console.log('🔎 [Booking4Seater] All cars brands:', [...new Set(cars.map(c => c.brand))]);
-  console.log('🔎 [Booking4Seater] 4-seater cars:', cars.filter(c => c.type === '4-seater').map(c => ({ brand: c.brand, color: c.color, name: c.vehicle_name })));
-
-  // Filter available colors based on selected brand (KHÔNG filter theo grade để hiển thị tất cả màu)
   const availableColors = [
     ...new Set(
       cars
-        .filter(
-          (car) => {
-            const isFourSeater = car.type === '4-seater';
-            const isAvailable = car.status === 'Available';
-            const hasValidColor = car.color && car.color !== 'N/A' && car.color !== 'null';
-            // REMOVED: const matchesGrade = !gradeFilter || car.grade === gradeFilter;
+        .filter((car) => {
+          const isFourSeater = car.type === '4-seater';
+          const isAvailable = car.status === 'Available';
+          const hasValidColor = car.color && car.color !== 'N/A' && car.color !== 'null';
+          const matchesGrade = !gradeFilter || car.grade === gradeFilter;
+          
+          // Match brand - simplified: if selectedBrand exists, check if car.brand matches
+          let matchesBrand = true;
+          if (selectedBrand) {
+            const carBrandLower = (car.brand || '').toLowerCase().trim();
+            const selectedBrandLower = selectedBrand.toLowerCase().trim();
+            matchesBrand = carBrandLower === selectedBrandLower;
             
-            // Match brand - simplified: if selectedBrand exists, check if car.brand matches
-            let matchesBrand = true;
-            if (selectedBrand) {
-              const carBrandLower = (car.brand || '').toLowerCase().trim();
-              const selectedBrandLower = selectedBrand.toLowerCase().trim();
-              matchesBrand = carBrandLower === selectedBrandLower;
-              
-              console.log(`🔍 Checking car: ${car.vehicle_name} | car.brand: "${car.brand}" (${carBrandLower}) vs selected: "${selectedBrand}" (${selectedBrandLower}) = ${matchesBrand}`);
-            }
-            
-            const passes = isFourSeater && isAvailable && hasValidColor && matchesBrand;
-            return passes;
+            console.log(`🔍 Checking car: ${car.vehicle_name} | car.brand: "${car.brand}" (${carBrandLower}) vs selected: "${selectedBrand}" (${selectedBrandLower}) = ${matchesBrand}`);
           }
-        )
+          
+          return isFourSeater && isAvailable && hasValidColor && matchesGrade && matchesBrand;
+        })
         .map((car) => car.color)
     ),
   ].sort();
-  
-  console.log('🎨 [Booking4Seater] Available Colors for brand', selectedBrand, ':', availableColors);
+
+  // Get available brands from 4-seater cars
+  const availableBrands = [
+    ...new Set(
+      cars
+        .filter((car) => {
+          const isFourSeater = car.type === '4-seater';
+          const isAvailable = car.status === 'Available';
+          const hasValidBrand = car.brand && car.brand !== 'N/A' && car.brand !== 'null';
+          const matchesGrade = !gradeFilter || car.grade === gradeFilter;
+          
+          // Match color - if selectedColor exists, check if car.color matches
+          const matchesColor = selectedColor ? car.color === selectedColor : true;
+          
+          return isFourSeater && isAvailable && hasValidBrand && matchesGrade && matchesColor;
+        })
+        .map((car) => car.brand)
+    ),
+  ].sort();
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -338,9 +351,7 @@ const Booking4Seater = () => {
       return;
     }
 
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      alert("Vui lòng đăng nhập để tiếp tục.");
+    if (!user) {
       navigate("/login");
       return;
     }
@@ -401,23 +412,6 @@ const Booking4Seater = () => {
       <div className="booking-content">
         <div className="booking-form-section">
           <form onSubmit={handleSubmit} className="booking-form">
-            {!preSelectedCar && (
-              <div className="form-group">
-                <label htmlFor="brandSelect">Chọn Hãng Xe *</label>
-                <select
-                  id="brandSelect"
-                  value={selectedBrand}
-                  onChange={(e) => setSelectedBrand(e.target.value)}
-                  required
-                >
-                  <option value="">-- Chọn hãng xe --</option>
-                  <option value="BMW">BMW</option>
-                  <option value="Tesla">Tesla</option>
-                  <option value="VinFast">VinFast</option>
-                </select>
-              </div>
-            )}
-
             {!preSelectedCar && availableColors.length > 0 && (
               <div className="form-group">
                 <label>Chọn Màu</label>
@@ -488,6 +482,39 @@ const Booking4Seater = () => {
               </div>
             )}
 
+            {!preSelectedCar && availableBrands.length > 0 && (
+              <div className="form-group">
+                <label>Chọn Hãng Xe</label>
+                <select
+                  value={selectedBrand}
+                  onChange={(e) => {
+                    const brand = e.target.value;
+                    setSelectedBrand(brand);
+                    if (!brand) {
+                      setSelectedCarId('');
+                      setSelectedCar(null);
+                      setBookedSlots([]);
+                    }
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    borderRadius: '8px',
+                    border: '1px solid #e5e7eb',
+                    fontSize: '14px',
+                    marginTop: '8px'
+                  }}
+                >
+                  <option value="">-- Chọn hãng xe --</option>
+                  {availableBrands.map((brand) => (
+                    <option key={brand} value={brand}>
+                      {brand}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {/* ✅ Chọn xe với thông báo timeline */}
             <div className="form-group">
               <label htmlFor="carSelect">Chọn Xe *</label>
@@ -496,7 +523,6 @@ const Booking4Seater = () => {
                 value={selectedCarId}
                 onChange={handleCarSelect}
                 required
-                disabled={!selectedColor || !selectedBrand}
               >
                 <option value="">
                   {!selectedColor || !selectedBrand 
@@ -632,91 +658,24 @@ const Booking4Seater = () => {
 
         {/* ✅ Hiển thị xe đã chọn */}
         <div className="booking-car-display">
-          <h2 className="car-display-title">Xe Đã Chọn</h2>
-
+          <h2>Xe Đã Chọn</h2>
           {!selectedCar ? (
-            <div className="no-car-selected">
-              <p>Vui lòng chọn xe từ danh sách để xem chi tiết</p>
-            </div>
+            <p>Vui lòng chọn xe từ danh sách để xem chi tiết.</p>
           ) : (
             <>
               <img
-                src={getCarImageByBrandAndColor(selectedCar.brand, selectedCar.color)}
+                src={getCarImageByBrandAndColor(selectedCar.brand, selectedCar.color) || getCarImageByColor(selectedCar.color)}
                 alt={selectedCar.vehicle_name}
                 className="car-display-image"
               />
-
               <div className="car-display-details">
-                <h3 className="car-name">
-                  {selectedCar.brand || selectedCar.vehicle_name?.split(' ')[0] || selectedCar.vehicle_name}
-                </h3>
-
-                {selectedCar.variant && (
-                  <div className="car-grade-badge">
-                    Hạng: {selectedCar.variant}
-                  </div>
-                )}
-
-                <div className="car-info-grid">
-                  <div className="car-info-item">
-                    <span className="info-label">Biển số:</span>
-                    <span className="info-value">{selectedCar.plate_number}</span>
-                  </div>
-
-                  <div className="car-info-item">
-                    <span className="info-label">Hãng:</span>
-                    <span className="info-value">{selectedCar.brand}</span>
-                  </div>
-
-                  <div className="car-info-item">
-                    <span className="info-label">Màu:</span>
-                    <span className="info-value">{selectedCar.color}</span>
-                  </div>
-
-                  <div className="car-info-item">
-                    <span className="info-label">Số chỗ:</span>
-                    <span className="info-value">{selectedCar.seat_count || selectedCar.seatCount} chỗ</span>
-                  </div>
-
-                  <div className="car-info-item">
-                    <span className="info-label">Năm SX:</span>
-                    <span className="info-value">{selectedCar.year_of_manufacture}</span>
-                  </div>
-
-                  <div className="car-info-item">
-                    <span className="info-label">Hộp số:</span>
-                    <span className="info-value">{selectedCar.transmission}</span>
-                  </div>
-
-                  <div className="car-info-item">
-                    <span className="info-label">Pin:</span>
-                    <span className="info-value battery">{selectedCar.battery_status}</span>
-                  </div>
-
-                  <div className="car-info-item">
-                    <span className="info-label">Dung lượng:</span>
-                    <span className="info-value">{selectedCar.battery_capacity}</span>
-                  </div>
-
-                  <div className="car-info-item">
-                    <span className="info-label">Quãng đường:</span>
-                    <span className="info-value">{selectedCar.range_km} km</span>
-                  </div>
-
-                  {selectedCar.variant && (
-                    <div className="car-info-item">
-                      <span className="info-label">Phiên bản:</span>
-                      <span className="info-value">{selectedCar.variant}</span>
-                    </div>
-                  )}
-
-                  <div className="car-info-item full-width">
-                    <span className="info-label">Trạng Thái:</span>
-                    <span className="info-value status-available">
-                      {selectedCar.status === 'Available' ? 'Sẵn sàng' : selectedCar.status}
-                    </span>
-                  </div>
-                </div>
+                <h3>{selectedCar.vehicle_name}</h3>
+                <p>Hãng: {selectedCar.brand}</p>
+                <p>Màu: {selectedCar.color}</p>
+                <p>Số chỗ: {selectedCar.seat_count}</p>
+                <p>Biển số: {selectedCar.plate_number}</p>
+                <p>Pin: {selectedCar.battery_status}</p>
+                <p>Quãng đường: {selectedCar.range_km} km</p>
               </div>
             </>
           )}

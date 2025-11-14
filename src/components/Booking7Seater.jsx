@@ -6,6 +6,7 @@ import { AuthContext } from '../context/AuthContext';
 import { validateVehicleForBooking } from '../utils/vehicleValidator';
 import './Booking7Seater.css';
 
+// Import ảnh xe theo brand và màu
 // BMW 7-seater
 import bmw7Black from '../assets/BMW7/black.jpg';
 import bmw7White from '../assets/BMW7/white.jpg';
@@ -27,7 +28,6 @@ import vinfast7Silver from '../assets/Vin7/silver.jpg';
 import vinfast7Blue from '../assets/Vin7/blue.jpg';
 import vinfast7Red from '../assets/Vin7/red.jpg';
 
-
 const Booking7Seater = () => {
     const location = useLocation();
     const navigate = useNavigate();
@@ -35,14 +35,6 @@ const Booking7Seater = () => {
     const { vehicles: cars, loading } = useVehicles();
     const preSelectedCar = location.state?.car;
     const gradeFilter = location.state?.gradeFilter; // For filtering by grade from Offers
-
-    // ✅ Sử dụng hook để fetch timeline cho tất cả xe
-    const { 
-        getVehicleTimeline, 
-        hasOverlap, 
-        getTimelineMessage,
-        loading: timelinesLoading 
-    } = useVehicleTimelines(cars);
 
     // Mapping ảnh xe theo brand và màu
     const getCarImageByBrandAndColor = (brand, color) => {
@@ -94,12 +86,21 @@ const Booking7Seater = () => {
 
         return null; // Hoặc return default image
     };
+    // ✅ Sử dụng hook mới để fetch timeline cho tất cả xe
+    const { 
+        getVehicleTimeline, 
+        hasOverlap, 
+        getTimelineMessage,
+        loading: timelinesLoading 
+    } = useVehicleTimelines(cars);
 
-    const [bookedSlots, setBookedSlots] = useState([]);
     const [selectedCarId, setSelectedCarId] = useState(preSelectedCar?.id || '');
     const [selectedCar, setSelectedCar] = useState(preSelectedCar || null);
+    // const [submitting, setSubmitting] = useState(false);
     const [selectedColor, setSelectedColor] = useState('');
     const [selectedBrand, setSelectedBrand] = useState('');
+    const [bookedSlots, setBookedSlots] = useState([]); // ✅ Timeline của xe đã chọn
+
 
     const [formData, setFormData] = useState({
         startTime: '',
@@ -115,10 +116,20 @@ const Booking7Seater = () => {
         // Timeline sẽ được check để disable các khung giờ đã book
         const matchesGrade = gradeFilter ? car.grade === gradeFilter : true;
         const matchesColor = selectedColor ? car.color === selectedColor : true;
+
         const matchesBrand = selectedBrand ? (car.brand === selectedBrand || car.vehicle_name?.includes(selectedBrand)) : true;
         return isSevenSeater && isAvailable && matchesGrade && matchesColor && matchesBrand;
     });
 
+    // Get unique brands from 7-seater available cars
+    const availableBrands = [...new Set(
+        cars.filter(car =>
+            car.type === '7-seater' &&
+            car.status === 'Available' &&
+            car.brand &&
+            (!gradeFilter || car.grade === gradeFilter)
+        ).map(car => car.brand)
+    )].filter(brand => ['BMW', 'Tesla', 'VinFast'].includes(brand)).sort();
 
     // Get unique colors from 7-seater available cars
     const availableColors = [...new Set(
@@ -143,12 +154,6 @@ const Booking7Seater = () => {
         });
     };
 
-    // Reset selected car when brand changes
-    useEffect(() => {
-        setSelectedCarId('');
-        setSelectedCar(null);
-        setBookedSlots([]);
-    }, [selectedBrand]);
 
     // Auto-select car when both color and brand are selected
     useEffect(() => {
@@ -228,7 +233,7 @@ const Booking7Seater = () => {
             console.error('❌ Vehicle validation failed:', validation.errors);
             console.error('❌ Full vehicle object:', selectedCar);
             alert(
-                `⚠️ Xe này không thể đặt do thiếu thông tin:\n\n${validation.errors.join('\n')}\n\n` +
+                ` Xe này không thể đặt do thiếu thông tin:\n\n${validation.errors.join('\n')}\n\n` +
                 `Vui lòng chọn xe khác hoặc liên hệ hỗ trợ.\n\n` +
                 `Vehicle ID: ${selectedCar.id || selectedCar.vehicleId}\n` +
                 `Vehicle Name: ${selectedCar.vehicle_name}\n` +
@@ -293,7 +298,6 @@ const Booking7Seater = () => {
         });
 
         if (!customerId || !token) {
-            alert('Vui lòng đăng nhập để tiếp tục!');
             navigate('/login');
             return;
         }
@@ -369,24 +373,6 @@ const Booking7Seater = () => {
                 {/* Left side - Booking Form */}
                 <div className="booking-form-section">
                     <form onSubmit={handleSubmit} className="booking-form">
-                        {/* Brand Selection */}
-                        {!preSelectedCar && (
-                            <div className="form-group">
-                                <label htmlFor="brandSelect">Chọn Hãng Xe *</label>
-                                <select
-                                    id="brandSelect"
-                                    value={selectedBrand}
-                                    onChange={(e) => setSelectedBrand(e.target.value)}
-                                    required
-                                >
-                                    <option value="">-- Chọn hãng xe --</option>
-                                    <option value="BMW">BMW</option>
-                                    <option value="Tesla">Tesla</option>
-                                    <option value="VinFast">VinFast</option>
-                                </select>
-                            </div>
-                        )}
-
                         {/* Color Filter - Color Boxes */}
                         {!preSelectedCar && availableColors.length > 0 && (
                             <div className="form-group">
@@ -419,7 +405,6 @@ const Booking7Seater = () => {
                                                         setSelectedColor('');
                                                         setSelectedCarId('');
                                                         setSelectedCar(null);
-                                                        setBookedSlots([]);
                                                     } else {
                                                         setSelectedColor(color);
                                                     }
@@ -455,6 +440,63 @@ const Booking7Seater = () => {
                                         );
                                     })}
                                 </div>
+                                {selectedColor && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setSelectedColor('');
+                                            setSelectedCarId('');
+                                            setSelectedCar(null);
+                                        }}
+                                        style={{
+                                            marginTop: 12,
+                                            padding: '6px 16px',
+                                            background: '#dc2626',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: 6,
+                                            fontSize: 13,
+                                            fontWeight: 600,
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Xóa bộ lọc màu
+                                    </button>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Brand Selector */}
+                        {!preSelectedCar && availableBrands.length > 0 && (
+                            <div className="form-group">
+                                <label>Chọn Hãng Xe</label>
+                                <select
+                                    value={selectedBrand}
+                                    onChange={(e) => {
+                                        const brand = e.target.value;
+                                        setSelectedBrand(brand);
+                                        if (!brand) {
+                                            setSelectedCarId('');
+                                            setSelectedCar(null);
+                                            setBookedSlots([]);
+                                        }
+                                    }}
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px',
+                                        borderRadius: '8px',
+                                        border: '1px solid #e5e7eb',
+                                        fontSize: '14px',
+                                        marginTop: '8px'
+                                    }}
+                                >
+                                    <option value="">-- Chọn hãng xe --</option>
+                                    {availableBrands.map((brand) => (
+                                        <option key={brand} value={brand}>
+                                            {brand}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                         )}
 
@@ -602,20 +644,18 @@ const Booking7Seater = () => {
                             />
 
                             <div className="car-display-details">
-                                <h3 className="car-name">
-                                    {selectedCar.brand || selectedCar.vehicle_name?.split(' ')[0] || selectedCar.vehicle_name}
-                                </h3>
+                                <h3 className="car-name">{selectedCar.vehicle_name}</h3>
 
-                                {selectedCar.variant && (
+                                {selectedCar.grade && (
                                     <div className="car-grade-badge">
-                                        Hạng: {selectedCar.variant}
+                                        Hạng: {selectedCar.grade}
                                     </div>
                                 )}
 
                                 <div className="car-info-grid">
                                     <div className="car-info-item">
-                                        <span className="info-label">Biển số:</span>
-                                        <span className="info-value">{selectedCar.plate_number}</span>
+                                        <span className="info-label">Mã Xe:</span>
+                                        <span className="info-value">{selectedCar.vehicle_id}</span>
                                     </div>
 
                                     <div className="car-info-item">
@@ -630,12 +670,17 @@ const Booking7Seater = () => {
 
                                     <div className="car-info-item">
                                         <span className="info-label">Số chỗ:</span>
-                                        <span className="info-value">{selectedCar.seat_count || selectedCar.seatCount} chỗ</span>
+                                        <span className="info-value">{selectedCar.seat_count} chỗ</span>
                                     </div>
 
                                     <div className="car-info-item">
                                         <span className="info-label">Năm SX:</span>
                                         <span className="info-value">{selectedCar.year_of_manufacture}</span>
+                                    </div>
+
+                                    <div className="car-info-item">
+                                        <span className="info-label">Biển số:</span>
+                                        <span className="info-value">{selectedCar.plate_number}</span>
                                     </div>
 
                                     <div className="car-info-item">

@@ -56,7 +56,6 @@ const Offers = () => {
 
     const handleBooking = (path, gradeFilter) => {
         if (!user) {
-            alert('Vui lòng đăng nhập để thuê xe!');
             navigate('/login');
             return;
         }

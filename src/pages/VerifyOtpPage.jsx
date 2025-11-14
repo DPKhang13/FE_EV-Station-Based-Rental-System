@@ -95,20 +95,60 @@ const VerifyOtpPage = () => {
   return (
     <div className="otp-container">
       <div className="otp-box">
-        <h2 className="otp-title">🔐 Xác thực OTP ({type})</h2>
+        {/* Icon Header */}
+        <div className="otp-icon-wrapper">
+          <div className="otp-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" fill="currentColor"/>
+            </svg>
+          </div>
+        </div>
 
+        {/* Title */}
+        <h2 className="otp-title">
+          Xác thực OTP
+          <span className="otp-type-badge">{type}</span>
+        </h2>
+
+        {/* Email Info */}
+        {email && (
+          <p className="otp-email-info">
+            📧 Mã OTP đã được gửi đến: <strong>{email}</strong>
+          </p>
+        )}
+
+        <p className="otp-description">
+          Vui lòng nhập mã 6 chữ số đã được gửi đến email của bạn
+        </p>
+
+        {/* OTP Form */}
         <form onSubmit={handleVerify} className="otp-form">
           <div className="otp-input-group">
             {otp.map((digit, i) => (
               <input
                 key={i}
                 type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 maxLength="1"
                 value={digit}
                 onChange={(e) => handleChange(e.target.value, i)}
                 onKeyDown={(e) => handleKeyDown(e, i)}
+                onPaste={(e) => {
+                  e.preventDefault();
+                  const pastedData = e.clipboardData.getData('text').slice(0, 6);
+                  if (/^\d+$/.test(pastedData)) {
+                    const newOtp = [...otp];
+                    pastedData.split('').forEach((char, idx) => {
+                      if (idx < 6) newOtp[idx] = char;
+                    });
+                    setOtp(newOtp);
+                    const nextIndex = Math.min(pastedData.length, 5);
+                    inputsRef.current[nextIndex]?.focus();
+                  }
+                }}
                 ref={(el) => (inputsRef.current[i] = el)}
-                className="otp-digit"
+                className={`otp-digit ${digit ? 'otp-digit-filled' : ''}`}
                 required
               />
             ))}
@@ -119,18 +159,53 @@ const VerifyOtpPage = () => {
             className="otp-button"
             disabled={loading || otp.join("").length < 6}
           >
-            {loading ? "⏳ Đang xác thực..." : "Xác nhận"}
+            {loading ? (
+              <>
+                <span className="otp-button-spinner"></span>
+                Đang xác thực...
+              </>
+            ) : (
+              <>
+                <svg className="otp-button-icon" viewBox="0 0 24 24" fill="none">
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor"/>
+                </svg>
+                Xác nhận
+              </>
+            )}
           </button>
         </form>
 
+        {/* Message */}
         {message && (
-          <p className="otp-message">
-            {String(message)}{" "}
-            {countdown !== null && countdown > 0 && (
-              <span className="otp-countdown">(Chuyển sau {countdown}s)</span>
-            )}
-          </p>
+          <div className={`otp-message ${message.includes('✅') || message.includes('thành công') ? 'otp-message-success' : message.includes('⚠️') ? 'otp-message-warning' : 'otp-message-error'}`}>
+            <span className="otp-message-icon">
+              {message.includes('✅') ? '✅' : message.includes('⚠️') ? '⚠️' : '❌'}
+            </span>
+            <span className="otp-message-text">
+              {String(message).replace(/[✅⚠️❌]/g, '').trim()}
+              {countdown !== null && countdown > 0 && (
+                <span className="otp-countdown"> (Chuyển sau {countdown}s)</span>
+              )}
+            </span>
+          </div>
         )}
+
+        {/* Resend OTP Link */}
+        <div className="otp-footer">
+          <p className="otp-footer-text">
+            Không nhận được mã?{' '}
+            <button
+              type="button"
+              className="otp-resend-link"
+              onClick={() => {
+                // TODO: Implement resend OTP functionality
+                setMessage("📧 Mã OTP mới đã được gửi!");
+              }}
+            >
+              Gửi lại mã
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   );

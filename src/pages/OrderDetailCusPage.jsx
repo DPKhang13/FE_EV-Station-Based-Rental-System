@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../services/api"; // axios instance
+import "./OrderDetailCusPage.css";
 
 const OrderDetailCusPage = () => {
   const { orderId } = useParams();
@@ -11,6 +12,10 @@ const OrderDetailCusPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [processing, setProcessing] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPaymentType, setSelectedPaymentType] = useState(null);
+  const [selectedAmount, setSelectedAmount] = useState(null); // 1: đặt cọc, 3: toàn bộ
+  const [selectedMethod, setSelectedMethod] = useState(null); // 'CASH' hoặc 'captureWallet'
 
   // ============================
   // FETCH ORDER DETAILS
@@ -47,13 +52,22 @@ const OrderDetailCusPage = () => {
   // ============================
   // HANDLE PAYMENT
   // ============================
-  const handlePayment = async (paymentType) => {
+  const handlePayment = async (paymentType, method = "captureWallet") => {
     try {
       setProcessing(true);
 
+      if (method === "CASH") {
+        alert("Bạn đã chọn thanh toán bằng tiền mặt. Vui lòng thanh toán khi nhận xe.");
+        setShowPaymentModal(false);
+        setSelectedAmount(null);
+        setSelectedMethod(null);
+        setProcessing(false);
+        return;
+      }
+
       const payload = {
         orderId,
-        method: "captureWallet",
+        method: method,
         paymentType,
       };
 
@@ -71,7 +85,62 @@ const OrderDetailCusPage = () => {
       alert("Không thể tạo thanh toán. Vui lòng thử lại sau.");
     } finally {
       setProcessing(false);
+      setShowPaymentModal(false);
+      setSelectedAmount(null);
+      setSelectedMethod(null);
     }
+  };
+
+  // ============================
+  // CHECK IF HAS PENDING PAYMENT
+  // ============================
+  const hasPendingPayment = () => {
+    return orderDetails.some((d) => {
+      const status = String(d.status).toUpperCase();
+      return status === "PENDING";
+    });
+  };
+
+  // ============================
+  // HANDLE SHOW PAYMENT MODAL
+  // ============================
+  const handleShowPaymentModal = (detail) => {
+    const type = String(detail.type).toUpperCase();
+    
+    if (type === "RENTAL") {
+      // Show modal chọn toàn bộ hoặc đặt cọc
+      setSelectedPaymentType("RENTAL");
+      setSelectedAmount(null);
+      setSelectedMethod(null);
+      setShowPaymentModal(true);
+    } else if (type === "PICKUP") {
+      // Thanh toán pickup (type 2)
+      setSelectedPaymentType("PICKUP");
+      setSelectedAmount(2);
+      setSelectedMethod(null);
+      setShowPaymentModal(true);
+    } else if (type.startsWith("SERVICE")) {
+      // Thanh toán service (type 5)
+      setSelectedPaymentType("SERVICE");
+      setSelectedAmount(5);
+      setSelectedMethod(null);
+      setShowPaymentModal(true);
+    }
+  };
+
+  // ============================
+  // HANDLE CONFIRM PAYMENT
+  // ============================
+  const handleConfirmPayment = () => {
+    if (!selectedMethod) {
+      alert("Vui lòng chọn phương thức thanh toán!");
+      return;
+    }
+    if (selectedPaymentType === "RENTAL" && !selectedAmount) {
+      alert("Vui lòng chọn hình thức thanh toán!");
+      return;
+    }
+    handlePayment(selectedAmount, selectedMethod);
   };
 
   // ============================
@@ -124,16 +193,13 @@ const OrderDetailCusPage = () => {
                 <th>Thời gian thuê</th>
                 <th>Giá</th>
                 <th>Trạng thái</th>
-                <th>Hành động</th>
               </tr>
             </thead>
             <tbody>
               {orderDetails.map((d) => {
                 const type = String(d.type).toUpperCase();
                 const status = String(d.status).toUpperCase();
-                const isService = type.startsWith("SERVICE");
                 const isPaid = status === "SUCCESS";
-                const paymentType = type === "RENTAL" ? 1 : 2;
 
                 return (
                   <tr key={d.detailId}>
@@ -145,46 +211,31 @@ const OrderDetailCusPage = () => {
                       {new Date(d.endTime).toLocaleString("vi-VN")}
                     </td>
                     <td>{d.price?.toLocaleString("vi-VN")} VND</td>
-                    <td>{status}</td>
-
-                    <td style={{ textAlign: "center" }}>
-                      {!isService ? (
-                        isPaid ? (
-                          <span
-                            style={{
-                              background: "#dcfce7",
-                              color: "#166534",
-                              padding: "6px 10px",
-                              borderRadius: "6px",
-                              fontWeight: "600",
-                            }}
-                          >
-                            ✅ Đã thanh toán
-                          </span>
-                        ) : (
-                          <button
-                            disabled={processing}
-                            onClick={() => handlePayment(paymentType)}
-                            style={{
-                              background:
-                                paymentType === 1
-                                  ? "linear-gradient(135deg, #f59e0b, #d97706)"
-                                  : "linear-gradient(135deg, #16a34a, #15803d)",
-                              color: "white",
-                              border: "none",
-                              padding: "8px 14px",
-                              borderRadius: "8px",
-                              fontWeight: "600",
-                              cursor: "pointer",
-                            }}
-                          >
-                            {paymentType === 1
-                              ? "💰 Thanh toán cọc"
-                              : "💳 Thanh toán còn lại"}
-                          </button>
-                        )
+                    <td>
+                      {isPaid ? (
+                        <span
+                          style={{
+                            background: "#dcfce7",
+                            color: "#166534",
+                            padding: "6px 10px",
+                            borderRadius: "6px",
+                            fontWeight: "600",
+                          }}
+                        >
+                          Đã thanh toán
+                        </span>
                       ) : (
-                        <span style={{ color: "#9ca3af" }}>—</span>
+                        <span
+                          style={{
+                            background: "#fef3c7",
+                            color: "#92400e",
+                            padding: "6px 10px",
+                            borderRadius: "6px",
+                            fontWeight: "600",
+                          }}
+                        >
+                          Chờ thanh toán
+                        </span>
                       )}
                     </td>
                   </tr>
@@ -192,85 +243,106 @@ const OrderDetailCusPage = () => {
               })}
             </tbody>
           </table>
-
-          {/* ==============================
-              THANH TOÁN PHÍ PHÁT SINH
-             ============================== */}
-          {(() => {
-            const serviceItems = orderDetails.filter((d) =>
-              String(d.type).toUpperCase().startsWith("SERVICE")
-            );
-
-            const unpaidServices = serviceItems.filter(
-              (s) => String(s.status).toUpperCase() !== "SUCCESS"
-            );
-
-            const totalServiceCost = unpaidServices.reduce(
-              (sum, item) => sum + (item.price || 0),
-              0
-            );
-
-            console.log("SERVICE DEBUG:", {
-              unpaidServices,
-              totalServiceCost,
-            });
-
-            if (unpaidServices.length === 0 || totalServiceCost <= 0)
-              return null;
-
-            return (
-              <div
-                style={{
-                  marginTop: "20px",
-                  padding: "16px",
-                  background: "#f8fafc",
-                  borderRadius: "10px",
-                  textAlign: "center",
-                }}
-              >
-                <h3>
-                  Tổng phí phát sinh ({unpaidServices.length} mục):{" "}
-                  <span style={{ color: "#2563eb" }}>
-                    {totalServiceCost.toLocaleString("vi-VN")} VND
-                  </span>
-                </h3>
-
-                <div style={{ marginTop: "10px", color: "#6b7280" }}>
-                  {unpaidServices.map((s, idx) => (
-                    <div key={idx}>
-                      • {s.description || s.type}:{" "}
-                      {(s.price || 0).toLocaleString("vi-VN")} VND
-                    </div>
-                  ))}
-                </div>
-
-                <button
-                  disabled={processing}
-                  onClick={() => handlePayment(5)}
-                  style={{
-                    marginTop: "14px",
-                    background: "linear-gradient(135deg, #2563eb, #1e40af)",
-                    color: "white",
-                    padding: "12px 20px",
-                    borderRadius: "10px",
-                    fontWeight: "700",
-                    border: "none",
-                    cursor: "pointer",
-                  }}
-                >
-                  🛠 Thanh toán phí phát sinh
-                </button>
-              </div>
-            );
-          })()}
         </>
       )}
 
-      <div style={{ marginTop: "24px" }}>
+      <div style={{ marginTop: "24px", display: "flex", gap: "12px" }}>
+        {hasPendingPayment() && (
+          <button
+            className="btn-back"
+            onClick={() => {
+              const pendingDetail = orderDetails.find(
+                (d) => String(d.status).toUpperCase() === "PENDING"
+              );
+              if (pendingDetail) {
+                handleShowPaymentModal(pendingDetail);
+              }
+            }}
+            disabled={processing}
+          >
+            Thanh toán
+          </button>
+        )}
         <button className="btn-back" onClick={() => navigate(-1)}>
-          ⬅ Quay lại
+          Quay lại
         </button>
       </div>
+
+      {/* ==============================
+          PAYMENT MODAL - CHỌN LOẠI THANH TOÁN
+         ============================== */}
+      {showPaymentModal && (
+        <div className="modal-overlay" onClick={() => setShowPaymentModal(false)}>
+          <div className="payment-modal" onClick={(e) => e.stopPropagation()}>
+            <h2>Chọn hình thức thanh toán</h2>
+            
+            {/* Chọn số tiền (chỉ hiện với RENTAL) */}
+            {selectedPaymentType === "RENTAL" && (
+              <div className="payment-options">
+                <h3>Hình thức</h3>
+                <div className="option-buttons">
+                  <button
+                    className={selectedAmount === 3 ? "option-btn active" : "option-btn"}
+                    onClick={() => setSelectedAmount(3)}
+                  >
+                    <div className="option-icon">💰</div>
+                    <div className="option-label">Thanh toán toàn bộ</div>
+                  </button>
+                  <button
+                    className={selectedAmount === 1 ? "option-btn active" : "option-btn"}
+                    onClick={() => setSelectedAmount(1)}
+                  >
+                    <div className="option-icon">💳</div>
+                    <div className="option-label">Đặt cọc</div>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Chọn phương thức thanh toán */}
+            <div className="payment-options">
+              <h3>Phương thức thanh toán</h3>
+              <div className="option-buttons">
+                <button
+                  className={selectedMethod === "CASH" ? "option-btn active" : "option-btn"}
+                  onClick={() => setSelectedMethod("CASH")}
+                >
+                  <div className="option-icon">💵</div>
+                  <div className="option-label">Tiền mặt</div>
+                </button>
+                <button
+                  className={selectedMethod === "captureWallet" ? "option-btn active" : "option-btn"}
+                  onClick={() => setSelectedMethod("captureWallet")}
+                >
+                  <div className="option-icon">📱</div>
+                  <div className="option-label">MoMo</div>
+                </button>
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="modal-actions">
+              <button
+                className="btn-cancel"
+                onClick={() => {
+                  setShowPaymentModal(false);
+                  setSelectedAmount(null);
+                  setSelectedMethod(null);
+                }}
+              >
+                Hủy
+              </button>
+              <button
+                className="btn-confirm"
+                onClick={handleConfirmPayment}
+                disabled={processing || !selectedMethod || (selectedPaymentType === "RENTAL" && !selectedAmount)}
+              >
+                {processing ? "Đang xử lý..." : "Xác nhận"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

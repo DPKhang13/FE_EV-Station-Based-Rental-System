@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-// import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "./GiaoTraXe.css";
 
 import vehicleService from "../services/vehicleService";
@@ -15,7 +15,7 @@ import PopupNhanChecking from "../components/staff/PopupNhanChecking";
 
 const GiaoTraXe = () => {
   const { user } = useContext(AuthContext);
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const [currentTab, setCurrentTab] = useState("tatca");
   const [searchTerm, setSearchTerm] = useState("");
@@ -151,8 +151,14 @@ const formatStatus = (status) => {
             ["RENTAL", "Rented", "ON_RENT", "IN_USE"].includes(o.status)
         );
         if (rentalOrder) {
-          setSelectedVehicle({ ...xe, order: rentalOrder });
-          setPopupType("nhanxe");
+          // ✅ Điều hướng tới trang xác thực khách hàng và tự động mở chi tiết
+          navigate("/staff/xacthuc", {
+            state: {
+              autoOpenOrderDetail: rentalOrder.orderId,
+              userId: rentalOrder.userId,
+              fromGiaoTraXe: true
+            }
+          });
         } else {
           alert("⚠️ Không tìm thấy đơn thuê xe tương ứng!");
         }
@@ -344,12 +350,22 @@ const getCarImage = (brand, color, seatCount) => {
 
               {/* Nút hành động */}
               {xe.trangThai === "Đang cho thuê" && (
-                <button
-                  className="btn-action"
-                  onClick={() => handleVehicleAction(xe)}
-                >
-                  Nhận xe trả
-                </button>
+                <div style={{ display: 'flex', gap: '6px', marginTop: '10px' }}>
+                  <button
+                    className="btn-action-compact"
+                    onClick={() => handleVehicleAction(xe)}
+                    style={{ flex: 1 }}
+                  >
+                    Nhận xe trả
+                  </button>
+                  <button
+                    className="btn-action-compact btn-secondary"
+                    onClick={() => handleVehicleAction(xe)}
+                    style={{ flex: 1 }}
+                  >
+                    Xem chi tiết
+                  </button>
+                </div>
               )}
 
               {xe.trangThai === "Đã đặt trước" && (

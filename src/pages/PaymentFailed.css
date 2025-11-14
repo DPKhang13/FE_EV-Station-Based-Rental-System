@@ -336,3 +336,24 @@
         text-align: center;
     }
 }
+
+/* Remove emojis from text content */
+.payment-failed-page h1,
+.payment-failed-page h3,
+.payment-failed-page button,
+.payment-failed-page .error-icon,
+.payment-failed-page li {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Hide emoji characters specifically */
+.payment-failed-page h1::first-letter,
+.payment-failed-page h3::first-letter,
+.payment-failed-page button::first-letter,
+.payment-failed-page .error-icon,
+.payment-failed-page li::first-letter {
+    font-size: 0;
+    visibility: hidden;
+    display: inline-block;
+    width: 0;
+}

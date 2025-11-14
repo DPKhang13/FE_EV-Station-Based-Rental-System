@@ -60,7 +60,6 @@ const formatDateTimeForBackend = (dateStr, isStart = true) => {
     try {
       const token = localStorage.getItem('accessToken');
       if (!token) {
-        alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
         navigate('/login');
         return;
       }

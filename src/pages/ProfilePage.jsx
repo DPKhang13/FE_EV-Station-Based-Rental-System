@@ -30,7 +30,6 @@ const ProfilePage = () => {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (!user) {
-      alert('Please login to view your profile');
       navigate('/login');
       return;
     }
@@ -360,8 +359,8 @@ const ProfilePage = () => {
       <div className="profile-container">
         {/* Header */}
         <div className="page-header">
-          <h1>👤 My Profile</h1>
-          <p className="subtitle">Manage your personal information</p>
+          <h1>HỒ SƠ CỦA TÔI</h1>
+          <p className="subtitle">Quản lý thông tin cá nhân</p>
         </div>
 
         <div className="profile-content">
@@ -380,10 +379,10 @@ const ProfilePage = () => {
 
             <div className="profile-actions">
               <button onClick={handleEditToggle} className="btn-edit">
-                {isEditing ? '✕ Cancel' : '✏️ Edit Profile'}
+                {isEditing ? '✕ Cancel' : ' Chỉnh sửa hồ sơ'}
               </button>
               <button onClick={handleLogout} className="btn-logout">
-                🚪 Logout
+                  Đăng xuất
               </button>
             </div>
           </div>
@@ -394,7 +393,7 @@ const ProfilePage = () => {
               {/* GRID INPUTS */}
               <div className="form-grid">
                 <div className="form-group">
-                  <label htmlFor="fullName">Full Name</label>
+                  <label htmlFor="fullName">Họ và tên</label>
                   <input
                     type="text"
                     id="fullName"
@@ -420,7 +419,7 @@ const ProfilePage = () => {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="phone">Phone Number</label>
+                  <label htmlFor="phone">Số điện thoại</label>
                   <input
                     type="tel"
                     id="phone"
@@ -432,7 +431,7 @@ const ProfilePage = () => {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="dateOfBirth">Date of Birth</label>
+                  <label htmlFor="dateOfBirth">Ngày tháng năm sinh</label>
                   <input
                     type="date"
                     id="dateOfBirth"
@@ -444,7 +443,7 @@ const ProfilePage = () => {
                 </div>
 
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label htmlFor="address">Address</label>
+                  <label htmlFor="address">Địa chỉ</label>
                   <input
                     type="text"
                     id="address"
@@ -478,7 +477,7 @@ const ProfilePage = () => {
                       border: '1px solid #e5e7eb',
                     }}
                     onError={(e) => {
-                      console.error('❌ Failed to load CCCD image:', idPreview);
+                      console.error(' Failed to load CCCD image:', idPreview);
                       e.target.style.display = 'none';
                     }}
                   />
@@ -522,7 +521,7 @@ const ProfilePage = () => {
                       border: '1px solid #e5e7eb',
                     }}
                     onError={(e) => {
-                      console.error('❌ Failed to load Driver License image:', dlPreview);
+                      console.error(' Failed to load Driver License image:', dlPreview);
                       e.target.style.display = 'none';
                     }}
                   />
@@ -548,7 +547,7 @@ const ProfilePage = () => {
               {isEditing && (
                 <div className="form-actions">
                   <button type="submit" className="btn-save" disabled={loading}>
-                    {loading ? 'Saving...' : '💾 Save Changes'}
+                    {loading ? 'Saving...' : ' Lưu thay đổi'}
                   </button>
                 </div>
               )}
@@ -560,12 +559,12 @@ const ProfilePage = () => {
             <div className="stat-card">
               <div className="stat-icon">📋</div>
               <div className="stat-info">
-                <h3>My Bookings</h3>
+                <h3>Đơn đặt xe của tôi</h3>
                 <button
                   onClick={() => navigate('/my-bookings')}
                   className="btn-view"
                 >
-                  View All Bookings →
+                  Xem tất cả đơn đặt xe →
                 </button>
               </div>
             </div>
