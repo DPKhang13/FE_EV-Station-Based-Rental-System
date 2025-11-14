@@ -34,6 +34,8 @@ import vinfast4Red from '../assets/Vin4/red.png';
 
 // Images
 import car4SeatDefault from '../assets/4seatsilver.png';
+import { vehicleTimelineService } from "../services/vehicleTimelineService";
+
 
 const Booking4Seater = () => {
   const location = useLocation();
