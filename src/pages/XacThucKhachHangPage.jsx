@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { orderService, authService } from "../services";
 import "./XacThucKhachHang.css";
@@ -63,6 +63,16 @@ export default function VerifyCustomerPage() {
     fetchStations(); 
   }, [user?.stationId, location]); // ✅ Thêm user.stationId và location vào dependency
 
+  // ✅ Tự động mở chi tiết đơn hàng khi navigate từ GiaoTraXe
+  useEffect(() => {
+    if (location.state?.autoOpenOrderDetail && orders.length > 0) {
+      const { autoOpenOrderDetail: orderId, userId } = location.state;
+      console.log('🎯 Auto opening order detail:', { orderId, userId });
+      // Không cần delay, orders đã ready
+      handleViewOrderDetail(orderId, userId);
+    }
+  }, [location.state?.autoOpenOrderDetail, orders]);
+
   // 🔍 Tìm kiếm
   const filtered = orders.filter((x) => {
   if (!search.trim()) return true;
@@ -118,9 +128,10 @@ export default function VerifyCustomerPage() {
   };
 
   // 👉 Xem chi tiết đơn hàng
-  const handleViewOrderDetail = (orderId, userId) => {
+  const handleViewOrderDetail = useCallback((orderId, userId) => {
+    console.log('📋 Navigating to order detail:', { orderId, userId });
     nav(`/staff/chitiet/${orderId}/${userId}`);
-  };
+  }, [nav]);
 
   if (loading)
     return (

@@ -240,6 +240,69 @@
   box-shadow: 0 5px 15px rgba(220, 0, 0, 0.3);
 }
 
+/* ========== NÚT HÀNH ĐỘNG GỌN (2 NÚT) ========== */
+.btn-action-compact {
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: #ffffff;
+  cursor: pointer;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 12px 32px rgba(37, 99, 235, 0.35);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-action-compact::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: #DC0000;
+  transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: -1;
+}
+
+.btn-action-compact:hover::before {
+  left: 0;
+}
+
+.btn-action-compact:hover {
+  border-color: #DC0000;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(220, 0, 0, 0.3);
+}
+
+.btn-action-compact:active {
+  transform: translateY(0);
+  box-shadow: 0 10px 26px rgba(37, 99, 235, 0.3);
+}
+
+/* Nút secondary (Xem chi tiết) */
+.btn-action-compact.btn-secondary {
+  background: linear-gradient(135deg, #a855f7, #6366f1);
+  box-shadow: 0 12px 32px rgba(168, 85, 247, 0.35);
+}
+
+.btn-action-compact.btn-secondary::before {
+  background: #7c3aed;
+}
+
+.btn-action-compact.btn-secondary:hover {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 36px rgba(168, 85, 247, 0.4);
+}
+
 /* ⏳ Loading + Empty */
 .loading,
 .empty {
