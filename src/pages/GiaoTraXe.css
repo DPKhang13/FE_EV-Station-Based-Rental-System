@@ -1,327 +1,415 @@
-/* ========== RESET NHẸ ========== */
-.giaoTraXe-container * {
-  box-sizing: border-box;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
-}
+/* ================================
+   🎨 GIAO - TRẢ XE STYLE - Mercedes Professional Design
+   ================================ */
 
-/* ========== BIẾN MÀU CHUNG ========== */
 .giaoTraXe-container {
-  --bg: #f5f7fb;
-  --card-bg: #ffffff;
-  --primary: #2563eb;
-  --primary-soft: rgba(37, 99, 235, 0.08);
-  --primary-hover: #1d4ed8;
-  --border: #e2e8f0;
-  --text-main: #0f172a;
-  --text-sub: #64748b;
-  --danger: #ef4444;
-  --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.08);
-}
-
-/* ========== WRAPPER CHUNG ========== */
-.giaoTraXe-container {
-  padding: 24px clamp(16px, 3vw, 40px);
-  background: radial-gradient(circle at top left, #e0edff, #f5f7fb 40%, #f9fafb);
+  padding: 80px 40px 40px;
+  font-family: "Poppins", -apple-system, sans-serif;
+  background: #FFFFFF;
   min-height: 100vh;
+  color: #000000;
 }
 
-/* ========== TIÊU ĐỀ ========== */
-.giaoTraXe-container .title {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--text-main);
-  margin-bottom: 18px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.title {
+  text-align: center;
+  font-size: 30px;
+  font-weight: 300;
+  color: #000000;
+  margin-bottom: 50px;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  position: relative;
+  padding-bottom: 20px;
 }
 
-.giaoTraXe-container .title::before {
-  content: "";
-  width: 8px;
-  height: 24px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #2563eb, #4f46e5);
+.title::after {
+  content: '';
+  display: block;
+  width: 80px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #DC0000 50%, transparent 100%);
+  margin: 20px auto 0;
 }
 
-/* ========== THANH TÌM KIẾM ========== */
+/* 🔍 Search bar */
 .search-bar {
-  margin-bottom: 18px;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 40px;
 }
 
 .search-input {
   width: 100%;
-  max-width: 420px;
-  padding: 10px 14px 10px 36px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15z' /%3E%3C/svg%3E")
-    no-repeat 11px center;
-  background-size: 16px;
-  font-size: 14px;
-  color: var(--text-main);
-  outline: none;
-  transition: all 0.2s ease;
-  box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4);
-}
-
-.search-input::placeholder {
-  color: var(--text-sub);
+  max-width: 600px;
+  padding: 16px 24px;
+  border: 2px solid #E0E0E0;
+  border-radius: 0;
+  font-size: 15px;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  background: #FFFFFF;
 }
 
 .search-input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+  border-color: #000000;
+  outline: none;
+  box-shadow: none;
 }
 
-/* ========== TABS FILTER ========== */
+.search-input::placeholder {
+  color: #999999;
+  font-weight: 300;
+}
+
+/* 🧭 Tabs */
 .tabs {
   display: flex;
+  justify-content: center;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 20px;
-  padding: 6px;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 999px;
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  margin-bottom: 50px;
+  gap: 0;
+  border-bottom: 1px solid #E0E0E0;
 }
 
 .tabs button {
+  padding: 16px 32px;
   border: none;
-  background: transparent;
-  padding: 8px 14px;
-  border-radius: 999px;
-  font-size: 13px;
-  color: var(--text-sub);
+  border-bottom: 3px solid transparent;
+  background-color: transparent;
   cursor: pointer;
-  transition: all 0.18s ease;
-  white-space: nowrap;
-}
-
-.tabs button:hover {
-  background: rgba(148, 163, 184, 0.08);
-  color: var(--text-main);
+  font-weight: 300;
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #666666;
+  transition: all 0.3s ease;
+  position: relative;
 }
 
 .tabs button.active {
-  background: var(--primary);
-  color: #ffffff;
-  box-shadow: 0 10px 26px rgba(37, 99, 235, 0.3);
+  background-color: transparent;
+  color: #000000;
+  border-bottom-color: #DC0000;
+  font-weight: 400;
 }
 
-/* ========== LƯỚI XE ========== */
+.tabs button:hover:not(.active) {
+  color: #000000;
+  background-color: #F5F5F5;
+}
+
+/* 🚗 Grid xe */
 .xe-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 30px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
-/* ========== THẺ XE ========== */
 .xe-card {
-  background: var(--card-bg);
-  border-radius: 18px;
-  padding: 14px 14px 16px;
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  box-shadow: var(--shadow-soft);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  position: relative;
+  background: #FFFFFF;
+  border: 2px solid #E0E0E0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  text-align: center;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-}
-
-.xe-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    circle at top right,
-    rgba(37, 99, 235, 0.14),
-    transparent 55%
-  );
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  pointer-events: none;
 }
 
 .xe-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(37, 99, 235, 0.3);
-  box-shadow: 0 22px 55px rgba(15, 23, 42, 0.16);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  border-color: #DC0000;
 }
 
-.xe-card:hover::before {
-  opacity: 1;
-}
-
-/* Ảnh xe */
 .xe-img {
   width: 100%;
-  height: 140px;
+  height: 220px;
   object-fit: cover;
-  border-radius: 14px;
-  margin-bottom: 8px;
+  border-radius: 0;
+  margin-bottom: 0;
+  transition: transform 0.3s ease;
+  border-bottom: 3px solid #E0E0E0;
 }
 
-/* Thông tin xe */
+.xe-card:hover .xe-img {
+  transform: scale(1.05);
+}
+
 .xe-card h3 {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-main);
-  margin: 0 0 2px;
-}
-
-.xe-card p {
-  margin: 0;
-  font-size: 13px;
-  color: var(--text-sub);
-}
-
-.xe-card p strong {
-  color: var(--text-main);
-}
-
-/* ========== BADGE TRẠNG THÁI ========== */
-.xe-status {
-  align-self: flex-start;
-  margin-top: 8px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  margin: 20px 0 12px;
+  padding: 0 20px;
+  font-size: 20px;
+  color: #000000;
+  font-weight: 400;
+  letter-spacing: 2px;
   text-transform: uppercase;
 }
 
-/* match với getStatusColor() trong JS */
+.xe-card p {
+  font-size: 14px;
+  margin: 8px 0;
+  padding: 0 20px;
+  color: #666666;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+}
+
+/* 🌈 Trạng thái */
+.xe-status {
+  font-weight: 400;
+  margin: 15px 20px 20px;
+  padding: 10px 16px;
+  border-radius: 0;
+  display: inline-block;
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
 .status-green {
-  background: rgba(22, 163, 74, 0.08);
-  color: #15803d;
+  background-color: #E8F5E9;
+  color: #2E7D32;
+  border: 1px solid #4CAF50;
 }
 
 .status-blue {
-  background: rgba(37, 99, 235, 0.08);
-  color: #1d4ed8;
+  background-color: #E3F2FD;
+  color: #1565C0;
+  border: 1px solid #2196F3;
 }
 
 .status-yellow {
-  background: rgba(245, 158, 11, 0.14);
-  color: #b45309;
+  background-color: #FFF9C4;
+  color: #F57F17;
+  border: 1px solid #FBC02D;
 }
 
 .status-purple {
-  background: rgba(139, 92, 246, 0.14);
-  color: #6d28d9;
+  background-color: #F3E5F5;
+  color: #6A1B9A;
+  border: 1px solid #9C27B0;
 }
 
 .status-orange {
-  background: rgba(249, 115, 22, 0.14);
-  color: #c2410c;
+  background-color: #FFE0B2;
+  color: #E65100;
+  border: 1px solid #FF9800;
 }
 
-/* ========== NÚT HÀNH ĐỘNG ========== */
+/* ⚙️ Button hành động */
 .btn-action {
-  margin-top: 10px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  border: none;
+  margin: 0 20px 20px;
+  background: #000000;
+  color: #FFFFFF;
+  border: 2px solid #000000;
+  padding: 14px 32px;
+  border-radius: 0;
+  font-weight: 400;
   font-size: 13px;
-  font-weight: 500;
-  background: linear-gradient(135deg, #2563eb, #4f46e5);
-  color: #ffffff;
+  letter-spacing: 2px;
+  text-transform: uppercase;
   cursor: pointer;
-  align-self: flex-start;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 12px 32px rgba(37, 99, 235, 0.35);
-  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
 
-.btn-action::after {
-  content: "›";
-  font-size: 14px;
-  transform: translateY(0.5px);
+.btn-action::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: #DC0000;
+  transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: -1;
+}
+
+.btn-action:hover::before {
+  left: 0;
 }
 
 .btn-action:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 16px 40px rgba(37, 99, 235, 0.45);
-  filter: brightness(1.02);
+  border-color: #DC0000;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(220, 0, 0, 0.3);
 }
 
-.btn-action:active {
-  transform: translateY(0);
-  box-shadow: 0 10px 26px rgba(37, 99, 235, 0.3);
-}
-
-/* trạng thái riêng cho Checking */
-.btn-action.checking {
-  background: linear-gradient(135deg, #a855f7, #6366f1);
-  box-shadow: 0 12px 32px rgba(129, 140, 248, 0.35);
-}
-
-/* ========== LOADING + EMPTY STATE ========== */
+/* ⏳ Loading + Empty */
 .loading,
 .empty {
-  margin-top: 40px;
   text-align: center;
-  color: var(--text-sub);
-  font-size: 14px;
+  font-size: 16px;
+  font-weight: 300;
+  color: #666666;
+  margin-top: 80px;
+  letter-spacing: 1px;
 }
 
-.loading::before {
-  content: "";
-  display: block;
-  margin: 0 auto 12px;
-  width: 24px;
-  height: 24px;
-  border-radius: 999px;
-  border: 3px solid rgba(148, 163, 184, 0.5);
-  border-top-color: var(--primary);
-  animation: spin 0.9s linear infinite;
+/* ================================
+   🧩 Popup Đặt trước - Mercedes Style
+   ================================ */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+  backdrop-filter: blur(4px);
 }
 
-/* Skeleton nhẹ cho empty */
-.empty {
-  padding: 18px 20px;
-  max-width: 380px;
-  margin-inline: auto;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px dashed rgba(148, 163, 184, 0.7);
+.popup {
+  background: #FFFFFF;
+  padding: 40px 50px;
+  border-radius: 0;
+  width: 480px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s ease;
+  border-top: 3px solid #DC0000;
 }
 
-/* ========== RESPONSIVE ========== */
+.popup h2 {
+  margin-bottom: 20px;
+  color: #000000;
+  font-size: 24px;
+  font-weight: 300;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.popup-message {
+  font-size: 15px;
+  margin: 20px 0 30px;
+  color: #666666;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+  line-height: 1.6;
+}
+
+.popup-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.btn-confirms {
+  background: #000000;
+  color: #FFFFFF;
+  border: 2px solid #000000;
+  padding: 12px 28px;
+  border-radius: 0;
+  cursor: pointer;
+  font-weight: 400;
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+.btn-confirms:hover {
+  background: #1E7E34;
+  border-color: #1E7E34;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(30, 126, 52, 0.3);
+}
+
+.btn-closes {
+  background: transparent;
+  color: #000000;
+  border: 2px solid #000000;
+  padding: 12px 28px;
+  border-radius: 0;
+  cursor: pointer;
+  font-weight: 400;
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+.btn-closes:hover {
+  background: #DC0000;
+  border-color: #DC0000;
+  color: #FFFFFF;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(220, 0, 0, 0.3);
+}
+
+/* ✨ Hiệu ứng */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 📱 Responsive */
 @media (max-width: 768px) {
   .giaoTraXe-container {
-    padding: 16px;
+    padding: 60px 20px 30px;
   }
 
-  .giaoTraXe-container .title {
+  .title {
+    font-size: 28px;
+    letter-spacing: 4px;
+  }
+
+  .search-input {
+    font-size: 14px;
+    padding: 14px 20px;
+  }
+
+  .tabs button {
+    padding: 12px 20px;
+    font-size: 12px;
+  }
+
+  .xe-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .popup {
+    width: 90%;
+    padding: 30px;
+  }
+
+  .popup h2 {
     font-size: 20px;
   }
 
-  .tabs {
-    border-radius: 14px;
-    padding: 6px 6px 4px;
+  .popup-buttons {
+    flex-direction: column;
+    gap: 12px;
   }
 
-  .xe-card {
-    border-radius: 16px;
-  }
-
-  .xe-img {
-    height: 130px;
-  }
-}
-
-/* ========== ANIMATIONS ========== */
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
+  .btn-confirms,
+  .btn-closes {
+    width: 100%;
   }
 }

@@ -31,7 +31,6 @@
 .search-input:focus {
   border-color: #007bff;
   outline: none;
-  box-shadow: 0 0 4px rgba(0, 123, 255, 0.4);
 }
 
 /* Tabs lọc */

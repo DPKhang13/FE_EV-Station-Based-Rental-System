@@ -34,6 +34,7 @@ const VehicleManagement = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [error, setError] = useState(null);
+    const [openDropdown, setOpenDropdown] = useState(null);
 
     // Filters state
     const [filters, setFilters] = useState({
@@ -95,6 +96,20 @@ const VehicleManagement = () => {
     useEffect(() => {
         fetchVehicles();
     }, []);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (openDropdown && !event.target.closest('.action-dropdown')) {
+                setOpenDropdown(null);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [openDropdown]);
 
     // Lấy unique values cho filters
     const getUniqueColors = () => [...new Set(vehicles.map(v => v.color).filter(Boolean))];
@@ -540,7 +555,7 @@ const VehicleManagement = () => {
                                 const statusInfo = getStatusInfo(vehicle.status);
                                 return (
                                     <tr key={vehicle.id || vehicle.vehicle_id}>
-                                        <td><strong>#{index + 1}</strong></td>
+                                        <td><strong>{index + 1}</strong></td>
                                         <td>
                                             <img
                                                 src={vehicle.image}
@@ -578,38 +593,46 @@ const VehicleManagement = () => {
                                             </span>
                                         </td>
                                         <td>
-                                            <button
-                                                className="btn-edit"
-                                                title="Chỉnh sửa thông tin xe"
-                                                onClick={() => handleEditVehicle(vehicle)}
-                                            >
-                                                Sửa
-                                            </button>
-                                            <button
-                                                className="btn-history"
-                                                title="Xem lịch sử đặt xe"
-                                                onClick={() => handleViewOrderHistory(vehicle)}
-                                                style={{
-                                                    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-                                                    color: 'white',
-                                                    padding: '8px 12px',
-                                                    border: 'none',
-                                                    borderRadius: '6px',
-                                                    cursor: 'pointer',
-                                                    fontSize: '14px',
-                                                    fontWeight: '600',
-                                                    marginRight: '8px'
-                                                }}
-                                            >
-                                                📋 Lịch sử
-                                            </button>
-                                            <button
-                                                className="btn-delete"
-                                                title="Xóa xe khỏi hệ thống"
-                                                onClick={() => handleDeleteVehicle(vehicle)}
-                                            >
-                                                Xóa
-                                            </button>
+                                            <div className="action-dropdown">
+                                                <button 
+                                                    className="dropdown-toggle"
+                                                    onClick={() => setOpenDropdown(openDropdown === vehicle.id ? null : vehicle.id)}
+                                                    title="Hành động"
+                                                >
+                                                    ⋮
+                                                </button>
+                                                {openDropdown === vehicle.id && (
+                                                    <div className="dropdown-menu">
+                                                        <button
+                                                            className="dropdown-item btn-edit-item"
+                                                            onClick={() => {
+                                                                handleEditVehicle(vehicle);
+                                                                setOpenDropdown(null);
+                                                            }}
+                                                        >
+                                                            ✏️ Sửa
+                                                        </button>
+                                                        <button
+                                                            className="dropdown-item btn-history-item"
+                                                            onClick={() => {
+                                                                handleViewOrderHistory(vehicle);
+                                                                setOpenDropdown(null);
+                                                            }}
+                                                        >
+                                                            📋 Lịch sử
+                                                        </button>
+                                                        <button
+                                                            className="dropdown-item btn-delete-item"
+                                                            onClick={() => {
+                                                                handleDeleteVehicle(vehicle);
+                                                                setOpenDropdown(null);
+                                                            }}
+                                                        >
+                                                            🗑️ Xóa
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 );

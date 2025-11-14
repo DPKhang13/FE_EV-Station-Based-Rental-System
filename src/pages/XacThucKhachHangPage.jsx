@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { orderService, authService } from "../services";
 import "./XacThucKhachHang.css";
 import PopupXacThucHoSoCaNhan from "../components/staff/PopupXacThucHoSoCaNhan";
@@ -12,6 +12,7 @@ const fmtRange = (s, e) => `${fmtVN(s)} - ${fmtVN(e)}`;
 export default function VerifyCustomerPage() {
   const { user } = useContext(AuthContext);
   const nav = useNavigate();
+  const location = useLocation();
 
   const [orders, setOrders] = useState([]);
   const [stations, setStations] = useState([]); // ⭐ Danh sách trạm
@@ -63,8 +64,7 @@ export default function VerifyCustomerPage() {
   }, [user?.stationId, location]); // ✅ Thêm user.stationId và location vào dependency
 
   // 🔍 Tìm kiếm
-  // 🔍 Tìm kiếm
-const filtered = orders.filter((x) => {
+  const filtered = orders.filter((x) => {
   if (!search.trim()) return true;
 
   const t = search.toLowerCase();

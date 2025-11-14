@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import CarFilter from './CarFilter';
 import { rentalStationService } from '../services';
-import '../App.css';
+import './ListCarPage.css';
 
 const ListCarPage = () => {
     const location = useLocation();
@@ -40,7 +40,7 @@ const ListCarPage = () => {
                 }
                 console.log('✅ Loaded branch name:', station?.name);
             } catch (error) {
-                console.error('❌ Error loading branch name:', error);
+                console.error(' Error loading branch name:', error);
                 setBranchName(`Chi nhánh ${selectedBranch}`);
             } finally {
                 setLoading(false);
@@ -51,13 +51,13 @@ const ListCarPage = () => {
     }, [selectedBranch]);
 
     return (
-        <div className="listcar-main" style={{ padding: '60px 0', textAlign: 'center' }}>
-            <h2 style={{ marginBottom: 20, fontSize: 32, fontWeight: 700 }}>Danh sách xe</h2>
-            {selectedBranch && !loading && (
-                <p style={{ fontSize: 18, color: '#dc2626', fontWeight: 600, marginBottom: 40 }}>
-                    {branchName}
-                </p>
-            )}
+        <div className="listcar-main">
+            <div className="listcar-header">
+                <h1 className="listcar-title">Danh sách xe</h1>
+                {selectedBranch && !loading && (
+                    <p className="branch-name">{branchName}</p>
+                )}
+            </div>
             <CarFilter selectedBranch={selectedBranch} />
         </div>
     );

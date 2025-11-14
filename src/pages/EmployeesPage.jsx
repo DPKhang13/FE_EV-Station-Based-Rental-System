@@ -27,7 +27,6 @@ const EmployeesPage = () => {
     switch (role?.toLowerCase()) {
       case "staff":
         return "Nhân viên";
-     break; 
       default:
         return "Không rõ";
     }
@@ -73,7 +72,7 @@ const EmployeesPage = () => {
 
   return (
     <div className="container">
-      <h2>Quản lý nhân viên</h2>
+      <h2>QUẢN LÝ NHÂN VIÊN</h2>
 
       {/* 🔘 Nút thêm nhân viên */}
       <div className="actions">
@@ -85,15 +84,15 @@ const EmployeesPage = () => {
       {/* 📊 Thống kê tổng quan */}
       <div className="stats-grid">
         <div className="stat-card">
-          <p>Tổng nhân viên</p>
+          <p>TỔNG NHÂN VIÊN</p>
           <h3>{employees.length}</h3>
         </div>
         <div className="stat-card">
-          <p>Đang làm việc</p>
+          <p>ĐANG LÀM VIỆC</p>
           <h3>{employees.filter((e) => e.status === "ACTIVE").length}</h3>
         </div>
         <div className="stat-card">
-          <p>Tổng giao nhận</p>
+          <p>TỔNG GIAO NHẬN</p>
           <h3>
             {employees.reduce(
               (a, e) => a + (e.pickupCount || 0) + (e.returnCount || 0),
@@ -106,61 +105,71 @@ const EmployeesPage = () => {
       {/* 📋 Bảng danh sách nhân viên */}
       <div className="employee-table">
         <h3>Danh sách nhân viên</h3>
-        <table>
+        <div className="employee-table-container">
+          <table>
           <thead>
             <tr>
-              <th>Nhân viên</th>
-              <th>Chức vụ</th>
-              <th>Điểm làm việc</th>
-              <th>Hiệu suất</th>
-              <th>Trạng thái tài khoản</th>
-              <th>Thao tác</th>
+              <th>NHÂN VIÊN</th>
+              <th>CHỨC VỤ</th>
+              <th>ĐIỂM LÀM VIỆC</th>
+              <th>HIỆU SUẤT</th>
+              <th>TRẠNG THÁI TÀI KHOẢN</th>
+              <th>THAO TÁC</th>
             </tr>
           </thead>
           <tbody>
-            {employees.map((e, index) => (
-              <tr key={index}>
-                <td>
-                  <div className="employee-info">
-                    <div className="avatar">{e.staffName?.[0] || "?"}</div>
-                    <div>
-                      <strong>{e.staffName}</strong>
-                      <p className="email">{e.staffEmail}</p>
-                    </div>
-                  </div>
-                </td>
-                <td>{hienThiChucVu(e.role)}</td>
-                <td>{e.stationName || "Không rõ trạm"}</td>
-                <td>
-                  <span className="tag">{danhGia(e)}</span>
-                  <p className="small-text">
-                    {(e.pickupCount || 0) + (e.returnCount || 0)} lần giao nhận
-                  </p>
-                </td>
-                <td>
-                  <span
-                    className={`status ${
-                      e.status === "ACTIVE" ? "active" : "inactive"
-                    }`}
-                  >
-                    {e.status === "ACTIVE"
-                      ? "Hoạt động"
-                      : "Ngưng hoạt động"}
-                  </span>
-                </td>
-                <td>
-                  <button
-                    className="delete-btn"
-                    title="Xóa nhân viên"
-                    onClick={() => handleDelete(index)}
-                  >
-                    🗑️
-                  </button>
+            {employees.length === 0 ? (
+              <tr>
+                <td colSpan="6" className="no-data">
+                  Chưa có nhân viên nào
                 </td>
               </tr>
-            ))}
+            ) : (
+              employees.map((e, index) => (
+                <tr key={index}>
+                  <td>
+                    <div className="employee-info">
+                      <div className="avatar">{e.staffName?.[0] || "?"}</div>
+                      <div>
+                        <strong>{e.staffName}</strong>
+                        <p className="email">{e.staffEmail}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{hienThiChucVu(e.role)}</td>
+                  <td>{e.stationName || "Không rõ trạm"}</td>
+                  <td>
+                    <span className="tag">{danhGia(e)}</span>
+                    <p className="small-text">
+                      {(e.pickupCount || 0) + (e.returnCount || 0)} lần giao nhận
+                    </p>
+                  </td>
+                  <td>
+                    <span
+                      className={`status ${
+                        e.status === "ACTIVE" ? "active" : "inactive"
+                      }`}
+                    >
+                      {e.status === "ACTIVE"
+                        ? "Hoạt động"
+                        : "Ngưng hoạt động"}
+                    </span>
+                  </td>
+                  <td>
+                    <button
+                      className="delete-btn"
+                      title="Xóa nhân viên"
+                      onClick={() => handleDelete(index)}
+                    >
+                      Xóa
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* 🔹 Thống kê theo trạm và top nhân viên */}

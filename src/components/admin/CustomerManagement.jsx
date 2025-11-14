@@ -54,8 +54,8 @@ const CustomerManagement = () => {
     const getStatusBadgeClass = (status) => {
         switch (status) {
             case 'ACTIVE': return 'status-active';
-            case 'ACTIVE_PENDING': return 'status-pending';
-            case 'INACTIVE': return 'status-inactive';
+            case 'VERIFIED': return 'status-active';
+            case 'BANNED': return 'status-inactive';
             default: return '';
         }
     };
@@ -71,9 +71,9 @@ const CustomerManagement = () => {
 
     const getStatusText = (status) => {
         switch (status) {
-            case 'ACTIVE': return 'Đã Xác Thực';
-            case 'ACTIVE_PENDING': return 'Chờ xác thực';
-            case 'INACTIVE': return 'Ngưng hoạt động';
+            case 'ACTIVE': return 'Hoạt động';
+            case 'VERIFIED': return 'Đã xác thực';
+            case 'BANNED': return 'Bị cấm';
             default: return status;
         }
     };
@@ -127,8 +127,8 @@ const CustomerManagement = () => {
                         <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
                             <option value="all">Tất cả</option>
                             <option value="ACTIVE">Hoạt động</option>
-                            <option value="ACTIVE_PENDING">Chờ xác thực</option>
-                            <option value="INACTIVE">Ngưng hoạt động</option>
+                            <option value="VERIFIED">Đã xác thực</option>
+                            <option value="BANNED">Bị cấm</option>
                         </select>
                     </div>
                 </div>

@@ -2,30 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useVehicles } from '../hooks/useVehicles';
 
-const carTypes = [
-    { value: '', label: 'Chọn loại xe (Select car type)' },
-    { value: '4-seater', label: '4-Seater' },
-    { value: '7-seater', label: '7-Seater' },
-];
-
-const carGrades = [
-    { value: '', label: 'Chọn hạng xe (Select grade)' },
-    { value: 'Air', label: 'Air' },
-    { value: 'Plus', label: 'Plus' },
-    { value: 'Pro', label: 'Pro' },
-];
+import './CarFilter.css';
 
 const CarFilter = ({ selectedBranch }) => {
     const navigate = useNavigate();
     const { vehicles: cars, loading, error, refetch } = useVehicles();
-    const [type, setType] = useState('');
+    const [brand, setBrand] = useState('');
     const [grade, setGrade] = useState('');
     const [selectedColors, setSelectedColors] = useState([]);
+    const [sortBy, setSortBy] = useState('name-asc');
 
     // Get unique colors from available cars
     const availableColors = [...new Set(cars
         .filter(car => car.color && car.color !== 'N/A' && car.color !== 'null')
         .map(car => car.color))
+    ].sort();
+
+    // Get unique brands from available cars
+    // eslint-disable-next-line no-unused-vars
+    const availableBrands = [...new Set(cars
+        .filter(car => car.brand && car.brand !== 'N/A' && car.brand !== 'null')
+        .map(car => car.brand))
     ].sort();
 
     const filteredCars = cars.filter(car => {
@@ -44,9 +41,12 @@ const CarFilter = ({ selectedBranch }) => {
             }
         }
 
-        // 3. LỌC THEO LOẠI XE (nếu có chọn)
-        if (type && car.type !== type) {
-            return false;
+        // 3. LỌC THEO HÃNG XE (thay vì loại xe)
+        if (brand) {
+            const carBrand = car.brand || car.manufacturer || '';
+            if (!carBrand || String(carBrand).toLowerCase() !== String(brand).toLowerCase()) {
+                return false;
+            }
         }
 
         // 4. LỌC THEO HẠNG XE (nếu có chọn)
@@ -78,90 +78,75 @@ const CarFilter = ({ selectedBranch }) => {
         return true;
     });
 
-    // Debug log - ✅ Cải thiện để debug vấn đề lọc
+    // Sort filtered cars
+    const sortedCars = [...filteredCars].sort((a, b) => {
+        const gradeOrder = { 'Air': 1, 'Plus': 2, 'Pro': 3 };
+        
+        switch (sortBy) {
+            case 'name-asc':
+                return (a.vehicle_name || '').localeCompare(b.vehicle_name || '');
+            case 'name-desc':
+                return (b.vehicle_name || '').localeCompare(a.vehicle_name || '');
+            case 'grade-asc':
+                return (gradeOrder[a.variant] || 0) - (gradeOrder[b.variant] || 0);
+            case 'grade-desc':
+                return (gradeOrder[b.variant] || 0) - (gradeOrder[a.variant] || 0);
+            default:
+                return 0;
+        }
+    });
+
+    // Debug log
     useEffect(() => {
-        console.log('🔍 [CarFilter] Debug Info:');
-        console.log('  📍 Branch:', selectedBranch || 'All');
-        console.log('  🚗 Type:', type || 'All');
-        console.log('  ⭐ Grade:', grade || 'All');
-        console.log('  🎨 Colors:', selectedColors.length > 0 ? selectedColors.join(', ') : 'All');
-        console.log('  📊 Total cars:', cars.length);
-        console.log('  ✅ Filtered cars:', filteredCars.length);
+        console.log(' [CarFilter] Debug Info:');
+        console.log('   Branch:', selectedBranch || 'All');
+        console.log('   Brand:', brand || 'All');
+        console.log('   Grade:', grade || 'All');
+        console.log('   Colors:', selectedColors.length > 0 ? selectedColors.join(', ') : 'All');
+        console.log('   Total cars:', cars.length);
+        console.log('   Filtered cars:', filteredCars.length);
+    }, [selectedBranch, brand, grade, selectedColors, sortBy, cars.length, filteredCars.length, cars]);
 
-        // ✅ Kiểm tra xe có variant null (Backend thiếu VehicleModel)
-        const carsWithNullVariant = cars.filter(c => !c.variant || c.variant === 'N/A');
-        if (carsWithNullVariant.length > 0) {
-            console.warn(`  ⚠️ CÓ ${carsWithNullVariant.length} XE THIẾU VARIANT (Backend thiếu VehicleModel):`);
-            console.warn(`     Biển số:`, carsWithNullVariant.map(c => c.plate_number).join(', '));
-            console.warn(`     Chi nhánh:`, [...new Set(carsWithNullVariant.map(c => `Station ${c.stationId}`))].join(', '));
-            console.warn(`  💡 Giải pháp: Backend cần chạy script SQL để thêm VehicleModel cho các xe này`);
-        }
+    // Xử lý khi thay đổi hãng xe
+    // const handleBrandChange = (value) => {
+    //     setBrand(value);
+    // };
 
-        // ✅ Debug màu sắc từ API
-        if (cars.length > 0) {
-            const colorsAvailable = [...new Set(cars.map(c => c.color || 'N/A'))];
-            console.log('  🎨 Màu sắc có trong API:', colorsAvailable);
-            const carsWithoutColor = cars.filter(c => !c.color || c.color === 'null' || c.color === 'undefined');
-            if (carsWithoutColor.length > 0) {
-                console.warn(`  ⚠️ Có ${carsWithoutColor.length} xe KHÔNG CÓ màu sắc từ API:`,
-                    carsWithoutColor.map(c => c.plate_number).join(', '));
-            }
-        }
+    // Xử lý khi thay đổi hạng xe
+    // const handleGradeChange = (value) => {
+    //     setGrade(value);
+    // };
 
-        if (filteredCars.length === 0 && cars.length > 0) {
-            console.warn('  ⚠️ KHÔNG TÌM THẤY XE PHÙ HỢP!');
-            console.log('  💡 Gợi ý:');
-            console.log('    - Stations available:', [...new Set(cars.map(c => c.stationId))].join(', '));
-            console.log('    - Types available:', [...new Set(cars.map(c => c.type))].join(', '));
+    // Xử lý khi thay đổi sort
+    // const handleSortChange = (value) => {
+    //     setSortBy(value);
+    // };
 
-            if (type) {
-                const carsOfType = cars.filter(c => c.type === type && (selectedBranch ? String(c.stationId) === String(selectedBranch) : true));
-                console.log(`    - 🚗 Số xe ${type} ${selectedBranch ? `tại chi nhánh ${selectedBranch}` : '(tất cả chi nhánh)'}: ${carsOfType.length}`);
-
-                if (carsOfType.length > 0) {
-                    // ✅ Log chi tiết grades với format gốc từ API
-                    console.log('    - ⭐ Grades chi tiết:');
-                    const gradeMap = new Map();
-                    carsOfType.forEach(c => {
-                        const originalGrade = c.grade || c.variant;
-                        const lowerGrade = (originalGrade || '').toLowerCase().trim();
-                        if (!gradeMap.has(lowerGrade)) {
-                            gradeMap.set(lowerGrade, { original: originalGrade, count: 0, cars: [] });
-                        }
-                        const entry = gradeMap.get(lowerGrade);
-                        entry.count++;
-                        entry.cars.push(c.plate_number);
-                    });
-
-                    gradeMap.forEach((data, lowerGrade) => {
-                        console.log(`      • "${data.original}" (lowercase: "${lowerGrade}"): ${data.count} xe`);
-                        console.log(`        Biển số: ${data.cars.slice(0, 3).join(', ')}${data.cars.length > 3 ? '...' : ''}`);
-                    });
-
-                    if (grade) {
-                        console.log(`    - 🔍 Đang tìm grade: "${grade}" (lowercase: "${grade.toLowerCase()}")`);
-                        const matchingGrade = Array.from(gradeMap.keys()).find(g => g === grade.toLowerCase());
-                        if (matchingGrade) {
-                            console.log(`    - ✅ Có ${gradeMap.get(matchingGrade).count} xe grade "${matchingGrade}"`);
-                        } else {
-                            console.error(`    - ❌ KHÔNG có xe grade "${grade.toLowerCase()}" - Grades có sẵn:`, Array.from(gradeMap.keys()));
-                        }
-                    }
-                }
-            }
-
-            if (selectedBranch) {
-                const carsInBranch = cars.filter(c => String(c.stationId) === String(selectedBranch));
-                console.log(`    - 📍 Chi nhánh ${selectedBranch}: ${carsInBranch.length} xe`);
-            }
-        }
-    }, [selectedBranch, type, grade, selectedColors, cars.length, filteredCars.length, cars]);
-
-    // Xử lý khi thay đổi loại xe
-    const handleTypeChange = (value) => {
-        setType(value);
-        // Reset grade khi thay đổi loại xe để người dùng chọn lại
+    // Clear all filters - Reset về trống
+    const clearFilters = () => {
+        setBrand('');
         setGrade('');
+        setSelectedColors([]);
+        setSortBy('name-asc');
+    };
+
+    // Helper function to get color hex
+    const getColorHex = (colorName) => {
+        const colorMap = {
+            'Black': '#000000',
+            'Đen': '#000000',
+            'White': '#FFFFFF',
+            'Trắng': '#FFFFFF',
+            'Red': '#DC0000',
+            'Đỏ': '#DC0000',
+            'Blue': '#0000FF',
+            'Xanh dương': '#0000FF',
+            'Silver': '#C0C0C0',
+            'Bạc': '#C0C0C0',
+            'Gray': '#808080',
+            'Xám': '#808080',
+        };
+        return colorMap[colorName] || '#999999';
     };
 
     // Điều hướng đến trang booking - Truyền đầy đủ thông tin xe
@@ -180,33 +165,26 @@ const CarFilter = ({ selectedBranch }) => {
                 }
             });
         }
-    }; return (
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+    };
+
+    return (
+        <div className="car-filter-container">
             {/* Loading state */}
             {loading && (
-                <div style={{ textAlign: 'center', padding: 40, fontSize: 18, color: '#888' }}>
-                    Đang tải dữ liệu xe...
+                <div className="loading-container">
+                    <div className="loading-spinner"></div>
+                    <p className="loading-text">Đang tải dữ liệu xe...</p>
                 </div>
             )}
 
             {/* Error state */}
             {error && (
-                <div style={{ textAlign: 'center', padding: 40 }}>
-                    <div style={{ color: '#ef4444', fontSize: 18, marginBottom: 16 }}>
+                <div className="error-container">
+                    <div className="error-title">
                         Lỗi khi tải dữ liệu: {error}
                     </div>
-                    <button
-                        onClick={refetch}
-                        style={{
-                            padding: '10px 20px',
-                            background: '#dc2626',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: 8,
-                            cursor: 'pointer'
-                        }}
-                    >
-                        Thử lại
+                    <button className="retry-btn" onClick={refetch}>
+                        <span>Thử lại</span>
                     </button>
                 </div>
             )}
@@ -214,342 +192,181 @@ const CarFilter = ({ selectedBranch }) => {
             {/* Main content - only show when not loading */}
             {!loading && (
                 <>
-                    {/* Bộ lọc */}
-                    <div style={{ display: 'flex', gap: 24, justifyContent: 'center', marginBottom: 40, flexWrap: 'wrap' }}>
+                    {/* Filters Compact Box */}
+                    <div className="filters-compact-box">
+                        {/* Dòng 1: Chọn màu - Click để toggle */}
                         <div>
-                            <label style={{ fontWeight: 600, marginRight: 12 }}>Loại xe:</label>
-                            <select
-                                value={type}
-                                onChange={e => handleTypeChange(e.target.value)}
-                                style={{
-                                    padding: '10px 20px',
-                                    borderRadius: 8,
-                                    border: '2px solid #dc2626',
-                                    fontSize: 16,
-                                    fontWeight: 500,
-                                    cursor: 'pointer',
-                                    outline: 'none'
-                                }}
-                            >
-                                {carTypes.map(opt => (
-                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                ))}
-                            </select>
-                        </div>
-                        {/* Hiển thị dropdown Hạng xe khi đã chọn loại xe */}
-                        {type && (
-                            <div>
-                                <label style={{ fontWeight: 600, marginRight: 12 }}>Hạng xe:</label>
-                                <select
-                                    value={grade}
-                                    onChange={e => setGrade(e.target.value)}
-                                    style={{
-                                        padding: '10px 20px',
-                                        borderRadius: 8,
-                                        border: '2px solid #dc2626',
-                                        fontSize: 16,
-                                        fontWeight: 500,
-                                        cursor: 'pointer',
-                                        outline: 'none'
-                                    }}
-                                >
-                                    {carGrades.map(opt => (
-                                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Bộ lọc màu sắc - Checkboxes */}
-                    {availableColors.length > 0 && (
-                        <div style={{
-                            maxWidth: 900,
-                            margin: '0 auto 40px',
-                            padding: '20px',
-                            background: 'white',
-                            borderRadius: 12,
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                        }}>
-                            <label style={{ fontWeight: 600, marginBottom: 12, display: 'block', fontSize: 18, color: '#1f2937' }}>
-                                Chọn Màu
-                            </label>
-                            <select
-                                value={selectedColors[0] || ''}
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    if (value) {
-                                        setSelectedColors([value]);
-                                    } else {
-                                        setSelectedColors([]);
-                                    }
-                                }}
-                                style={{
-                                    width: '100%',
-                                    padding: '12px 16px',
-                                    fontSize: '16px',
-                                    fontWeight: 500,
-                                    border: '2px solid #e5e7eb',
-                                    borderRadius: '12px',
-                                    backgroundColor: 'white',
-                                    cursor: 'pointer',
-                                    outline: 'none',
-                                    transition: 'all 0.3s ease',
-                                    color: '#1f2937'
-                                }}
-                                onFocus={(e) => {
-                                    e.target.style.borderColor = '#667eea';
-                                    e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
-                                }}
-                                onBlur={(e) => {
-                                    e.target.style.borderColor = '#e5e7eb';
-                                    e.target.style.boxShadow = 'none';
-                                }}
-                            >
-                                <option value="">-- Tất cả màu --</option>
+                            <label className="filter-label" style={{ display: 'block', marginBottom: 12 }}>Chọn Màu</label>
+                            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                                 {availableColors.map(color => {
-                                    const colorMap = {
-                                        'Black': '⬛',
-                                        'White': '⬜',
-                                        'Red': '🟥',
-                                        'Blue': '🟦',
-                                        'Silver': '◽',
-                                        'Gray': '◾',
-                                        'Yellow': '🟨'
-                                    };
-                                    const icon = colorMap[color] || '🟩';
+                                    const isSelected = selectedColors.includes(color);
                                     return (
-                                        <option key={color} value={color}>
-                                            {icon} {color}
-                                        </option>
-                                    );
-                                })}
-                            </select>
-                            {selectedColors.length > 0 && (
-                                <div style={{
-                                    display: 'flex',
-                                    gap: 8,
-                                    marginTop: 12,
-                                    flexWrap: 'wrap'
-                                }}>
-                                    {selectedColors.map(color => {
-                                        const colorMap = {
-                                            'Black': '#000000',
-                                            'White': '#FFFFFF',
-                                            'Red': '#DC2626',
-                                            'Blue': '#2563EB',
-                                            'Silver': '#9CA3AF',
-                                            'Gray': '#6B7280',
-                                            'Yellow': '#EAB308'
-                                        };
-                                        const bgColor = colorMap[color] || '#6B7280';
-                                        return (
-                                            <div
-                                                key={color}
-                                                style={{
-                                                    display: 'inline-flex',
-                                                    alignItems: 'center',
-                                                    gap: 8,
-                                                    padding: '6px 12px',
-                                                    background: '#f3f4f6',
-                                                    borderRadius: 8,
-                                                    fontSize: 14,
-                                                    fontWeight: 500
-                                                }}
-                                            >
-                                                <div style={{
-                                                    width: 20,
-                                                    height: 20,
-                                                    backgroundColor: bgColor,
-                                                    borderRadius: 4,
-                                                    border: color === 'White' ? '1px solid #e5e7eb' : 'none'
-                                                }} />
-                                                <span>{color}</span>
-                                                <button
-                                                    onClick={() => setSelectedColors(selectedColors.filter(c => c !== color))}
-                                                    style={{
-                                                        background: 'transparent',
-                                                        border: 'none',
-                                                        cursor: 'pointer',
-                                                        fontSize: 16,
-                                                        color: '#6b7280',
-                                                        padding: 0,
-                                                        marginLeft: 4
-                                                    }}
-                                                >✕</button>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                            <div style={{ display: 'none' }}>
-                                {availableColors.map(color => (
-                                    <label key={color}>
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedColors.includes(color)}
-                                            onChange={(e) => {
-                                                if (e.target.checked) {
-                                                    setSelectedColors([...selectedColors, color]);
-                                                } else {
+                                        <div
+                                            key={color}
+                                            onClick={() => {
+                                                if (isSelected) {
+                                                    // Click lại để bỏ chọn
                                                     setSelectedColors(selectedColors.filter(c => c !== color));
+                                                } else {
+                                                    // Chọn màu mới
+                                                    setSelectedColors([...selectedColors, color]);
                                                 }
                                             }}
                                             style={{
-                                                width: 18,
-                                                height: 18,
-                                                cursor: 'pointer'
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                gap: 8,
+                                                cursor: 'pointer',
+                                                padding: 8,
+                                                borderRadius: 8,
+                                                border: isSelected ? '3px solid #DC0000' : '2px solid #E5E5E5',
+                                                backgroundColor: isSelected ? '#FFF5F5' : '#FFFFFF',
+                                                transition: 'all 0.3s',
+                                                minWidth: 80
                                             }}
-                                        />
-                                        <span>{color}</span>
-                                    </label>
-                                ))}
+                                        >
+                                            <div
+                                                style={{
+                                                    width: 50,
+                                                    height: 50,
+                                                    backgroundColor: getColorHex(color),
+                                                    borderRadius: 8,
+                                                    border: (color === 'White' || color === 'Trắng') ? '2px solid #E5E5E5' : 'none',
+                                                    boxShadow: isSelected ? '0 4px 12px rgba(220, 0, 0, 0.3)' : '0 2px 8px rgba(0,0,0,0.1)'
+                                                }}
+                                            />
+                                            <span style={{
+                                                fontSize: 13,
+                                                fontWeight: isSelected ? 600 : 500,
+                                                color: isSelected ? '#DC0000' : '#333333',
+                                                textAlign: 'center'
+                                            }}>
+                                                {color}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
                             </div>
-                            {selectedColors.length > 0 && (
-                                <button
-                                    onClick={() => setSelectedColors([])}
-                                    style={{
-                                        marginTop: 16,
-                                        padding: '8px 16px',
-                                        background: '#dc2626',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: 8,
-                                        fontSize: 14,
-                                        fontWeight: 600,
-                                        cursor: 'pointer',
-                                        display: 'block',
-                                        margin: '16px auto 0'
-                                    }}
-                                >
-                                    Xóa bộ lọc màu
-                                </button>
-                            )}
                         </div>
-                    )}
 
-                    {/* Danh sách xe - Horizontal Cards */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, alignItems: 'center' }}>
-                        {filteredCars.length === 0 ? (
-                            <div style={{
-                                textAlign: 'center',
-                                padding: 60,
-                                background: '#f9fafb',
-                                borderRadius: 16,
-                                marginTop: 40,
-                                width: '100%',
-                                maxWidth: 600
-                            }}>
-                                <div style={{ fontSize: 48, marginBottom: 16 }}>🚗</div>
-                                <div style={{ color: '#6b7280', fontSize: 18, fontWeight: 500, marginBottom: 8 }}>
-                                    Không tìm thấy xe phù hợp
-                                </div>
-                                <div style={{ color: '#9ca3af', fontSize: 14, marginBottom: 16 }}>
+                        {/* Dòng 2: Hãng xe + Hạng xe + Sắp xếp */}
+                        <div className="filters-grid" style={{ marginTop: 24 }}>
+                            {/* Hãng xe */}
+                            <div className="filter-group">
+                                <label className="filter-label">Chọn xe</label>
+                                <select
+                                    className="filter-select"
+                                    value={brand}
+                                    onChange={e => setBrand(e.target.value)}
+                                >
+                                    <option value="">-- Chọn một xe --</option>
+                                    <option value="BMW">BMW</option>
+                                    <option value="Tesla">Tesla</option>
+                                    <option value="VinFast">VinFast</option>
+                                </select>
+                            </div>
+
+                            {/* Hạng xe */}
+                            <div className="filter-group">
+                                <label className="filter-label">Hạng xe</label>
+                                <select
+                                    className="filter-select"
+                                    value={grade}
+                                    onChange={e => setGrade(e.target.value)}
+                                >
+                                    <option value="">-- Chọn hạng xe --</option>
+                                    <option value="Air">Air</option>
+                                    <option value="Plus">Plus</option>
+                                    <option value="Pro">Pro</option>
+                                </select>
+                            </div>
+
+                            {/* Sắp xếp */}
+                            <div className="filter-group">
+                                <label className="filter-label">Sắp xếp</label>
+                                <select
+                                    className="filter-select"
+                                    value={sortBy}
+                                    onChange={e => setSortBy(e.target.value)}
+                                >
+                                    <option value="name-asc">Tên A-Z</option>
+                                    <option value="name-desc">Tên Z-A</option>
+                                    <option value="grade-asc">Hạng thấp → cao</option>
+                                    <option value="grade-desc">Hạng cao → thấp</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Clear button */}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 24, paddingTop: 20, borderTop: '1px solid #E5E5E5' }}>
+                            <button className="clear-filters-btn" onClick={clearFilters}>
+                                <span>Reset bộ lọc</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Cars Grid */}
+                    <div className="cars-grid">
+                        {sortedCars.length === 0 ? (
+                            <div className="empty-state" style={{ gridColumn: '1 / -1' }}>
+                                <div className="empty-icon">🚗</div>
+                                <h3 className="empty-title">Không tìm thấy xe phù hợp</h3>
+                                <p className="empty-message">
                                     {selectedBranch && `Chi nhánh: ${selectedBranch} | `}
-                                    {type && `Loại: ${type} | `}
+                                    {brand && `Hãng xe: ${brand} | `}
                                     {grade && `Hạng: ${grade} | `}
                                     Tổng số xe: {cars.length}
-                                </div>
-                                <div style={{ color: '#ef4444', fontSize: 14, fontWeight: 500 }}>
-                                    💡 Gợi ý: {grade
-                                        ? 'Một số xe có thể thiếu thông tin hạng xe (Backend chưa cập nhật VehicleModel). Thử bỏ bộ lọc hạng xe.'
-                                        : 'Thử bỏ bớt bộ lọc hoặc chọn chi nhánh khác'}
-                                </div>
+                                    <br /><br />
+                                    💡 Gợi ý: Thử chọn hãng xe, hạng xe hoặc màu sắc khác
+                                </p>
                             </div>
                         ) : (
-                            filteredCars.map(car => (
-                                <div
-                                    key={car.id}
-                                    style={{
-                                        width: '100%',
-                                        maxWidth: 900,
-                                        background: '#fff',
-                                        borderRadius: 16,
-                                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                                        padding: 24,
-                                        display: 'flex',
-                                        gap: 24,
-                                        alignItems: 'center',
-                                        transition: 'transform 0.3s, box-shadow 0.3s',
-                                        cursor: 'pointer'
-                                    }}
-                                    onMouseEnter={e => {
-                                        e.currentTarget.style.transform = 'translateX(8px)';
-                                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(220,38,38,0.3)';
-                                    }}
-                                    onMouseLeave={e => {
-                                        e.currentTarget.style.transform = 'translateX(0)';
-                                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-                                    }}
-                                >
-                                    {/* Hình ảnh bên trái */}
-                                    <img
-                                        src={car.image}
-                                        alt={car.name}
-                                        style={{
-                                            width: 280,
-                                            height: 180,
-                                            objectFit: 'cover',
-                                            borderRadius: 12,
-                                            flexShrink: 0
-                                        }}
-                                    />
+                            sortedCars.map(car => (
+                                <div key={car.id} className="car-card">
+                                    {/* Car Image */}
+                                    <div className="car-image-container">
+                                        <img
+                                            src={car.image}
+                                            alt={car.vehicle_name}
+                                            className="car-image"
+                                        />
+                                        <div className="car-status-badge">Available</div>
+                                    </div>
 
-                                    {/* Thông tin xe bên phải - Chỉ hiển thị: Tên xe, Màu sắc, Biển số, Grade */}
-                                    <div style={{ flex: 1, textAlign: 'left' }}>
-                                        <h3 style={{ margin: '0 0 20px', fontSize: 28, fontWeight: 700, color: '#1f2937' }}>
-                                            {car.vehicle_name}
-                                        </h3>
+                                    {/* Car Info */}
+                                    <div className="car-info">
+                                        <h3 className="car-name">{car.vehicle_name}</h3>
 
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                                            <div style={{ fontSize: 18, color: '#374151' }}>
-                                                <strong style={{ color: '#dc2626' }}>Biển số xe:</strong> {car.plate_number}
+                                        <div className="car-details">
+                                            <div className="car-detail-item">
+                                                <span className="car-detail-label">Biển số:</span>
+                                                <span>{car.plate_number}</span>
                                             </div>
-                                            <div style={{ fontSize: 18, color: '#374151' }}>
-                                                <strong style={{ color: '#dc2626' }}>Grade:</strong>{' '}
-                                                <span style={{
-                                                    color: (!car.variant && !car.grade) || car.variant === 'N/A' ? '#ef4444' : '#374151',
-                                                    fontStyle: (!car.variant && !car.grade) || car.variant === 'N/A' ? 'italic' : 'normal'
-                                                }}>
-                                                    {(!car.variant && !car.grade) || car.variant === 'N/A'
-                                                        ? 'Chưa cập nhật (Backend thiếu VehicleModel)'
-                                                        : (car.variant || car.grade)}
+                                            <div className="car-detail-item">
+                                                <span className="car-detail-label">Hạng xe:</span>
+                                                <span>{car.variant || car.grade || 'N/A'}</span>
+                                            </div>
+                                            <div className="car-detail-item">
+                                                <span className="car-detail-label">Màu sắc:</span>
+                                                <span>
+                                                    {car.color || 'N/A'}
+                                                    {car.color && car.color !== 'N/A' && (
+                                                        <span 
+                                                            className="car-color-swatch"
+                                                            style={{ backgroundColor: getColorHex(car.color) }}
+                                                        ></span>
+                                                    )}
                                                 </span>
                                             </div>
-                                            <div style={{ fontSize: 18, color: '#374151' }}>
-                                                <strong style={{ color: '#dc2626' }}>Màu sắc:</strong>{' '}
-                                                <span style={{
-                                                    color: (!car.color || car.color === 'N/A') ? '#ef4444' : '#374151',
-                                                    fontStyle: (!car.color || car.color === 'N/A') ? 'italic' : 'normal'
-                                                }}>
-                                                    {(!car.color || car.color === 'N/A')
-                                                        ? 'Chưa cập nhật (Backend thiếu VehicleModel)'
-                                                        : car.color}
-                                                </span>
-                                            </div>
-                                            <div style={{ fontSize: 18, color: '#374151' }}>
-                                                <strong style={{ color: '#dc2626' }}>Loại xe:</strong> {car.type === '4-seater' ? '4 chỗ' : '7 chỗ'}
+                                            <div className="car-detail-item">
+                                                <span className="car-detail-label">Loại xe:</span>
+                                                <span>{car.type === '4-seater' ? '4 Chỗ' : '7 Chỗ'}</span>
                                             </div>
                                         </div>
 
-                                        <button
-                                            onClick={() => handleRentCar(car)}
-                                            style={{
-                                                marginTop: 30,
-                                                padding: '12px 32px',
-                                                background: '#10b981',
-                                                color: 'white',
-                                                border: 'none',
-                                                borderRadius: 8,
-                                                fontSize: 18,
-                                                fontWeight: 600,
-                                                cursor: 'pointer',
-                                                transition: 'background 0.3s'
-                                            }}
-                                            onMouseEnter={e => e.currentTarget.style.background = '#059669'}
-                                            onMouseLeave={e => e.currentTarget.style.background = '#10b981'}
-                                        >
-                                            Thuê xe ngay
+                                        <button className="rent-btn" onClick={() => handleRentCar(car)}>
+                                            <span>Thuê xe ngay</span>
                                         </button>
                                     </div>
                                 </div>

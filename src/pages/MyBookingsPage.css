@@ -574,7 +574,6 @@
     padding: 32px 40px;
     background: #000000;
     border-radius: 0;
-    position: sticky;
     top: 0;
     z-index: 1;
     box-shadow: none;
@@ -785,7 +784,6 @@
     gap: 16px;
     padding: 24px 40px;
     border-top: 1px solid #E5E5E5;
-    position: sticky;
     bottom: 0;
     background: white;
 }
@@ -936,7 +934,7 @@
 
 .booking-card:hover {
     border-color: #DC0000;
-    box-shadow: 0 0 0 1px #DC0000;
+    box-shadow: 0 0 0 1px #000000;
     transform: translateY(-4px);
 }
 

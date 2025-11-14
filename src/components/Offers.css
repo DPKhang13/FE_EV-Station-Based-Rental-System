@@ -62,7 +62,7 @@
 
 .category-description {
     font-size: 15px;
-    color: #666666;
+    color: #000000;
     margin: 0;
     font-weight: 300;
     letter-spacing: 1px;
@@ -312,6 +312,7 @@
     text-transform: uppercase;
     letter-spacing: 3px;
     color: #000000;
+    min-height: 35px;
 }
 
 .offer-card .offer-price {
@@ -321,6 +322,7 @@
     margin: 8px 0 15px 0;
     padding: 0 20px;
     letter-spacing: 1px;
+    min-height: 50px;
 }
 
 .offer-card .offer-price span {
@@ -333,8 +335,22 @@
     color: #6b7280;
     line-height: 1.6;
     padding: 0 20px;
-    margin-bottom: 20px;
-    flex-grow: 1;
+    margin-bottom: 15px;
+    min-height: 50px;
+}
+
+.offer-card .offer-subinfo {
+    font-size: 13px;
+    color: #000000;
+    text-align: center;
+    padding: 0 20px;
+    margin: 15px 0 20px 0;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+}
+
+.offer-card .offer-subinfo b {
+    font-weight: 400;
 }
 
 .offer-card .rent-now-button {

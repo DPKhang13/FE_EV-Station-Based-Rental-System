@@ -1,452 +1,446 @@
-/* ==============================
-   EmployeesPage.css
-   Clean + Pro UI • Responsive • Auto Dark Mode
-================================= */
+/* ================================
+   EMPLOYEES PAGE - Mercedes Style
+   White - Red - Black Theme
+   ================================ */
 
-/* ---------- Design tokens ---------- */
-:root {
-  --primary: #4f46e5;            /* Indigo 600 */
-  --primary-700: #4338ca;
-  --accent: #06b6d4;             /* Cyan 500 */
-
-  --bg: #f6f7fb;
-  --surface: #ffffff;
-  --card: #ffffff;
-
-  --text: #0f172a;               /* Slate 900 */
-  --muted: #64748b;              /* Slate 500 */
-  --border: #e5e7eb;             /* Slate 200 */
-
-  --active-bg: #ecfdf5;          /* Emerald 50 */
-  --active-text: #047857;        /* Emerald 700 */
-  --inactive-bg: #f3f4f6;        /* Gray 100 */
-  --inactive-text: #6b7280;      /* Gray 500 */
-  --danger-bg: #fef2f2;          /* Red 50 */
-  --danger-text: #b91c1c;        /* Red 700 */
-
-  --radius: 14px;
-  --radius-sm: 10px;
-
-  --shadow-sm: 0 1px 2px rgba(2, 6, 23, .05);
-  --shadow-md: 0 10px 30px rgba(2, 6, 23, .08);
-  --shadow-lg: 0 20px 45px rgba(2, 6, 23, .12);
-}
-
-/* ---------- Dark scheme (auto) ---------- */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0b1220;
-    --surface: #0f172a;
-    --card: #0f172a;
-
-    --text: #e5e7eb;
-    --muted: #94a3b8;
-    --border: rgba(148, 163, 184, 0.24);
-
-    --active-bg: rgba(16, 185, 129, 0.15);
-    --active-text: #34d399;
-    --inactive-bg: rgba(148, 163, 184, 0.18);
-    --inactive-text: #cbd5e1;
-    --danger-bg: rgba(239, 68, 68, 0.14);
-    --danger-text: #fca5a5;
-
-    --shadow-md: 0 12px 34px rgba(0, 0, 0, .45);
-    --shadow-lg: 0 24px 60px rgba(0, 0, 0, .55);
-  }
-}
-
-/* ---------- Reset & base ---------- */
-*,
-*::before,
-*::after { box-sizing: border-box; }
-
-html, body {
-  height: 100%;
-  margin: 0;
-  background:
-    radial-gradient(80rem 80rem at 10% -10%, rgba(99,102,241,.08), transparent),
-    radial-gradient(70rem 70rem at 110% 10%, rgba(6,182,212,.07), transparent),
-    var(--bg);
-  color: var(--text);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-:focus-visible {
-  outline: 3px solid color-mix(in oklab, var(--primary) 60%, white);
-  outline-offset: 2px;
-  border-radius: 10px;
-}
-
-/* ---------- Layout ---------- */
 .container {
-  max-width: 1120px;
-  margin: clamp(16px, 4vw, 40px) auto;
-  padding: 0 clamp(12px, 3vw, 20px);
+    padding: 30px;
+    background: #FFFFFF;
+    min-height: 100vh;
 }
 
-/* ---------- Headings ---------- */
-h2 {
-  margin: 0 0 18px;
-  font-size: clamp(22px, 2.6vw, 32px);
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-  font-weight: 800;
-  background: linear-gradient(90deg, var(--text), color-mix(in oklab, var(--text) 70%, var(--primary) 30%));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+/* Page Header */
+.container > h2 {
+    font-size: 28px;
+    color: #000000;
+    margin: 0 0 30px 0;
+    font-weight: 300;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding-bottom: 15px;
+    border-bottom: 3px solid #DC0000;
+    display: inline-block;
+    width: auto;
+    max-width: fit-content;
 }
 
-h3 {
-  margin: 0 0 12px;
-  font-size: clamp(16px, 2vw, 20px);
-  font-weight: 700;
-  color: var(--text);
-}
-
-/* ---------- Actions ---------- */
+/* Actions */
 .actions {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+    margin-bottom: 30px;
 }
 
 .add-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  border: 1px solid var(--border);                    /* fallback */
-  border-radius: 12px;
-  background: var(--primary);                          /* fallback */
-  background: linear-gradient(180deg,
-              color-mix(in oklab, var(--primary) 84%, white) 0%, var(--primary) 100%);
-  color: white;
-  font-weight: 700;
-  letter-spacing: .2px;
-  box-shadow: 0 8px 20px rgba(79, 70, 229, .25);
-  transition: transform .12s ease, box-shadow .2s ease, filter .2s ease;
-  cursor: pointer;
-  border-color: color-mix(in oklab, var(--primary) 40%, var(--border));
+    padding: 12px 24px;
+    border: 2px solid #000000;
+    border-radius: 0;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: #000000;
+    color: #FFFFFF;
 }
 
 .add-btn:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.03);
-  box-shadow: 0 12px 26px rgba(79, 70, 229, .28);
+    background: #DC0000;
+    border-color: #DC0000;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(220, 0, 0, 0.3);
 }
 
-.add-btn:active { transform: translateY(0); }
-
-/* ---------- Stats ---------- */
+/* Stats Cards - Mercedes Style */
 .stats-grid {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 14px;
-  margin-bottom: 18px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    margin-bottom: 35px;
 }
 
 .stat-card {
-  grid-column: span 4;
-  background: var(--surface); /* fallback */
-  background: linear-gradient(180deg,
-              color-mix(in oklab, var(--surface) 92%, white),
-              var(--surface));
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 18px;
-  box-shadow: var(--shadow-md);
-  position: relative;
-  overflow: hidden;
+    background: #FFFFFF;
+    border: 2px solid #000000;
+    border-radius: 0;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
 
-@media (max-width: 960px) {
-  .stat-card { grid-column: span 6; }
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 3px;
+    background: #DC0000;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
 }
-@media (max-width: 640px) {
-  .stat-card { grid-column: span 12; }
+
+.stat-card:hover {
+    border-color: #DC0000;
+    transform: translateY(-2px);
 }
 
 .stat-card p {
-  margin: 0;
-  font-size: 13px;
-  color: var(--muted);
+    font-size: 12px;
+    color: #000000;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 700;
+    margin: 0;
 }
 
 .stat-card h3 {
-  margin: 6px 0 0;
-  font-size: clamp(22px, 3.3vw, 28px);
-  letter-spacing: -0.02em;
+    font-size: 42px;
+    font-weight: 300;
+    color: #000000;
+    margin: 0;
+    letter-spacing: -1px;
 }
 
-.stat-card::after {
-  content: "";
-  position: absolute;
-  inset: -2px -2px auto auto;
-  width: 110px; height: 110px;
-  background: radial-gradient(70px 70px at 80% 20%,
-              color-mix(in oklab, var(--primary) 30%, transparent),
-              transparent);
-  opacity: .35;
-  pointer-events: none;
-}
-
-/* ---------- Table ---------- */
+/* Table Container */
 .employee-table {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-lg);
-  padding: 12px;
-  overflow: hidden;
+    margin-top: 30px;
 }
 
 .employee-table > h3 {
-  padding: 4px 6px 10px 6px;
-  margin: 0 8px 8px;
-  border-bottom: 1px dashed var(--border);
-  color: var(--muted);
-  font-weight: 600;
+    font-size: 18px;
+    color: #000000;
+    margin-bottom: 20px;
+    font-weight: 300;
+    letter-spacing: 2px;
+    text-transform: uppercase;
 }
 
-.employee-table { overflow-x: auto; }                  /* scroll on small screens */
+.employee-table-container {
+    background: #FFFFFF;
+    border: 2px solid #E0E0E0;
+    border-top: 3px solid #DC0000;
+    border-radius: 0;
+    overflow: hidden;
+}
+
 .employee-table table {
-  width: 100%;
-  min-width: 880px;
-  border-collapse: separate;
-  border-spacing: 0;
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
 }
 
-.employee-table thead th {
-  text-align: left;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-  color: var(--muted);
-  padding: 12px 14px;
-  position: sticky;
-  top: 0;
-  background: var(--surface); /* fallback */
-  background: linear-gradient(180deg,
-              color-mix(in oklab, var(--surface) 86%, white),
-              var(--surface));
-  border-bottom: 1px solid var(--border);
-  z-index: 1;
+.employee-table thead {
+    background: #000000 !important;
 }
 
-.employee-table tbody td {
-  padding: 14px;
-  border-bottom: 1px solid color-mix(in oklab, var(--border) 72%, transparent);
-  vertical-align: middle;
+.employee-table th {
+    padding: 16px 14px !important;
+    text-align: left !important;
+    font-weight: 500 !important;
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+    color: #FFFFFF !important;
+    background: #000000 !important;
+    border: none !important;
+    border-radius: 0 !important;
+}
+
+/* Column widths */
+.employee-table th:nth-child(1),
+.employee-table td:nth-child(1) {
+    width: 25%;
+}
+
+.employee-table th:nth-child(2),
+.employee-table td:nth-child(2) {
+    width: 12%;
+    text-align: center;
+}
+
+.employee-table th:nth-child(3),
+.employee-table td:nth-child(3) {
+    width: 18%;
+}
+
+.employee-table th:nth-child(4),
+.employee-table td:nth-child(4) {
+    width: 15%;
+    text-align: center;
+}
+
+.employee-table th:nth-child(5),
+.employee-table td:nth-child(5) {
+    width: 15%;
+    text-align: center;
+}
+
+.employee-table th:nth-child(6),
+.employee-table td:nth-child(6) {
+    width: 15%;
+    text-align: center;
+}
+
+.employee-table tbody tr {
+    border-bottom: 1px solid #E0E0E0;
+    transition: background 0.2s;
 }
 
 .employee-table tbody tr:hover {
-  background: var(--surface); /* fallback */
-  background: color-mix(in oklab, var(--surface) 94%, var(--primary) 6%);
+    background: #F9FAFB;
 }
 
-/* ---------- Employee cell ---------- */
+.employee-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.employee-table td {
+    padding: 14px;
+    color: #000000;
+    font-size: 13px;
+    vertical-align: middle;
+    word-wrap: break-word;
+}
+
+/* Employee Info */
 .employee-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .avatar {
-  --size: 42px;
-  width: var(--size);
-  height: var(--size);
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font-weight: 800;
-  color: white;
-  background:
-    radial-gradient(60% 80% at 70% 30%, rgba(255,255,255,.26), transparent),
-    linear-gradient(135deg, var(--primary),
-      color-mix(in oklab, var(--primary) 55%, var(--accent)));
-  box-shadow: inset 0 0 0 2px rgba(255,255,255,.25),
-              0 6px 18px rgba(79, 70, 229, .28);
-  user-select: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 0;
+    background: #000000;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 1px;
+    flex-shrink: 0;
 }
 
-.email {
-  margin: 4px 0 0;
-  font-size: 12px;
-  color: var(--muted);
+.employee-info strong {
+    font-weight: 700;
+    color: #000000;
+    letter-spacing: 0.3px;
+    display: block;
+    margin-bottom: 4px;
 }
 
-/* ---------- Tags & status ---------- */
+.employee-info .email {
+    font-size: 12px;
+    color: #6B7280;
+    letter-spacing: 0.2px;
+    margin: 0;
+}
+
+/* Tag/Performance Badge */
 .tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  font-size: 12px;
-  font-weight: 700;
-  border-radius: 999px;
-  background: var(--surface); /* fallback */
-  background: color-mix(in oklab, var(--primary) 14%, var(--surface));
-  color: color-mix(in oklab, var(--primary) 50%, var(--text));
-  border: 1px solid var(--border);
-  border-color: color-mix(in oklab, var(--primary) 28%, var(--border));
+    display: inline-block;
+    padding: 6px 12px;
+    border: 2px solid #000000;
+    border-radius: 0;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: #FFFFFF;
+    color: #000000;
+    margin-bottom: 4px;
 }
 
 .small-text {
-  margin: 6px 0 0;
-  font-size: 12px;
-  color: var(--muted);
+    font-size: 11px;
+    color: #6B7280;
+    margin: 4px 0 0 0;
+    letter-spacing: 0.2px;
 }
 
+/* Status Badge - Mercedes Style */
 .status {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-weight: 700;
-  font-size: 12px;
-  border: 1px solid var(--border);
-}
-
-.status::before {
-  content: "";
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--muted);
-  box-shadow: 0 0 0 3px rgba(0,0,0,0.05) inset;
+    padding: 7px 14px;
+    border-radius: 0;
+    border: 2px solid;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: inline-block;
+    transition: all 0.3s;
+    background: #FFFFFF;
+    text-align: center;
 }
 
 .status.active {
-  background: var(--active-bg);
-  color: var(--active-text);
-  border-color: color-mix(in oklab, var(--active-text) 26%, var(--border));
+    border-color: #000000;
+    color: #000000;
 }
-.status.active::before { background: var(--active-text); }
+
+.status.active:hover {
+    background: #000000;
+    color: #FFFFFF;
+}
 
 .status.inactive {
-  background: var(--inactive-bg);
-  color: var(--inactive-text);
+    border-color: #DC0000;
+    color: #DC0000;
 }
-.status.inactive::before { background: var(--inactive-text); }
 
-/* ---------- Row actions ---------- */
+.status.inactive:hover {
+    background: #DC0000;
+    color: #FFFFFF;
+}
+
+/* Delete Button - Mercedes Style */
 .delete-btn {
-  all: unset;
-  cursor: pointer;
-  display: inline-grid;
-  place-items: center;
-  width: 36px; height: 36px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--surface); /* fallback */
-  background: linear-gradient(180deg,
-              color-mix(in oklab, var(--surface) 92%, white),
-              var(--surface));
-  transition: transform .12s ease, background .2s ease,
-              box-shadow .2s ease, border-color .2s ease;
+    padding: 8px 12px;
+    border: 2px solid #DC0000;
+    border-radius: 0;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: #FFFFFF;
+    color: #DC0000;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
 }
+
 .delete-btn:hover {
-  transform: translateY(-1px);
-  background: color-mix(in oklab, var(--danger-bg) 40%, var(--surface));
-  border-color: color-mix(in oklab, var(--danger-text) 25%, var(--border));
-  box-shadow: var(--shadow-sm);
+    background: #DC0000;
+    color: #FFFFFF;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 0, 0, 0.3);
 }
-.delete-btn:active { transform: translateY(0); }
 
-/* ---------- Bottom section ---------- */
+/* Center align for specific columns */
+.employee-table th:nth-child(2),
+.employee-table th:nth-child(4),
+.employee-table th:nth-child(5),
+.employee-table th:nth-child(6) {
+    text-align: center !important;
+}
+
+.employee-table td:nth-child(2),
+.employee-table td:nth-child(4),
+.employee-table td:nth-child(5),
+.employee-table td:nth-child(6) {
+    text-align: center;
+}
+
+/* Bottom Section */
 .bottom-section {
-  margin-top: 18px;
-  display: grid;
-  grid-template-columns: 1.2fr .8fr;
-  gap: 14px;
-}
-
-@media (max-width: 960px) {
-  .bottom-section { grid-template-columns: 1fr; }
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 25px;
+    margin-top: 40px;
 }
 
 .performance-card,
 .top-employee-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  box-shadow: var(--shadow-md);
+    background: #FFFFFF;
+    border: 2px solid #000000;
+    border-radius: 0;
+    padding: 30px;
+    position: relative;
+    overflow: hidden;
+}
+
+.performance-card::before,
+.top-employee-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 3px;
+    background: #DC0000;
+    box-sizing: border-box;
+}
+
+.performance-card h3,
+.top-employee-card h3 {
+    font-size: 16px;
+    font-weight: 300;
+    color: #000000;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin: 0 0 20px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #E0E0E0;
 }
 
 .performance-card ul,
 .top-employee-card ol {
-  margin: 10px 0 0;
-  padding-left: 18px;
-  color: var(--text);
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
 
 .performance-card li,
 .top-employee-card li {
-  margin: 8px 0;
-  padding: 8px 10px;
-  background: var(--surface); /* fallback */
-  background: linear-gradient(180deg,
-              color-mix(in oklab, var(--surface) 94%, white),
-              var(--surface));
-  border: 1px dashed var(--border);
-  border-radius: var(--radius-sm);
+    padding: 12px 0;
+    border-bottom: 1px solid #E0E0E0;
+    font-size: 14px;
+    color: #000000;
+    letter-spacing: 0.3px;
+}
+
+.performance-card li:last-child,
+.top-employee-card li:last-child {
+    border-bottom: none;
 }
 
 .rank {
-  display: inline-grid;
-  place-items: center;
-  width: 26px; height: 26px;
-  margin-right: 8px;
-  border-radius: 50%;
-  font-weight: 800;
-  font-size: 12px;
-  color: white;
-  background: linear-gradient(135deg, var(--primary),
-              color-mix(in oklab, var(--primary) 55%, var(--accent)));
-  box-shadow: 0 8px 18px rgba(79, 70, 229, .25);
+    font-weight: 700;
+    color: #DC0000;
+    margin-right: 8px;
 }
 
-/* ---------- Column sizing ---------- */
-.employee-table th:nth-child(1),
-.employee-table td:nth-child(1) { width: 32%; }
-.employee-table th:nth-child(2),
-.employee-table td:nth-child(2) { width: 14%; }
-.employee-table th:nth-child(3),
-.employee-table td:nth-child(3) { width: 18%; }
-.employee-table th:nth-child(4),
-.employee-table td:nth-child(4) { width: 18%; }
-.employee-table th:nth-child(5),
-.employee-table td:nth-child(5) { width: 13%; }
-.employee-table th:nth-child(6),
-.employee-table td:nth-child(6) { width: 5%; }
-
-/* ---------- Mobile tweaks ---------- */
-@media (max-width: 600px) {
-  .employee-table table { min-width: 680px; }
-
-  /* Nếu muốn ẩn bớt cột trên mobile thay vì cho scroll ngang,
-     bỏ comment block bên dưới là xong:
-  
-  .employee-table th:nth-child(3),
-  .employee-table td:nth-child(3),
-  .employee-table th:nth-child(5),
-  .employee-table td:nth-child(5) { display: none; }
-  
-  .employee-table table { min-width: 0; }
-  */
+/* No Data */
+.no-data {
+    text-align: center;
+    padding: 60px !important;
+    color: #000000;
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 300;
 }
 
-/* ---------- Motion & selection ---------- */
-@media (prefers-reduced-motion: reduce) {
-  * { transition: none !important; }
-}
+/* Responsive */
+@media (max-width: 768px) {
+    .container {
+        padding: 20px;
+    }
 
-::selection {
-  background: color-mix(in oklab, var(--primary) 28%, transparent);
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .bottom-section {
+        grid-template-columns: 1fr;
+    }
+
+    .employee-table-container {
+        overflow-x: auto;
+    }
+
+    .employee-table table {
+        min-width: 900px;
+    }
 }
