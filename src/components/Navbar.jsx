@@ -123,7 +123,6 @@ const Navbar = () => {
 
                                     // Check if user is logged in
                                     if (!user) {
-                                        alert('Vui lòng đăng nhập để xem đơn đặt xe của bạn!');
                                         navigate('/login');
                                         return;
                                     }

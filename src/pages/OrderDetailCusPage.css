@@ -1,0 +1,720 @@
+.order-detail-page {
+    min-height: 100vh;
+    background: #F5F5F5;
+    padding: 100px 20px 60px;
+}
+
+/* Loading State */
+.order-detail-page .loading-container {
+    text-align: center;
+    padding: 100px 20px;
+}
+
+.order-detail-page .spinner {
+    width: 60px;
+    height: 60px;
+    border: 5px solid #E5E5E5;
+    border-top-color: #DC0000;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 24px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Page Header - Cleaner Design */
+.order-detail-page > h1 {
+    text-align: center;
+    font-size: 42px;
+    font-weight: 200;
+    color: #000000;
+    margin-bottom: 0;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 12px;
+    padding: 60px 20px 30px;
+    border-bottom: 2px solid #DC0000;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.order-detail-page > p {
+    text-align: center;
+    font-size: 13px;
+    color: #666666;
+    font-weight: 300;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin: 20px auto;
+    max-width: 1400px;
+    padding: 0 20px;
+}
+
+.order-detail-page > p strong {
+    color: #DC0000;
+    font-weight: 500;
+    margin-left: 8px;
+}
+
+/* Table Container */
+.order-detail-page .table-container {
+    max-width: 1400px;
+    margin: 50px auto;
+    overflow-x: auto;
+    background: #FFFFFF;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Table Styles - Premium Design */
+.order-detail-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #FFFFFF;
+    overflow: hidden;
+}
+
+.order-detail-table thead {
+    background: #000000 !important;
+    color: #FFFFFF !important;
+}
+
+.order-detail-table thead th {
+    padding: 24px 20px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    white-space: nowrap;
+    background: #000000 !important;
+    color: #FFFFFF !important;
+}
+
+.order-detail-table thead th:last-child {
+    border-right: none;
+}
+
+.order-detail-table thead tr {
+    background: #000000 !important;
+}
+
+.order-detail-table thead tr:hover {
+    background: #000000 !important;
+}
+
+.order-detail-table tbody tr {
+    border-bottom: 1px solid #F0F0F0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #FFFFFF;
+}
+
+.order-detail-table tbody tr:hover {
+    background: #FAFAFA;
+    box-shadow: inset 4px 0 0 #DC0000;
+}
+
+.order-detail-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.order-detail-table tbody td {
+    padding: 24px 20px;
+    text-align: center;
+    font-size: 13px;
+    color: #444444;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    letter-spacing: 0.3px;
+    vertical-align: middle;
+}
+
+.order-detail-table tbody td:first-child {
+    font-weight: 600;
+    color: #000000;
+    font-family: 'Courier New', monospace;
+}
+
+/* Payment Status Badge in Table */
+.order-detail-table .payment-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    letter-spacing: 1.5px;
+}
+
+.order-detail-table .payment-status.success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #FFFFFF;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+}
+
+/* Payment Buttons in Table */
+.order-detail-table button {
+    padding: 10px 24px;
+    border: 2px solid #000000;
+    background: #FFFFFF;
+    color: #000000;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 1.8px;
+    white-space: nowrap;
+}
+
+.order-detail-table button:hover:not(:disabled) {
+    background: #000000;
+    color: #FFFFFF;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.order-detail-table button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.order-detail-table button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    border-color: #CCCCCC;
+    color: #999999;
+}
+
+/* Service Section - Premium Card Design */
+.service-payment-section {
+    max-width: 1400px;
+    margin: 50px auto !important;
+    padding: 48px !important;
+    background: linear-gradient(135deg, #FFFFFF 0%, #FAFAFA 100%) !important;
+    border: 3px solid #DC0000 !important;
+    border-radius: 0 !important;
+    text-align: center;
+    box-shadow: 0 4px 24px rgba(220, 0, 0, 0.12) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.service-payment-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #DC0000 0%, #000000 100%);
+}
+
+.service-payment-section h3 {
+    font-size: 20px;
+    font-weight: 300;
+    color: #000000;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #E5E5E5;
+}
+
+.service-payment-section h3 span {
+    color: #DC0000;
+    font-weight: 600;
+    font-size: 24px;
+}
+
+.service-payment-section .service-list {
+    margin: 32px 0;
+    padding: 24px;
+    background: #FFFFFF;
+    border-left: 4px solid #DC0000;
+    text-align: left;
+}
+
+.service-payment-section .service-list div {
+    padding: 12px 16px;
+    color: #444444;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    border-bottom: 1px dashed #E5E5E5;
+}
+
+.service-payment-section .service-list div:last-child {
+    border-bottom: none;
+}
+
+.service-payment-section button {
+    margin-top: 32px;
+    padding: 16px 48px;
+    background: #DC0000;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    box-shadow: 0 4px 16px rgba(220, 0, 0, 0.3);
+}
+
+.service-payment-section button:hover:not(:disabled) {
+    background: #000000;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.service-payment-section button:active:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.service-payment-section button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Back Button - Enhanced Design */
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin: 60px auto 0;
+    padding: 14px 40px;
+    background: #FFFFFF;
+    color: #000000;
+    border: 2px solid #000000;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.btn-back:hover {
+    background: #000000;
+    color: #FFFFFF;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.btn-back:active {
+    transform: translateY(0);
+}
+
+/* Remove emojis from specific elements only - NOT h1 */
+.order-detail-page h2::first-letter,
+.order-detail-page h3::first-letter,
+.order-detail-page button::first-letter,
+.order-detail-page span::first-letter {
+    font-size: inherit;
+    visibility: visible;
+    display: inline;
+    width: auto;
+}
+
+/* Only hide emojis in buttons and status badges */
+.order-detail-table button::before,
+.service-payment-section button::before,
+.btn-back::before {
+    content: none;
+}
+
+/* Empty State */
+.order-detail-page .empty-message {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666666;
+    font-size: 16px;
+    letter-spacing: 1px;
+}
+
+/* Error State */
+.order-detail-page .error-container {
+    text-align: center;
+    padding: 100px 20px;
+}
+
+.order-detail-page .error-container h2 {
+    color: #DC0000;
+    font-size: 32px;
+    font-weight: 200;
+    margin-bottom: 16px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+}
+
+.order-detail-page .error-container p {
+    color: #666666;
+    margin-bottom: 30px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .order-detail-page > h1 {
+        font-size: 36px;
+        letter-spacing: 8px;
+        padding: 50px 20px 25px;
+    }
+
+    .order-detail-table thead th,
+    .order-detail-table tbody td {
+        padding: 18px 14px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .order-detail-page {
+        padding: 80px 15px 50px;
+    }
+
+    .order-detail-page > h1 {
+        font-size: 28px;
+        letter-spacing: 6px;
+        padding: 40px 15px 20px;
+    }
+
+    .order-detail-page > p {
+        font-size: 11px;
+        letter-spacing: 2px;
+    }
+
+    .order-detail-table {
+        font-size: 11px;
+    }
+
+    .order-detail-table thead th {
+        padding: 16px 10px;
+        font-size: 9px;
+        letter-spacing: 1.5px;
+    }
+
+    .order-detail-table tbody td {
+        padding: 16px 10px;
+        font-size: 11px;
+    }
+
+    .order-detail-table button {
+        padding: 8px 16px;
+        font-size: 9px;
+        letter-spacing: 1.2px;
+    }
+
+    .service-payment-section {
+        padding: 32px 24px !important;
+        margin: 30px auto !important;
+    }
+
+    .service-payment-section h3 {
+        font-size: 16px;
+        letter-spacing: 3px;
+        margin-bottom: 24px;
+    }
+
+    .service-payment-section h3 span {
+        font-size: 20px;
+    }
+
+    .service-payment-section button {
+        padding: 14px 36px;
+        font-size: 11px;
+    }
+
+    .btn-back {
+        padding: 12px 32px;
+        font-size: 11px;
+        margin-top: 40px;
+    }
+}
+
+@media (max-width: 480px) {
+    .order-detail-page {
+        padding: 70px 10px 40px;
+    }
+
+    .order-detail-page > h1 {
+        font-size: 22px;
+        letter-spacing: 4px;
+        padding: 30px 10px 15px;
+    }
+
+    .order-detail-page > p {
+        font-size: 10px;
+        letter-spacing: 1.5px;
+    }
+
+    .order-detail-table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .order-detail-table thead th {
+        padding: 14px 8px;
+        font-size: 8px;
+    }
+
+    .order-detail-table tbody td {
+        padding: 14px 8px;
+        font-size: 10px;
+    }
+
+    .order-detail-table button {
+        padding: 6px 12px;
+        font-size: 8px;
+        letter-spacing: 1px;
+    }
+
+    .service-payment-section {
+        padding: 24px 16px !important;
+    }
+
+    .service-payment-section h3 {
+        font-size: 14px;
+        letter-spacing: 2px;
+    }
+
+    .service-payment-section .service-list {
+        padding: 16px;
+        margin: 20px 0;
+    }
+
+    .service-payment-section .service-list div {
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+
+    .btn-back {
+        padding: 10px 24px;
+        font-size: 10px;
+        letter-spacing: 2px;
+    }
+}
+
+/* ========================================
+   PAYMENT MODAL
+   ======================================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(4px);
+}
+
+.payment-modal {
+  background: white;
+  padding: 40px;
+  min-width: 500px;
+  max-width: 600px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border: 2px solid #000000;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.payment-modal h2 {
+  margin: 0 0 30px 0;
+  font-size: 24px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #000000;
+  text-align: center;
+  border-bottom: 3px solid #DC0000;
+  padding-bottom: 15px;
+}
+
+.payment-options {
+  margin-bottom: 30px;
+}
+
+.payment-options h3 {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #000000;
+  margin: 0 0 15px 0;
+}
+
+.option-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.option-btn {
+  background: white;
+  border: 2px solid #E0E0E0;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.option-btn:hover {
+  border-color: #000000;
+  background: #F5F5F5;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.option-btn.active {
+  border-color: #DC0000;
+  background: #FFF5F5;
+  box-shadow: 0 4px 12px rgba(220, 0, 0, 0.2);
+}
+
+.option-btn.active .option-icon {
+  transform: scale(1.2);
+}
+
+.option-icon {
+  font-size: 32px;
+  transition: transform 0.3s ease;
+}
+
+.option-label {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #000000;
+}
+
+.modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-top: 30px;
+  padding-top: 30px;
+  border-top: 2px solid #E0E0E0;
+}
+
+.btn-cancel,
+.btn-confirm {
+  padding: 15px 30px;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid #000000;
+}
+
+.btn-cancel {
+  background: white;
+  color: #000000;
+}
+
+.btn-cancel:hover {
+  background: #000000;
+  color: white;
+}
+
+.btn-confirm {
+  background: #DC0000;
+  color: white;
+  border-color: #DC0000;
+}
+
+.btn-confirm:hover {
+  background: #B00000;
+  border-color: #B00000;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 0, 0, 0.3);
+}
+
+.btn-confirm:disabled {
+  background: #CCCCCC;
+  border-color: #CCCCCC;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Responsive Modal */
+@media (max-width: 768px) {
+  .payment-modal {
+    min-width: 90%;
+    padding: 30px 20px;
+  }
+
+  .payment-modal h2 {
+    font-size: 20px;
+  }
+
+  .option-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .payment-modal {
+    padding: 20px 15px;
+  }
+
+  .payment-modal h2 {
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+
+  .option-icon {
+    font-size: 28px;
+  }
+
+  .option-label {
+    font-size: 12px;
+  }
+}

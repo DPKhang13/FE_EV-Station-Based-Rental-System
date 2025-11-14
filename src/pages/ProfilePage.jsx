@@ -31,7 +31,6 @@ const ProfilePage = () => {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (!user) {
-      alert('Please login to view your profile');
       navigate('/login');
       return;
     }

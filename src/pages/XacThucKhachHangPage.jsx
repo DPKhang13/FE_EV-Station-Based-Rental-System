@@ -24,6 +24,7 @@ export default function VerifyCustomerPage() {
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState(null);
   const [verifyLoading, setVerifyLoading] = useState(false);
+  
 
   // 🧾 Lấy đơn hàng theo trạm
   const fetchOrders = async () => {
@@ -53,17 +54,24 @@ export default function VerifyCustomerPage() {
   };
 
   useEffect(() => {
-    fetchOrders();
-    fetchStations(); // ⭐ Tải trạm khi mở trang
-  }, []);
+    // ✅ Chạy lại khi user data ready (có stationId) hoặc location thay đổi
+    if (user?.stationId) {
+      console.log('👤 User ready with stationId:', user.stationId);
+      fetchOrders();
+    }
+    fetchStations(); 
+  }, [user?.stationId, location]); // ✅ Thêm user.stationId và location vào dependency
 
   // 🔍 Tìm kiếm
-  const filtered = orders.filter((x) => {
-    if (x.status === "COMPLETED") return false;
-    const t = search.toLowerCase();
-    return [x.customerName, x.phone, x.orderId]
-      .some((f) => (f || "").toLowerCase().includes(t));
-  });
+  // 🔍 Tìm kiếm
+const filtered = orders.filter((x) => {
+  if (!search.trim()) return true;
+
+  const t = search.toLowerCase();
+  return [x.customerName, x.phone, x.orderId]
+    .some((f) => (f || "").toLowerCase().includes(t));
+});
+
 
   // 👤 Xác thực hồ sơ
   const handleOpenProfile = async (row) => {

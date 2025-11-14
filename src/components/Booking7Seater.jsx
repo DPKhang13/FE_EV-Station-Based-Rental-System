@@ -204,7 +204,6 @@ const Booking7Seater = () => {
         });
 
         if (!customerId || !token) {
-            alert('Vui lòng đăng nhập để tiếp tục!');
             navigate('/login');
             return;
         }

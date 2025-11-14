@@ -207,8 +207,7 @@ const Booking4Seater = () => {
     }
 
     const token = localStorage.getItem("accessToken");
-    if (!token) {
-      alert("Vui lòng đăng nhập để tiếp tục.");
+    if (!user) {
       navigate("/login");
       return;
     }
