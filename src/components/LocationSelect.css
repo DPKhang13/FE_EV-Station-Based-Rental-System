@@ -10,6 +10,12 @@
 .location-header {
     text-align: center;
     margin-bottom: 60px;
+    border-bottom: none !important;
+}
+
+.location-header::after,
+.location-header::before {
+    display: none !important;
 }
 
 .location-title {

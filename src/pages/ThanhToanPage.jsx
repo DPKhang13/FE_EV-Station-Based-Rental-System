@@ -23,6 +23,8 @@ const translateStatus = (status = "") => {
 // 🔤 Dịch loại giao dịch sang tiếng Việt
 const translateType = (type = "") => {
   const map = {
+    DEPOSITED: "Đã cọc tiền",
+    FINAL:"Đã thanh toán hết",
     DEPOSIT: "Đã cọc tiền",
     WITHDRAW: "Rút tiền",
     RENTAL_PAYMENT: "Thanh toán thuê xe",

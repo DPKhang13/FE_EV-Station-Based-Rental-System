@@ -26,8 +26,9 @@ const CarFilter = ({ selectedBranch }) => {
     ].sort();
 
     const filteredCars = cars.filter(car => {
-        // 1. CHỈ HIỂN THỊ XE AVAILABLE
-        if (car.status !== 'Available') {
+        // 1. ✅ HIỂN THỊ TẤT CẢ XE (kể cả BOOKED - vì có thể available ở timeline khác)
+        // Chỉ loại bỏ xe MAINTENANCE
+        if (car.status === 'Maintenance' || car.status === 'MAINTENANCE') {
             return false;
         }
 

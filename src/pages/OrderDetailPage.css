@@ -1,865 +1,533 @@
-.order-detail-page {
-  max-width: 900px;
+/* =========================
+   Order Detail – Modern UI
+   ========================= */
+:root{
+  --bg: #f7f9fc;
+  --text: #0f172a;
+  --muted: #475569;
+  --border: #e5e7eb;
+  --primary: #2563eb;
+  --primary-600:#1d4ed8;
+  --accent: #10b981;
+
+  --card-bg:#ffffff;
+  --card-shadow: 0 6px 20px rgba(2, 6, 23, 0.06);
+  --card-radius:14px;
+
+  --success:#22c55e;
+  --pending:#facc15;
+  --danger:#ef4444;
+  --processing:#06b6d4;
+}
+
+/* Page */
+.order-detail-page{
+  max-width: 960px;
   margin: 40px auto;
-  padding: 36px;
-  background: linear-gradient(180deg, #f9fbff 0%, #ffffff 100%);
-  border-radius: 16px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
-  font-family: "Inter", sans-serif;
-  color: #1e293b;
-  animation: fadeIn 0.4s ease;
+  padding: 28px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  animation: fadeIn .25s ease;
 }
 
 /* Header */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.header{
+  display:flex; align-items:center; justify-content:space-between;
   margin-bottom: 28px;
 }
-
-.header h1 {
-  font-size: 1.9rem;
-  font-weight: 700;
-  color: #0f172a;
-  background: linear-gradient(90deg, #2563eb, #10b981);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+.header h1{
+  font-size: 1.9rem; font-weight: 800; letter-spacing: -0.4px;
+  background: linear-gradient(90deg, var(--accent), var(--primary));
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
 }
-
-/* Back button */
-.back-btn {
-  background: #2563eb;
-  color: white;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 500;
-  font-size: 0.95rem;
-  transition: all 0.25s ease;
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+.back-btn{
+  background: var(--primary); color:#fff; border:0;
+  padding:10px 16px; border-radius:10px; font-weight:600; cursor:pointer;
+  box-shadow: 0 6px 14px rgba(37,99,235,.25); transition: transform .15s, filter .15s;
 }
+.back-btn:hover{ transform: translateY(-1.5px); filter: brightness(1.05); }
 
-.back-btn:hover {
-  background: #1d4ed8;
-  transform: translateY(-2px);
+/* Card */
+.info-card{
+  background: var(--card-bg);
+  border:1px solid var(--border);
+  border-radius: var(--card-radius);
+  padding: 22px 24px;
+  margin-bottom: 22px;
+  box-shadow: var(--card-shadow);
+  transition: box-shadow .2s, transform .2s;
 }
-
-/* Info cards */
-.info-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-left: 6px solid #2563eb;
-  border-radius: 12px;
-  padding: 24px 28px;
-  margin-bottom: 28px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  transition: 0.3s;
+.info-card:hover{ transform: translateY(-2px); box-shadow: 0 10px 26px rgba(2,6,23,.08); }
+.info-card h2{
+  font-size:1.18rem; font-weight:700; color: var(--primary);
+  margin:0 0 14px;
+  position:relative; display:inline-block;
+}
+.info-card h2::after{
+  content:""; position:absolute; left:0; bottom:-6px; height:3px; width:56%;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  border-radius: 2px;
 }
 
-.info-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.15);
+/* Two-column info grid */
+.info-grid{
+  display:grid; grid-template-columns: 1fr 1fr; gap: 10px 28px;
+}
+.info-grid p{ margin:0; padding:8px 0; border-bottom: 1px dashed var(--border); }
+.info-grid p:last-child{ border-bottom:0; }
+.info-grid p > span:first-child{ color: var(--muted); font-weight:600; margin-right: 8px; min-width: 120px; display:inline-block; }
+
+/* Vehicle small section (optional) */
+.vehicle-info p{ margin:6px 0; }
+
+/* Transaction list (details) */
+.detail-card{
+  background:#fbfdff;
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:16px 18px;
+  margin-bottom:14px;
+  transition: background .15s, box-shadow .2s;
+}
+.detail-card:hover{ background:#fff; box-shadow: 0 6px 18px rgba(37,99,235,.10); }
+
+.detail-header{
+  display:flex; align-items:center; gap:12px; margin-bottom:10px;
 }
 
-.info-card h2 {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #1d4ed8;
-  margin-bottom: 16px;
+/* Status pill */
+.status-tag{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:6px 12px; min-width:112px; border-radius:999px;
+  font-size:.82rem; font-weight:800; letter-spacing:.4px; text-transform:uppercase;
+  color:#fff; box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
+}
+.status-tag.success{ background: var(--success); }
+.status-tag.pending{ background: var(--pending); color:#1e293b; }
+.status-tag.failed,
+.status-tag.cancelled{ background: var(--danger); }
+.status-tag.processing{ background: var(--processing); }
+
+/* Detail grid */
+.detail-grid{
+  display:grid; grid-template-columns: 1fr 1fr;
+  gap: 8px 22px;
+}
+.detail-grid p{ margin:0; line-height:1.55; }
+.detail-grid p > span:first-child{ font-weight:600; color: var(--muted); }
+
+/* Loading & error */
+.loading, .error{
+  text-align:center; padding:36px; border-radius:12px; font-size:1.05rem;
+}
+.loading{ color: var(--muted); }
+.error{ background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; }
+
+/* Small helpers */
+.btn-now{ margin-left:8px; background: var(--primary); color:#fff; border:0; padding:6px 10px; border-radius:8px; cursor:pointer; }
+.btn-now:hover{ filter: brightness(1.05); }
+
+/* Animations */
+@keyframes fadeIn{
+  from{ opacity:0; transform: translateY(8px);}
+  to{ opacity:1; transform: translateY(0);}
 }
 
-.info-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px 40px;
+/* Responsive */
+@media (max-width: 820px){
+  .order-detail-page{ padding:20px; margin:24px auto; }
+  .info-grid, .detail-grid{ grid-template-columns: 1fr; }
+  .header h1{ font-size:1.6rem; }
+}
+/* ===== Vehicle Status Pill ===== */
+.pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 12px;
+  border-radius:999px;
+  font-weight:700;
+  font-size:.85rem;
+  letter-spacing:.3px;
+  text-transform:uppercase;
+  border:1px solid rgba(0,0,0,.06);
+  box-shadow: 0 4px 12px rgba(2,6,23,.06);
+  background:#fff;
 }
 
-.info-grid p {
-  margin: 6px 0;
-  font-size: 0.96rem;
-  border-bottom: 1px dashed #e5e7eb;
-  padding-bottom: 4px;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
+/* Dot icon */
+.pill::before{
+  content:"";
+  width:8px; height:8px; border-radius:50%;
+  box-shadow: 0 0 0 3px rgba(0,0,0,.04) inset;
 }
 
-.info-grid span {
-  min-width: 130px; /* đảm bảo key đều nhau */
-  font-weight: 600;
-  color: #0f172a;
-  display: inline-block;
+/* BOOKED – xanh ngọc sang, có pulse nhẹ */
+.pill-booked{
+  color:#0b5d52;
+  background: linear-gradient(180deg, #eafff8, #d6fff3);
+  border-color:#99f6e4;
+}
+.pill-booked::before{ background:#10b981; }
+.pill-booked{
+  position:relative;
+}
+.pill-booked::after{
+  content:"";
+  position:absolute; left:10px;
+  width:8px; height:8px; border-radius:50%;
+  background:#10b981; opacity:.5;
+  animation:pulse 1.6s infinite;
+}
+@keyframes pulse{
+  0%{ transform: scale(1); opacity:.6; }
+  60%{ transform: scale(2.2); opacity:0; }
+  100%{ transform: scale(2.2); opacity:0; }
 }
 
-
-.info-grid p:last-child {
-  border-bottom: none;
+/* AVAILABLE – xanh dương dịu */
+.pill-available{
+  color:#173b82;
+  background: linear-gradient(180deg, #eef5ff, #e3efff);
+  border-color:#bfdbfe;
 }
+.pill-available::before{ background:#3b82f6; }
 
-.info-grid span {
-  font-weight: 600;
-  color: #0f172a;
+/* MAINTENANCE – cam */
+.pill-maintenance{
+  color:#7a3a07;
+  background: linear-gradient(180deg, #fff6e5, #ffeccc);
+  border-color:#fcd34d;
 }
+.pill-maintenance::before{ background:#f59e0b; }
 
-/* Status tag styles */
-.status-tag {
-  font-weight: 600;
-  padding: 6px 12px;
-  border-radius: 8px;
-  text-transform: capitalize;
-  display: inline-block;
+/* OFFLINE / INACTIVE – xám */
+.pill-offline, .pill-inactive{
+  color:#334155;
+  background: linear-gradient(180deg, #f3f4f6, #edeff2);
+  border-color:#cbd5e1;
 }
-
-.status-tag.reserved {
-  background-color: #fef3c7;
-  color: #92400e;
-}
-
-.status-tag.rented {
-  background-color: #d1fae5;
-  color: #065f46;
+.pill-offline::before, .pill-inactive::before{ background:#94a3b8; }
+.handover-actions{
+  display:flex; gap:12px; flex-wrap:wrap;
 }
 
-.status-tag.completed {
-  background-color: #bfdbfe;
-  color: #1e3a8a;
+.btn{
+  border:0; border-radius:12px; padding:12px 16px; cursor:pointer;
+  font-weight:700; color:#fff; transition:.2s; box-shadow:0 6px 14px rgba(2,6,23,.12);
+  min-width:200px;
 }
+.btn:disabled{ opacity:.5; cursor:not-allowed; }
 
-.status-tag.canceled {
-  background-color: #fee2e2;
-  color: #b91c1c;
+.btn-primary{
+  background: linear-gradient(135deg,#2563eb,#3b82f6);
 }
+.btn-primary:hover{ filter: brightness(1.05); transform: translateY(-1px); }
 
-/* Feedback messages */
-.loading,
-.error {
-  text-align: center;
-  padding: 40px;
-  font-size: 1.1rem;
+.btn-danger{
+  background: linear-gradient(135deg,#ef4444,#dc2626);
 }
+.btn-danger:hover{ filter: brightness(1.05); transform: translateY(-1px); }
+/* =========================
+   Glossy / Neon Buttons
+   ========================= */
 
-.loading {
-  color: #475569;
-}
-
-.error {
-  color: #dc2626;
-  background: #fee2e2;
-  border-radius: 10px;
-  margin: 24px;
-  padding: 16px;
-}
-
-/* Animation */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.change-vehicle-container {
-  margin-top: 20px;
-  text-align: right;
-}
-
-.change-vehicle-btn {
-  background: linear-gradient(90deg, #2563eb, #10b981);
-  color: white;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: 0.3s;
-}
-
-.change-vehicle-btn:hover {
-  opacity: 0.9;
-  transform: translateY(-2px);
-}
-
-/* Popup chọn xe */
-.popup-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-}
-
-.popup {
-  background: white;
-  padding: 25px 30px;
-  border-radius: 14px;
-  width: 400px;
-  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
-  animation: fadeIn 0.3s ease;
-}
-
-.popup h3 {
-  font-size: 1.3rem;
-  margin-bottom: 14px;
-  color: #1e293b;
-  text-align: center;
-}
-
-.vehicle-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.vehicle-list li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.confirm-btn {
-  background: #2563eb;
-  color: white;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.confirm-btn:hover {
-  background: #1e40af;
-}
-
-.close-btn {
-  margin-top: 15px;
-  background: #ef4444;
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
-  width: 100%;
-  cursor: pointer;
-}
-
-.close-btn:hover {
-  background: #dc2626;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-.action-buttons {
-  display: flex;
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.pickup-btn, .cancel-btn {
-  padding: 10px 16px;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  color: white;
-  transition: all 0.2s ease;
-}
-
-.pickup-btn {
-  background-color: #28a745;
-}
-
-.pickup-btn:hover {
-  background-color: #218838;
-}
-
-.cancel-btn {
-  background-color: #dc3545;
-}
-
-.cancel-btn:hover {
-  background-color: #c82333;
-}
-
-/* 🧭 Phần hành động */
-.action-section {
-  margin-top: 20px;
-}
-
-.action-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 10px;
-  border-left: 4px solid #007bff;
-  padding-left: 10px;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-start;
-  flex-wrap: wrap;
-}
-
-/* 🔘 3 nút bằng nhau */
-.action-btn {
-  flex: 1;
-  min-width: 180px;
-  text-align: center;
-  padding: 10px 0;
-  font-weight: 600;
-  border: none;
-  border-radius: 8px;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-/* Màu từng loại */
-.action-btn.pickup {
-  background-color: #28a745;
-}
-
-.action-btn.cancel {
-  background-color: #dc3545;
-}
-
-.action-btn.change {
-  background-color: #007bff;
-}
-
-/* Hiệu ứng hover */
-.action-btn:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-.action-buttons {
-  display: flex;
-  gap: 16px;
-  justify-content: flex-start;
-  flex-wrap: wrap;
-  margin-top: 14px;
-}
-
-/* Base cho nút */
-.action-btn {
-  flex: 1;
-  min-width: 180px;
-  padding: 12px 0;
-  font-weight: 600;
-  border: none;
-  border-radius: 14px;
-  color: #fff;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  background-size: 200% 200%;
+/* Base */
+.btn{
   position: relative;
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width: 200px;
+  padding: 13px 18px;
+  border: 0;
+  border-radius: 14px;
+  font-weight: 800;
+  letter-spacing: .4px;
+  color: #fff;
+  cursor: pointer;
+  user-select: none;
+  transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
+  background-size: 180% 180%;
   box-shadow:
-    0 6px 12px rgba(0, 0, 0, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    0 10px 24px rgba(2, 6, 23, .15),
+    inset 0 1px 0 rgba(255,255,255,.25);
   overflow: hidden;
 }
 
-/* Hiệu ứng ánh sáng phản chiếu */
-.action-btn::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -50%;
-  width: 200%;
-  height: 100%;
-  background: linear-gradient(
-    120deg,
-    rgba(255, 255, 255, 0.3) 0%,
-    rgba(255, 255, 255, 0.05) 40%,
-    transparent 80%
-  );
-  transform: skewX(-25deg);
-  transition: 0.5s;
+/* Hiệu ứng ánh sáng quét */
+.btn::after{
+  content:"";
+  position:absolute; top:-40%; left:-60%;
+  width: 60%; height: 180%;
+  background: linear-gradient(120deg, rgba(255,255,255,.35), rgba(255,255,255,0) 60%);
+  transform: rotate(20deg);
+  transition: .6s;
+  pointer-events: none;
 }
 
-.action-btn:hover::before {
-  left: 100%;
+/* Lớp "gloss" bóng kính */
+.btn::before{
+  content:"";
+  position:absolute; inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.08) 45%, rgba(255,255,255,0) 46%) /* dải bóng trên */,
+    radial-gradient(120% 60% at 50% -10%, rgba(255,255,255,.35), transparent 60%); /* phản chiếu mềm */;
+  opacity:.9;
+  mix-blend-mode: screen;
+  pointer-events: none;
 }
 
-/* Màu cụ thể cho từng nút */
-.action-btn.pickup {
-  background: linear-gradient(145deg, #00c853, #00e676, #00c853);
-  box-shadow: 0 8px 20px rgba(0, 200, 83, 0.45);
-}
-
-.action-btn.cancel {
-  background: linear-gradient(145deg, #ff1744, #ff5252, #ff1744);
-  box-shadow: 0 8px 20px rgba(255, 23, 68, 0.45);
-}
-
-.action-btn.change {
-  background: linear-gradient(145deg, #2979ff, #448aff, #2979ff);
-  box-shadow: 0 8px 20px rgba(41, 121, 255, 0.45);
-}
-
-/* Hover nổi bật */
-.action-btn:hover:not(:disabled) {
-  transform: translateY(-3px) scale(1.02);
+/* Hover – nổi, sáng và quét ánh sáng */
+.btn:hover{
+  transform: translateY(-3px);
+  filter: brightness(1.06);
   box-shadow:
-    0 10px 25px rgba(0, 0, 0, 0.25),
-    inset 0 2px 4px rgba(255, 255, 255, 0.2);
-  filter: brightness(1.1);
+    0 16px 36px rgba(2, 6, 23, .18),
+    0 0 22px rgba(255,255,255,.08),
+    inset 0 1px 0 rgba(255,255,255,.35);
+}
+.btn:hover::after{
+  left: 130%;
 }
 
-/* Active (nhấn giữ) */
-.action-btn:active {
-  transform: scale(0.97);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+/* Active – nhấn */
+.btn:active{
+  transform: translateY(0) scale(.98);
+  filter: brightness(.98);
+}
+
+/* Focus ring đẹp */
+.btn:focus-visible{
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(255,255,255,.6),
+    0 0 0 6px rgba(37, 99, 235, .45),
+    0 12px 26px rgba(2, 6, 23, .18);
 }
 
 /* Disabled */
-.action-btn:disabled {
-  background: linear-gradient(145deg, #b0bec5, #90a4ae);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
-  opacity: 0.8;
-  cursor: not-allowed;
-}
-.confirm-popup {
-  background: #fff;
-  border-radius: 16px;
-  padding: 28px;
-  width: 420px;
-  text-align: center;
-  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.3);
-  animation: popupIn 0.3s ease;
+.btn:disabled{
+  opacity:.55; cursor:not-allowed; transform:none; filter:none;
+  box-shadow: 0 6px 14px rgba(2,6,23,.12), inset 0 1px 0 rgba(255,255,255,.15);
 }
 
-@keyframes popupIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+/* Primary – xanh dương neon */
+.btn-primary{
+  background: linear-gradient(145deg, #2f6bff, #5a8bff 40%, #2655ff);
+  border: 1px solid rgba(63, 111, 255, .55);
+  box-shadow:
+    0 14px 28px rgba(47, 107, 255, .35),
+    0 0 24px rgba(80, 140, 255, .35) inset;
+}
+.btn-primary:hover{
+  box-shadow:
+    0 18px 38px rgba(47, 107, 255, .45),
+    0 0 34px rgba(93, 155, 255, .4) inset;
 }
 
-.confirm-popup h3 {
-  color: #e67e22;
-  margin-bottom: 12px;
-  font-weight: 700;
+/* Danger – đỏ ruby */
+.btn-danger{
+  background: linear-gradient(145deg, #ff3d5a, #ff6a7a 40%, #f02240);
+  border: 1px solid rgba(255, 77, 102, .55);
+  box-shadow:
+    0 14px 28px rgba(255, 61, 90, .35),
+    0 0 24px rgba(255, 120, 140, .35) inset;
+}
+.btn-danger:hover{
+  box-shadow:
+    0 18px 38px rgba(255, 61, 90, .45),
+    0 0 34px rgba(255, 120, 140, .42) inset;
 }
 
-.confirm-popup p {
-  color: #333;
-  margin-bottom: 22px;
-  font-size: 15px;
+/* Hiệu ứng “glow” nhẹ khi hover (neon viền) */
+.btn-primary:hover{
+  text-shadow: 0 1px 8px rgba(255,255,255,.45);
+  box-shadow:
+    0 0 0 1px rgba(37,99,235,.2),
+    0 10px 28px rgba(37, 99, 235, .45),
+    0 0 38px rgba(93,155,255,.45) inset;
+}
+.btn-danger:hover{
+  text-shadow: 0 1px 8px rgba(255,255,255,.45);
+  box-shadow:
+    0 0 0 1px rgba(239,68,68,.25),
+    0 10px 28px rgba(239, 68, 68, .45),
+    0 0 38px rgba(255,120,140,.45) inset;
 }
 
-.confirm-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
+/* Ripple nhẹ khi click (không cần JS) */
+.btn:is(.btn-primary,.btn-danger){
+  --ripple: rgba(255,255,255,.45);
 }
-
-.confirm-yes,
-.confirm-no {
-  padding: 10px 18px;
-  border: none;
-  border-radius: 10px;
-  color: #fff;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.btn:is(.btn-primary,.btn-danger):active::after{
+  left: 50%; top: 50%; transform: translate(-50%,-50%) scale(0);
+  width: 0; height: 0; border-radius: 50%;
+  background: radial-gradient(circle at center, var(--ripple) 0, transparent 60%);
+  transition: none;
+  animation: ripple .5s ease-out forwards;
 }
-
-.confirm-yes {
-  background: linear-gradient(135deg, #2ecc71, #27ae60);
-  box-shadow: 0 6px 18px rgba(46, 204, 113, 0.45);
+@keyframes ripple{
+  to{ width: 260%; height: 260%; opacity: 0; }
 }
-
-.confirm-no {
-  background: linear-gradient(135deg, #e74c3c, #c0392b);
-  box-shadow: 0 6px 18px rgba(231, 76, 60, 0.45);
-}
-
-.confirm-yes:hover,
-.confirm-no:hover {
-  transform: scale(1.05);
-}
-/* 🌟 Base style cho mọi trạng thái */
-.status-tag {
-  padding: 8px 14px;
-  border-radius: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  font-size: 0.95rem;
-  letter-spacing: 1px;
-  display: inline-block;
-  min-width: 100px;
-  text-align: center;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(6px);
-  box-shadow: inset 0 0 4px rgba(255, 255, 255, 0.4);
-}
-
-/* 💚 RENTAL: xanh ngọc sang chảnh */
-.status-tag.rental,
-.status-tag.rented {
-  background: linear-gradient(135deg, #00e676, #00bfa5);
-  color: #ffffff;
-  box-shadow: 0 4px 12px rgba(0, 255, 128, 0.4),
-              0 0 10px rgba(0, 255, 180, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-}
-
-/* 💛 DEPOSITED: ánh vàng sang */
-.status-tag.deposited {
-  background: linear-gradient(135deg, #ffeb3b, #ffb300);
-  color: #212121;
-  box-shadow: 0 4px 10px rgba(255, 215, 0, 0.5),
-              inset 0 0 6px rgba(255, 255, 255, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-}
-
-/* ❤️ CANCELLED: đỏ hồng cảnh báo */
-.status-tag.cancelled {
-  background: linear-gradient(135deg, #ff5252, #d32f2f);
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(255, 64, 64, 0.5),
-              0 0 8px rgba(255, 0, 0, 0.4);
-}
-
-/* 🩵 COMPLETED: ánh xanh thiên thanh */
-.status-tag.completed {
-  background: linear-gradient(135deg, #42a5f5, #1e88e5);
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4),
-              0 0 10px rgba(33, 150, 243, 0.5);
-}
-
-/* 💫 Hiệu ứng hover nhẹ */
-.status-tag:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2),
-              0 0 15px rgba(255, 255, 255, 0.2);
-}
-/* 💰 Nhận lại xe & Thanh toán — xanh dương đồng bộ */
-.payment-section {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-left: 6px solid #2563eb; /* Xanh dương chủ đạo */
+/* Toast */
+.toast{
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  padding: 12px 16px;
   border-radius: 12px;
-  padding: 24px 28px;
-  margin-top: 28px;
-  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.15);
-  transition: 0.3s ease;
+  font-weight: 700;
+  font-size: .95rem;
+  box-shadow: 0 12px 28px rgba(2,6,23,.15);
+  backdrop-filter: blur(6px);
+  animation: slideIn .25s ease, fadeOut .3s ease 3.7s forwards;
+}
+.toast.success{ background: #ecfdf5; color:#065f46; border:1px solid #a7f3d0; }
+.toast.error{   background: #fef2f2; color:#991b1b; border:1px solid #fecaca; }
+.toast.info{    background: #eff6ff; color:#1e40af; border:1px solid #bfdbfe; }
+
+@keyframes slideIn{
+  from{ transform: translateY(-10px); opacity:0; }
+  to{ transform: translateY(0); opacity:1; }
+}
+@keyframes fadeOut{
+  to{ opacity:0; transform: translateY(-6px); }
+}
+/* =========================
+   Receive Button – Warning Neon
+   ========================= */
+
+.btn-receive {
+  background: linear-gradient(145deg, #f59e0b, #fbbf24 40%, #f97316);
+  border: 1px solid rgba(251, 191, 36, .55);
+  color: #fff;
+  position: relative;
+  padding: 13px 18px;
+  min-width: 200px;
+  border-radius: 14px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
+  background-size: 180% 180%;
+  box-shadow:
+    0 14px 28px rgba(251, 191, 36, .35),
+    0 0 24px rgba(255, 185, 90, .35) inset,
+    inset 0 1px 0 rgba(255,255,255,.25);
+  overflow: hidden;
 }
 
-.payment-section:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+/* Hiệu ứng bóng kính */
+.btn-receive::before{
+  content:"";
+  position:absolute; inset:0;
+  border-radius: inherit;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.1) 45%, rgba(255,255,255,0) 46%),
+    radial-gradient(120% 60% at 50% -10%, rgba(255,255,255,.3), transparent 60%);
+  mix-blend-mode: screen;
+  pointer-events:none;
 }
 
-/* Tiêu đề gradient xanh dương */
-.payment-section h2 {
-  font-size: 1.2rem;
-  font-weight: 600;
-  background: linear-gradient(90deg, #2563eb, #3b82f6);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 16px;
+/* Ánh sáng quét */
+.btn-receive::after{
+  content:"";
+  position:absolute; top:-40%; left:-60%;
+  width:60%; height:180%;
+  background: linear-gradient(120deg, rgba(255,255,255,.45), rgba(255,255,255,0) 60%);
+  transform: rotate(20deg);
+  transition:.5s;
+  pointer-events:none;
+}
+
+/* Hover – sáng, nổi, quét ánh sáng */
+.btn-receive:hover{
+  transform: translateY(-3px);
+  filter: brightness(1.07);
+  box-shadow:
+    0 18px 38px rgba(251, 191, 36, .45),
+    0 0 34px rgba(255, 208, 100, .42) inset;
+}
+.btn-receive:hover::after{
+  left: 130%;
+}
+
+/* Active – nhấn */
+.btn-receive:active{
+  transform: scale(.97);
+  filter: brightness(.95);
+}
+
+/* Disabled */
+.btn-receive:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+  transform:none;
+  filter:none;
+  box-shadow:0 6px 14px rgba(0,0,0,.1);
+}
+.modal-overlay{
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.45);
+  display:flex; justify-content:center; align-items:center;
+  z-index: 9999;
+}
+
+.modal{
+  background:#fff;
+  width: 420px;
+  padding: 20px 28px;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.2);
+  animation: fadeIn .25s ease;
+}
+
+.modal h2{
+  margin-bottom: 12px;
+  font-size: 1.3rem;
+  color:#2563eb;
+}
+
+.modal p{
+  margin: 6px 0;
+}
+
+.modal input{
+  width:100%; padding:10px;
+  margin-top:6px;
+  border:1px solid #ddd;
+  border-radius:8px;
+}
+
+.modal-actions{
+  margin-top:16px;
+  display:flex; justify-content:space-between;
+}
+.fixed-services {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.service-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
+  padding: 6px 0;
 }
 
-/* Grid nội dung */
-.payment-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px 40px;
-  margin-bottom: 20px;
-}
-
-.payment-grid p {
-  margin: 6px 0;
-  font-size: 0.96rem;
-  border-bottom: 1px dashed #e5e7eb;
-  padding-bottom: 4px;
-}
-
-.payment-grid span {
+.checkbox-line {
   min-width: 150px;
   font-weight: 600;
-  color: #0f172a;
 }
 
-/* Hàng nút hành động */
-.payment-actions {
-  display: flex;
-  gap: 14px;
-  justify-content: flex-start;
-  flex-wrap: wrap;
-  margin-top: 10px;
-}
-
-/* Base nút */
-.payment-actions button {
-  flex: 1;
-  min-width: 180px;
-  padding: 12px 0;
-  font-weight: 600;
-  border: none;
-  border-radius: 12px;
-  color: #fff;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  background-size: 200% 200%;
-  position: relative;
-  overflow: hidden;
-  box-shadow:
-    0 6px 12px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-/* Hiệu ứng ánh sáng chạy */
-.payment-actions button::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -50%;
-  width: 200%;
-  height: 100%;
-  background: linear-gradient(
-    120deg,
-    rgba(255, 255, 255, 0.3) 0%,
-    rgba(255, 255, 255, 0.05) 40%,
-    transparent 80%
-  );
-  transform: skewX(-25deg);
-  transition: 0.6s;
-}
-
-.payment-actions button:hover::before {
-  left: 100%;
-}
-
-/* ✅ Nút Hoàn tất thuê xe */
-.btn-finish {
-  background: linear-gradient(145deg, #2563eb, #3b82f6, #2563eb);
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
-}
-
-.btn-finish:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.1);
-}
-
-/* ⚠️ Nút Báo sự cố */
-.btn-issue {
-  background: linear-gradient(145deg, #facc15, #f59e0b, #facc15);
-  color: #1e293b;
-  font-weight: 700;
-  box-shadow: 0 8px 20px rgba(250, 204, 21, 0.45);
-}
-
-.btn-issue:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.05);
-}
-/* 💵 Checklist dịch vụ thêm */
-.service-checklist {
-  margin-top: 24px;
-  border-top: 1px dashed #e2e8f0;
-  padding-top: 16px;
-}
-
-.service-checklist h3 {
-  color: #2563eb;
-  font-size: 1.1rem;
-  margin-bottom: 12px;
-  font-weight: 600;
-}
-
-/* Bảng dịch vụ */
-.service-checklist table {
-  width: 100%;
-  border-collapse: collapse;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.1);
-}
-
-.service-checklist th {
-  background: linear-gradient(90deg, #2563eb, #3b82f6);
-  color: white;
-  text-align: left;
-  padding: 10px 14px;
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-
-.service-checklist td {
-  padding: 10px 14px;
-  border-bottom: 1px solid #e5e7eb;
-  font-size: 0.95rem;
-}
-
-.service-checklist tr:hover td {
-  background: #f9fafb;
-}
-
-/* Tổng tiền */
-.payment-summary {
-  margin-top: 16px;
-  padding: 12px 16px;
-  background: #f8fafc;
-  border-radius: 10px;
-  border-left: 4px solid #2563eb;
-  box-shadow: inset 0 0 6px rgba(37, 99, 235, 0.1);
-}
-
-.payment-summary p {
-  margin: 6px 0;
-  font-size: 1rem;
-  color: #1e293b;
-}
-/* ✏️ Ô input khi edit */
-.edit-input {
-  width: 100%;
-  padding: 6px 8px;
-  font-size: 0.9rem;
-  border: 1px solid #cbd5e1;
+.service-price-input {
+  width: 120px;
+  padding: 5px;
   border-radius: 6px;
-  outline: none;
-  transition: all 0.2s ease;
-}
-
-.edit-input:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 6px rgba(37, 99, 235, 0.2);
-}
-
-/* 🖊️ Nút Sửa / Lưu */
-.edit-btn {
-  padding: 6px 12px;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
-  color: white;
-  font-size: 0.9rem;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
-}
-
-.edit-btn:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.1);
-}
-
-/* 🧩 Nút Save màu xanh lá */
-.edit-btn.save {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.35);
-}
-.btn-now {
-  margin-left: 10px;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  border: none;
-  color: white;
-  padding: 4px 10px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
-}
-
-.btn-now:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.1);
-}
-.payment-method {
-  margin-top: 24px;
-  padding: 20px 26px;
-  background: #f8fafc;
-  border-left: 6px solid #2563eb;
-  border-radius: 14px;
-  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.08);
-}
-
-.payment-method h3 {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #2563eb;
-  margin-bottom: 16px;
-}
-
-.method-buttons {
-  display: flex;
-  gap: 18px;
-  flex-wrap: wrap;
-}
-
-/* 💳 Gửi yêu cầu thanh toán */
-.btn-send-payment {
-  flex: 1;
-  min-width: 240px;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  color: white;
-  font-weight: 600;
-  border: none;
-  border-radius: 10px;
-  padding: 12px 16px;
-  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.25);
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-
-.btn-send-payment:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.1);
-}
-
-/* 💵 Thanh toán tiền mặt */
-.btn-cash-confirm {
-  flex: 1;
-  min-width: 240px;
-  background: linear-gradient(135deg, #facc15, #f59e0b);
-  color: #1e1e1e;
-  font-weight: 700;
-  border: none;
-  border-radius: 10px;
-  padding: 12px 16px;
-  box-shadow: 0 6px 14px rgba(245, 158, 11, 0.25);
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-
-.btn-cash-confirm:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.05);
+  border: 1px solid #444;
+  background: #222;
+  color: #fff;
 }

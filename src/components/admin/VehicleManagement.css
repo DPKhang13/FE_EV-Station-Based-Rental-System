@@ -18,7 +18,6 @@
     letter-spacing: 2px;
     text-transform: uppercase;
     padding-bottom: 15px;
-    border-bottom: 3px solid #DC0000;
     display: inline-block;
     width: auto;
     max-width: fit-content;
@@ -521,8 +520,7 @@
 
 .status-badge {
     padding: 4px 6px;
-    border: 1px solid #E0E0E0;
-    border-radius: 0;
+    border: none;
     font-size: 9px;
     font-weight: 400;
     letter-spacing: 0.3px;
@@ -535,25 +533,23 @@
 }
 
 .status-badge.AVAILABLE {
-    background: #FFFFFF;
-    color: #000000;
-    border-color: #000000;
+    background: #ecfdf5;
+    color: #15803d;
 }
 
 .status-badge.RESERVED {
-    background: #E0E0E0;
-    color: #000000;
+    background: #fffbeb;
+    color: #b45309;
 }
 
 .status-badge.IN_USE {
-    background: #DC0000;
-    color: #FFFFFF;
-    border-color: #DC0000;
+    background: #eff6ff;
+    color: #1d4ed8;
 }
 
 .status-badge.MAINTENANCE {
-    background: #E0E0E0;
-    color: #000000;
+    background: #fef2f2;
+    color: #b91c1c;
 }
 
 .btn-edit,

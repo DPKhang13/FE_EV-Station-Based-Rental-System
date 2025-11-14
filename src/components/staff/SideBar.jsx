@@ -67,15 +67,7 @@ export default function Sidebar() {
             <span>Bảng giá</span>
           </NavLink>
 
-           <NavLink
-            to="/staff/dichvu"
-            className={({ isActive }) =>
-              isActive ? "sidebar__btn active" : "sidebar__btn"
-            }
-          >
-           <IoReturnDownBack />
-            <span>Quản lí dịch vụ</span>
-          </NavLink>
+          
         </nav>
       </div>
 

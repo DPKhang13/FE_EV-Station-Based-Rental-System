@@ -12,7 +12,7 @@ const PopupDatTruoc = ({ xe, onClose }) => {
       <div className="popup">
         <h2>🚗 Xe {xe.ten}</h2>
         <p>Biển số: {xe.bienSo}</p>
-        <p className="popup-message">Vui lòng đi đến thủ tục bàn giao.</p>
+        <p className="popup-message">Vui lòng đi đến quản lí đơn hàng để tiến hành thủ tục bàn giao.</p>
         <div className="popup-buttons">
           <button className="btn-closes" onClick={onClose}>
             Đóng

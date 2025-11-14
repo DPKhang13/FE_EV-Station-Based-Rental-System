@@ -130,7 +130,7 @@ const ProfilePage = () => {
         <div className="profile-page">
             <div className="profile-container">
                 <div className="page-header">
-                    <h1>👤 My Profile</h1>
+                    <h1>MY PROFILE</h1>
                     <p className="subtitle">Manage your personal information</p>
                 </div>
 
@@ -153,13 +153,13 @@ const ProfilePage = () => {
                                 onClick={handleEditToggle}
                                 className="btn-edit"
                             >
-                                {isEditing ? '✕ Cancel' : '✏️ Edit Profile'}
+                                {isEditing ? 'HỦY' : 'CHỈNH SỬA'}
                             </button>
                             <button
                                 onClick={handleLogout}
                                 className="btn-logout"
                             >
-                                🚪 Logout
+                                ĐĂNG XUẤT
                             </button>
                         </div>
                     </div>
@@ -169,7 +169,7 @@ const ProfilePage = () => {
                         <form onSubmit={handleUpdateProfile}>
                             <div className="form-grid">
                                 <div className="form-group">
-                                    <label htmlFor="fullName">Full Name</label>
+                                    <label htmlFor="fullName">Họ và Tên</label>
                                     <input
                                         type="text"
                                         id="fullName"
@@ -195,7 +195,7 @@ const ProfilePage = () => {
                                 </div>
 
                                 <div className="form-group">
-                                    <label htmlFor="phone">Phone Number</label>
+                                    <label htmlFor="phone">Số Điện Thoại</label>
                                     <input
                                         type="tel"
                                         id="phone"
@@ -207,7 +207,7 @@ const ProfilePage = () => {
                                 </div>
 
                                 <div className="form-group">
-                                    <label htmlFor="dateOfBirth">Date of Birth</label>
+                                    <label htmlFor="dateOfBirth">Ngày Sinh</label>
                                     <input
                                         type="date"
                                         id="dateOfBirth"
@@ -228,7 +228,7 @@ const ProfilePage = () => {
                                         className="btn-save"
                                         disabled={loading}
                                     >
-                                        {loading ? 'Saving...' : '💾 Save Changes'}
+                                        {loading ? 'ĐANG LƯU...' : 'LƯU THAY ĐỔI'}
                                     </button>
                                 </div>
                             )}
@@ -240,12 +240,12 @@ const ProfilePage = () => {
                         <div className="stat-card">
                             <div className="stat-icon">📋</div>
                             <div className="stat-info">
-                                <h3>My Bookings</h3>
+                                <h3>Đơn Đặt Của Tôi</h3>
                                 <button
                                     onClick={() => navigate('/my-bookings')}
                                     className="btn-view"
                                 >
-                                    View All Bookings →
+                                    Xem Tất Cả Đơn Đặt →
                                 </button>
                             </div>
                         </div>

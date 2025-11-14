@@ -1,8 +1,10 @@
-import React, { useState, useContext } from 'react';
+
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import './Navbar.css';
 import logo from '../assets/logo2.png';
+import React, { useState, useContext, useEffect } from 'react';
+
 
 const Navbar = () => {
     const [activeNav, setActiveNav] = useState('home');
@@ -10,6 +12,16 @@ const Navbar = () => {
     const [showDropdown, setShowDropdown] = useState(false);
     const navigate = useNavigate();
     const { user, logout } = useContext(AuthContext);
+    useEffect(() => {
+    if (user) {
+        if (user.role === "staff") {
+            navigate("/staff");
+        } else if (user.role === "admin") {
+            navigate("/admin");
+        }
+    }
+}, [user, navigate]);
+
 
     return (
         <nav className="navbar">
@@ -127,68 +139,83 @@ const Navbar = () => {
 
                     <div className="navbar-buttons">
                         {user ? (
-                            user.role === "customer" ? (
-                                // ✅ Show user menu for customers
-                                <div className="user-menu">
-                                    <button
-                                        className="user-button"
-                                        onClick={() => setShowDropdown(!showDropdown)}
-                                    >
-                                        <span className="user-avatar">👤</span>
-                                        <span className="user-name">{user.name || 'Người dùng'}</span>
-                                        <svg className="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: '16px', height: '16px' }}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </button>
+                            <>
+                                {user.role === "customer" && (
+                                    <div className="user-menu">
+                                        <button
+                                            className="user-button"
+                                            onClick={() => setShowDropdown(!showDropdown)}
+                                        >
+                                            <span className="user-avatar">👤</span>
+                                            <span className="user-name">{user.name || 'Người dùng'}</span>
+                                            <svg className="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: '16px', height: '16px' }}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
 
-                                    {showDropdown && (
-                                        <div className="user-dropdown">
-                                            <button
-                                                onClick={() => {
-                                                    setShowDropdown(false);
-                                                    navigate('/profile');
-                                                }}
-                                                className="dropdown-item"
-                                            >
-                                                Hồ Sơ Của Tôi
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    setShowDropdown(false);
-                                                    navigate('/my-bookings');
-                                                }}
-                                                className="dropdown-item"
-                                            >
-                                                 Đơn Đặt
-                                            </button>
-                                            <div className="dropdown-divider"></div>
-                                            <button
-                                                onClick={() => {
-                                                    setShowDropdown(false);
-                                                    logout();
-                                                    navigate('/');
-                                                }}
-                                                className="dropdown-item logout"
-                                            >
-                                                Đăng Xuất
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                // If user is not a customer (staff/admin), show login button
-                                <>
-                                    <Link to="/login" className="login-button">Đăng Nhập</Link>
-                                </>
-                            )
+                                        {showDropdown && (
+                                            <div className="user-dropdown">
+                                                <button
+                                                    onClick={() => {
+                                                        setShowDropdown(false);
+                                                        navigate('/profile');
+                                                    }}
+                                                    className="dropdown-item"
+                                                >
+                                                    Hồ Sơ Của Tôi
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setShowDropdown(false);
+                                                        navigate('/my-bookings');
+                                                    }}
+                                                    className="dropdown-item"
+                                                >
+                                                    Đơn Đặt
+                                                </button>
+                                                <div className="dropdown-divider"></div>
+                                                <button
+                                                    onClick={() => {
+                                                        setShowDropdown(false);
+                                                        logout();
+                                                        navigate('/');
+                                                    }}
+                                                    className="dropdown-item logout"
+                                                >
+                                                    Đăng Xuất
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* 🧩 Điều hướng cho STAFF và ADMIN */}
+                                {user.role === "staff" && (
+                                    <button
+                                        className="dashboard-button"
+                                        onClick={() => navigate('/staff')}
+                                    >
+                                        Trang Nhân Viên
+                                    </button>
+                                )}
+
+                                {user.role === "admin" && (
+                                    <button
+                                        className="dashboard-button"
+                                        onClick={() => navigate('/admin')}
+                                    >
+                                        Trang Quản Trị
+                                    </button>
+                                )}
+                            </>
                         ) : (
-                            // User not logged in - show login/register buttons
                             <>
                                 <Link to="/login" className="login-button">Đăng Nhập</Link>
                                 <Link to="/register" className="register-button">Đăng Ký</Link>
                             </>
                         )}
                     </div>
+
                 </div>
             </div>
         </nav>

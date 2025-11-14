@@ -94,18 +94,26 @@ const GiaoTraXe = () => {
   /** ================================
    * 🧾 Chuyển trạng thái xe sang tiếng Việt
    * ================================ */
-  const formatStatus = (status) => {
-    const map = {
-      Available: "Có sẵn",
-      Rented: "Đang cho thuê",
-      RENTAL: "Đang cho thuê",
-      Maintenance: "Bảo trì",
-      Checking: "Đang kiểm tra",
-      CHECKING: "Đang kiểm tra",
-      Reserved: "Đã đặt trước",
-    };
-    return map[status] || "Không xác định";
+const formatStatus = (status) => {
+  const s = status?.toUpperCase?.() || "";
+
+  const map = {
+    "AVAILABLE": "Có sẵn",
+    "RENTED": "Đang cho thuê",
+    "RENTAL": "Đang cho thuê",
+    "ON_RENT": "Đang cho thuê",
+    "IN_USE": "Đang cho thuê",
+
+    "MAINTENANCE": "Bảo trì",
+    "CHECKING": "Đang kiểm tra",
+
+    "BOOKED": "Đã đặt trước",
+    "RESERVED": "Đã đặt trước",
   };
+
+  return map[s] || "Không xác định";
+};
+
 
   /** ================================
    * 🎨 Màu trạng thái
