@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { rentalStationService } from '../services';
+import vehicleService from '../services/vehicleService';
 import './LocationSelect.css';
 
 const LocationSelect = () => {
@@ -9,11 +10,35 @@ const LocationSelect = () => {
     const [selectedBranch, setSelectedBranch] = useState('');
     const [locations, setLocations] = useState([]);
     const [loadingStations, setLoadingStations] = useState(true);
+    const [vehiclesByStation, setVehiclesByStation] = useState({});
+    const [loadingVehicles, setLoadingVehicles] = useState({});
 
-    // Scroll to top when component mounts
+    // Load xe theo stationId
+    const loadVehiclesByStation = async (stationId) => {
+        try {
+            setLoadingVehicles(prev => ({ ...prev, [stationId]: true }));
+            const response = await fetch(`http://localhost:8080/api/vehicles/station/${stationId}`);
+            if (!response.ok) throw new Error('Failed to fetch vehicles');
+            const vehicles = await response.json();
+            setVehiclesByStation(prev => ({
+                ...prev,
+                [stationId]: Array.isArray(vehicles) ? vehicles : (vehicles.data || [])
+            }));
+            console.log(`✅ Loaded ${vehicles?.length || 0} vehicles for station ${stationId}`);
+        } catch (error) {
+            console.error(`❌ Error loading vehicles for station ${stationId}:`, error);
+            setVehiclesByStation(prev => ({ ...prev, [stationId]: [] }));
+        } finally {
+            setLoadingVehicles(prev => ({ ...prev, [stationId]: false }));
+        }
+    };
+
+    // Khi chọn chi nhánh, load xe
     useEffect(() => {
-        window.scrollTo({ top: 0, behavior: 'instant' });
-    }, []);
+        if (selectedBranch) {
+            loadVehiclesByStation(selectedBranch);
+        }
+    }, [selectedBranch]);
 
     // Load stations từ API
     useEffect(() => {
@@ -240,6 +265,17 @@ const LocationSelect = () => {
                                         <span className="branch-icon">📞</span>
                                         <span>{location.phone}</span>
                                     </div>
+                                </div>
+
+                                {/* Hiển thị số xe có sẵn */}
+                                <div className="branch-vehicle-count">
+                                    {loadingVehicles[location.id] ? (
+                                        <span>⏳ Đang tải...</span>
+                                    ) : (
+                                        <span>
+                                            🚗 <strong>{getAvailableVehicleCount(location.id)}</strong> xe có sẵn
+                                        </span>
+                                    )}
                                 </div>
 
                                 <button

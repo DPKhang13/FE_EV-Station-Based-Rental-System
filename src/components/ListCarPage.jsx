@@ -10,6 +10,7 @@ const ListCarPage = () => {
     const selectedBranch = queryParams.get('branch') || '';
     const [branchName, setBranchName] = useState('');
     const [loading, setLoading] = useState(true);
+    const [vehicles, setVehicles] = useState([]);
 
     // Scroll to top when component mounts
     useEffect(() => {
@@ -40,7 +41,7 @@ const ListCarPage = () => {
                 }
                 console.log('✅ Loaded branch name:', station?.name);
             } catch (error) {
-                console.error(' Error loading branch name:', error);
+                console.error('❌ Error loading branch name:', error);
                 setBranchName(`Chi nhánh ${selectedBranch}`);
             } finally {
                 setLoading(false);
@@ -48,6 +49,30 @@ const ListCarPage = () => {
         };
 
         loadBranchName();
+    }, [selectedBranch]);
+
+    // Load vehicles từ API theo stationId
+    useEffect(() => {
+        const loadVehicles = async () => {
+            if (!selectedBranch) {
+                setVehicles([]);
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:8080/api/vehicles/station/${selectedBranch}`);
+                if (!response.ok) throw new Error('Failed to fetch vehicles');
+                const data = await response.json();
+                const vehicleList = Array.isArray(data) ? data : (data.data || []);
+                setVehicles(vehicleList);
+                console.log(`✅ Loaded ${vehicleList.length} vehicles for station ${selectedBranch}`);
+            } catch (error) {
+                console.error(`❌ Error loading vehicles for station ${selectedBranch}:`, error);
+                setVehicles([]);
+            }
+        };
+
+        loadVehicles();
     }, [selectedBranch]);
 
     return (
@@ -58,7 +83,7 @@ const ListCarPage = () => {
                     <p className="branch-name">{branchName}</p>
                 )}
             </div>
-            <CarFilter selectedBranch={selectedBranch} />
+            <CarFilter selectedBranch={selectedBranch} vehicles={vehicles} />
         </div>
     );
 };

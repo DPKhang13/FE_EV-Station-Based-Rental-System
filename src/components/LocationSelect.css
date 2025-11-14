@@ -251,6 +251,26 @@
     min-width: 20px;
 }
 
+/* Vehicle Count Display */
+.branch-vehicle-count {
+    margin-bottom: 16px;
+    padding: 12px;
+    background: #F5F5F5;
+    border-left: 3px solid #DC0000;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #333333;
+    letter-spacing: 1px;
+    text-align: center;
+}
+
+.branch-card.selected .branch-vehicle-count {
+    background: rgba(220, 0, 0, 0.2);
+    border-left-color: #FF6B6B;
+    color: #FFFFFF;
+}
+
 /* Branch Button */
 .branch-button {
     width: 100%;

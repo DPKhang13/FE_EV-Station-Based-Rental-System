@@ -4,28 +4,32 @@ import { useVehicles } from '../hooks/useVehicles';
 
 import './CarFilter.css';
 
-const CarFilter = ({ selectedBranch }) => {
+const CarFilter = ({ selectedBranch, vehicles: propsVehicles }) => {
     const navigate = useNavigate();
     const { vehicles: cars, loading, error, refetch } = useVehicles();
+    
+    // Use vehicles from props if available, otherwise use hook data
+    const vehicleData = propsVehicles && propsVehicles.length > 0 ? propsVehicles : cars;
+    
     const [brand, setBrand] = useState('');
     const [grade, setGrade] = useState('');
     const [selectedColors, setSelectedColors] = useState([]);
     const [sortBy, setSortBy] = useState('name-asc');
 
     // Get unique colors from available cars
-    const availableColors = [...new Set(cars
+    const availableColors = [...new Set(vehicleData
         .filter(car => car.color && car.color !== 'N/A' && car.color !== 'null')
         .map(car => car.color))
     ].sort();
 
     // Get unique brands from available cars
     // eslint-disable-next-line no-unused-vars
-    const availableBrands = [...new Set(cars
+    const availableBrands = [...new Set(vehicleData
         .filter(car => car.brand && car.brand !== 'N/A' && car.brand !== 'null')
         .map(car => car.brand))
     ].sort();
 
-    const filteredCars = cars.filter(car => {
+    const filteredCars = vehicleData.filter(car => {
         // 1. ✅ HIỂN THỊ TẤT CẢ XE (kể cả BOOKED - vì có thể available ở timeline khác)
         // Chỉ loại bỏ xe MAINTENANCE
         if (car.status === 'Maintenance' || car.status === 'MAINTENANCE') {
@@ -33,7 +37,8 @@ const CarFilter = ({ selectedBranch }) => {
         }
 
         // 2. LỌC THEO CHI NHÁNH (nếu có chọn)
-        if (selectedBranch) {
+        if (selectedBranch && !propsVehicles) {
+            // Chỉ lọc nếu không có vehicles từ props (props đã filtered)
             const carStationId = String(car.stationId || car.branch || '');
             const selectedStationId = String(selectedBranch);
             if (carStationId !== selectedStationId) {
