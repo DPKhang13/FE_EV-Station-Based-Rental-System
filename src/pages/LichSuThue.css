@@ -1,0 +1,165 @@
+/* ==== Container ==== */
+.ls-container {
+  padding: 40px 7%;
+  background: #f5f7fa;
+  min-height: 100vh;
+  font-family: "Inter", sans-serif;
+}
+
+/* ==== Title ==== */
+.ls-title {
+  text-align: center;
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: #1f2937;
+  letter-spacing: 1px;
+}
+
+/* ==== Back Button ==== */
+.ls-back-btn {
+  padding: 10px 18px;
+  background: #1f2937;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  font-size: 14px;
+  transition: 0.2s ease;
+}
+
+.ls-back-btn:hover {
+  background: #111827;
+}
+
+/* ==== Card ==== */
+.ls-card {
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 14px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+/* ==== Empty State ==== */
+.ls-empty {
+  text-align: center;
+  font-size: 18px;
+  color: #6b7280;
+  padding: 20px;
+}
+
+/* ==== Table ==== */
+.ls-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.ls-table th {
+  text-align: left;
+  font-size: 13px;
+  text-transform: uppercase;
+  padding: 14px;
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.ls-table td {
+  padding: 14px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 15px;
+}
+
+.ls-table tr:hover td {
+  background: #f0f7ff;
+}
+
+/* ==== Plate ==== */
+.ls-plate {
+  font-family: monospace;
+  background: #e5e7eb;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+/* ==== Money ==== */
+.ls-money {
+  font-weight: 600;
+  color: #1d4ed8;
+}
+
+/* ==== Status Badge ==== */
+.ls-badge {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: white;
+}
+
+.status-completed,
+.status-COMPLETED {
+  background: #10b981;
+}
+
+.status-cancelled,
+.status-CANCELLED {
+  background: #ef4444;
+}
+
+.status-pending,
+.status-PENDING {
+  background: #f59e0b;
+}
+
+.status-processing,
+.status-PROCESSING {
+  background: #3b82f6;
+}
+
+/* ==== Loading ==== */
+.ls-loading {
+  padding: 40px;
+  text-align: center;
+  font-size: 18px;
+}
+.status-success,
+.status-SUCCESS {
+  background: #16a34a33;
+  border: 1px solid #16a34a;
+  color: #16a34a;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.status-failed,
+.status-FAILED {
+  background: #ef444433;
+  border: 1px solid #ef4444;
+  color: #ef4444;
+}
+
+.status-refunded,
+.status-REFUNDED {
+  background: #9333ea33;
+  border: 1px solid #9333ea;
+  color: #9333ea;
+}
+.ls-detail-btn {
+  background: #2563eb;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.ls-detail-btn:hover {
+  background: #1e40af;
+  transform: translateY(-1px);
+}

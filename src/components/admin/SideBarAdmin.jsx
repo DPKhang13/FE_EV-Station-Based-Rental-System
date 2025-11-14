@@ -34,6 +34,15 @@ export default function SideBarAdmin() {
             <FaCar />
             <span>Quản lý xe</span>
           </NavLink>
+          <NavLink to="/admin/quanlixe" className="sidebar__btn">
+            <FaCar />
+            <span>Quản lý xe tại trạm</span>
+          </NavLink>
+          
+          
+          
+
+
           <NavLink to="/admin/locations" className="sidebar__btn">
             <FaMapMarkerAlt />
             <span>Điểm thuê</span>
@@ -61,6 +70,8 @@ export default function SideBarAdmin() {
             <FaChartPie />
             <span>Thống kê tổng quan</span>
           </NavLink>
+
+          
 
         </nav>
       </div>

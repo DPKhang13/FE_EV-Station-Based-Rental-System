@@ -5,14 +5,16 @@ import "./XacThucKhachHang.css";
 import PopupXacThucHoSoCaNhan from "../components/staff/PopupXacThucHoSoCaNhan";
 import { AuthContext } from "../context/AuthContext";
 
-// 🕒 Định dạng thời gian
+// 🕒 Định dạng
 const fmtVN = (d) => (d ? new Date(d).toLocaleString("vi-VN") : "N/A");
 const fmtRange = (s, e) => `${fmtVN(s)} - ${fmtVN(e)}`;
 
 export default function VerifyCustomerPage() {
   const { user } = useContext(AuthContext);
   const nav = useNavigate();
+
   const [orders, setOrders] = useState([]);
+  const [stations, setStations] = useState([]); // ⭐ Danh sách trạm
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -23,12 +25,13 @@ export default function VerifyCustomerPage() {
   const [profileError, setProfileError] = useState(null);
   const [verifyLoading, setVerifyLoading] = useState(false);
 
-  // 🧾 Lấy danh sách đơn hàng
+  // 🧾 Lấy đơn hàng theo trạm
   const fetchOrders = async () => {
     try {
       const res = await orderService.getPendingOrders();
       const data = res.data || res || [];
       const stationId = user?.stationId || 1;
+
       setOrders(data.filter((o) => Number(o.stationId) === Number(stationId)));
     } catch (err) {
       console.error("❌ Lỗi tải hồ sơ:", err);
@@ -38,16 +41,28 @@ export default function VerifyCustomerPage() {
     }
   };
 
+  // 🚉 Fetch toàn bộ trạm
+  const fetchStations = async () => {
+    try {
+      const res = await fetch("http://localhost:8080/api/rentalstation/getAll");
+      const data = await res.json();
+      setStations(data || []);
+    } catch (err) {
+      console.error("❌ Không thể tải danh sách trạm:", err);
+    }
+  };
+
   useEffect(() => {
     fetchOrders();
+    fetchStations(); // ⭐ Tải trạm khi mở trang
   }, []);
 
   // 🔍 Tìm kiếm
   const filtered = orders.filter((x) => {
     if (x.status === "COMPLETED") return false;
-    const term = search.toLowerCase();
+    const t = search.toLowerCase();
     return [x.customerName, x.phone, x.orderId]
-      .some((f) => (f || "").toLowerCase().includes(term));
+      .some((f) => (f || "").toLowerCase().includes(t));
   });
 
   // 👤 Xác thực hồ sơ
@@ -55,10 +70,13 @@ export default function VerifyCustomerPage() {
     setSelectedRow(row);
     setPopupType("profile");
     setProfileLoading(true);
+
     try {
       const res = await authService.getProfilePendingVerification();
       const profiles = res.data || res || [];
-      setSelectedProfile(profiles.find((p) => p.userId === row.userId) || null);
+      setSelectedProfile(
+        profiles.find((p) => p.userId === row.userId) || null
+      );
     } catch {
       setProfileError("Không tải được hồ sơ khách hàng.");
     } finally {
@@ -66,12 +84,14 @@ export default function VerifyCustomerPage() {
     }
   };
 
-  // ✅ Duyệt hồ sơ
+  // ⭕ Duyệt hồ sơ
   const handleVerify = async () => {
     if (!selectedRow?.userId) return;
     setVerifyLoading(true);
+
     try {
       await authService.verifyProfileByUserId(selectedRow.userId);
+
       setOrders((prev) =>
         prev.map((r) =>
           r.userId === selectedRow.userId
@@ -79,6 +99,7 @@ export default function VerifyCustomerPage() {
             : r
         )
       );
+
       setPopupType(null);
       alert("✅ Hồ sơ khách hàng đã được xác thực.");
     } catch {
@@ -88,7 +109,7 @@ export default function VerifyCustomerPage() {
     }
   };
 
-  // 📄 Xem chi tiết đơn hàng → truyền cả orderId + userId
+  // 👉 Xem chi tiết đơn hàng
   const handleViewOrderDetail = (orderId, userId) => {
     nav(`/staff/chitiet/${orderId}/${userId}`);
   };
@@ -105,10 +126,9 @@ export default function VerifyCustomerPage() {
     <>
       <div className="verify-container">
         <h1 className="verify-title">Xác thực khách hàng</h1>
-        <p className="verify-subtitle">
-          Kiểm tra giấy tờ và xử lý hồ sơ đặt xe
-        </p>
+        <p className="verify-subtitle">Kiểm tra giấy tờ và xử lý hồ sơ đặt xe</p>
 
+        {/* 🔍 Tìm kiếm */}
         <input
           className="verify-search"
           type="text"
@@ -119,57 +139,76 @@ export default function VerifyCustomerPage() {
 
         <div className="verify-section">
           <h2>Hồ sơ đặt xe cần xử lý ({filtered.length})</h2>
+
           <table className="verify-table">
             <thead>
               <tr>
-                
                 <th>KHÁCH HÀNG</th>
                 <th>XE THUÊ</th>
                 <th>THỜI GIAN THUÊ</th>
+                <th>TRẠM</th>
                 <th>TỔNG TIỀN</th>
                 <th>XÁC THỰC HỒ SƠ</th>
                 <th>THAO TÁC</th>
               </tr>
             </thead>
+
             <tbody>
               {filtered.map((row) => {
                 const verified =
                   row.profileVerified ||
-                  row.userStatus?.includes("ĐÃ XÁC THỰC");
-                const delivered =
-                  !!row.pickedUpAt ||
-                  ["RENTAL", "Rented"].includes(row.status);
-                const deposit =
-                  row.depositAmount ??
-                  Math.round(Number(row.totalPrice || 0) * 0.3);
+                  ["ACTIVE", "ĐÃ XÁC THỰC", "ĐÃ XÁC THỰC (HỒ SƠ)"].includes(
+                    row.userStatus?.toUpperCase?.()
+                  );
+
+                // ⭐ Tìm trạm theo stationId
+                const station = stations.find(
+                  (s) => Number(s.stationid) === Number(row.stationId)
+                );
 
                 return (
                   <tr key={row.orderId}>
-                    
                     <td>
                       {row.customerName}
                       <br />
                       <span className="verify-phone">{row.phone}</span>
                     </td>
+
                     <td>
-                      {(row.vehicleName || "Xe")} ({row.plateNumber || "N/A"})
+                      {row.vehicleName} ({row.plateNumber})
                     </td>
+
                     <td>{fmtRange(row.startTime, row.endTime)}</td>
+
+                    {/* ⭐ HIỂN THỊ TRẠM */}
+                    <td>
+                      {station ? (
+                        <>
+                          <strong>{station.name}</strong>
+                          <br />
+                          <small>
+                            {station.street}, {station.ward}, {station.district},{" "}
+                            {station.city}
+                          </small>
+                        </>
+                      ) : (
+                        "Không xác định"
+                      )}
+                    </td>
+
                     <td>
                       {Number(row.totalPrice).toLocaleString("vi-VN")} VND
-                      <br />
-                      <small>
-                        Cọc: {Number(deposit).toLocaleString("vi-VN")} VND
-                      </small>
                     </td>
+
                     <td>
                       <span
                         className={`verify-status ${
                           verified ? "success" : "warning"
                         }`}
                       >
-                        {row.userStatus || "Chưa xác thực"}
+                        {verified ? "ĐÃ XÁC THỰC" : "CHƯA XÁC THỰC"}
                       </span>
+
                       {row.pickedUpAt && (
                         <small>
                           <br />
@@ -177,29 +216,25 @@ export default function VerifyCustomerPage() {
                         </small>
                       )}
                     </td>
+
                     <td>
-                      {!verified && (
+                      {!verified ? (
                         <button
                           className="verify-btn primary"
                           onClick={() => handleOpenProfile(row)}
                         >
                           Xác thực hồ sơ
                         </button>
+                      ) : (
+                        <button
+                          className="verify-btn info"
+                          onClick={() =>
+                            handleViewOrderDetail(row.orderId, row.userId)
+                          }
+                        >
+                          📄 Chi tiết đơn hàng
+                        </button>
                       )}
-
-                      {/* ✅ Nếu đã xác thực (ĐÃ XÁC THỰC (HỒ SƠ)) thì chỉ hiển thị nút Chi tiết đơn hàng */}
-                      {verified &&
-                        row.userStatus === "ĐÃ XÁC THỰC (HỒ SƠ)" && (
-                          <button
-                            className="verify-btn info"
-                            onClick={() =>
-                              handleViewOrderDetail(row.orderId, row.userId)
-                            }
-                            style={{ marginLeft: 8 }}
-                          >
-                            📄 Chi tiết đơn hàng
-                          </button>
-                        )}
                     </td>
                   </tr>
                 );
@@ -209,6 +244,7 @@ export default function VerifyCustomerPage() {
         </div>
       </div>
 
+      {/* Popup xác thực hồ sơ */}
       {popupType === "profile" && (
         <PopupXacThucHoSoCaNhan
           row={selectedRow}
@@ -222,4 +258,4 @@ export default function VerifyCustomerPage() {
       )}
     </>
   );
-}  
+}

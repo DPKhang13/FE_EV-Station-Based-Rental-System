@@ -58,6 +58,43 @@ const uploadForm = async (path, file, userId) => {
 const photoService = {
   uploadIdCard: (file, userId) => uploadForm('upload/cccd', file, userId),
   uploadDriverLicense: (file, userId) => uploadForm('upload/driver-license', file, userId),
+  
+  /**
+   * Lấy danh sách photos của user từ database
+   * GET /api/photos/{userId} hoặc /api/customer/{userId}/photos
+   */
+  getPhotos: async (userId) => {
+    const endpoints = [
+      `photos/user/${userId}`,
+      `photos/${userId}`,
+      `customer/${userId}/photos`,
+      `upload/photos/${userId}`,
+    ];
+    
+    for (const endpoint of endpoints) {
+      try {
+        const url = joinUrl(API_BASE_URL, endpoint);
+        console.log('🔍 Fetching photos from:', url);
+        
+        const res = await fetch(url, {
+          method: 'GET',
+          headers: { ...getAuthHeaders(), Accept: 'application/json' },
+          credentials: 'include',
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          console.log('✅ Photos fetched from', endpoint, ':', data);
+          return data;
+        }
+      } catch (err) {
+        console.warn(`⚠️ Failed to fetch photos from ${endpoint}:`, err.message);
+      }
+    }
+    
+    console.warn('⚠️ No photos endpoint found');
+    return null;
+  },
 };
 
 export default photoService;

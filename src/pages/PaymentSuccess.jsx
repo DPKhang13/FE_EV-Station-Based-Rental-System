@@ -6,17 +6,16 @@ const PaymentSuccessPage = () => {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState("PENDING");
 
-  useEffect(() => {
-    // ✅ Đọc trực tiếp kết quả từ URL (do PaymentCallbackPage redirect sang)
-    const responseCode = searchParams.get("responseCode");
-    if (responseCode === "00") setStatus("SUCCESS");
-    else setStatus("FAILED");
-  }, [searchParams]);
-
-  const orderId = searchParams.get("orderId");
+  // Get params from URL
+  const orderId = searchParams.get("orderId") || "N/A";
   const amount = searchParams.get("amount");
   const txnRef = searchParams.get("txnRef");
-  const method = searchParams.get("method");
+  const method = searchParams.get("method") || "MoMo";
+
+  useEffect(() => {
+    const statusParam = searchParams.get("status");
+    setStatus(statusParam === "SUCCESS" ? "SUCCESS" : "FAILED");
+  }, [searchParams]);
 
   return (
     <div className="payment-success-page" style={{ textAlign: "center", padding: "40px" }}>
@@ -24,16 +23,22 @@ const PaymentSuccessPage = () => {
         {status === "SUCCESS" ? "✅ Thanh toán thành công!" : "❌ Thanh toán thất bại"}
       </h1>
 
-      <p><strong>Mã đơn hàng:</strong> {orderId || "N/A"}</p>
-      <p><strong>Mã giao dịch:</strong> {txnRef || "N/A"}</p>
+      <p><strong>Mã đơn hàng:</strong> {orderId}</p>
+
+      <p><strong>Mã giao dịch:</strong> {txnRef || "Không có"}</p>
+
       <p>
         <strong>Số tiền:</strong>{" "}
         {amount
-          ? (Number(amount) / 100).toLocaleString("vi-VN") + " VNĐ"
-          : "N/A"}
+          ? Number(amount).toLocaleString("vi-VN") + " VNĐ"
+          : "Không có"}
       </p>
-      <p><strong>Phương thức:</strong> {method || "VNPay"}</p>
+
+      <p><strong>Phương thức:</strong> {method}</p>
+
       <p><strong>Trạng thái:</strong> {status === "SUCCESS" ? "Thành công" : "Thất bại"}</p>
+      <p><strong>Order Info:</strong> {searchParams.get("orderInfo")}</p>
+      <p><strong>Pay Type:</strong> {searchParams.get("payType")}</p>
 
       <div style={{ marginTop: "20px" }}>
         <button

@@ -35,46 +35,139 @@ const ProfilePage = () => {
       navigate('/login');
       return;
     }
-    loadUserProfile();
+    fetchProfileFromDatabase();
   }, [user, navigate]);
 
-  // Nạp sẵn URL ảnh nếu có (từ context/localStorage)
-  useEffect(() => {
-    if (!user) return;
-    
-    console.log('👤 Loading user photos from:', user);
-    
-    const cccd =
-      user.cccdImageUrl || user.idCardUrl || user.cccdUrl || null;
-    const dl =
-      user.driverLicenseImageUrl ||
-      user.driverLicenseUrl ||
-      user.licenseUrl ||
-      null;
-
-    console.log('📸 CCCD URL:', cccd);
-    console.log('📸 Driver License URL:', dl);
-
-    if (cccd) {
-      setIdPreview(cccd);
-      setIdCardUrl(cccd);
+  // Fetch profile từ database
+  const fetchProfileFromDatabase = async () => {
+    try {
+      console.log('🔄 Fetching profile from database...');
+      console.log('👤 Current user from context:', user);
+      const userId = user?.id || user?.userId || user?.data?.id;
+      console.log('🔑 User ID:', userId);
+      
+      const response = await profileService.getProfile(userId);
+      console.log('✅ Profile data from DB:', response);
+      
+      const profileData = response?.data || response;
+      console.log('📋 Parsed profile data:', profileData);
+      console.log('📋 All profile keys:', Object.keys(profileData));
+      
+      // Update form data
+      setFormData({
+        fullName: profileData.fullName || profileData.name || profileData.username || '',
+        email: profileData.email || '',
+        phone: profileData.phone || profileData.phoneNumber || '',
+        address: profileData.address || '',
+        dateOfBirth: profileData.dateOfBirth || profileData.dob || '',
+      });
+      
+      // ✅ Fetch photos riêng từ table photos
+      let cccdUrl = null;
+      let dlUrl = null;
+      
+      if (userId) {
+        try {
+          console.log('🔄 Fetching photos from photos table...');
+          const photosData = await photoService.getPhotos(userId);
+          console.log('📸 Photos data:', photosData);
+          
+          if (photosData) {
+            // Nếu photosData là array
+            if (Array.isArray(photosData)) {
+              const cccdPhoto = photosData.find(p => p.type === 'CCCD' || p.type === 'cccd');
+              const dlPhoto = photosData.find(p => p.type === 'GPLX' || p.type === 'gplx' || p.type === 'driver_license');
+              
+              cccdUrl = cccdPhoto?.photo_url || cccdPhoto?.photoUrl || cccdPhoto?.url;
+              dlUrl = dlPhoto?.photo_url || dlPhoto?.photoUrl || dlPhoto?.url;
+            } else if (photosData.data && Array.isArray(photosData.data)) {
+              // Nếu wrapped trong data
+              const cccdPhoto = photosData.data.find(p => p.type === 'CCCD' || p.type === 'cccd');
+              const dlPhoto = photosData.data.find(p => p.type === 'GPLX' || p.type === 'gplx' || p.type === 'driver_license');
+              
+              cccdUrl = cccdPhoto?.photo_url || cccdPhoto?.photoUrl || cccdPhoto?.url;
+              dlUrl = dlPhoto?.photo_url || dlPhoto?.photoUrl || dlPhoto?.url;
+            } else {
+              // Nếu là object với cccd và license fields
+              cccdUrl = photosData.cccd?.photo_url || photosData.cccd?.url || photosData.cccdUrl;
+              dlUrl = photosData.license?.photo_url || photosData.license?.url || photosData.licenseUrl;
+            }
+          }
+        } catch (photoErr) {
+          console.warn('⚠️ Could not fetch photos separately:', photoErr);
+        }
+      }
+      
+      // Fallback: check trong profile data
+      if (!cccdUrl) {
+        cccdUrl = profileData.photo_url || profileData.photoUrl || profileData.cccdImageUrl || profileData.idCardUrl || profileData.cccdUrl || null;
+      }
+      if (!dlUrl) {
+        dlUrl = profileData.license_url || profileData.licenseUrl || profileData.driverLicenseImageUrl || profileData.driverLicenseUrl || null;
+      }
+      
+      console.log('📸 CCCD URL from DB:', cccdUrl);
+      console.log('📸 Driver License URL from DB:', dlUrl);
+      
+      // Tìm tất cả fields có chứa 'cccd', 'id', hoặc 'card' để debug
+      const cccdFields = Object.keys(profileData).filter(k => 
+        k.toLowerCase().includes('cccd') || 
+        k.toLowerCase().includes('idcard') || 
+        k.toLowerCase().includes('photo') ||
+        k.toLowerCase().includes('id_card')
+      );
+      console.log('🔍 Possible CCCD fields in response:', cccdFields);
+      cccdFields.forEach(key => console.log(`  - ${key}:`, profileData[key]));
+      
+      // Tìm tất cả fields có chứa 'license' hoặc 'driver'
+      const dlFields = Object.keys(profileData).filter(k => 
+        k.toLowerCase().includes('license') || 
+        k.toLowerCase().includes('driver') ||
+        k.toLowerCase().includes('gplx') ||
+        k.toLowerCase().includes('bang_lai')
+      );
+      console.log('🔍 Possible Driver License fields in response:', dlFields);
+      dlFields.forEach(key => console.log(`  - ${key}:`, profileData[key]));
+      
+      if (cccdUrl) {
+        console.log('✅ Setting CCCD preview:', cccdUrl);
+        setIdPreview(cccdUrl);
+        setIdCardUrl(cccdUrl);
+      } else {
+        console.log('⚠️ No CCCD URL found in database');
+      }
+      
+      if (dlUrl) {
+        console.log('✅ Setting DL preview:', dlUrl);
+        setDlPreview(dlUrl);
+        setDriverLicenseUrl(dlUrl);
+      } else {
+        console.log('⚠️ No Driver License URL found in database');
+      }
+      
+      // Update user in context và localStorage
+      updateUser({
+        ...profileData,
+        name: profileData.fullName || profileData.name,
+        cccdImageUrl: cccdUrl,
+        idCardUrl: cccdUrl,
+        cccdUrl: cccdUrl,
+        driverLicenseImageUrl: dlUrl,
+        driverLicenseUrl: dlUrl,
+        licenseUrl: dlUrl,
+      });
+      
+    } catch (err) {
+      console.error('❌ Failed to fetch profile from database:', err);
+      console.error('❌ Error details:', err.message);
+      // Fallback to localStorage if API fails
+      loadUserProfileFromLocalStorage();
     }
-    if (dl) {
-      setDlPreview(dl);
-      setDriverLicenseUrl(dl);
-    }
-  }, [user]);
+  };
 
-  // Dọn objectURL tránh leak
-  useEffect(() => {
-    return () => {
-      if (idPreview?.startsWith('blob:')) URL.revokeObjectURL(idPreview);
-      if (dlPreview?.startsWith('blob:')) URL.revokeObjectURL(dlPreview);
-    };
-  }, [idPreview, dlPreview]);
-
-  // Load profile từ context hoặc localStorage
-  const loadUserProfile = () => {
+  // Fallback: Load từ localStorage
+  const loadUserProfileFromLocalStorage = () => {
+    console.log('⚠️ Loading profile from localStorage (fallback)');
     if (user) {
       setFormData({
         fullName: user.name || user.fullName || user.username || '',
@@ -83,8 +176,21 @@ const ProfilePage = () => {
         address: user.address || '',
         dateOfBirth: user.dateOfBirth || user.dob || '',
       });
+      
+      const cccd = user.cccdImageUrl || user.idCardUrl || user.cccdUrl || null;
+      const dl = user.driverLicenseImageUrl || user.driverLicenseUrl || user.licenseUrl || null;
+      
+      if (cccd) {
+        setIdPreview(cccd);
+        setIdCardUrl(cccd);
+      }
+      if (dl) {
+        setDlPreview(dl);
+        setDriverLicenseUrl(dl);
+      }
       return;
     }
+    
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
       try {
@@ -96,15 +202,40 @@ const ProfilePage = () => {
           address: u.address || '',
           dateOfBirth: u.dateOfBirth || u.dob || '',
         });
-      } catch {}
+        
+        const cccd = u.cccdImageUrl || u.idCardUrl || u.cccdUrl || null;
+        const dl = u.driverLicenseImageUrl || u.driverLicenseUrl || u.licenseUrl || null;
+        
+        if (cccd) {
+          setIdPreview(cccd);
+          setIdCardUrl(cccd);
+        }
+        if (dl) {
+          setDlPreview(dl);
+          setDriverLicenseUrl(dl);
+        }
+      } catch (err) {
+        console.error('❌ Failed to parse user from localStorage:', err);
+      }
     }
   };
+
+  // Dọn objectURL tránh leak
+  useEffect(() => {
+    return () => {
+      if (idPreview?.startsWith('blob:')) URL.revokeObjectURL(idPreview);
+      if (dlPreview?.startsWith('blob:')) URL.revokeObjectURL(dlPreview);
+    };
+  }, [idPreview, dlPreview]);
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleEditToggle = () => {
-    if (isEditing) loadUserProfile(); // hủy sửa -> nạp lại
+    if (isEditing) {
+      // Hủy sửa -> load lại từ database
+      fetchProfileFromDatabase();
+    }
     setIsEditing((v) => !v);
   };
 
@@ -197,35 +328,20 @@ const ProfilePage = () => {
         idCardUrl: idCardUrl || undefined,
         driverLicenseUrl: driverLicenseUrl || undefined,
       };
+      
+      console.log('💾 Saving profile with payload:', payload);
       const res = await profileService.update(payload);
-      console.log('✅ Profile updated:', res);
-      
-      // ✅ Cập nhật lại user trong context và localStorage
-      const updatedUserData = {
-        name: formData.fullName,
-        fullName: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
-        phoneNumber: formData.phone,
-        address: formData.address,
-        dateOfBirth: formData.dateOfBirth,
-        dob: formData.dateOfBirth,
-        cccdImageUrl: idCardUrl,
-        idCardUrl: idCardUrl,
-        cccdUrl: idCardUrl,
-        driverLicenseImageUrl: driverLicenseUrl,
-        driverLicenseUrl: driverLicenseUrl,
-        licenseUrl: driverLicenseUrl,
-      };
-      
-      updateUser(updatedUserData);
-      console.log('✅ User profile updated successfully');
+      console.log('✅ Profile saved to database:', res);
       
       alert('Profile updated successfully!');
       setIsEditing(false);
+      
+      // ✅ Fetch lại profile từ database để đảm bảo sync
+      await fetchProfileFromDatabase();
+      
     } catch (err) {
       console.error('❌ Error updating profile:', err);
-      alert('Failed to update profile');
+      alert('Failed to update profile: ' + (err.message || 'Unknown error'));
     } finally {
       setLoading(false);
     }

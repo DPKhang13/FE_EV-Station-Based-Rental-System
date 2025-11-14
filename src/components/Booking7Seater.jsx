@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useVehicles } from '../hooks/useVehicles';
+import { useVehicleTimelines } from '../hooks/useVehicleTimelines';
 import { AuthContext } from '../context/AuthContext';
 import { validateVehicleForBooking } from '../utils/vehicleValidator';
 import './Booking7Seater.css';
@@ -13,10 +14,20 @@ const Booking7Seater = () => {
     const preSelectedCar = location.state?.car;
     const gradeFilter = location.state?.gradeFilter; // For filtering by grade from Offers
 
+    // ✅ Sử dụng hook mới để fetch timeline cho tất cả xe
+    const { 
+        getVehicleTimeline, 
+        hasBookedSlots, 
+        hasOverlap, 
+        getTimelineMessage,
+        loading: timelinesLoading 
+    } = useVehicleTimelines(cars);
+
     const [selectedCarId, setSelectedCarId] = useState(preSelectedCar?.id || '');
     const [selectedCar, setSelectedCar] = useState(preSelectedCar || null);
     const [submitting, setSubmitting] = useState(false);
     const [selectedColor, setSelectedColor] = useState('');
+    const [bookedSlots, setBookedSlots] = useState([]); // ✅ Timeline của xe đã chọn
 
     const [formData, setFormData] = useState({
         startTime: '',
@@ -27,17 +38,17 @@ const Booking7Seater = () => {
     // Filter 7-seater available cars, optionally by grade and color
     const availableCars = cars.filter(car => {
         const isSevenSeater = car.type === '7-seater';
-        const isAvailable = car.status === 'Available';
+        // ✅ HIỂN THỊ TẤT CẢ XE (kể cả BOOKED/RENTAL/CHECKING)
+        // Timeline sẽ được check để disable các khung giờ đã book
         const matchesGrade = gradeFilter ? car.grade === gradeFilter : true;
         const matchesColor = selectedColor ? car.color === selectedColor : true;
-        return isSevenSeater && isAvailable && matchesGrade && matchesColor;
+        return isSevenSeater && matchesGrade && matchesColor;
     });
 
     // Get unique colors from 7-seater available cars
     const availableColors = [...new Set(
         cars.filter(car =>
             car.type === '7-seater' &&
-            car.status === 'Available' &&
             car.color &&
             car.color !== 'N/A' &&
             car.color !== 'null' &&
@@ -57,14 +68,34 @@ const Booking7Seater = () => {
         });
     };
 
-    const handleCarSelect = (e) => {
+    const handleCarSelect = async (e) => {
         const carId = e.target.value;
+        console.log('🚗 Đã chọn xe ID:', carId);
         setSelectedCarId(carId);
+        
         if (carId) {
-            const car = availableCars.find(c => c.id === parseInt(carId));
+            const car = availableCars.find(c => c.id === parseInt(carId) || c.vehicleId === parseInt(carId));
             setSelectedCar(car);
+            
+            // ✅ Fetch timeline của xe này
+            try {
+                console.log('📞 Gọi API timeline cho:', carId);
+                const data = await vehicleTimelineService.getTimelines(carId);
+                console.log('📦 Timeline nhận được:', data);
+                const booked = data
+                    .filter(t => t.status === 'BOOKED' || t.status === 'ORDER_RENTAL' || t.status === 'RENTAL')
+                    .map(t => ({
+                        start: new Date(t.startTime),
+                        end: new Date(t.endTime)
+                    }));
+                setBookedSlots(booked);
+            } catch (error) {
+                console.error('❌ Lỗi khi gọi API timeline:', error);
+                setBookedSlots([]);
+            }
         } else {
             setSelectedCar(null);
+            setBookedSlots([]);
         }
     };
 
@@ -130,6 +161,22 @@ const Booking7Seater = () => {
         // 4. Calculate end time from start time + planned hours
         const plannedHours = parseInt(formData.plannedHours);
         const end = new Date(start.getTime() + (plannedHours * 60 * 60 * 1000));
+
+        // ✅ CHECK OVERLAP với timeline (xe đã được book trong khoảng thời gian này)
+        const hasOverlap = bookedSlots.some((slot) => {
+            // Overlap condition: (start1 < end2) AND (end1 > start2)
+            return start < slot.end && end > slot.start;
+        });
+
+        if (hasOverlap) {
+            alert(
+                '⚠️ Xe này đã được đặt trong khoảng thời gian bạn chọn!\n\n' +
+                'Vui lòng:\n' +
+                '1. Chọn thời gian khác\n' +
+                '2. Hoặc chọn xe khác'
+            );
+            return;
+        }
 
         // 5. Get user ID and token
         const token = localStorage.getItem('accessToken');
@@ -321,6 +368,7 @@ const Booking7Seater = () => {
                             </div>
                         )}
 
+                        {/* ✅ Chọn xe với thông báo timeline */}
                         <div className="form-group">
                             <label htmlFor="carSelect">Chọn Xe *</label>
                             <select
@@ -330,13 +378,62 @@ const Booking7Seater = () => {
                                 required
                             >
                                 <option value="">Chọn một xe</option>
-                                {availableCars.map(car => (
-                                    <option key={car.id} value={car.id}>
-                                        {car.vehicle_name}
-                                    </option>
-                                ))}
+                                {availableCars.map(car => {
+                                    const vehicleId = car.vehicleId || car.id;
+                                    const timelineMsg = getTimelineMessage(vehicleId);
+                                    const displayName = car.vehicle_name || car.vehicleName || car.plateNumber;
+                                    
+                                    return (
+                                        <option key={car.id} value={car.id}>
+                                            {displayName}
+                                            {timelineMsg ? ` ⚠️ (${timelineMsg.summary})` : ' ✅ (Trống lịch)'}
+                                        </option>
+                                    );
+                                })}
                             </select>
+                            {timelinesLoading && (
+                                <small style={{ color: '#666', fontSize: '12px', display: 'block', marginTop: '4px' }}>
+                                    🔄 Đang tải thông tin lịch đặt xe...
+                                </small>
+                            )}
                         </div>
+
+                        {/* ✅ Hiển thị timeline đã book (nếu có) - Cải tiến với status */}
+                        {selectedCar && bookedSlots.length > 0 && (
+                            <div style={{
+                                padding: "12px",
+                                background: "#fff3cd",
+                                border: "1px solid #ffc107",
+                                borderRadius: "8px",
+                                marginBottom: "16px"
+                            }}>
+                                <p style={{ margin: "0 0 8px", fontWeight: "600", color: "#856404" }}>
+                                    ⚠️ Xe này đã được đặt trong các khung giờ sau:
+                                </p>
+                                <ul style={{ margin: "0", paddingLeft: "20px", color: "#856404" }}>
+                                    {bookedSlots.map((slot, idx) => {
+                                        const statusLabel = slot.status === 'MAINTENANCE' 
+                                            ? '🔧 Bảo trì' 
+                                            : slot.status === 'CHECKING' 
+                                            ? '🔍 Kiểm tra' 
+                                            : slot.status === 'RENTAL'
+                                            ? '🚗 Đang thuê'
+                                            : '📅 Đã đặt';
+                                        
+                                        return (
+                                            <li key={idx} style={{ marginBottom: "4px" }}>
+                                                <strong>{statusLabel}:</strong>{" "}
+                                                {new Date(slot.start).toLocaleString("vi-VN")} → {new Date(slot.end).toLocaleString("vi-VN")}
+                                                {slot.note && <em style={{ fontSize: "11px", display: "block", marginTop: "2px" }}>({slot.note})</em>}
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                                <p style={{ margin: "8px 0 0", fontSize: "13px", color: "#856404" }}>
+                                    💡 Vui lòng chọn thời gian khác để đặt xe.
+                                </p>
+                            </div>
+                        )}
 
                         <div className="form-group">
                             <label htmlFor="startTime">Ngày & Giờ Nhận Xe *</label>
