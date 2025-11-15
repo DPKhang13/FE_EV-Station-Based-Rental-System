@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { authService, vehicleService, orderService } from "../services";
+import api from "../services/api";
 import "./OrderDetailPage.css";
 
 export default function OrderDetailPage() {
@@ -24,6 +25,11 @@ export default function OrderDetailPage() {
   });
 
   const [toast, setToast] = useState(null);
+  const [payments, setPayments] = useState([]);
+  const [processing, setProcessing] = useState(false);
+  const [isWaitingForVehicle, setIsWaitingForVehicle] = useState(false);
+  const [otherOrdersUsingSameVehicle, setOtherOrdersUsingSameVehicle] = useState([]);
+  
   const showToast = (type, text, ms = 4000) => {
     setToast({ type, text });
     setTimeout(() => setToast(null), ms);
@@ -62,6 +68,47 @@ export default function OrderDetailPage() {
         (v) => Number(v.vehicleId) === Number(first.vehicleId)
       );
       if (foundVehicle) setVehicle(foundVehicle);
+    }
+  };
+
+  // Fetch payments
+  const fetchPayments = async () => {
+    try {
+      const res = await api.get(`/payment/order/${orderId}`);
+      const paymentList = Array.isArray(res)
+        ? res
+        : Array.isArray(res.data)
+        ? res.data
+        : res.data?.data || [];
+      setPayments(paymentList);
+    } catch (err) {
+      console.error("Lỗi khi tải payments:", err);
+      setPayments([]);
+    }
+  };
+
+  // Handle confirm payment
+  const handleStaffConfirmPayment = async () => {
+    if (!window.confirm("Xác nhận thanh toán này đã được khách hàng thanh toán bằng tiền mặt?")) {
+      return;
+    }
+
+    try {
+      setProcessing(true);
+      await api.put(`/payment/cash/approve/order/${orderId}`);
+      showToast("success", "✅ Đã xác nhận thanh toán thành công!");
+      await fetchPayments();
+      await refetchDetails();
+    } catch (err) {
+      console.error("Lỗi xác nhận thanh toán:", err);
+      const errorMsg = 
+        err?.response?.data?.message || 
+        err?.response?.data?.error ||
+        err?.message || 
+        "Không thể xác nhận thanh toán. Vui lòng thử lại sau.";
+      showToast("error", errorMsg);
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -192,6 +239,9 @@ export default function OrderDetailPage() {
           );
           setVehicle(foundVehicle);
         }
+        
+        // Fetch payments
+        await fetchPayments();
       } catch (err) {
         console.error(err);
         setError("Không thể tải dữ liệu!");
@@ -284,30 +334,90 @@ export default function OrderDetailPage() {
       <div className="info-card">
         <h2>Các giao dịch trong đơn hàng</h2>
 
-        {orderDetails.map((detail) => (
-          <div key={detail.detailId} className="detail-card">
-            <div className="detail-header">
-              <span className={`status-tag ${detail.status.toLowerCase()}`}>
-                {detail.status === "SUCCESS"
-                  ? "Thành công"
-                  : detail.status === "FAILED"
-                    ? "Thất bại"
-                    : detail.status === "PENDING"
-                      ? "Đang kiểm tra"
-                      : detail.status === "CHECKING"
-                        ? "Đang chờ"
-                        : detail.status}
-              </span>
-            </div>
+        {orderDetails.map((detail) => {
+          const methodPayment = String(detail.methodPayment || "").toUpperCase();
+          const status = String(detail.status || "").toUpperCase();
+          const isPending = status === "PENDING" || status === "CHECKING" || status === "ĐANG KIỂM TRA";
+          const isCash = methodPayment === "CASH";
+          
+          // Tìm payment CASH PENDING tương ứng
+          const relatedPayment = payments.find(
+            (p) => 
+              String(p.status || "").toUpperCase() === "PENDING" &&
+              String(p.method || "").toUpperCase() === "CASH"
+          );
+          
+          const showConfirmButton = isCash && isPending;
+          
+          return (
+            <div key={detail.detailId} className="detail-card">
+              <div className="detail-header" style={{ 
+                display: "flex", 
+                justifyContent: "space-between", 
+                alignItems: "center",
+                gap: "16px"
+              }}>
+                <span className={`status-tag ${detail.status.toLowerCase()}`}>
+                  {detail.status === "SUCCESS"
+                    ? "Thành công"
+                    : detail.status === "FAILED"
+                      ? "Thất bại"
+                      : detail.status === "PENDING"
+                        ? "Đang kiểm tra"
+                        : detail.status === "CHECKING"
+                          ? "Đang chờ"
+                          : detail.status}
+                </span>
+                
+                {/* Nút Xác nhận đã thanh toán */}
+                {showConfirmButton && (
+                  <button
+                    onClick={() => {
+                      // Gọi API với orderId (không cần paymentId nữa)
+                      handleStaffConfirmPayment();
+                    }}
+                    disabled={processing}
+                    style={{
+                      padding: "8px 20px",
+                      background: "#000000",
+                      color: "#FFFFFF",
+                      border: "2px solid #000000",
+                      borderRadius: "0",
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      cursor: processing ? "not-allowed" : "pointer",
+                      letterSpacing: "0.5px",
+                      textTransform: "uppercase",
+                      transition: "all 0.3s ease",
+                      whiteSpace: "nowrap"
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!processing) {
+                        e.target.style.background = "#DC0000";
+                        e.target.style.borderColor = "#DC0000";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!processing) {
+                        e.target.style.background = "#000000";
+                        e.target.style.borderColor = "#000000";
+                      }
+                    }}
+                  >
+                    {processing ? "Đang xử lý..." : "✅ Xác nhận đã thanh toán"}
+                  </button>
+                )}
+              </div>
 
-            <div className="detail-grid">
-              <p><span>Thời gian bắt đầu:</span> {fmtVN(detail.startTime)}</p>
-              <p><span>Thời gian kết thúc:</span> {fmtVN(detail.endTime)}</p>
-              <p><span>Số tiền:</span> {Number(detail.price).toLocaleString("vi-VN")} VND</p>
-              <p><span>Mô tả:</span> {detail.description}</p>
+              <div className="detail-grid">
+                <p><span>Thời gian bắt đầu:</span> {fmtVN(detail.startTime)}</p>
+                <p><span>Thời gian kết thúc:</span> {fmtVN(detail.endTime)}</p>
+                <p><span>Số tiền:</span> {Number(detail.price).toLocaleString("vi-VN")} VND</p>
+                <p><span>Mô tả:</span> {detail.description}</p>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       {/* ======================== */}
       {/* ======================== */}
