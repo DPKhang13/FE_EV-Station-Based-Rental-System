@@ -903,3 +903,8 @@
         width: 100%;
     }
 }
+.action-dropdown { position: relative; display: inline-block; }
+.dropdown-menu {
+  position: absolute; right: 0; top: 100%;
+  z-index: 1000; max-height: 160px; overflow-y: auto; white-space: nowrap;
+}

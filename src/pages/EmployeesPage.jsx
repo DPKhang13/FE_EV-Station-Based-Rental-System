@@ -46,10 +46,27 @@ const EmployeesPage = () => {
     setEmployees([...employees, newEmployee]);
   };
 
-  // 🗑️ Xóa nhân viên (tạm thời client-side)
-  const handleDelete = (index) => {
-    if (window.confirm("Bạn có chắc muốn xóa nhân viên này không?")) {
-      setEmployees(employees.filter((_, i) => i !== index));
+
+
+  // 🔁 Chuyển đổi trạng thái tài khoản
+  const handleToggleStatus = async (staff) => {
+    if (!staff?.staffId) {
+      alert("Không tìm thấy mã nhân viên!");
+      return;
+    }
+
+    try {
+      await fetch(`http://localhost:8080/api/staffschedule/staff/${staff.staffId}/toggle`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" }
+      });
+
+      alert("✅ Đã chuyển trạng thái tài khoản!");
+      getEmployees(); // reload lại danh sách
+    } catch (error) {
+      console.error("❌ Lỗi khi chuyển trạng thái:", error);
+      const msg = error?.response?.data?.message || error.message;
+      alert(`⚠️ Không thể đổi trạng thái: ${msg}`);
     }
   };
 
@@ -107,68 +124,67 @@ const EmployeesPage = () => {
         <h3>Danh sách nhân viên</h3>
         <div className="employee-table-container">
           <table>
-          <thead>
-            <tr>
-              <th>NHÂN VIÊN</th>
-              <th>CHỨC VỤ</th>
-              <th>ĐIỂM LÀM VIỆC</th>
-              <th>HIỆU SUẤT</th>
-              <th>TRẠNG THÁI TÀI KHOẢN</th>
-              <th>THAO TÁC</th>
-            </tr>
-          </thead>
-          <tbody>
-            {employees.length === 0 ? (
+            <thead>
               <tr>
-                <td colSpan="6" className="no-data">
-                  Chưa có nhân viên nào
-                </td>
+                <th>NHÂN VIÊN</th>
+                <th>CHỨC VỤ</th>
+                <th>ĐIỂM LÀM VIỆC</th>
+                <th>HIỆU SUẤT</th>
+                <th>TRẠNG THÁI TÀI KHOẢN</th>
+                <th>THAO TÁC</th>
               </tr>
-            ) : (
-              employees.map((e, index) => (
-                <tr key={index}>
-                  <td>
-                    <div className="employee-info">
-                      <div className="avatar">{e.staffName?.[0] || "?"}</div>
-                      <div>
-                        <strong>{e.staffName}</strong>
-                        <p className="email">{e.staffEmail}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{hienThiChucVu(e.role)}</td>
-                  <td>{e.stationName || "Không rõ trạm"}</td>
-                  <td>
-                    <span className="tag">{danhGia(e)}</span>
-                    <p className="small-text">
-                      {(e.pickupCount || 0) + (e.returnCount || 0)} lần giao nhận
-                    </p>
-                  </td>
-                  <td>
-                    <span
-                      className={`status ${
-                        e.status === "ACTIVE" ? "active" : "inactive"
-                      }`}
-                    >
-                      {e.status === "ACTIVE"
-                        ? "Hoạt động"
-                        : "Ngưng hoạt động"}
-                    </span>
-                  </td>
-                  <td>
-                    <button
-                      className="delete-btn"
-                      title="Xóa nhân viên"
-                      onClick={() => handleDelete(index)}
-                    >
-                      Xóa
-                    </button>
+            </thead>
+            <tbody>
+              {employees.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="no-data">
+                    Chưa có nhân viên nào
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                employees.map((e, index) => (
+                  <tr key={index}>
+                    <td>
+                      <div className="employee-info">
+                        <div className="avatar">{e.staffName?.[0] || "?"}</div>
+                        <div>
+                          <strong>{e.staffName}</strong>
+                          <p className="email">{e.staffEmail}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{hienThiChucVu(e.role)}</td>
+                    <td>{e.stationName || "Không rõ trạm"}</td>
+                    <td>
+                      <span className="tag">{danhGia(e)}</span>
+                      <p className="small-text">
+                        {(e.pickupCount || 0) + (e.returnCount || 0)} lần giao nhận
+                      </p>
+                    </td>
+                    <td>
+                      <span
+                        className={`status ${e.status === "ACTIVE" ? "active" : "inactive"
+                          }`}
+                      >
+                        {e.status === "ACTIVE"
+                          ? "Hoạt động"
+                          : "Ngưng hoạt động"}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        className={`toggle-btn ${e.status === "ACTIVE" ? "deactivate" : "activate"}`}
+                        onClick={() => handleToggleStatus(e)}
+                      >
+                        {e.status === "ACTIVE" ? "🟢 Hoạt động" : "🔴 Ngưng"}
+                      </button>
+                    </td>
+
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 

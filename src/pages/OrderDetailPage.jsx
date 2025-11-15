@@ -16,6 +16,9 @@ export default function OrderDetailPage() {
   const [returnPreview, setReturnPreview] = useState(null);
   const [returnTime, setReturnTime] = useState("");
   const [showReturnModal, setShowReturnModal] = useState(false);
+  const [editingService, setEditingService] = useState(null);
+const [editData, setEditData] = useState({ description: "", cost: 0 });
+
 
   const [service, setService] = useState({
     serviceType: "",
@@ -293,9 +296,9 @@ export default function OrderDetailPage() {
                   : detail.status === "FAILED"
                     ? "Thất bại"
                     : detail.status === "PENDING"
-                      ? "Đang kiểm tra"
+                      ? "Đang chờ xử lý"
                       : detail.status === "CHECKING"
-                        ? "Đang chờ"
+                        ? "Đang kiểm tra"
                         : detail.status}
               </span>
             </div>
@@ -313,115 +316,128 @@ export default function OrderDetailPage() {
       {/* ======================== */}
       {/* ⭐ SERVICE FORM — FIX FOR SERVICE_SERVICE */}
       {/* ======================== */}
-      <div className="info-card">
-        <h2>Dịch vụ phát sinh</h2>
+      {vehicle?.status === "RENTAL" && (
+  <div className="info-card">
+    <h2>Dịch vụ phát sinh</h2>
 
-        {/* ==== DANH SÁCH DỊCH VỤ ==== */}
-        <div style={{ marginBottom: "16px" }}>
-          <h3 style={{ marginBottom: "8px" }}>Danh sách dịch vụ đã tạo</h3>
+    {/* ==== DANH SÁCH DỊCH VỤ ==== */}
+    <div style={{ marginBottom: "16px" }}>
+      <h3 style={{ marginBottom: "8px" }}>Danh sách dịch vụ đã tạo</h3>
 
-          {orderDetails.filter(d => d.type === "SERVICE_SERVICE").length === 0 ? (
-            <p style={{ color: "#777" }}>Chưa có dịch vụ nào.</p>
-          ) : (
-            orderDetails
-              .filter(d => d.type === "SERVICE_SERVICE")
-              .map((sv) => (
-                <div key={sv.detailId} className="detail-card">
-                  <div className="detail-grid">
-                    <p><span>Dịch vụ:</span> {sv.description}</p>
-                    <p><span>Giá:</span> {Number(sv.price).toLocaleString("vi-VN")} VND</p>
-                    <p><span>Trạng thái:</span> {sv.status}</p>
-                  </div>
-                </div>
-              ))
-          )}
-        </div>
+     {orderDetails
+  .filter(d => d.type === "SERVICE_SERVICE")
+  .map((sv) => (
+    <div key={sv.detailId} className="detail-card">
+      <div className="detail-grid">
+        <p><span>Dịch vụ:</span> {sv.description}</p>
+        <p><span>Giá:</span> {Number(sv.price).toLocaleString("vi-VN")} VND</p>
+        <p><span>Trạng thái:</span> {sv.status==="PENDING"?"Đang chờ xử lý":sv.status}</p>
+      </div>
 
-        <hr />
+      {sv.status === "PENDING" && (
+        <button
+          className="btn-add-services"
+          style={{ marginTop: 10 }}
+          onClick={() => {
+            setEditingService(sv);
+            setEditData({
+              description: sv.description,
+              cost: sv.price
+            });
+          }}
+        >
+          ✏️ Chỉnh sửa
+        </button>
+      )}
+    </div>
+  ))}
 
-        {/* ==== TICK DỊCH VỤ CỐ ĐỊNH ==== */}
-        <h3>Chọn dịch vụ cố định</h3>
-        <div className="fixed-services">
-          {[
-            { label: "Giao thông", defaultCost: 50000 },
-            { label: "Sửa chữa", defaultCost: 150000 },
-            { label: "Bảo dưỡng", defaultCost: 100000 },
-            { label: "Vệ sinh", defaultCost: 30000 }
-          ].map((sv) => (
-            <div key={sv.label} className="service-row">
-              <label className="checkbox-line">
-                <input
-                  type="checkbox"
-                  checked={service.description === sv.label}
-                  onChange={() =>
-                    setService({
-                      serviceType: "SERVICE",
-                      cost: sv.defaultCost,
-                      description: sv.label
-                    })
-                  }
-                />
-                {sv.label}
-              </label>
+    </div>
 
-              <input
-                type="number"
-                className="service-price-input"
-                value={
-                  service.description === sv.label ? service.cost : sv.defaultCost
-                }
-                onChange={(e) => {
-                  if (service.description === sv.label) {
-                    setService({
-                      ...service,
-                      cost: Number(e.target.value)
-                    });
-                  }
-                }}
-              />
+    <hr />
 
-              <span>VND</span>
-            </div>
-          ))}
-        </div>
+    {/* ==== TICK DỊCH VỤ CỐ ĐỊNH ==== */}
+    <h3>Chọn dịch vụ cố định</h3>
+    <div className="fixed-services">
+      {[
+        { label: "Giao thông", defaultCost: 50000 },
+        { label: "Sửa chữa", defaultCost: 150000 },
+        { label: "Bảo dưỡng", defaultCost: 100000 },
+        { label: "Vệ sinh", defaultCost: 30000 }
+      ].map((sv) => (
+        <div key={sv.label} className="service-row">
+          <label className="checkbox-line">
+            <input
+              type="checkbox"
+              checked={service.description === sv.label}
+              onChange={() =>
+                setService({
+                  serviceType: "SERVICE",
+                  cost: sv.defaultCost,
+                  description: sv.label
+                })
+              }
+            />
+            {sv.label}
+          </label>
 
-        <hr />
-
-        {/* ==== DỊCH VỤ TÙY CHỈNH ==== */}
-        <h3>➕ Thêm dịch vụ khác</h3>
-
-        <div className="service-form">
-          <label>Loại dịch vụ</label>
-          <input
-            type="text"
-            value={service.description}
-            placeholder="Tên dịch vụ"
-            onChange={(e) =>
-              setService({
-                ...service,
-                description: e.target.value,
-                serviceType: "SERVICE"
-              })
-            }
-          />
-
-          <label>Giá tiền (VND)</label>
           <input
             type="number"
-            value={service.cost}
-            onChange={(e) =>
-              setService({
-                ...service,
-                cost: Number(e.target.value)
-              })
+            className="service-price-input"
+            value={
+              service.description === sv.label ? service.cost : sv.defaultCost
             }
+            onChange={(e) => {
+              if (service.description === sv.label) {
+                setService({
+                  ...service,
+                  cost: Number(e.target.value)
+                });
+              }
+            }}
           />
-
-          <button className="btn btn-add-service" onClick={handleAddService}>
-            ➕ Thêm dịch vụ
-          </button>
+          <span>VND</span>
         </div>
-      </div>
+      ))}
+    </div>
+
+    <hr />
+
+    {/* ==== DỊCH VỤ TÙY CHỈNH ==== */}
+    <h3>➕ Thêm dịch vụ khác</h3>
+    <div className="service-form">
+      <label>Loại dịch vụ</label>
+      <input
+        type="text"
+        value={service.description}
+        placeholder="Tên dịch vụ"
+        onChange={(e) =>
+          setService({
+            ...service,
+            description: e.target.value,
+            serviceType: "SERVICE"
+          })
+        }
+      />
+
+      <label>Giá tiền (VND)</label>
+      <input
+        type="number"
+        value={service.cost}
+        onChange={(e) =>
+          setService({
+            ...service,
+            cost: Number(e.target.value)
+          })
+        }
+      />
+
+      <button className="btn-add-services" onClick={handleAddService}>
+        ➕ Thêm dịch vụ
+      </button>
+    </div>
+  </div>
+)}
 
       {/* HANDOVER */}
       <div className="info-card">
@@ -506,6 +522,61 @@ export default function OrderDetailPage() {
           </div>
         </div>
       )}
+      {editingService && (
+  <div className="modal-overlay">
+    <div className="modal">
+      <h2>✏️ Chỉnh sửa dịch vụ</h2>
+
+      <label>Mô tả dịch vụ</label>
+      <input
+        type="text"
+        value={editData.description}
+        onChange={(e) =>
+          setEditData({ ...editData, description: e.target.value })
+        }
+      />
+
+      <label>Giá tiền (VND)</label>
+      <input
+        type="number"
+        value={editData.cost}
+        onChange={(e) =>
+          setEditData({ ...editData, cost: Number(e.target.value) })
+        }
+      />
+
+      <div className="modal-actions">
+        <button className="btn btn-primary" onClick={async () => {
+          try {
+            await fetch(`http://localhost:8080/api/order-details/${editingService.detailId}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                ...editingService,
+                description: editData.description,
+                price: Number(editData.cost)
+              })
+            });
+
+            showToast("success", "✅ Cập nhật dịch vụ thành công!");
+            setEditingService(null);
+            await refetchDetails();
+          } catch (err) {
+            console.error(err);
+            showToast("error", "❌ Lỗi khi cập nhật dịch vụ!");
+          }
+        }}>
+          💾 Lưu thay đổi
+        </button>
+
+        <button className="btn btn-danger" onClick={() => setEditingService(null)}>
+          ✖ Hủy
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }

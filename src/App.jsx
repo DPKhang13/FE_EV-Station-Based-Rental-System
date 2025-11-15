@@ -191,7 +191,7 @@ function App() {
               <Route path="vehicles" element={<VehicleManagement />} />
               <Route path="locations" element={<StationManagement />} />
               <Route path="customers" element={<CustomerManagement />} />
-              <Route path="quanlixe" element={<QuanLiXeTaiTram/>}/>
+             
               <Route path="hienthiXe/:station" element={<TrangHienThiXeTheoTram/>}/>
               <Route path="chitiet/:id" element={<ChiTietKhachHang/>}/>
               <Route path="lichsu-thue/:userId" element={<LichSuThue/>}/>
