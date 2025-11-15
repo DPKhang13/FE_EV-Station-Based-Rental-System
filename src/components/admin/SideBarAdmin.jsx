@@ -34,6 +34,11 @@ export default function SideBarAdmin() {
             <FaCar />
             <span>Quản lý xe</span>
           </NavLink>
+          
+          <NavLink to="/admin/quanlyxetaitram" className="sidebar__btn">
+            <FaCar />
+            <span>Quản lý xe tại trạm</span>
+          </NavLink>
          
           
           

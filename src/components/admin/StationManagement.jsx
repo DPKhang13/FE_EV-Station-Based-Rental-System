@@ -181,6 +181,13 @@ const StationManagement = () => {
                 };
             });
 
+            // Sắp xếp trạm theo ID (số)
+            stationData = [...stationData].sort((a, b) => {
+                const idA = Number(a.id || a.stationid || 0);
+                const idB = Number(b.id || b.stationid || 0);
+                return idA - idB;
+            });
+
             console.log('✅ Final parsed stations:', stationData);
             console.log('✅ Setting stations state with:', stationData.length, 'items');
 
@@ -314,6 +321,13 @@ const StationManagement = () => {
                 ...station,
                 id: station.stationid || station.id
             }));
+
+            // Sắp xếp trạm theo ID (số)
+            stationData = [...stationData].sort((a, b) => {
+                const idA = Number(a.id || a.stationid || 0);
+                const idB = Number(b.id || b.stationid || 0);
+                return idA - idB;
+            });
 
             setStations(stationData);
             setError('');
