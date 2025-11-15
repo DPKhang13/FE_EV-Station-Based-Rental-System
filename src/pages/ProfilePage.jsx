@@ -37,6 +37,33 @@ const ProfilePage = () => {
     fetchProfileFromDatabase();
   }, [user, navigate]);
 
+  // ✅ Sync formData khi user context thay đổi
+  useEffect(() => {
+    if (!user) return;
+    
+    console.log('🔄 User context changed, syncing formData:', user);
+    setFormData({
+      fullName: user.name || user.fullName || user.username || '',
+      email: user.email || '',
+      phone: user.phone || user.phoneNumber || '',
+      address: user.address || '',
+      dateOfBirth: user.dateOfBirth || user.dob || '',
+    });
+    
+    // Sync ảnh nếu có
+    const cccdUrl = user.cccdImageUrl || user.idCardUrl || user.cccdUrl;
+    const dlUrl = user.driverLicenseImageUrl || user.driverLicenseUrl || user.licenseUrl;
+    
+    if (cccdUrl) {
+      setIdPreview(cccdUrl);
+      setIdCardUrl(cccdUrl);
+    }
+    if (dlUrl) {
+      setDlPreview(dlUrl);
+      setDriverLicenseUrl(dlUrl);
+    }
+  }, [user]);
+
   // Fetch profile từ database
   const fetchProfileFromDatabase = async () => {
     try {
@@ -322,6 +349,10 @@ const ProfilePage = () => {
     e.preventDefault();
     setLoading(true);
     try {
+      const userId = user?.id || user?.userId || user?.data?.id;
+      console.log('🔑 Sending userId:', userId);
+      console.log('👤 Current user:', user);
+      
       const payload = {
         ...formData,
         idCardUrl: idCardUrl || undefined,
@@ -329,13 +360,36 @@ const ProfilePage = () => {
       };
       
       console.log('💾 Saving profile with payload:', payload);
-      const res = await profileService.update(payload);
+      const res = await profileService.update(payload, userId);
       console.log('✅ Profile saved to database:', res);
+      
+      // ✅ Cập nhật user context ngay lập tức
+      const updatedUserData = {
+        name: formData.fullName,
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        phoneNumber: formData.phone,
+        address: formData.address,
+        dateOfBirth: formData.dateOfBirth,
+        dob: formData.dateOfBirth,
+        cccdImageUrl: idCardUrl,
+        idCardUrl: idCardUrl,
+        cccdUrl: idCardUrl,
+        driverLicenseImageUrl: driverLicenseUrl,
+        driverLicenseUrl: driverLicenseUrl,
+        licenseUrl: driverLicenseUrl,
+      };
+      
+      console.log('🔄 Updating user context with:', updatedUserData);
+      updateUser(updatedUserData);
+      console.log('✅ User context updated, changes should appear immediately');
       
       alert('Profile updated successfully!');
       setIsEditing(false);
       
-      // ✅ Fetch lại profile từ database để đảm bảo sync
+      // ✅ Fetch lại profile từ database để đảm bảo sync (second priority)
+      console.log('🔄 Fetching latest profile from database...');
       await fetchProfileFromDatabase();
       
     } catch (err) {

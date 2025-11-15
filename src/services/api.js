@@ -49,30 +49,26 @@ const ensureTokenCookie = () => {
  * Handle API response
  */
 const handleResponse = async (response) => {
-    if (!response.ok) {
-        let errorData;
-        const contentType = response.headers.get('content-type');
-
-        try {
-            if (contentType && contentType.includes('application/json')) {
-                errorData = await response.json();
-            } else {
-                errorData = await response.text();
-            }
-        } catch (e) {
-            errorData = 'Failed to parse error response';
+   if (!response.ok) {
+    let errorData;
+    const contentType = response.headers.get('content-type');
+    try {
+        if (contentType && contentType.includes('application/json')) {
+            errorData = await response.json();
+        } else {
+            errorData = await response.text();
         }
-
-        console.error(`🔴 [API] Error Response (${response.status}):`, errorData);
-
-        const error = new Error(`HTTP ${response.status}: ${typeof errorData === 'string' ? errorData : JSON.stringify(errorData)}`);
-        error.response = {
-            status: response.status,
-            data: errorData,
-            headers: response.headers
-        };
-        throw error;
+    } catch {
+        errorData = 'Failed to parse error response';
     }
+
+    console.error(`🔴 [API] Error Response (${response.status}):`, errorData);
+
+    const error = new Error(errorData?.message || `HTTP ${response.status}`);
+    error.status = response.status; // ✅ Gắn status cho FE đọc
+    throw error;
+}
+
 
     // ✅ Extract new AccessToken from Set-Cookie header if present
     const setCookieHeader = response.headers.get('set-cookie');
