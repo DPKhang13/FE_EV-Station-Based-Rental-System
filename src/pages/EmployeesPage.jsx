@@ -6,7 +6,7 @@ const EmployeesPage = () => {
   const [employees, setEmployees] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newStaff, setNewStaff] = useState({
-    fullname: "",
+    fullName: "", // ✅ đổi từ fullname → fullName
     email: "",
     phone: "",
     stationId: "",
@@ -55,10 +55,10 @@ const EmployeesPage = () => {
 
   // 🔎 Kiểm tra dữ liệu nhập
   const validateForm = () => {
-    const { fullname, email, phone, stationId, password } = newStaff;
+    const { fullName, email, phone, stationId, password } = newStaff;
     let newErrors = {};
 
-    if (!fullname.trim()) newErrors.fullname = "Vui lòng nhập họ tên";
+    if (!fullName.trim()) newErrors.fullName = "Vui lòng nhập họ tên";
     if (!email.endsWith("@gmail.com")) newErrors.email = "Email phải có dạng @gmail.com";
     if (!/^0[0-9]{9}$/.test(phone))
       newErrors.phone = "Số điện thoại không hợp lệ (phải là đầu số Việt Nam 10 chữ số)";
@@ -71,38 +71,37 @@ const EmployeesPage = () => {
 
   // 🚀 Gọi API tạo nhân viên mới
   const handleCreateStaff = async () => {
-  if (!validateForm()) return;
+    if (!validateForm()) return;
 
-  try {
-    const res = await fetch("http://localhost:8080/api/staffschedule/createStaff", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        fullname: newStaff.fullname,
-        email: newStaff.email,
-        phone: newStaff.phone,
-        stationId: Number(newStaff.stationId), // ✅ ép kiểu
-        password: newStaff.password
-      }),
-    });
+    try {
+      const res = await fetch("http://localhost:8080/api/staffschedule/createStaff", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: newStaff.fullName, // ✅ key đúng theo backend yêu cầu
+          email: newStaff.email,
+          phone: newStaff.phone,
+          stationId: Number(newStaff.stationId),
+          password: newStaff.password
+        }),
+      });
 
-    if (!res.ok) {
-      const errData = await res.json().catch(() => null);
-      console.error("📩 Backend trả lỗi:", errData);
-      throw new Error(errData?.message || "Tạo tài khoản thất bại");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        console.error("📩 Backend trả lỗi:", errData);
+        throw new Error(errData?.message || "Tạo tài khoản thất bại");
+      }
+
+      alert("✅ Tạo tài khoản nhân viên thành công!");
+      setShowAddModal(false);
+      setNewStaff({ fullName: "", email: "", phone: "", stationId: "", password: "" });
+      setErrors({});
+      getEmployees();
+    } catch (err) {
+      console.error("❌ Lỗi tạo tài khoản:", err);
+      alert(`Không thể tạo tài khoản: ${err.message}`);
     }
-
-    alert("✅ Tạo tài khoản nhân viên thành công!");
-    setShowAddModal(false);
-    setNewStaff({ fullname: "", email: "", phone: "", stationId: "", password: "" });
-    setErrors({});
-    getEmployees();
-  } catch (err) {
-    console.error("❌ Lỗi tạo tài khoản:", err);
-    alert(`Không thể tạo tài khoản: ${err.message}`);
-  }
-};
-
+  };
 
   // 🔁 Chuyển trạng thái tài khoản
   const handleToggleStatus = async (staff) => {
@@ -308,13 +307,13 @@ const EmployeesPage = () => {
             <label>Họ tên</label>
             <input
               type="text"
-              name="fullname"
-              value={newStaff.fullname}
+              name="fullName" // ✅ đổi name
+              value={newStaff.fullName}
               onChange={handleChange}
               placeholder="VD: Nguyễn Văn A"
-              className={errors.fullname ? "input-error" : ""}
+              className={errors.fullName ? "input-error" : ""}
             />
-            {errors.fullname && <p className="error-text">{errors.fullname}</p>}
+            {errors.fullName && <p className="error-text">{errors.fullName}</p>}
 
             <label>Email</label>
             <input
