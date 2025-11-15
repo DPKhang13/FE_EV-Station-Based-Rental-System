@@ -6,7 +6,6 @@ import { AuthContext } from "../context/AuthContext";
 import { validateVehicleForBooking } from "../utils/vehicleValidator";
 import { orderService } from "../services";
 
-import { vehicleTimelineService } from "../services/vehicleTimelineService";
 
 
 import "./Booking4Seater.css";
@@ -36,8 +35,6 @@ const Booking4Seater = () => {
   // ✅ Sử dụng hook mới để fetch timeline cho tất cả xe
   const { 
     getVehicleTimeline, 
-    hasBookedSlots, 
-    hasOverlap, 
     getTimelineMessage,
     loading: timelinesLoading 
   } = useVehicleTimelines(cars);
@@ -206,7 +203,6 @@ const Booking4Seater = () => {
       return;
     }
 
-    const token = localStorage.getItem("accessToken");
     if (!user) {
       navigate("/login");
       return;
@@ -314,14 +310,14 @@ const Booking4Seater = () => {
                       value={vehicleId}
                     >
                       {displayName}
-                      {timelineMsg ? ` ⚠️ (${timelineMsg.summary})` : ' ✅ (Trống lịch)'}
+                      {timelineMsg ? ` (${timelineMsg.summary})` : ' (Trống lịch)'}
                     </option>
                   );
                 })}
               </select>
               {timelinesLoading && (
                 <small style={{ color: '#666', fontSize: '12px', display: 'block', marginTop: '4px' }}>
-                  🔄 Đang tải thông tin lịch đặt xe...
+                  Đang tải thông tin lịch đặt xe...
                 </small>
               )}
             </div>
@@ -336,29 +332,32 @@ const Booking4Seater = () => {
                 marginBottom: "16px"
               }}>
                 <p style={{ margin: "0 0 8px", fontWeight: "600", color: "#856404" }}>
-                  ⚠️ Xe này đã được đặt trong các khung giờ sau:
+                  Xe này đã được đặt trong các khung giờ sau:
                 </p>
                 <ul style={{ margin: "0", paddingLeft: "20px", color: "#856404" }}>
                   {bookedSlots.map((slot, idx) => {
                     const statusLabel = slot.status === 'MAINTENANCE' 
-                      ? '🔧 Bảo trì' 
+                      ? 'Bảo trì' 
                       : slot.status === 'CHECKING' 
-                      ? '🔍 Kiểm tra' 
+                      ? 'Kiểm tra' 
                       : slot.status === 'RENTAL'
-                      ? '🚗 Đang thuê'
-                      : '📅 Đã đặt';
+                      ? 'Đang thuê'
+                      : 'Đã đặt';
+                    
+                    // Lọc bỏ mã đơn hàng khỏi note (nếu có)
+                    const cleanNote = slot.note ? slot.note.replace(/\(Xe được đặt cho đơn thuê #.*?\)/gi, '').replace(/đơn thuê #.*/gi, '').trim() : null;
                     
                     return (
                       <li key={idx} style={{ marginBottom: "4px" }}>
                         <strong>{statusLabel}:</strong>{" "}
                         {new Date(slot.start).toLocaleString("vi-VN")} → {new Date(slot.end).toLocaleString("vi-VN")}
-                        {slot.note && <em style={{ fontSize: "11px", display: "block", marginTop: "2px" }}>({slot.note})</em>}
+                        {cleanNote && cleanNote.length > 0 && <em style={{ fontSize: "11px", display: "block", marginTop: "2px" }}>({cleanNote})</em>}
                       </li>
                     );
                   })}
                 </ul>
                 <p style={{ margin: "8px 0 0", fontSize: "13px", color: "#856404" }}>
-                  💡 Vui lòng chọn thời gian khác để đặt xe.
+                  Vui lòng chọn thời gian khác để đặt xe.
                 </p>
               </div>
             )}

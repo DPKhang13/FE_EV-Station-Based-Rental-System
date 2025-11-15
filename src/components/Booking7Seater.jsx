@@ -21,8 +21,6 @@ const Booking7Seater = () => {
     // ✅ Sử dụng hook mới để fetch timeline cho tất cả xe
     const { 
         getVehicleTimeline, 
-        hasBookedSlots, 
-        hasOverlap, 
         getTimelineMessage,
         loading: timelinesLoading 
     } = useVehicleTimelines(cars);
@@ -366,14 +364,14 @@ const Booking7Seater = () => {
                                             value={vehicleId}
                                         >
                                             {displayName}
-                                            {timelineMsg ? ` ⚠️ (${timelineMsg.summary})` : ' ✅ (Trống lịch)'}
+                                            {timelineMsg ? ` (${timelineMsg.summary})` : ' (Trống lịch)'}
                                         </option>
                                     );
                                 })}
                             </select>
                             {timelinesLoading && (
                                 <small style={{ color: '#666', fontSize: '12px', display: 'block', marginTop: '4px' }}>
-                                    🔄 Đang tải thông tin lịch đặt xe...
+                                    Đang tải thông tin lịch đặt xe...
                                 </small>
                             )}
                         </div>

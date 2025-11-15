@@ -666,16 +666,20 @@ const OrderDetailCusPage = () => {
                   : payments.find((p) => p); // Tìm payment đầu tiên nếu không có paymentType
                 
                 // Lấy payment method từ payment hoặc order detail
-                const paymentMethod = foundPayment 
-                  ? String(foundPayment.method || "").toUpperCase()
-                  : methodPayment || "";
+                // Chỉ lấy methodPayment từ order detail nếu thực sự có giá trị
+                let paymentMethod = "";
+                if (foundPayment && foundPayment.method) {
+                  paymentMethod = String(foundPayment.method).toUpperCase();
+                } else if (methodPayment && methodPayment.trim() !== "") {
+                  paymentMethod = String(methodPayment).toUpperCase();
+                }
                 
                 // Chuyển đổi payment method sang tiếng Việt
                 const getPaymentMethodText = (method) => {
-                  const methodUpper = String(method || "").toUpperCase();
+                  if (!method || method.trim() === "") return "Chưa có";
+                  const methodUpper = String(method).toUpperCase();
                   if (methodUpper === "CASH") return "Tiền mặt";
                   if (methodUpper === "CAPTUREWALLET" || methodUpper === "MOMO") return "MoMo";
-                  if (methodUpper === "") return "-";
                   return methodUpper;
                 };
                 
