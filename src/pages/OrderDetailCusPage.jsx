@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../services/api"; // axios instance
+import { orderService } from "../services/orderService";
+import { authService, vehicleService } from "../services";
 import { AuthContext } from "../context/AuthContext";
 import "./OrderDetailCusPage.css";
 
@@ -12,6 +14,8 @@ const OrderDetailCusPage = () => {
   const [orderDetails, setOrderDetails] = useState([]);
   const [payments, setPayments] = useState([]);
   const [orderStatus, setOrderStatus] = useState("");
+  const [customer, setCustomer] = useState(null);
+  const [vehicle, setVehicle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [processing, setProcessing] = useState(false);
@@ -49,14 +53,30 @@ const OrderDetailCusPage = () => {
       console.log("DETAILS:", details);
       setOrderDetails(details);
 
-      if (details.length > 0 && details[0].status) {
-        setOrderStatus(details[0].status.toUpperCase());
-      }
+      // Order status sẽ được fetch từ API preview-return
     } catch (err) {
       console.error("❌ Lỗi khi tải chi tiết đơn:", err);
       setError("Không thể tải thông tin chi tiết đơn hàng");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ============================
+  // FETCH ORDER STATUS
+  // ============================
+  const fetchOrderStatus = async () => {
+    try {
+      const preview = await orderService.getReturnPreview(orderId);
+      const status = preview?.status || "";
+      setOrderStatus(status.toUpperCase());
+      console.log("📋 Order status:", status);
+    } catch (err) {
+      console.warn("⚠️ Cannot fetch order status:", err);
+      // Fallback: try to get from order details
+      if (orderDetails && orderDetails.length > 0 && orderDetails[0].status) {
+        setOrderStatus(orderDetails[0].status.toUpperCase());
+      }
     }
   };
 
@@ -91,11 +111,76 @@ const OrderDetailCusPage = () => {
     }
   };
 
+  // ============================
+  // FETCH CUSTOMER
+  // ============================
+  const fetchCustomer = async () => {
+    try {
+      // Lấy userId từ orderDetails hoặc user context
+      const firstDetail = orderDetails[0];
+      const customerUserId = firstDetail?.customerId || firstDetail?.userId || user?.userId;
+      
+      if (!customerUserId) {
+        console.warn("⚠️ Không tìm thấy userId để fetch customer");
+        return;
+      }
+
+      const resCus = await authService.getAllCustomer();
+      const customers = resCus.data || resCus || [];
+      const foundCustomer = customers.find(
+        (c) => String(c.userId).toLowerCase() === String(customerUserId).toLowerCase()
+      );
+      setCustomer(foundCustomer || null);
+    } catch (err) {
+      console.error("❌ Lỗi khi tải thông tin khách hàng:", err);
+    }
+  };
+
+  // ============================
+  // FETCH VEHICLE
+  // ============================
+  const fetchVehicle = async () => {
+    try {
+      const firstDetail = orderDetails[0];
+      if (!firstDetail?.vehicleId) {
+        console.warn("⚠️ Không tìm thấy vehicleId để fetch vehicle");
+        return;
+      }
+
+      const resVehicles = await vehicleService.getVehicles();
+      const vehicles = resVehicles.data || resVehicles || [];
+      const foundVehicle = vehicles.find(
+        (v) => Number(v.vehicleId) === Number(firstDetail.vehicleId)
+      );
+      setVehicle(foundVehicle || null);
+    } catch (err) {
+      console.error("❌ Lỗi khi tải thông tin xe:", err);
+    }
+  };
+
   useEffect(() => {
-    fetchOrderDetails();
-    fetchPayments();
+    const loadData = async () => {
+      await fetchOrderDetails();
+      // Fetch customer và vehicle sau khi có orderDetails
+      if (orderDetails.length > 0) {
+        await fetchCustomer();
+        await fetchVehicle();
+      }
+      await fetchPayments();
+      await fetchOrderStatus();
+    };
+    loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
+
+  // Fetch customer và vehicle khi orderDetails thay đổi
+  useEffect(() => {
+    if (orderDetails.length > 0) {
+      fetchCustomer();
+      fetchVehicle();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderDetails]);
 
   // ============================
   // HANDLE PAYMENT
@@ -243,9 +328,10 @@ const OrderDetailCusPage = () => {
       
       alert("✅ Đã xác nhận thanh toán thành công!");
       
-      // Refresh payments và order details để hiển thị status mới
+      // Refresh payments, order details và order status để hiển thị status mới
       await fetchPayments();
       await fetchOrderDetails();
+      await fetchOrderStatus();
     } catch (err) {
       console.error("Lỗi xác nhận thanh toán:", err);
       const errorMsg = 
@@ -283,15 +369,225 @@ const OrderDetailCusPage = () => {
   // ============================
   // MAIN UI
   // ============================
+  // Format datetime helper
+  const fmtVN = (d) =>
+    d ? new Date(d).toLocaleString("vi-VN") : "N/A";
+
+  // Chuyển đổi order status sang tiếng Việt
+  const getOrderStatusText = (status) => {
+    if (!status) return "N/A";
+    const statusUpper = String(status).toUpperCase();
+    const statusMap = {
+      "PENDING": "Chờ xử lý",
+      "DEPOSITED": "Đã đặt cọc",
+      "BOOKED": "Đã đặt",
+      "RENTAL": "Đang thuê",
+      "WAITING_FOR_VEHICLE": "Chờ xe",
+      "WAITING": "Chờ xe",
+      "CONFIRMED": "Đã xác nhận",
+      "COMPLETED": "Đã hoàn thành",
+      "PENDING_FINAL_PAYMENT": "Chờ thanh toán cuối",
+      "CHECKING": "Đang kiểm tra",
+      "CANCELLED": "Đã hủy"
+    };
+    return statusMap[statusUpper] || status;
+  };
+
   return (
     <div className="order-detail-page">
       <h1>Chi tiết đơn hàng</h1>
-      <p>
-        <strong>Mã đơn hàng:</strong> {orderId}
-      </p>
-      <p>
-        <strong>Trạng thái:</strong> {orderStatus || "N/A"}
-      </p>
+      
+      {/* Trạng thái đơn hàng */}
+      {orderStatus && (
+        <div style={{
+          background: "#F5F5F5",
+          borderTop: "2px solid #DC0000",
+          padding: "16px 20px",
+          marginBottom: "20px"
+        }}>
+          <p style={{ margin: 0 }}>
+            <strong style={{ color: "#DC0000", textTransform: "uppercase" }}>Trạng thái: </strong>
+            <span style={{ color: "#333", fontWeight: "500" }}>{getOrderStatusText(orderStatus)}</span>
+          </p>
+        </div>
+      )}
+
+      {/* CUSTOMER */}
+      {customer && (
+        <div style={{
+          background: "#FFFFFF",
+          border: "1px solid #E0E0E0",
+          borderRadius: "8px",
+          padding: "20px",
+          marginBottom: "20px",
+          marginTop: "20px"
+        }}>
+          <h2 style={{ 
+            fontSize: "18px", 
+            fontWeight: "600", 
+            marginBottom: "16px",
+            color: "#000000",
+            borderBottom: "2px solid #DC0000",
+            paddingBottom: "10px"
+          }}>
+            Thông tin khách hàng
+          </h2>
+
+          <div style={{ 
+            display: "grid", 
+            gridTemplateColumns: "1fr 1fr", 
+            gap: "12px 24px" 
+          }}>
+            <p style={{ margin: 0 }}>
+              <span style={{ fontWeight: "600", color: "#666" }}>Họ tên:</span>{" "}
+              <strong>{customer.fullName || customer.fullname || "N/A"}</strong>
+            </p>
+            <p style={{ margin: 0 }}>
+              <span style={{ fontWeight: "600", color: "#666" }}>Email:</span>{" "}
+              <strong>{customer.email || "N/A"}</strong>
+            </p>
+            <p style={{ margin: 0 }}>
+              <span style={{ fontWeight: "600", color: "#666" }}>Số điện thoại:</span>{" "}
+              <strong>{customer.phone || customer.phonenumber || customer.phoneNumber || "N/A"}</strong>
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* VEHICLE */}
+      {vehicle && (() => {
+        // Lấy thông tin ngày nhận, ngày trả từ order detail
+        const rentalDetail = orderDetails.find(d => d.type === "RENTAL") || orderDetails[0];
+        const startTime = rentalDetail?.startTime || rentalDetail?.rentalStartTime;
+        const endTime = rentalDetail?.endTime || rentalDetail?.rentalEndTime;
+        
+        return (
+          <div style={{
+            background: "#FFFFFF",
+            border: "1px solid #E0E0E0",
+            borderRadius: "8px",
+            padding: "20px",
+            marginBottom: "20px"
+          }}>
+            <h2 style={{ 
+              fontSize: "18px", 
+              fontWeight: "600", 
+              marginBottom: "16px",
+              color: "#000000",
+              borderBottom: "2px solid #DC0000",
+              paddingBottom: "10px"
+            }}>
+              Thông tin xe
+            </h2>
+
+            <div style={{ 
+              display: "grid", 
+              gridTemplateColumns: "1fr 1fr", 
+              gap: "12px 24px" 
+            }}>
+              <p style={{ margin: 0 }}>
+                <span style={{ fontWeight: "600", color: "#666" }}>Tên xe:</span>{" "}
+                <strong>{vehicle.vehicleName || vehicle.vehicle_name || "N/A"}</strong>
+              </p>
+
+              <p style={{ margin: 0 }}>
+                <span style={{ fontWeight: "600", color: "#666" }}>Biển số:</span>{" "}
+                <strong>{vehicle.plateNumber || vehicle.plate_number || "N/A"}</strong>
+              </p>
+
+              <p style={{ margin: 0 }}>
+                <span style={{ fontWeight: "600", color: "#666" }}>Loại xe:</span>{" "}
+                <strong>
+                  {vehicle.type === "4-seater" ? "Xe 4 chỗ" : 
+                   vehicle.type === "7-seater" ? "Xe 7 chỗ" : 
+                   vehicle.type || vehicle.seat_count ? `Xe ${vehicle.seat_count || vehicle.seatCount} chỗ` : 
+                   "N/A"}
+                </strong>
+              </p>
+
+              <p style={{ margin: 0 }}>
+                <span style={{ fontWeight: "600", color: "#666" }}>Màu sắc:</span>{" "}
+                <strong>{vehicle.color || "N/A"}</strong>
+              </p>
+
+              {startTime && (
+                <p style={{ margin: 0 }}>
+                  <span style={{ fontWeight: "600", color: "#666" }}>Ngày nhận xe:</span>{" "}
+                  <strong>{fmtVN(startTime)}</strong>
+                </p>
+              )}
+
+              {endTime && (
+                <p style={{ margin: 0 }}>
+                  <span style={{ fontWeight: "600", color: "#666" }}>Ngày trả xe:</span>{" "}
+                  <strong>{fmtVN(endTime)}</strong>
+                </p>
+              )}
+
+              <p style={{ margin: 0 }}>
+                <span style={{ fontWeight: "600", color: "#666" }}>Trạm hiện tại:</span>{" "}
+                <strong>{vehicle.stationName || vehicle.station_name || "N/A"}</strong>
+              </p>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ⭐⭐ BANNER THÔNG BÁO WAITING - Khi detail status là WAITING ⭐⭐ */}
+      {orderDetails.some(d => String(d.status || "").toUpperCase() === "WAITING") && (
+        <div style={{
+          backgroundColor: "#FFF3CD",
+          border: "2px solid #FFC107",
+          borderRadius: "8px",
+          padding: "20px",
+          marginBottom: "20px",
+          marginTop: "20px"
+        }}>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "12px"
+          }}>
+            <span style={{ fontSize: "24px" }}>⚠️</span>
+            <div>
+              <h3 style={{ margin: 0, color: "#856404", fontSize: "18px", fontWeight: "bold" }}>
+                Xe này đã được khách hàng khác thuê
+              </h3>
+              <p style={{ margin: "8px 0 0 0", color: "#856404", fontSize: "14px" }}>
+                Đơn hàng của bạn đang trong hàng chờ. Chúng tôi sẽ thông báo khi xe có sẵn để bàn giao.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ⭐⭐ BANNER THÔNG BÁO CONFIRMED - Xe đã có sẵn ⭐⭐ */}
+      {orderDetails.some(d => String(d.status || "").toUpperCase() === "CONFIRMED") && (
+        <div style={{
+          backgroundColor: "#D1FAE5",
+          border: "2px solid #10B981",
+          borderRadius: "8px",
+          padding: "20px",
+          marginBottom: "20px",
+          marginTop: "20px"
+        }}>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "12px"
+          }}>
+            <span style={{ fontSize: "24px" }}>✅</span>
+            <div>
+              <h3 style={{ margin: 0, color: "#065F46", fontSize: "18px", fontWeight: "bold" }}>
+                Xe đã có sẵn! Bạn có thể đến nhận xe
+              </h3>
+              <p style={{ margin: "8px 0 0 0", color: "#065F46", fontSize: "14px" }}>
+                Xe đã sẵn sàng để bàn giao. Vui lòng đến trạm để hoàn tất thủ tục nhận xe.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {orderDetails.length === 0 ? (
         <p>Không có dữ liệu chi tiết.</p>
@@ -309,6 +605,7 @@ const OrderDetailCusPage = () => {
                 <th>Thời gian thuê</th>
                 <th>Giá</th>
                 <th>Trạng thái</th>
+                <th>Phương thức thanh toán</th>
                 {isStaff && <th>Hành động</th>}
               </tr>
             </thead>
@@ -333,9 +630,9 @@ const OrderDetailCusPage = () => {
                 
                 const paymentType = getPaymentTypeFromDetailType(type);
                 
-                // Tìm payment CASH PENDING tương ứng với order detail này
+                // ⭐⭐ Tìm payment CASH PENDING tương ứng với order detail này ⭐⭐
                 // Tìm theo paymentType hoặc tìm bất kỳ payment CASH PENDING nào của order này
-                const relatedPayment = paymentType 
+                const pendingCashPayment = paymentType 
                   ? payments.find(
                       (p) => 
                         String(p.status || "").toUpperCase() === "PENDING" &&
@@ -347,6 +644,42 @@ const OrderDetailCusPage = () => {
                         String(p.status || "").toUpperCase() === "PENDING" &&
                         String(p.method || "").toUpperCase() === "CASH"
                     );
+                
+                // ⭐⭐ Kiểm tra payment tương ứng đã SUCCESS chưa (không phân biệt status) ⭐⭐
+                const relatedPayment = paymentType 
+                  ? payments.find(
+                      (p) => 
+                        String(p.method || "").toUpperCase() === "CASH" &&
+                        p.paymentType === paymentType
+                    )
+                  : payments.find(
+                      (p) => 
+                        String(p.method || "").toUpperCase() === "CASH"
+                    );
+                
+                const isPaymentSuccess = relatedPayment && String(relatedPayment.status || "").toUpperCase() === "SUCCESS";
+                
+                // Tìm payment method từ payments array hoặc order detail
+                // Ưu tiên: tìm payment có cùng paymentType, nếu không có thì tìm bất kỳ payment nào
+                const foundPayment = paymentType
+                  ? payments.find((p) => p.paymentType === paymentType)
+                  : payments.find((p) => p); // Tìm payment đầu tiên nếu không có paymentType
+                
+                // Lấy payment method từ payment hoặc order detail
+                const paymentMethod = foundPayment 
+                  ? String(foundPayment.method || "").toUpperCase()
+                  : methodPayment || "";
+                
+                // Chuyển đổi payment method sang tiếng Việt
+                const getPaymentMethodText = (method) => {
+                  const methodUpper = String(method || "").toUpperCase();
+                  if (methodUpper === "CASH") return "Tiền mặt";
+                  if (methodUpper === "CAPTUREWALLET" || methodUpper === "MOMO") return "MoMo";
+                  if (methodUpper === "") return "-";
+                  return methodUpper;
+                };
+                
+                const paymentMethodText = getPaymentMethodText(paymentMethod);
                 
                 // Kiểm tra xem có payment PENDING với method CASH không
                 // Nếu có payment CASH PENDING, thì order detail phải hiển thị PENDING
@@ -362,13 +695,12 @@ const OrderDetailCusPage = () => {
                 const isPaid = displayStatus === "SUCCESS" && !hasPendingCashPayment;
                 const isPending = displayStatus === "PENDING" || hasPendingCashPayment;
                 
-                // Hiển thị nút xác nhận nếu:
-                // - Chỉ staff/admin mới thấy nút (khách hàng không thể tự xác nhận)
-                // - methodPayment = "CASH" (từ order detail)
-                // - Status là PENDING
+                // ⭐⭐ HIỂN THỊ NÚT KHI: STAFF + CASH + CÓ PENDING + CHƯA SUCCESS ⭐⭐
+                // ⭐⭐ ẨN NÚT KHI: KHÔNG STAFF HOẶC KHÔNG CASH HOẶC KHÔNG CÓ PENDING HOẶC ĐÃ SUCCESS ⭐⭐
                 const showConfirmButton = isStaff && 
                                          methodPayment === "CASH" && 
-                                         isPending;
+                                         pendingCashPayment !== null &&
+                                         !isPaymentSuccess;
                 
                 console.log("🔍 Order Detail Check:", {
                   detailId: d.detailId,
@@ -430,6 +762,22 @@ const OrderDetailCusPage = () => {
                         </span>
                       )}
                     </td>
+                    {/* Cột Phương thức thanh toán */}
+                    <td style={{
+                      whiteSpace: "normal",
+                      wordWrap: "break-word",
+                      maxWidth: "150px",
+                      wordBreak: "break-word"
+                    }}>
+                      <span style={{
+                        fontWeight: "500",
+                        color: paymentMethod === "CASH" ? "#DC0000" : "#0066CC",
+                        display: "inline-block",
+                        maxWidth: "100%"
+                      }}>
+                        {paymentMethodText}
+                      </span>
+                    </td>
                     {/* Cột Hành động - Chỉ hiển thị cho staff/admin */}
                     {isStaff && (
                       <td>
@@ -483,229 +831,6 @@ const OrderDetailCusPage = () => {
         </>
       )}
 
-      {/* ==============================
-          PHẦN HIỂN THỊ PAYMENTS (GIAO DỊCH)
-         ============================== */}
-      <div style={{ marginTop: "40px" }}>
-        <h2 style={{ 
-          fontSize: "20px", 
-          fontWeight: "600", 
-          marginBottom: "20px",
-          color: "#000000",
-          borderBottom: "2px solid #DC0000",
-          paddingBottom: "10px"
-        }}>
-          Các giao dịch trong đơn hàng
-        </h2>
-
-        {payments.length === 0 ? (
-          <p style={{ color: "#666", fontStyle: "italic" }}>Chưa có giao dịch nào.</p>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            {payments.map((payment) => {
-              const status = String(payment.status || "").toUpperCase();
-              const method = String(payment.method || "").toUpperCase();
-              const isPending = status === "PENDING" || status === "ĐANG KIỂM TRA" || status === "CHECKING";
-              const isSuccess = status === "SUCCESS";
-              const isCash = method === "CASH";
-              
-              // Debug: Log chi tiết cho mỗi payment
-              console.log("🔍 Payment Check:", {
-                paymentId: payment.paymentId,
-                rawStatus: payment.status,
-                status: status,
-                rawMethod: payment.method,
-                method: method,
-                isPending,
-                isCash,
-                isStaff,
-                shouldShow: isStaff && isPending && isCash
-              });
-              
-              // Debug: Log để kiểm tra điều kiện
-              const shouldShowButton = isStaff && isPending && isCash;
-              if (shouldShowButton) {
-                console.log("✅ Nút xác nhận sẽ hiển thị:", {
-                  paymentId: payment.paymentId,
-                  status,
-                  method,
-                  isStaff,
-                  isPending,
-                  isCash
-                });
-              } else {
-                console.log("❌ Nút KHÔNG hiển thị vì:", {
-                  paymentId: payment.paymentId,
-                  isStaff: isStaff ? "✅" : "❌",
-                  isPending: isPending ? "✅" : "❌",
-                  isCash: isCash ? "✅" : "❌"
-                });
-              }
-              
-              // Lấy mô tả dựa vào paymentType
-              const getPaymentDescription = (type) => {
-                const typeMap = {
-                  1: "Đặt cọc",
-                  2: "Thanh toán phần còn lại",
-                  3: "Thanh toán toàn bộ đơn",
-                  5: "Thanh toán dịch vụ"
-                };
-                return typeMap[type] || "Thanh toán";
-              };
-
-              return (
-                <div
-                  key={payment.paymentId}
-                  style={{
-                    background: "#FFFFFF",
-                    border: "1px solid #E0E0E0",
-                    borderRadius: "0",
-                    padding: "20px",
-                    position: "relative"
-                  }}
-                >
-                  {/* Status Badge và Nút Xác nhận */}
-                  <div style={{ 
-                    marginBottom: "16px",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: "16px",
-                    flexWrap: "wrap"
-                  }}>
-                    <span
-                      style={{
-                        display: "inline-block",
-                        padding: "6px 16px",
-                        borderRadius: "0",
-                        fontSize: "12px",
-                        fontWeight: "600",
-                        textTransform: "uppercase",
-                        letterSpacing: "1px",
-                        background: isSuccess 
-                          ? "#10b981" 
-                          : isPending 
-                          ? "#facc15" 
-                          : "#ef4444",
-                        color: isPending ? "#1e293b" : "#FFFFFF"
-                      }}
-                    >
-                      {isSuccess 
-                        ? "THÀNH CÔNG" 
-                        : isPending 
-                        ? "ĐANG CHỜ XÁC NHẬN" 
-                        : status}
-                    </span>
-                    
-                    {/* Nút Xác nhận - Chỉ hiển thị cho staff/admin khi: isPending && isCash */}
-                    {isStaff && isPending && isCash && (
-                      <button
-                        onClick={() => {
-                          console.log("🔘 Click xác nhận payment cho order:", orderId);
-                          handleStaffConfirmPayment();
-                        }}
-                        disabled={processing}
-                        style={{
-                          padding: "8px 20px",
-                          background: "#000000",
-                          color: "#FFFFFF",
-                          border: "2px solid #000000",
-                          borderRadius: "0",
-                          fontSize: "12px",
-                          fontWeight: "600",
-                          cursor: processing ? "not-allowed" : "pointer",
-                          letterSpacing: "0.5px",
-                          textTransform: "uppercase",
-                          transition: "all 0.3s ease",
-                          whiteSpace: "nowrap",
-                          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                          zIndex: 10
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!processing) {
-                            e.target.style.background = "#DC0000";
-                            e.target.style.borderColor = "#DC0000";
-                            e.target.style.transform = "translateY(-2px)";
-                            e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!processing) {
-                            e.target.style.background = "#000000";
-                            e.target.style.borderColor = "#000000";
-                            e.target.style.transform = "translateY(0)";
-                            e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
-                          }
-                        }}
-                      >
-                        {processing ? "Đang xử lý..." : "✅ Xác nhận đã thanh toán"}
-                      </button>
-                    )}
-                    
-                  </div>
-
-                  {/* Payment Info Grid */}
-                  <div style={{ 
-                    display: "grid", 
-                    gridTemplateColumns: "1fr 1fr", 
-                    gap: "12px 24px" 
-                  }}>
-                    <p style={{ margin: 0 }}>
-                      <span style={{ fontWeight: "600", color: "#666" }}>
-                        Thời gian bắt đầu:
-                      </span>{" "}
-                      {payment.createdAt 
-                        ? new Date(payment.createdAt).toLocaleString("vi-VN", {
-                            hour12: false,
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            second: "2-digit"
-                          })
-                        : "N/A"}
-                    </p>
-                    <p style={{ margin: 0 }}>
-                      <span style={{ fontWeight: "600", color: "#666" }}>
-                        Thời gian kết thúc:
-                      </span>{" "}
-                      {payment.updatedAt && payment.updatedAt !== payment.createdAt
-                        ? new Date(payment.updatedAt).toLocaleString("vi-VN", {
-                            hour12: false,
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            second: "2-digit"
-                          })
-                        : "N/A"}
-                    </p>
-                    <p style={{ margin: 0 }}>
-                      <span style={{ fontWeight: "600", color: "#666" }}>
-                        Số tiền:
-                      </span>{" "}
-                      <strong style={{ color: "#000" }}>
-                        {payment.amount?.toLocaleString("vi-VN") || "N/A"} VND
-                      </strong>
-                    </p>
-                    <p style={{ margin: 0 }}>
-                      <span style={{ fontWeight: "600", color: "#666" }}>
-                        Mô tả:
-                      </span>{" "}
-                      {getPaymentDescription(payment.paymentType)}
-                      {payment.method === "CASH" && " (Tiền mặt)"}
-                      {payment.method === "captureWallet" && " (MoMo)"}
-                    </p>
-                  </div>
-
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
 
       <div style={{ marginTop: "24px", display: "flex", gap: "12px" }}>
         {hasPendingPayment() && (

@@ -4,7 +4,11 @@ import { useVehicles } from '../hooks/useVehicles';
 import { useVehicleTimelines } from '../hooks/useVehicleTimelines';
 import { AuthContext } from '../context/AuthContext';
 import { validateVehicleForBooking } from '../utils/vehicleValidator';
+import { orderService } from '../services';
 import './Booking7Seater.css';
+import './BookingCalendar.css';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 const Booking7Seater = () => {
     const location = useLocation();
@@ -23,11 +27,12 @@ const Booking7Seater = () => {
         loading: timelinesLoading 
     } = useVehicleTimelines(cars);
 
-    const [selectedCarId, setSelectedCarId] = useState(preSelectedCar?.id || '');
+    const [selectedCarId, setSelectedCarId] = useState(preSelectedCar?.vehicleId || preSelectedCar?.id || '');
     const [selectedCar, setSelectedCar] = useState(preSelectedCar || null);
-    const [submitting, setSubmitting] = useState(false);
     const [selectedColor, setSelectedColor] = useState('');
-    const [bookedSlots, setBookedSlots] = useState([]); // ✅ Timeline của xe đã chọn
+    const [hasActiveRental, setHasActiveRental] = useState(false);
+    const [checkingRental, setCheckingRental] = useState(true);
+    const [bookedSlots, setBookedSlots] = useState([]);
 
     const [formData, setFormData] = useState({
         startTime: '',
@@ -56,10 +61,58 @@ const Booking7Seater = () => {
         ).map(car => car.color)
     )].sort();
 
-    // Scroll to top when component mounts
+    // Format datetime for backend
+    const formatDateTimeForBackend = (dateStr, isStart = true) => {
+        if (!dateStr) return null;
+        if (dateStr.includes('T')) {
+            const [date, time] = dateStr.split('T');
+            const formatted = time.length === 5 ? `${time}:00` : time;
+            return `${date} ${formatted}`;
+        }
+        if (dateStr.length === 10)
+            return isStart ? `${dateStr} 00:00:00` : `${dateStr} 23:59:59`;
+        return dateStr;
+    };
+
+    // Check if date is booked
+    function isBooked(date) {
+        return bookedSlots.some((slot) => date >= slot.start && date <= slot.end);
+    }
+
     useEffect(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'instant' });
     }, []);
+
+    useEffect(() => {
+        const checkActiveRental = async () => {
+            try {
+                setCheckingRental(true);
+                const orders = await orderService.getMyOrders();
+                if (!Array.isArray(orders)) {
+                    setCheckingRental(false);
+                    return;
+                }
+                for (const order of orders) {
+                    try {
+                        const preview = await orderService.getReturnPreview(order.orderId);
+                        if (preview.status === 'RENTAL') {
+                            setHasActiveRental(true);
+                            break;
+                        }
+                    } catch {
+                        if (order.status === 'RENTAL') {
+                            setHasActiveRental(true);
+                            break;
+                        }
+                    }
+                }
+            } finally {
+                setCheckingRental(false);
+            }
+        };
+        if (user) checkActiveRental();
+        else setCheckingRental(false);
+    }, [user]);
 
     const handleChange = (e) => {
         setFormData({
@@ -68,33 +121,25 @@ const Booking7Seater = () => {
         });
     };
 
-    const handleCarSelect = async (e) => {
+    const handleCarSelect = (e) => {
         const carId = e.target.value;
         console.log('🚗 Đã chọn xe ID:', carId);
         setSelectedCarId(carId);
-        
+
+        const car = carId
+            ? availableCars.find(
+                (c) => c.vehicleId === parseInt(carId) || c.id === parseInt(carId)
+            )
+            : null;
+
+        setSelectedCar(car);
+
+        // ✅ Lấy timeline từ hook (đã được fetch sẵn)
         if (carId) {
-            const car = availableCars.find(c => c.id === parseInt(carId) || c.vehicleId === parseInt(carId));
-            setSelectedCar(car);
-            
-            // ✅ Fetch timeline của xe này
-            try {
-                console.log('📞 Gọi API timeline cho:', carId);
-                const data = await vehicleTimelineService.getTimelines(carId);
-                console.log('📦 Timeline nhận được:', data);
-                const booked = data
-                    .filter(t => t.status === 'BOOKED' || t.status === 'ORDER_RENTAL' || t.status === 'RENTAL')
-                    .map(t => ({
-                        start: new Date(t.startTime),
-                        end: new Date(t.endTime)
-                    }));
-                setBookedSlots(booked);
-            } catch (error) {
-                console.error('❌ Lỗi khi gọi API timeline:', error);
-                setBookedSlots([]);
-            }
+            const timeline = getVehicleTimeline(carId);
+            console.log('📦 Timeline từ hook:', timeline);
+            setBookedSlots(timeline);
         } else {
-            setSelectedCar(null);
             setBookedSlots([]);
         }
     };
@@ -149,20 +194,24 @@ const Booking7Seater = () => {
 
         console.log('✅ Vehicle validation passed:', selectedCar.id, selectedCar.vehicle_name);
 
-        // 3. Validate time logic
         const start = new Date(formData.startTime);
         const now = new Date();
 
         if (start < now) {
-            alert('Thời gian nhận xe phải là thời điểm trong tương lai!');
+            alert('Thời gian nhận xe phải trong tương lai!');
             return;
         }
 
-        // 4. Calculate end time from start time + planned hours
+        // Calculate end time from start time + planned hours
         const plannedHours = parseInt(formData.plannedHours);
+        if (!plannedHours || plannedHours < 1) {
+            alert('Vui lòng nhập số giờ thuê (tối thiểu 1 giờ).');
+            return;
+        }
+
         const end = new Date(start.getTime() + (plannedHours * 60 * 60 * 1000));
 
-        // ✅ CHECK OVERLAP với timeline (xe đã được book trong khoảng thời gian này)
+        // ✅ VALIDATE: Kiểm tra overlap với timeline đã book
         const hasOverlap = bookedSlots.some((slot) => {
             // Overlap condition: (start1 < end2) AND (end1 > start2)
             return start < slot.end && end > slot.start;
@@ -171,9 +220,7 @@ const Booking7Seater = () => {
         if (hasOverlap) {
             alert(
                 '⚠️ Xe này đã được đặt trong khoảng thời gian bạn chọn!\n\n' +
-                'Vui lòng:\n' +
-                '1. Chọn thời gian khác\n' +
-                '2. Hoặc chọn xe khác'
+                'Vui lòng chọn thời gian khác hoặc chọn xe khác.'
             );
             return;
         }
@@ -208,21 +255,11 @@ const Booking7Seater = () => {
             return;
         }
 
-        // 6. Convert datetime to backend format (add seconds)
-        const startTimeFormatted = formData.startTime
-            .replace('T', ' ')  // Đổi T thành dấu cách
-            + ':00';  // Thêm giây
-
-        // 7. Calculate end time from start time + planned hours
-        const year = end.getFullYear();
-        const month = String(end.getMonth() + 1).padStart(2, '0');
-        const day = String(end.getDate()).padStart(2, '0');
-        const hours = String(end.getHours()).padStart(2, '0');
-        const minutes = String(end.getMinutes()).padStart(2, '0');
-        const seconds = String(end.getSeconds()).padStart(2, '0');
-
-        // Format end time (calculated from startTime + plannedHours)
-        const endTimeFormatted = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        const startTimeFormatted = formatDateTimeForBackend(formData.startTime, true);
+        const endTimeFormatted = formatDateTimeForBackend(
+            end.toISOString().slice(0, 19).replace('T', ' '),
+            false
+        );
 
         console.log('📅 Formatted times:', {
             start: startTimeFormatted,
@@ -260,16 +297,20 @@ const Booking7Seater = () => {
         navigate('/confirm-booking', { state: { bookingData } });
     };
 
-    // Show loading state
-    if (loading) {
+    if (loading) return <div className="booking-container">Đang tải dữ liệu xe...</div>;
+    if (checkingRental)
         return (
             <div className="booking-container">
-                <div style={{ textAlign: 'center', padding: 60, fontSize: 18, color: '#888' }}>
-                    Đang tải dữ liệu xe...
-                </div>
+                <p>Đang kiểm tra trạng thái thuê xe...</p>
             </div>
         );
-    }
+    if (hasActiveRental)
+        return (
+            <div className="booking-container">
+                <p>Bạn đang có đơn thuê xe đang hoạt động. Hoàn thành trước khi đặt xe mới.</p>
+                <button onClick={() => navigate('/my-bookings')}>Xem đơn đặt xe</button>
+            </div>
+        );
 
     return (
         <div className="booking-container">
@@ -279,91 +320,28 @@ const Booking7Seater = () => {
                 {/* Left side - Booking Form */}
                 <div className="booking-form-section">
                     <form onSubmit={handleSubmit} className="booking-form">
-                        {/* Color Filter - Color Boxes */}
                         {!preSelectedCar && availableColors.length > 0 && (
                             <div className="form-group">
                                 <label>Chọn Màu</label>
-                                <div style={{
-                                    display: 'flex',
-                                    gap: '12px',
-                                    flexWrap: 'wrap',
-                                    marginTop: '8px'
-                                }}>
-                                    {availableColors.map(color => {
-                                        const colorMap = {
-                                            'Black': '#000000',
-                                            'White': '#FFFFFF',
-                                            'Red': '#DC2626',
-                                            'Blue': '#2563EB',
-                                            'Silver': '#9CA3AF',
-                                            'Gray': '#6B7280',
-                                            'Yellow': '#EAB308'
-                                        };
-                                        const bgColor = colorMap[color] || '#6B7280';
-                                        const isSelected = selectedColor === color;
-
-                                        return (
-                                            <div
-                                                key={color}
-                                                onClick={() => {
-                                                    setSelectedColor(color);
-                                                    setSelectedCarId('');
-                                                    setSelectedCar(null);
-                                                }}
-                                                style={{
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    alignItems: 'center',
-                                                    gap: '6px',
-                                                    cursor: 'pointer',
-                                                    transition: 'all 0.3s'
-                                                }}
-                                            >
-                                                <div style={{
-                                                    width: '50px',
-                                                    height: '50px',
-                                                    backgroundColor: bgColor,
-                                                    border: color === 'White' ? '2px solid #e5e7eb' : 'none',
-                                                    borderRadius: '8px',
-                                                    boxShadow: isSelected
-                                                        ? '0 0 0 3px #667eea, 0 4px 12px rgba(102, 126, 234, 0.4)'
-                                                        : '0 2px 4px rgba(0,0,0,0.1)',
-                                                    transform: isSelected ? 'scale(1.1)' : 'scale(1)',
-                                                    transition: 'all 0.3s ease'
-                                                }}
-                                                />
-                                                <span style={{
-                                                    fontSize: '13px',
-                                                    fontWeight: isSelected ? 700 : 500,
-                                                    color: isSelected ? '#667eea' : '#6b7280'
-                                                }}>{color}</span>
-                                            </div>
-                                        );
-                                    })}
+                                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                                    {availableColors.map((color) => (
+                                        <div
+                                            key={color}
+                                            onClick={() => setSelectedColor(color)}
+                                            style={{
+                                                width: 50,
+                                                height: 50,
+                                                backgroundColor: color.toLowerCase(),
+                                                border:
+                                                    selectedColor === color
+                                                        ? '3px solid #667eea'
+                                                        : '1px solid #ccc',
+                                                borderRadius: 8,
+                                                cursor: 'pointer',
+                                            }}
+                                        ></div>
+                                    ))}
                                 </div>
-                                {selectedColor && (
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setSelectedColor('');
-                                            setSelectedCarId('');
-                                            setSelectedCar(null);
-                                        }}
-                                        style={{
-                                            marginTop: 12,
-                                            padding: '6px 16px',
-                                            background: '#dc2626',
-                                            color: 'white',
-                                            border: 'none',
-                                            borderRadius: 6,
-                                            fontSize: 13,
-                                            fontWeight: 600,
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        Xóa bộ lọc màu
-                                    </button>
-                                )}
                             </div>
                         )}
 
@@ -377,13 +355,16 @@ const Booking7Seater = () => {
                                 required
                             >
                                 <option value="">Chọn một xe</option>
-                                {availableCars.map(car => {
+                                {availableCars.map((car) => {
                                     const vehicleId = car.vehicleId || car.id;
                                     const timelineMsg = getTimelineMessage(vehicleId);
                                     const displayName = car.vehicle_name || car.vehicleName || car.plateNumber;
                                     
                                     return (
-                                        <option key={car.id} value={car.id}>
+                                        <option
+                                            key={vehicleId}
+                                            value={vehicleId}
+                                        >
                                             {displayName}
                                             {timelineMsg ? ` ⚠️ (${timelineMsg.summary})` : ' ✅ (Trống lịch)'}
                                         </option>
@@ -434,20 +415,32 @@ const Booking7Seater = () => {
                             </div>
                         )}
 
+                        {/* ✅ Ngày & giờ nhận xe */}
                         <div className="form-group">
-                            <label htmlFor="startTime">Ngày & Giờ Nhận Xe *</label>
-                            <input
-                                type="datetime-local"
-                                id="startTime"
-                                name="startTime"
-                                value={formData.startTime}
-                                onChange={handleChange}
-                                min={new Date().toISOString().slice(0, 16)}
-                                required
+                            <label>Ngày & Giờ Nhận Xe *</label>
+                            <DatePicker
+                                selected={formData.startTime ? new Date(formData.startTime) : null}
+                                onChange={(date) => {
+                                    if (!date) return;
+                                    if (isBooked(date)) {
+                                        alert('Xe này đã được đặt trong thời gian này!');
+                                        return;
+                                    }
+                                    setFormData({
+                                        ...formData,
+                                        startTime: date.toISOString(),
+                                    });
+                                }}
+                                showTimeSelect
+                                timeFormat="HH:mm"
+                                timeIntervals={30}
+                                dateFormat="yyyy-MM-dd HH:mm"
+                                minDate={new Date()}
+                                dayClassName={(date) =>
+                                    isBooked(date) ? 'booked-day' : undefined
+                                }
+                                placeholderText="Chọn ngày & giờ nhận xe"
                             />
-                            <small style={{ color: '#666', fontSize: '12px', display: 'block', marginTop: '4px' }}>
-                                Chọn thời điểm bạn muốn nhận xe
-                            </small>
                         </div>
 
                         <div className="form-group">
