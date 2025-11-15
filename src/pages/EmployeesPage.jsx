@@ -5,12 +5,20 @@ import { adminService } from "../services/adminService";
 const EmployeesPage = () => {
   const [employees, setEmployees] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [newStaff, setNewStaff] = useState({
-    fullName: "", // ✅ đổi từ fullname → fullName
+    fullName: "",
     email: "",
     phone: "",
     stationId: "",
     password: ""
+  });
+  const [updateStaff, setUpdateStaff] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    password: "",
+    stationId: ""
   });
   const [errors, setErrors] = useState({});
 
@@ -78,7 +86,7 @@ const EmployeesPage = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fullName: newStaff.fullName, // ✅ key đúng theo backend yêu cầu
+          fullName: newStaff.fullName,
           email: newStaff.email,
           phone: newStaff.phone,
           stationId: Number(newStaff.stationId),
@@ -124,6 +132,73 @@ const EmployeesPage = () => {
     }
   };
 
+  // ✏️ Mở popup cập nhật thông tin
+  const handleUpdateEmployee = () => {
+    setShowUpdateModal(true);
+    setUpdateStaff({
+      fullName: "",
+      email: "",
+      phone: "",
+      password: "",
+      stationId: ""
+    });
+  };
+
+  // 🔁 Xử lý nhập form cập nhật
+  const handleUpdateChange = (e) => {
+    const { name, value } = e.target;
+    setUpdateStaff((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  // ✅ Kiểm tra hợp lệ form cập nhật
+  const validateUpdateForm = () => {
+    const { email, phone } = updateStaff;
+    let newErrors = {};
+
+    if (!email.endsWith("@gmail.com")) newErrors.email = "Email phải có dạng @gmail.com";
+    if (phone && !/^0[0-9]{9}$/.test(phone))
+      newErrors.phone = "Số điện thoại không hợp lệ (10 chữ số)";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // 🚀 Gọi API cập nhật thông tin
+  const handleUpdateStaff = async () => {
+    if (!validateUpdateForm()) return;
+
+    try {
+      const res = await fetch(
+        `http://localhost:8080/api/staffschedule/staff/update/${updateStaff.email}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fullName: updateStaff.fullName,
+            email: updateStaff.email,
+            phone: updateStaff.phone,
+            password: updateStaff.password,
+            stationId: Number(updateStaff.stationId),
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.message || "Cập nhật thất bại");
+      }
+
+      alert("✅ Cập nhật thông tin thành công!");
+      setShowUpdateModal(false);
+      setUpdateStaff({ fullName: "", email: "", phone: "", password: "", stationId: "" });
+      getEmployees();
+    } catch (err) {
+      console.error("❌ Lỗi cập nhật:", err);
+      alert(`Không thể cập nhật: ${err.message}`);
+    }
+  };
+
   // 🏆 Đánh giá hiệu suất
   const danhGia = (e) => {
     const tong = (e.pickupCount || 0) + (e.returnCount || 0);
@@ -135,10 +210,7 @@ const EmployeesPage = () => {
 
   // 🥇 Top nhân viên
   const topEmployees = [...employees]
-    .sort(
-      (a, b) =>
-        (b.pickupCount + b.returnCount) - (a.pickupCount + a.returnCount)
-    )
+    .sort((a, b) => (b.pickupCount + b.returnCount) - (a.pickupCount + a.returnCount))
     .slice(0, 3);
 
   return (
@@ -147,23 +219,12 @@ const EmployeesPage = () => {
 
       {/* 🔘 Nút thao tác */}
       <div className="actions">
-        <button className="add-btn" onClick={handleAddEmployee}>
-          ➕ Thêm nhân viên
-        </button>
-
-        <button
-          className="update-btn"
-          onClick={() => alert("🔄 Đang cập nhật thông tin nhân viên...")}
-        >
-          🧾 Cập nhật thông tin
-        </button>
-
+        <button className="add-btn" onClick={handleAddEmployee}>➕ Thêm nhân viên</button>
+        <button className="update-btn" onClick={handleUpdateEmployee}>🧾 Cập nhật thông tin</button>
         <button
           className="delete-all-btn"
           onClick={() => {
-            if (
-              window.confirm("⚠️ Bạn có chắc muốn xóa vĩnh viễn tất cả tài khoản nhân viên không?")
-            ) {
+            if (window.confirm("⚠️ Bạn có chắc muốn xóa vĩnh viễn tất cả tài khoản nhân viên không?")) {
               alert("🗑️ Toàn bộ tài khoản đã bị xóa (mô phỏng).");
             }
           }}
@@ -174,22 +235,11 @@ const EmployeesPage = () => {
 
       {/* 📊 Thống kê tổng quan */}
       <div className="stats-grid">
-        <div className="stat-card">
-          <p>TỔNG NHÂN VIÊN</p>
-          <h3>{employees.length}</h3>
-        </div>
-        <div className="stat-card">
-          <p>ĐANG LÀM VIỆC</p>
-          <h3>{employees.filter((e) => e.status === "ACTIVE").length}</h3>
-        </div>
+        <div className="stat-card"><p>TỔNG NHÂN VIÊN</p><h3>{employees.length}</h3></div>
+        <div className="stat-card"><p>ĐANG LÀM VIỆC</p><h3>{employees.filter((e) => e.status === "ACTIVE").length}</h3></div>
         <div className="stat-card">
           <p>TỔNG GIAO NHẬN</p>
-          <h3>
-            {employees.reduce(
-              (a, e) => a + (e.pickupCount || 0) + (e.returnCount || 0),
-              0
-            )}
-          </h3>
+          <h3>{employees.reduce((a, e) => a + (e.pickupCount || 0) + (e.returnCount || 0), 0)}</h3>
         </div>
       </div>
 
@@ -210,11 +260,7 @@ const EmployeesPage = () => {
             </thead>
             <tbody>
               {employees.length === 0 ? (
-                <tr>
-                  <td colSpan="6" className="no-data">
-                    Chưa có nhân viên nào
-                  </td>
-                </tr>
+                <tr><td colSpan="6" className="no-data">Chưa có nhân viên nào</td></tr>
               ) : (
                 employees.map((e, index) => (
                   <tr key={index}>
@@ -231,24 +277,16 @@ const EmployeesPage = () => {
                     <td>{e.stationName || "Không rõ trạm"}</td>
                     <td>
                       <span className="tag">{danhGia(e)}</span>
-                      <p className="small-text">
-                        {(e.pickupCount || 0) + (e.returnCount || 0)} lần giao nhận
-                      </p>
+                      <p className="small-text">{(e.pickupCount || 0) + (e.returnCount || 0)} lần giao nhận</p>
                     </td>
                     <td>
-                      <span
-                        className={`status ${
-                          e.status === "ACTIVE" ? "active" : "inactive"
-                        }`}
-                      >
+                      <span className={`status ${e.status === "ACTIVE" ? "active" : "inactive"}`}>
                         {e.status === "ACTIVE" ? "Hoạt động" : "Ngưng hoạt động"}
                       </span>
                     </td>
                     <td>
                       <button
-                        className={`toggle-btn ${
-                          e.status === "ACTIVE" ? "deactivate" : "activate"
-                        }`}
+                        className={`toggle-btn ${e.status === "ACTIVE" ? "deactivate" : "activate"}`}
                         onClick={() => handleToggleStatus(e)}
                       >
                         {e.status === "ACTIVE" ? "🟢 Hoạt động" : "🔴 Ngưng"}
@@ -290,8 +328,7 @@ const EmployeesPage = () => {
             {topEmployees.map((e, index) => (
               <li key={index}>
                 <span className="rank">#{index + 1}</span> {e.staffName} –{" "}
-                {e.stationName} (
-                {(e.pickupCount || 0) + (e.returnCount || 0)} lần giao)
+                {e.stationName} ({(e.pickupCount || 0) + (e.returnCount || 0)} lần giao)
               </li>
             ))}
           </ol>
@@ -307,7 +344,7 @@ const EmployeesPage = () => {
             <label>Họ tên</label>
             <input
               type="text"
-              name="fullName" // ✅ đổi name
+              name="fullName"
               value={newStaff.fullName}
               onChange={handleChange}
               placeholder="VD: Nguyễn Văn A"
@@ -360,12 +397,69 @@ const EmployeesPage = () => {
             {errors.password && <p className="error-text">{errors.password}</p>}
 
             <div className="modal-actions">
-              <button className="btn btn-primary" onClick={handleCreateStaff}>
-                ✅ Đồng ý tạo
-              </button>
-              <button className="btn btn-danger" onClick={() => setShowAddModal(false)}>
-                ✖ Hủy
-              </button>
+              <button className="btn btn-primary" onClick={handleCreateStaff}>✅ Đồng ý tạo</button>
+              <button className="btn btn-danger" onClick={() => setShowAddModal(false)}>✖ Hủy</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🧾 Modal cập nhật nhân viên */}
+      {showUpdateModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h2>🧾 Cập nhật thông tin nhân viên</h2>
+
+            <label>Email nhân viên</label>
+            <input
+              type="email"
+              name="email"
+              value={updateStaff.email}
+              onChange={handleUpdateChange}
+              placeholder="Nhập email để cập nhật"
+              className={errors.email ? "input-error" : ""}
+            />
+            {errors.email && <p className="error-text">{errors.email}</p>}
+
+            <label>Họ tên</label>
+            <input
+              type="text"
+              name="fullName"
+              value={updateStaff.fullName}
+              onChange={handleUpdateChange}
+              placeholder="VD: Nguyễn Văn B"
+            />
+
+            <label>Số điện thoại</label>
+            <input
+              type="text"
+              name="phone"
+              value={updateStaff.phone}
+              onChange={handleUpdateChange}
+              placeholder="VD: 0987654321"
+            />
+
+            <label>Mật khẩu (nếu muốn đổi)</label>
+            <input
+              type="password"
+              name="password"
+              value={updateStaff.password}
+              onChange={handleUpdateChange}
+              placeholder="Để trống nếu không đổi"
+            />
+
+            <label>Mã trạm (Station ID)</label>
+            <input
+              type="number"
+              name="stationId"
+              value={updateStaff.stationId}
+              onChange={handleUpdateChange}
+              placeholder="VD: 1"
+            />
+
+            <div className="modal-actions">
+              <button className="btn btn-primary" onClick={handleUpdateStaff}>✅ Xác nhận cập nhật</button>
+              <button className="btn btn-danger" onClick={() => setShowUpdateModal(false)}>✖ Hủy</button>
             </div>
           </div>
         </div>
