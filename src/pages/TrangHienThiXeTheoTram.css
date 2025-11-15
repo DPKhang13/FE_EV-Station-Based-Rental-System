@@ -1,147 +1,267 @@
 /* =========================================
-   TRANG HIỂN THỊ XE THEO TRẠM - CLEAN LUXURY
+   TRANG HIỂN THỊ XE THEO TRẠM - PROFESSIONAL TABLE
    ========================================= */
 
 .station-vehicle-page {
   min-height: 100vh;
-  padding: 32px 6vw 60px;
-  background: #f3f4f6;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
-    "Segoe UI", sans-serif;
-  color: #111827;
+  padding: 32px 40px 60px;
+  background: #f8f9fa;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Helvetica Neue", sans-serif;
+  color: #1a1a1a;
 }
 
-/* Title kiểu showroom sang, nhưng đơn giản */
-.station-vehicle-page .title {
-  font-size: 26px;
-  font-weight: 600;
-  letter-spacing: 0.16em;
+/* Page Header Section */
+.page-header-section {
+  text-align: center;
+  margin-bottom: 32px;
+  border-bottom: 3px solid #c41e3a;
+  padding-bottom: 20px;
+}
+
+.page-title {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 2px;
   text-transform: uppercase;
-  color: #111827;
-  margin-bottom: 22px;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
 }
 
-.station-vehicle-page .title::after {
-  content: "";
-  display: block;
-  margin-top: 10px;
-  width: 80px;
-  height: 2px;
-  background: #111827;
+.station-name-large {
+  font-size: 24px;
+  color: #1a1a1a;
+  margin: 0;
+  font-weight: 600;
 }
 
 /* Empty state */
-.station-vehicle-page .empty {
-  margin-top: 32px;
-  padding: 32px 20px;
-  border-radius: 14px;
-  border: 1px solid #e5e7eb;
-  background: #ffffff;
-  color: #6b7280;
+.empty-state {
+  margin-top: 60px;
+  padding: 60px 20px;
   text-align: center;
-  font-size: 14px;
+  color: #666;
 }
 
-/* ==========================
-   TABLE CONTAINER
-   ========================== */
+.empty-state p {
+  font-size: 18px;
+  margin: 0;
+}
 
+/* Table Header Actions */
+.table-header-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+  gap: 12px;
+}
+
+/* Table Container */
+.table-container {
+  background: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+}
+
+/* Table Styling */
 .station-vehicle-page .vehicle-table {
   width: 100%;
-  margin-top: 18px;
   border-collapse: collapse;
   border-spacing: 0;
-  background: #ffffff;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow:
-    0 8px 20px rgba(15, 23, 42, 0.06),
-    0 1px 3px rgba(15, 23, 42, 0.03);
+  margin: 0;
 }
 
-/* Header */
-.station-vehicle-page .vehicle-table thead {
-  background: #f9fafb;
+/* Header Row - Black background */
+.station-vehicle-page .vehicle-table .header-row {
+  background: #1a1a1a;
 }
 
-.station-vehicle-page .vehicle-table th {
-  padding: 12px 16px;
+.station-vehicle-page .vehicle-table thead th {
+  padding: 14px 12px;
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
+  font-weight: 700;
+  letter-spacing: 1px;
   text-transform: uppercase;
-  color: #6b7280;
+  color: #ffffff;
   text-align: left;
-  border-bottom: 1px solid #e5e7eb;
+  border: none;
+  background: #1a1a1a;
 }
 
-/* Body */
-.station-vehicle-page .vehicle-table td {
-  padding: 12px 16px;
-  font-size: 14px;
-  color: #111827;
-  border-bottom: 1px solid #f3f4f6;
-  background: #ffffff;
-  transition: background 0.18s ease, transform 0.18s ease,
-    box-shadow 0.18s ease;
+.station-vehicle-page .vehicle-table th.col-index,
+.station-vehicle-page .vehicle-table th.col-seats,
+.station-vehicle-page .vehicle-table th.col-year,
+.station-vehicle-page .vehicle-table th.col-battery,
+.station-vehicle-page .vehicle-table th.col-status,
+.station-vehicle-page .vehicle-table th.col-action {
+  text-align: center;
 }
 
-.station-vehicle-page .vehicle-table tbody tr:last-child td {
+/* Body Rows */
+.station-vehicle-page .vehicle-table tbody tr {
+  border-bottom: 1px solid #e8e8e8;
+  transition: background-color 0.2s ease;
+}
+
+.station-vehicle-page .vehicle-table tbody tr:last-child {
   border-bottom: none;
 }
 
-/* Zebra nhẹ */
-.station-vehicle-page .vehicle-table tbody tr:nth-child(even) td {
-  background: #fcfcfc;
+/* Alternate row colors */
+.station-vehicle-page .vehicle-table tbody tr:nth-child(odd) {
+  background: #ffffff;
 }
 
-/* Hover nhẹ nhàng, không lòe loẹt */
-.station-vehicle-page .vehicle-table tbody tr:hover td {
-  background: #f9fafb;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+.station-vehicle-page .vehicle-table tbody tr:nth-child(even) {
+  background: #f5f5f5;
 }
 
-/* Cột STT */
-.station-vehicle-page .vehicle-table td:first-child,
-.station-vehicle-page .vehicle-table th:first-child {
-  width: 52px;
-  text-align: center;
-  color: #9ca3af;
+/* Hover effect */
+.station-vehicle-page .vehicle-table tbody tr:hover {
+  background: #f0f0f0 !important;
 }
 
-/* Tên xe nổi bật hơn tí */
-.station-vehicle-page .vehicle-table td strong {
-  font-weight: 600;
-  letter-spacing: 0.01em;
-}
-
-/* Biển số kiểu "plate" */
-.station-vehicle-page .plate {
-  font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas,
-    "Liberation Mono", "Courier New", monospace;
+.station-vehicle-page .vehicle-table td {
+  padding: 12px;
   font-size: 13px;
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  color: #333;
+  text-align: left;
+}
+
+/* Column Widths */
+.col-index {
+  width: 35px;
+  text-align: center;
+  font-weight: 600;
+  color: #666;
+}
+
+.col-image {
+  width: 80px;
+  text-align: center;
+}
+
+.col-name {
+  width: 11%;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.col-plate {
+  width: 10%;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.col-brand {
+  width: 8%;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.col-color {
+  width: 9%;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.col-seats {
+  width: 7%;
+  text-align: center;
+}
+
+.col-year {
+  width: 7%;
+  text-align: center;
+}
+
+.col-mileage {
+  width: 10%;
+  text-align: center;
+}
+
+.col-battery {
+  width: 7%;
+  text-align: center;
+}
+
+.col-status {
+  width: 11%;
+  text-align: center;
+  position: relative;
+}
+
+.col-action {
+  display: flex;
+  justify-content: center;
+  align-items: center;  /* 🔥 Center theo chiều dọc */
+  position: relative;
+}
+
+/* Plate Number Badge */
+.plate-number {
+  display: inline-block;
+  font-family: "Courier New", monospace;
+  font-weight: 600;
+  color: #1a5490;
+  background: #e8f1ff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #b3d9ff;
+  font-size: 12px;
+}
+
+/* Color Badge */
+.color-badge {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #ddd;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+/* Vehicle Image */
+.vehicle-image {
+  width: 70px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+  background: #f5f5f5;
+}
+
+/* Battery Badge */
+.battery-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 110px;
-  color: #111827;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 50px;
 }
 
-/* Cột số ghế, năm, quãng đường canh giữa nhẹ */
-.station-vehicle-page .vehicle-table td:nth-child(6),
-.station-vehicle-page .vehicle-table td:nth-child(7),
-.station-vehicle-page .vehicle-table td:nth-child(9) {
-  text-align: center;
+.battery-badge.high {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
 }
 
-/* Pin (%) – đậm hơn chút */
-.station-vehicle-page .vehicle-table td:nth-child(8) {
-  font-weight: 500;
+.battery-badge.medium {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+.battery-badge.low {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
 }
 
 /* ==========================
@@ -152,71 +272,305 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 10px;
-  border-radius: 999px;
+  padding: 6px 12px;
+  border-radius: 4px;
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-weight: 700;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
   border: 1px solid transparent;
+  min-width: 80px;
 }
 
 /* Sẵn sàng (AVAILABLE) */
 .status-badge.AVAILABLE {
-  background: #ecfdf5;
-  border-color: #bbf7d0;
-  color: #15803d;
+  background: #d4edda;
+  color: #155724;
+  border-color: #c3e6cb;
 }
 
 /* Đang thuê (IN_USE) */
 .status-badge.IN_USE {
-  background: #eff6ff;
-  border-color: #bfdbfe;
-  color: #1d4ed8;
+  background: #cce5ff;
+  color: #004085;
+  border-color: #b8daff;
 }
 
 /* Đã đặt (RESERVED) */
 .status-badge.RESERVED {
-  background: #fffbeb;
-  border-color: #fde68a;
-  color: #b45309;
+  background: #fff3cd;
+  color: #856404;
+  border-color: #ffeaa7;
 }
 
 /* Bảo trì (MAINTENANCE) */
 .status-badge.MAINTENANCE {
-  background: #fef2f2;
-  border-color: #fecaca;
-  color: #b91c1c;
+  background: #f8d7da;
+  color: #721c24;
+  border-color: #f5c6cb;
+}
+
+/* Table Footer Stats */
+
+.table-footer {
+  padding: 16px 12px;
+  background: #ffffff;
+  border-top: 3px solid #c41e3a;
+  text-align: right;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stats {
+  display: flex;
+  justify-content: flex-end;
+  gap: 24px;
+  font-size: 13px;
+}
+
+.stat-item {
+  color: #666;
+}
+
+.stat-item strong {
+  color: #333;
+  font-weight: 600;
+}
+
+/* Nút Thêm xe */
+.btn-add-vehicle {
+  padding: 10px 20px;
+  background: #c41e3a;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-add-vehicle:hover {
+  background: #a01729;
+}
+
+.btn-add-vehicle:active {
+  background: #8a1220;
+}
+
+/* Menu cho từng xe */
+.menu-wrapper {
+  position: relative;
+}
+
+.menu-btn {
+  background: none;
+  border: none;
+  font-size: 22px;       /* giảm một chút cho cân */
+  color: #444;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  line-height: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;   /* 🔥 bắt buộc */
+  height: 100%;
+}
+.menu-btn:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  min-width: 180px;
+  z-index: 100;
+  margin-top: 4px;
+}
+
+.menu-item {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 13px;
+  color: #333;
+  transition: background-color 0.2s ease;
+}
+
+.menu-item:hover {
+  background: #f5f5f5;
+}
+
+.menu-item:first-child {
+  border-radius: 4px 4px 0 0;
+}
+
+.menu-item:last-child {
+  border-radius: 0 0 4px 4px;
+}
+
+.menu-item.danger {
+  color: #c41e3a;
+}
+
+.menu-item.danger:hover {
+  background: #fee;
 }
 
 /* ==========================
    RESPONSIVE
    ========================== */
 
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
   .station-vehicle-page {
-    padding: 24px 16px 40px;
+    padding: 24px 24px 40px;
   }
 
-  .station-vehicle-page .vehicle-table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
+  .col-name {
+    width: 12%;
+  }
+
+  .page-title {
+    font-size: 24px;
   }
 }
 
-@media (max-width: 640px) {
-  .station-vehicle-page .title {
+@media (max-width: 1024px) {
+  .station-vehicle-page {
+    padding: 20px 16px 40px;
+  }
+
+  .page-header-section {
+    margin-bottom: 24px;
+  }
+
+  .table-container {
+    overflow-x: auto;
+  }
+
+  .station-vehicle-page .vehicle-table td {
+  vertical-align: middle;  /* 🔥 Căn giữa cell */
+}
+  .col-image {
+    width: 70px;
+  }
+
+  .vehicle-image {
+    width: 60px;
+    height: 45px;
+  }
+
+  .stats {
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+  }
+
+  .stat-item {
+    display: block;
+  }
+}
+
+@media (max-width: 768px) {
+  .station-vehicle-page {
+    padding: 16px 12px 32px;
+  }
+
+  .page-title {
     font-size: 20px;
-    text-align: center;
+    letter-spacing: 1px;
   }
 
-  .station-vehicle-page .title::after {
-    margin-left: auto;
-    margin-right: auto;
+  .page-header-section {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #1a1a1a;
   }
 
-  .station-vehicle-page .empty {
+  .station-vehicle-page .vehicle-table thead th {
+    padding: 10px 8px;
+    font-size: 10px;
+  }
+
+  .station-vehicle-page .vehicle-table td {
+    padding: 8px 6px;
+    font-size: 12px;
+  }
+
+  .col-index {
+    width: 30px;
+  }
+
+  .col-name {
+    width: 14%;
+  }
+
+  .status-badge {
+    min-width: 70px;
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .station-vehicle-page {
+    padding: 12px 8px 24px;
+  }
+
+  .page-title {
+    font-size: 16px;
+    letter-spacing: 0.5px;
+  }
+
+  .station-name {
     font-size: 13px;
+  }
+
+  .station-vehicle-page .vehicle-table {
+    font-size: 11px;
+  }
+
+  .station-vehicle-page .vehicle-table thead th {
+    padding: 8px 4px;
+    font-size: 9px;
+  }
+
+  .station-vehicle-page .vehicle-table td {
+    padding: 6px 4px;
+    font-size: 11px;
+  }
+
+  .col-name {
+    width: 16%;
+  }
+
+  .col-brand,
+  .col-color {
+    width: 10%;
+  }
+
+  .plate-number {
+    font-size: 10px;
+  }
+
+  .stats {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .stat-item {
+    font-size: 12px;
   }
 }
