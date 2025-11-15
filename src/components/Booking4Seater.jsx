@@ -40,7 +40,9 @@ const Booking4Seater = () => {
   } = useVehicleTimelines(cars);
 
   const [bookedSlots, setBookedSlots] = useState([]);
-  const [selectedCarId, setSelectedCarId] = useState(preSelectedCar?.vehicleId || "");
+  const [selectedCarId, setSelectedCarId] = useState(
+    preSelectedCar ? String(preSelectedCar.vehicleId || preSelectedCar.id || preSelectedCar.vehicle_id || "") : ""
+  );
   const [selectedCar, setSelectedCar] = useState(preSelectedCar || null);
   const [selectedColor, setSelectedColor] = useState("");
   const [hasActiveRental, setHasActiveRental] = useState(false);
@@ -75,7 +77,9 @@ const Booking4Seater = () => {
   };
 
   const availableCars = cars.filter((car) => {
-    const isFourSeater = car.type === "4-seater";
+    // ✅ Filter chính xác: chỉ lấy xe 4 chỗ
+    const seatCount = car.seat_count || car.seatCount || 0;
+    const isFourSeater = (car.type === "4-seater") || (seatCount >= 1 && seatCount < 7);
     // ✅ HIỂN THỊ TẤT CẢ XE (kể cả BOOKED/RENTAL/CHECKING)
     // Timeline sẽ được check để disable các khung giờ đã book
     const matchesGrade = gradeFilter ? car.grade === gradeFilter : true;
@@ -87,12 +91,17 @@ const Booking4Seater = () => {
     ...new Set(
       cars
         .filter(
-          (car) =>
-            car.type === "4-seater" &&
-            car.color &&
-            car.color !== "N/A" &&
-            car.color !== "null" &&
-            (!gradeFilter || car.grade === gradeFilter)
+          (car) => {
+            const seatCount = car.seat_count || car.seatCount || 0;
+            const isFourSeater = (car.type === "4-seater") || (seatCount >= 1 && seatCount < 7);
+            return (
+              isFourSeater &&
+              car.color &&
+              car.color !== "N/A" &&
+              car.color !== "null" &&
+              (!gradeFilter || car.grade === gradeFilter)
+            );
+          }
         )
         .map((car) => car.color)
     ),
@@ -101,6 +110,70 @@ const Booking4Seater = () => {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, []);
+
+  // ✅ Tự động set selectedColor từ preSelectedCar để đảm bảo xe có trong availableCars
+  useEffect(() => {
+    if (preSelectedCar?.color && !selectedColor) {
+      setSelectedColor(preSelectedCar.color);
+    }
+  }, [preSelectedCar, selectedColor]);
+
+  // ✅ Cập nhật selectedCar từ danh sách cars khi có preSelectedCar
+  useEffect(() => {
+    if (preSelectedCar && cars.length > 0) {
+      const carId = preSelectedCar.vehicleId || preSelectedCar.id || preSelectedCar.vehicle_id;
+      if (carId) {
+        // Tìm xe trong tất cả cars (không filter) để đảm bảo tìm thấy
+        const fullCar = cars.find(
+          (c) => {
+            const cId = c.vehicleId || c.id || c.vehicle_id;
+            return (
+              String(cId) === String(carId) ||
+              cId === carId ||
+              cId === parseInt(carId) ||
+              parseInt(cId) === parseInt(carId) ||
+              String(c.vehicleId) === String(carId) ||
+              String(c.id) === String(carId) ||
+              String(c.vehicle_id) === String(carId)
+            );
+          }
+        );
+        
+        if (fullCar) {
+          setSelectedCar(fullCar);
+          const timeline = getVehicleTimeline(fullCar.vehicleId || fullCar.id || fullCar.vehicle_id);
+          setBookedSlots(timeline);
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cars, preSelectedCar]);
+
+  // ✅ Set selectedCarId sau khi availableCars đã được cập nhật (sau khi selectedColor được set)
+  useEffect(() => {
+    if (selectedCar && availableCars.length > 0) {
+      const carId = selectedCar.vehicleId || selectedCar.id || selectedCar.vehicle_id;
+      if (carId) {
+        // Kiểm tra xem xe có trong availableCars không
+        const foundInAvailable = availableCars.find(
+          (c) => {
+            const cId = c.vehicleId || c.id || c.vehicle_id;
+            return String(cId) === String(carId) || cId === carId;
+          }
+        );
+        
+        if (foundInAvailable) {
+          const fullCarId = foundInAvailable.vehicleId || foundInAvailable.id || foundInAvailable.vehicle_id;
+          const fullCarIdStr = String(fullCarId);
+          // Chỉ set nếu chưa được set hoặc khác với giá trị hiện tại
+          if (selectedCarId !== fullCarIdStr) {
+            setSelectedCarId(fullCarIdStr);
+          }
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCar, availableCars]);
 
   useEffect(() => {
     const checkActiveRental = async () => {
@@ -140,7 +213,12 @@ const Booking4Seater = () => {
 
     const car = carId
       ? availableCars.find(
-          (c) => c.vehicleId === parseInt(carId) || c.id === parseInt(carId)
+          (c) => 
+            String(c.vehicleId) === carId || 
+            String(c.id) === carId || 
+            String(c.vehicle_id) === carId ||
+            c.vehicleId === parseInt(carId) || 
+            c.id === parseInt(carId)
         )
       : null;
 
@@ -300,14 +378,15 @@ const Booking4Seater = () => {
               >
                 <option value="">Chọn một xe</option>
                 {availableCars.map((car) => {
-                  const vehicleId = car.vehicleId || car.id;
+                  const vehicleId = car.vehicleId || car.id || car.vehicle_id;
+                  const vehicleIdStr = String(vehicleId); // Đảm bảo value là string
                   const timelineMsg = getTimelineMessage(vehicleId);
                   const displayName = car.vehicle_name || car.vehicleName || car.plateNumber;
                   
                   return (
                     <option
-                      key={vehicleId}
-                      value={vehicleId}
+                      key={vehicleIdStr}
+                      value={vehicleIdStr}
                     >
                       {displayName}
                       {timelineMsg ? ` (${timelineMsg.summary})` : ' (Trống lịch)'}
@@ -446,17 +525,18 @@ const Booking4Seater = () => {
             <>
               <img
                 src={getCarImageByColor(selectedCar.color)}
-                alt={selectedCar.vehicle_name}
+                alt={selectedCar.vehicle_name || selectedCar.vehicleName || selectedCar.name || "Xe 4 chỗ"}
                 className="car-display-image"
               />
               <div className="car-display-details">
-                <h3>{selectedCar.vehicle_name}</h3>
-                <p>Hãng: {selectedCar.brand}</p>
-                <p>Màu: {selectedCar.color}</p>
-                <p>Số chỗ: {selectedCar.seat_count}</p>
-                <p>Biển số: {selectedCar.plate_number}</p>
-                <p>Pin: {selectedCar.battery_status}</p>
-                <p>Quãng đường: {selectedCar.range_km} km</p>
+                <h3>{selectedCar.vehicle_name || selectedCar.vehicleName || selectedCar.name}</h3>
+                <p>Hãng: {selectedCar.brand || "N/A"}</p>
+                <p>Màu: {selectedCar.color || "N/A"}</p>
+                <p>Số chỗ: {selectedCar.seat_count || selectedCar.seatCount || "N/A"}</p>
+                <p>Biển số: {selectedCar.plate_number || selectedCar.plateNumber || "N/A"}</p>
+                <p>Pin: {selectedCar.battery_status || selectedCar.batteryStatus || "N/A"}</p>
+                <p>Quãng đường: {selectedCar.range_km || selectedCar.rangeKm ? `${selectedCar.range_km || selectedCar.rangeKm} km` : "N/A"}</p>
+                {selectedCar.stationName && <p>Trạm: {selectedCar.stationName}</p>}
               </div>
             </>
           )}

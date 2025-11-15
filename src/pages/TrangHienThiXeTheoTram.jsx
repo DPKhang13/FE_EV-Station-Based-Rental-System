@@ -1,7 +1,9 @@
-import React, { useEffect, useState, useRef } from "react";
-import { useParams } from "react-router-dom";
+// pages/TrangHienThiXeTheoTram.jsx
+import React, { useEffect, useState, useContext } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import "../components/admin/VehicleManagement.css";
+import "./TrangHienThiXeTheoTram.css";
+import { AuthContext } from "../context/AuthContext";
 
 // Import ảnh 4 chỗ từ các thư mục riêng
 // BMW 4 chỗ
@@ -51,6 +53,8 @@ import DefaultCar from "../assets/4standard.jpg";
 
 const TrangHienThiXeTheoTram = () => {
   const { station } = useParams();
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useContext(AuthContext);
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stationName, setStationName] = useState("");
@@ -98,17 +102,6 @@ const TrangHienThiXeTheoTram = () => {
     seatCount: 4
   });
   const [notification, setNotification] = useState({ show: false, message: "", type: "success" });
-  
-  // Search and Filter states (from CarRent)
-  const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  
-  // Bộ lọc
-  const [filters, setFilters] = useState({
-    colors: [],
-    seatCounts: [],
-    statuses: [],
-  });
 
   // Hàm hiển thị thông báo
   const showNotification = (message, type = "success") => {
@@ -168,60 +161,6 @@ const TrangHienThiXeTheoTram = () => {
     return "AVAILABLE";
   };
 
-  // Search and Filter helper functions (from CarRent)
-  // Dropdown ngoài click tự đóng
-  const menuRef = useRef(null);
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        // Only handle if not related to existing menu logic
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // Các bộ lọc duy nhất
-  const getUniqueColors = () => [...new Set(vehicles.map((v) => v.color).filter(Boolean))];
-  const getUniqueSeatCounts = () =>
-    [...new Set(vehicles.map((v) => v.seatCount || v.seat_count).filter(Boolean))].sort(
-      (a, b) => a - b
-    );
-  const getAllStatuses = () => ["Available", "Rented", "Maintenance"];
-
-  // Toggle filter
-  const toggleFilter = (type, value) => {
-    setFilters((prev) => {
-      const updated = prev[type].includes(value)
-        ? prev[type].filter((x) => x !== value)
-        : [...prev[type], value];
-      return { ...prev, [type]: updated };
-    });
-  };
-
-  const clearFilters = () =>
-    setFilters({ colors: [], seatCounts: [], statuses: [] });
-
-  // Lọc xe theo search + filter
-  const filteredVehicles = vehicles.filter((v) => {
-    const matchesSearch =
-      !searchTerm ||
-      v.vehicleName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      v.plateNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      v.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      v.color?.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesColor =
-      filters.colors.length === 0 || filters.colors.includes(v.color);
-    const matchesSeat =
-      filters.seatCounts.length === 0 ||
-      filters.seatCounts.includes(v.seatCount || v.seat_count);
-    const matchesStatus =
-      filters.statuses.length === 0 || filters.statuses.includes(v.status);
-
-    return matchesSearch && matchesColor && matchesSeat && matchesStatus;
-  });
-
   // Hàm fetch lại danh sách xe
   const fetchVehicles = async () => {
     try {
@@ -234,7 +173,13 @@ const TrangHienThiXeTheoTram = () => {
         const vStation = Number(v.stationId || v.station_id);
         return vStation === Number(station);
       });
-      setVehicles(filtered);
+      // Sắp xếp theo biển số xe
+      const sorted = [...filtered].sort((a, b) => {
+        const plateA = (a.plateNumber || a.plate_number || "").toUpperCase();
+        const plateB = (b.plateNumber || b.plate_number || "").toUpperCase();
+        return plateA.localeCompare(plateB);
+      });
+      setVehicles(sorted);
       if (filtered.length > 0 && filtered[0].stationName) {
         setStationName(filtered[0].stationName);
       }
@@ -302,10 +247,16 @@ const TrangHienThiXeTheoTram = () => {
                Number(vStation) === Number(searchStation);
       });
       
-      console.log("✅ Tổng số xe tìm thấy:", filtered.length);
-      setVehiclesByStation(filtered);
+      // Sắp xếp theo biển số xe
+      const sorted = [...filtered].sort((a, b) => {
+        const plateA = (a.plateNumber || a.plate_number || "").toUpperCase();
+        const plateB = (b.plateNumber || b.plate_number || "").toUpperCase();
+        return plateA.localeCompare(plateB);
+      });
+      console.log("✅ Tổng số xe tìm thấy:", sorted.length);
+      setVehiclesByStation(sorted);
       
-      if (filtered.length === 0) {
+      if (sorted.length === 0) {
         console.warn("⚠️ Không tìm thấy xe nào cho trạm:", stationId);
       }
     } catch (err) {
@@ -908,13 +859,30 @@ const TrangHienThiXeTheoTram = () => {
   };
 
   const getStatusInfo = (status) => {
-    const map = {
-      Available: { text: "AVAILABLE", class: "AVAILABLE", display: "Sẵn sàng" },
-      Rented: { text: "IN_USE", class: "IN_USE", display: "Đang thuê" },
-      Reserved: { text: "RESERVED", class: "RESERVED", display: "Đã đặt" },
-      Maintenance: { text: "MAINTENANCE", class: "MAINTENANCE", display: "Bảo trì" }
+    // Normalize status về uppercase để so sánh
+    const statusUpper = (status || "").toUpperCase();
+    
+    // Map tất cả status về tiếng Việt
+    const statusMap = {
+      "AVAILABLE": { text: "AVAILABLE", class: "AVAILABLE", display: "Sẵn sàng" },
+      "RENTED": { text: "IN_USE", class: "IN_USE", display: "Đang thuê" },
+      "RENTAL": { text: "IN_USE", class: "IN_USE", display: "Đang thuê" },
+      "ON_RENT": { text: "IN_USE", class: "IN_USE", display: "Đang thuê" },
+      "IN_USE": { text: "IN_USE", class: "IN_USE", display: "Đang thuê" },
+      "BOOKED": { text: "RESERVED", class: "RESERVED", display: "Đã đặt trước" },
+      "RESERVED": { text: "RESERVED", class: "RESERVED", display: "Đã đặt trước" },
+      "CHECKING": { text: "CHECKING", class: "CHECKING", display: "Đang kiểm tra" },
+      "MAINTENANCE": { text: "MAINTENANCE", class: "MAINTENANCE", display: "Bảo trì" },
+      // Fallback cho camelCase
+      "Available": { text: "AVAILABLE", class: "AVAILABLE", display: "Sẵn sàng" },
+      "Rented": { text: "IN_USE", class: "IN_USE", display: "Đang thuê" },
+      "Booked": { text: "RESERVED", class: "RESERVED", display: "Đã đặt trước" },
+      "Reserved": { text: "RESERVED", class: "RESERVED", display: "Đã đặt trước" },
+      "Checking": { text: "CHECKING", class: "CHECKING", display: "Đang kiểm tra" },
+      "Maintenance": { text: "MAINTENANCE", class: "MAINTENANCE", display: "Bảo trì" }
     };
-    return map[status] || { text: status, class: "AVAILABLE", display: status };
+    
+    return statusMap[statusUpper] || statusMap[status] || { text: status, class: "AVAILABLE", display: status };
   };
 
   // Đóng menu khi click ra ngoài
@@ -930,6 +898,15 @@ const TrangHienThiXeTheoTram = () => {
       return () => document.removeEventListener('click', handleClickOutside);
     }
   }, [openMenuId, openOrderMenuId]);
+
+  // Kiểm tra quyền admin
+  useEffect(() => {
+    if (authLoading) return;
+    const token = localStorage.getItem("accessToken");
+    if (!token || user?.role !== "admin") {
+      navigate("/login", { replace: true });
+    }
+  }, [navigate, user, authLoading]);
 
   useEffect(() => {
     fetchAllStations();
@@ -952,10 +929,8 @@ const TrangHienThiXeTheoTram = () => {
         if (filtered.length > 0 && filtered[0].stationName) {
           setStationName(filtered[0].stationName);
         }
-        setError(null);
       } catch (err) {
         console.error("Lỗi tải xe:", err);
-        setError("Không thể tải danh sách xe. Vui lòng thử lại sau.");
       } finally {
         setLoading(false);
       }
@@ -973,110 +948,16 @@ const TrangHienThiXeTheoTram = () => {
     );
   }
 
-  // Render
   return (
     <div className="station-vehicle-page">
-      {/* Header */}
-      <div className="page-header-section">
-        <h1 className="page-title">DANH SÁCH XE TẠI TRẠM #{station}</h1>
-        {stationName && <p className="station-name-large">{stationName}</p>}
-      </div>
-
-      {/* Search Bar (from CarRent) */}
-      <div className="search-bar" style={{ marginBottom: "20px", padding: "0 20px" }}>
-        <input
-          type="text"
-          placeholder="🔍 Tìm theo tên, biển số, màu..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "10px",
-            fontSize: "16px",
-            border: "1px solid #ddd",
-            borderRadius: "4px"
-          }}
-        />
-      </div>
-
-      {/* Filter Section (from CarRent) */}
-      <div className="filters-section" style={{ marginBottom: "20px", padding: "0 20px" }}>
-        <div className="filter-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
-          <h3 style={{ margin: 0 }}>🔍 Bộ lọc</h3>
-          {(filters.colors.length > 0 ||
-            filters.seatCounts.length > 0 ||
-            filters.statuses.length > 0) && (
-            <button className="btn-clear-filters" onClick={clearFilters} style={{
-              padding: "5px 15px",
-              backgroundColor: "#f0f0f0",
-              border: "1px solid #ddd",
-              borderRadius: "4px",
-              cursor: "pointer"
-            }}>
-              Xóa bộ lọc
-            </button>
-          )}
-        </div>
-
-        <div className="filters-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px" }}>
-          {/* Màu sắc */}
-          <div className="filter-group">
-            <h4 style={{ marginBottom: "10px" }}>🎨 Màu sắc</h4>
-            <div className="filter-options" style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-              {getUniqueColors().map((color) => (
-                <label key={color} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-                  <input
-                    type="checkbox"
-                    checked={filters.colors.includes(color)}
-                    onChange={() => toggleFilter("colors", color)}
-                  />
-                  <span>{color}</span>
-                </label>
-              ))}
-            </div>
+          {/* Header */}
+          <div className="page-header-section">
+            <h1 className="page-title">DANH SÁCH XE TẠI TRẠM #{station}</h1>
+            {stationName && <p className="station-name-large">{stationName}</p>}
           </div>
-
-          {/* Số ghế */}
-          <div className="filter-group">
-            <h4 style={{ marginBottom: "10px" }}>💺 Số ghế</h4>
-            <div className="filter-options" style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-              {getUniqueSeatCounts().map((seat) => (
-                <label key={seat} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-                  <input
-                    type="checkbox"
-                    checked={filters.seatCounts.includes(seat)}
-                    onChange={() => toggleFilter("seatCounts", seat)}
-                  />
-                  <span>{seat} chỗ</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Trạng thái */}
-          <div className="filter-group">
-            <h4 style={{ marginBottom: "10px" }}>📊 Trạng thái</h4>
-            <div className="filter-options" style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-              {getAllStatuses().map((st) => {
-                const info = getStatusInfo(st);
-                return (
-                  <label key={st} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-                    <input
-                      type="checkbox"
-                      checked={filters.statuses.includes(st)}
-                      onChange={() => toggleFilter("statuses", st)}
-                    />
-                    <span>{info.display || info.text}</span>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Action Button */}
-      <div className="table-header-actions" style={{ padding: "0 20px", marginBottom: "20px" }}>
+      <div className="table-header-actions">
         <button 
           className="btn-add-vehicle"
           onClick={handleOpenAddModal}
@@ -1085,29 +966,7 @@ const TrangHienThiXeTheoTram = () => {
         </button>
       </div>
 
-      {error && (
-        <div style={{ padding: "20px", textAlign: "center", color: "#d32f2f", backgroundColor: "#ffebee", margin: "0 20px 20px", borderRadius: "4px" }}>
-          {error}
-        </div>
-      )}
-
-      {filteredVehicles.length === 0 && vehicles.length > 0 ? (
-        <div className="empty-state" style={{ padding: "40px", textAlign: "center" }}>
-          <div style={{ fontSize: "48px", marginBottom: "16px" }}>📭</div>
-          <p>Không có xe nào phù hợp với bộ lọc</p>
-          <button onClick={clearFilters} style={{
-            marginTop: "10px",
-            padding: "8px 16px",
-            backgroundColor: "#1976d2",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer"
-          }}>
-            Xóa bộ lọc
-          </button>
-        </div>
-      ) : filteredVehicles.length === 0 && vehicles.length === 0 ? (
+      {vehicles.length === 0 ? (
         <div className="empty-state">
           <div style={{ fontSize: "48px", marginBottom: "16px" }}>📭</div>
           <p>Không có xe nào tại trạm này</p>
@@ -1133,7 +992,7 @@ const TrangHienThiXeTheoTram = () => {
             </thead>
 
             <tbody>
-              {filteredVehicles.map((v, index) => {
+              {vehicles.map((v, index) => {
                 const statusInfo = getStatusInfo(v.status);
                 const batteryStatus = parseInt(v.batteryStatus || v.battery_status || 0);
                 const batteryClass = batteryStatus >= 70 ? "high" : batteryStatus >= 40 ? "medium" : "low";
@@ -1234,13 +1093,35 @@ const TrangHienThiXeTheoTram = () => {
                 <strong>Tổng xe:</strong> {vehicles.length}
               </span>
               <span className="stat-item">
-                <strong>Sẵn sàng:</strong> {vehicles.filter(v => v.status === "Available").length}
+                <strong>Sẵn sàng:</strong> {vehicles.filter(v => {
+                  const s = (v.status || "").toUpperCase();
+                  return s === "AVAILABLE" || s === "Available";
+                }).length}
               </span>
               <span className="stat-item">
-                <strong>Đang thuê:</strong> {vehicles.filter(v => v.status === "Rented").length}
+                <strong>Đang thuê:</strong> {vehicles.filter(v => {
+                  const s = (v.status || "").toUpperCase();
+                  return s === "RENTED" || s === "RENTAL" || s === "ON_RENT" || s === "IN_USE" || 
+                         s === "Rented" || s === "Rental";
+                }).length}
               </span>
               <span className="stat-item">
-                <strong>Bảo trì:</strong> {vehicles.filter(v => v.status === "Maintenance").length}
+                <strong>Đã đặt trước:</strong> {vehicles.filter(v => {
+                  const s = (v.status || "").toUpperCase();
+                  return s === "BOOKED" || s === "RESERVED" || s === "Booked" || s === "Reserved";
+                }).length}
+              </span>
+              <span className="stat-item">
+                <strong>Đang kiểm tra:</strong> {vehicles.filter(v => {
+                  const s = (v.status || "").toUpperCase();
+                  return s === "CHECKING" || s === "Checking";
+                }).length}
+              </span>
+              <span className="stat-item">
+                <strong>Bảo trì:</strong> {vehicles.filter(v => {
+                  const s = (v.status || "").toUpperCase();
+                  return s === "MAINTENANCE" || s === "Maintenance";
+                }).length}
               </span>
             </div>
           </div>
@@ -1278,7 +1159,9 @@ const TrangHienThiXeTheoTram = () => {
                 >
                   <option value="Available">Sẵn sàng</option>
                   <option value="Rented">Đang thuê</option>
-                  <option value="Reserved">Đã đặt</option>
+                  <option value="Booked">Đã đặt trước</option>
+                  <option value="Reserved">Đã đặt trước</option>
+                  <option value="Checking">Đang kiểm tra</option>
                   <option value="Maintenance">Bảo trì</option>
                 </select>
               </div>
@@ -1399,7 +1282,9 @@ const TrangHienThiXeTheoTram = () => {
                 >
                   <option value="Available">Sẵn sàng</option>
                   <option value="Rented">Đang thuê</option>
-                  <option value="Reserved">Đã đặt</option>
+                  <option value="Booked">Đã đặt trước</option>
+                  <option value="Reserved">Đã đặt trước</option>
+                  <option value="Checking">Đang kiểm tra</option>
                   <option value="Maintenance">Bảo trì</option>
                 </select>
               </div>

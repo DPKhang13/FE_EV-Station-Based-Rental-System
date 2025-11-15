@@ -189,6 +189,7 @@ function App() {
               <Route path="dashboard" element={<AdminDashBoardPage />} />
               <Route path="employees" element={<EmployeesPage />} />
               <Route path="vehicles" element={<VehicleManagement />} />
+              <Route path="quanlyxetaitram" element={<QuanLiXeTaiTram />} />
               <Route path="locations" element={<StationManagement />} />
               <Route path="customers" element={<CustomerManagement />} />
              

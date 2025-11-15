@@ -1,15 +1,25 @@
 // pages/QuanLiXeTaiTram.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./QuanLiXeTaiTram.css";
+import { AuthContext } from "../context/AuthContext";
 
 const QuanLiXeTaiTram = () => {
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useContext(AuthContext);
   const [stations, setStations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const navigate = useNavigate();
+  // Kiểm tra quyền admin
+  useEffect(() => {
+    if (authLoading) return;
+    const token = localStorage.getItem("accessToken");
+    if (!token || user?.role !== "admin") {
+      navigate("/login", { replace: true });
+    }
+  }, [navigate, user, authLoading]);
 
   useEffect(() => {
     const fetchStations = async () => {
@@ -33,14 +43,15 @@ const QuanLiXeTaiTram = () => {
 
   const handleViewDetail = (stationId) => {
     navigate(`/admin/hienthiXe/${stationId}`);
-};
+  };
+
   if (loading) {
     return <div className="station-loading">Đang tải danh sách trạm...</div>;
   }
 
   return (
     <div className="station-page">
-      <h1 className="station-title">Quản lý xe tại trạm</h1>
+      <h1 className="station-title">QUẢN LÝ XE TẠI TRẠM</h1>
 
       {error && <p className="station-error">{error}</p>}
 

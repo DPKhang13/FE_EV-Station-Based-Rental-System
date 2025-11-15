@@ -200,18 +200,9 @@ const formatDateTimeForBackend = (dateStr, isStart = true) => {
             </div>
           </div>
 
-          {/* Tóm tắt */}
-          <div className="confirm-section summary">
-            <h2>Tóm Tắt Đặt Xe</h2>
-            <div className="summary-item">
-              <span className="label">Trạng Thái:</span>
-              <span className="value status-pending">CHỜ XỬ LÝ</span>
-            </div>
-          </div>
-
           <div className="confirm-actions">
             <button onClick={() => navigate(-1)} className="btn-back" disabled={loading}>
-              Quay Lại
+              {loading ? 'Đang xử lý...' : 'Quay Lại'}
             </button>
             <button onClick={handleConfirmBooking} className="btn-confirm" disabled={loading}>
               {loading ? 'Đang xử lý...' : 'Xác Nhận Đặt Xe'}
