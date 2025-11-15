@@ -21,6 +21,9 @@ const EmployeesPage = () => {
     stationId: ""
   });
   const [errors, setErrors] = useState({});
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+const [deleteEmail, setDeleteEmail] = useState("");
+
 
   // 🔹 Lấy danh sách nhân viên khi load trang
   useEffect(() => {
@@ -131,6 +134,37 @@ const EmployeesPage = () => {
       alert("Không thể đổi trạng thái. Vui lòng thử lại!");
     }
   };
+  const handleDeleteAccount = async () => {
+  if (!deleteEmail.endsWith("@gmail.com")) {
+    alert("❌ Email không hợp lệ!");
+    return;
+  }
+
+  // Xác nhận lần 2
+  if (!window.confirm(`⚠️ Bạn có chắc muốn xóa tài khoản: ${deleteEmail} ?\nHành động này không thể hoàn tác!`)) {
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      `http://localhost:8080/api/staffschedule/deleteUser/by-email?email=${deleteEmail}`,
+      {
+        method: "DELETE",
+      }
+    );
+
+    if (!res.ok) throw new Error("Không thể xóa tài khoản!");
+
+    alert("🗑️ Đã xóa tài khoản vĩnh viễn!");
+    setShowDeleteModal(false);
+    setDeleteEmail("");
+    getEmployees(); // load lại danh sách
+  } catch (error) {
+    console.error("❌ Lỗi khi xóa tài khoản:", error);
+    alert("Xóa tài khoản thất bại. Vui lòng thử lại!");
+  }
+};
+
 
   // ✏️ Mở popup cập nhật thông tin
   const handleUpdateEmployee = () => {
@@ -222,15 +256,12 @@ const EmployeesPage = () => {
         <button className="add-btn" onClick={handleAddEmployee}>➕ Thêm nhân viên</button>
         <button className="update-btn" onClick={handleUpdateEmployee}>🧾 Cập nhật thông tin</button>
         <button
-          className="delete-all-btn"
-          onClick={() => {
-            if (window.confirm("⚠️ Bạn có chắc muốn xóa vĩnh viễn tất cả tài khoản nhân viên không?")) {
-              alert("🗑️ Toàn bộ tài khoản đã bị xóa (mô phỏng).");
-            }
-          }}
-        >
-          ❌ Xóa tài khoản vĩnh viễn
-        </button>
+  className="delete-all-btn"
+  onClick={() => setShowDeleteModal(true)}
+>
+  ❌ Xóa tài khoản vĩnh viễn
+</button>
+
       </div>
 
       {/* 📊 Thống kê tổng quan */}
@@ -464,6 +495,31 @@ const EmployeesPage = () => {
           </div>
         </div>
       )}
+      {showDeleteModal && (
+  <div className="modal-overlay">
+    <div className="modal">
+      <h2>🗑️ Xóa tài khoản nhân viên</h2>
+
+      <label>Email nhân viên</label>
+      <input
+        type="email"
+        placeholder="Nhập email cần xóa"
+        value={deleteEmail}
+        onChange={(e) => setDeleteEmail(e.target.value)}
+      />
+
+      <div className="modal-actions">
+        <button className="btn btn-danger" onClick={handleDeleteAccount}>
+          ❌ Chấp nhận xóa
+        </button>
+        <button className="btn btn-secondary" onClick={() => setShowDeleteModal(false)}>
+          ✖ Hủy
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };
