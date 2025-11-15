@@ -140,15 +140,7 @@ const PopupXemChiTietXe = ({ vehicleId, onClose, onReload }) => {
                   <span className="info-label">Pin:</span>
                   <span className="info-value battery">{vehicleDetail.batteryStatus || "N/A"}</span>
                 </div>
-                <div className="info-item">
-                  <span className="info-label">Dung lượng pin:</span>
-                  <span className="info-value">{vehicleDetail.batteryCapacity || "N/A"}</span>
                 </div>
-                <div className="info-item">
-                  <span className="info-label">Quãng đường:</span>
-                  <span className="info-value">{vehicleDetail.rangeKm || "N/A"} km</span>
-                </div>
-              </div>
             </div>
 
             {/* Trạm & vị trí */}

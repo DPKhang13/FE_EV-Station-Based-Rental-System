@@ -64,8 +64,9 @@ const ThanhToanPage = () => {
   // 🔍 Tra cứu theo số điện thoại
   const handleSearch = async () => {
     if (!phone.trim()) {
-      setError("Vui lòng nhập số điện thoại khách hàng!");
+      fetchTransactions();
       return;
+    
     }
     setError("");
     try {

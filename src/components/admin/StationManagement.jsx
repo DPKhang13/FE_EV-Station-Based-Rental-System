@@ -469,63 +469,47 @@ const StationManagement = () => {
         });
     };
 
-    const handleUpdateVehicle = async (e) => {
-        e.preventDefault();
+   const handleUpdateVehicle = async (e) => {
+  e.preventDefault();
 
-        try {
-            const brand = vehicleFormData.vehicleName;
-            const seatCount = parseInt(vehicleFormData.seatCount);
-            const variant = vehicleFormData.variant.toUpperCase();
+  try {
+    const vehicleId = editingVehicle.vehicleId || editingVehicle.id;
+    if (!vehicleId) throw new Error("Không tìm thấy ID xe!");
 
-            const seatLabel = seatCount === 4 ? '4S' : '7S';
-            const vehicleName = `${brand} ${seatLabel} ${variant}`;
-
-            const seatText = seatCount === 4 ? '4-seater' : '7-seater';
-            const description = `${brand} EV ${seatText}, ${variant} variant`;
-
-            const vehicleData = {
-                plateNumber: vehicleFormData.plateNumber,
-                stationId: editingVehicle.stationId, // Thêm stationId từ xe đang edit
-                brand: brand,
-                vehicleName: vehicleName,
-                color: vehicleFormData.color,
-                seatCount: seatCount,
-                variant: variant,
-                status: vehicleFormData.status,
-                description: description,
-                batteryStatus: vehicleFormData.batteryStatus,
-                batteryCapacity: vehicleFormData.batteryCapacity,
-                rangeKm: 500
-            };
-
-            const vehicleId = editingVehicle.vehicleId || editingVehicle.id;
-            console.log('🔧 Updating vehicle ID:', vehicleId, 'Data:', vehicleData);
-
-            if (!vehicleId) {
-                throw new Error('Vehicle ID not found!');
-            }
-
-            const result = await vehicleService.updateVehicle(vehicleId, vehicleData);
-            console.log('✅ Vehicle updated successfully:', result);
-
-            // Đóng modal edit
-            handleCloseEditVehicleModal();
-
-            // Refresh danh sách xe (modal detail vẫn mở)
-            if (selectedStation) {
-                const stationId = selectedStation.stationid || selectedStation.id;
-                console.log('🔄 Refreshing vehicle list for station:', stationId);
-                const vehicles = await vehicleService.getVehiclesByStation(stationId);
-                console.log('✅ Refreshed:', vehicles.length, 'xe');
-                setStationVehicles(vehicles);
-            }
-
-            alert(`✅ Đã cập nhật xe ${vehicleFormData.plateNumber} thành công!`);
-        } catch (err) {
-            console.error('❌ Error updating vehicle:', err);
-            alert('❌ Có lỗi xảy ra khi cập nhật xe. Vui lòng thử lại.');
-        }
+    const vehicleData = {
+      status: vehicleFormData.status,
+      color: vehicleFormData.color,
+      seatCount: Number(vehicleFormData.seatCount) || 0,
+      batteryStatus: vehicleFormData.batteryStatus,
+      batteryCapacity: vehicleFormData.batteryCapacity,
+      rangeKm: Number(vehicleFormData.rangeKm) || 0,
     };
+
+    console.log("🚗 PUT update vehicle:", vehicleData);
+
+    const res = await fetch(`http://localhost:8080/api/vehicles/update/${vehicleId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(vehicleData),
+    });
+
+    if (!res.ok) throw new Error(await res.text());
+
+    alert("✅ Cập nhật xe thành công!");
+    handleCloseEditVehicleModal();
+
+    if (selectedStation) {
+      const id = selectedStation.stationid || selectedStation.id;
+      const vehicles = await vehicleService.getVehiclesByStation(id);
+      setStationVehicles(vehicles);
+    }
+  } catch (err) {
+    console.error("❌ Lỗi cập nhật xe:", err);
+    alert("❌ Cập nhật thất bại, vui lòng thử lại.");
+  }
+};
+
+
 
     const handleDeleteVehicle = async (vehicle) => {
         if (!window.confirm(`Bạn có chắc chắn muốn xóa xe ${vehicle.plateNumber}?`)) {
@@ -1174,172 +1158,140 @@ const StationManagement = () => {
 
             {/* Edit Vehicle Modal */}
             {showEditVehicleModal && editingVehicle && (
-                <div className="modal-overlay" onClick={handleCloseEditVehicleModal}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h2>🔧 Chỉnh sửa xe: {editingVehicle.plateNumber}</h2>
-                            <button className="modal-close" onClick={handleCloseEditVehicleModal}>✕</button>
-                        </div>
+  <div className="modal-overlay" onClick={handleCloseEditVehicleModal}>
+    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-header">
+        <h2>🔧 Chỉnh sửa xe: {editingVehicle.plateNumber}</h2>
+        <button className="modal-close" onClick={handleCloseEditVehicleModal}>✕</button>
+      </div>
 
-                        {/* Preview for edit modal */}
-                        {/* Reduce horizontal padding and let image be responsive to remove white side bars */}
-                        <div style={{ textAlign: 'center', padding: '12px 0 0 0', width: '100%' }}>
-                            {(() => {
-                                const previewVehicle = {
-                                    brand: vehicleFormData.vehicleName || editingVehicle.brand,
-                                    color: vehicleFormData.color || editingVehicle.color,
-                                    seatCount: Number(vehicleFormData.seatCount) || editingVehicle.seatCount || 4,
-                                    image: editingVehicle.image || ''
-                                };
-                                return (
-                                    <img
-                                        src={getCarImageUrl(previewVehicle)}
-                                        alt="Preview"
-                                        style={{
-                                            width: '35%',
-                                            maxWidth: 720,
-                                            height: 'auto',
-                                            objectFit: 'contain',
-                                            borderRadius: 8,
-                                            border: '1px solid #eee',
-                                            background: 'transparent',
-                                            boxShadow: '0 6px 18px rgba(0,0,0,0.08)',
-                                            display: 'block',
-                                            margin: '0 auto'
-                                        }}
-                                        onError={(e) => { e.target.src = 'https://via.placeholder.com/420x400?text=No+Image'; }}
-                                    />
-                                );
-                            })()}
-                        </div>
+      {/* Ảnh preview xe */}
+      <div style={{ textAlign: "center", padding: "12px 0 0 0", width: "100%" }}>
+        {(() => {
+          const previewVehicle = {
+            brand: editingVehicle.brand,
+            color: vehicleFormData.color || editingVehicle.color,
+            seatCount: Number(vehicleFormData.seatCount) || editingVehicle.seatCount || 4,
+          };
+          return (
+            <img
+              src={getCarImageUrl(previewVehicle)}
+              alt="Preview"
+              style={{
+                width: "40%",
+                maxWidth: 480,
+                height: "auto",
+                objectFit: "contain",
+                borderRadius: 8,
+                border: "1px solid #eee",
+                background: "#fff",
+                boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+                margin: "0 auto",
+                display: "block",
+              }}
+              onError={(e) => {
+                e.target.src = "https://via.placeholder.com/420x300?text=No+Image";
+              }}
+            />
+          );
+        })()}
+      </div>
 
-                        <form onSubmit={handleUpdateVehicle} className="station-form">
-                            <div className="form-grid">
-                                <div className="form-group full-width">
-                                    <label>Biển số xe <span className="required">*</span></label>
-                                    <input
-                                        type="text"
-                                        name="plateNumber"
-                                        value={vehicleFormData.plateNumber}
-                                        onChange={handleVehicleInputChange}
-                                        required
-                                        disabled
-                                        style={{ background: '#f3f4f6', cursor: 'not-allowed' }}
-                                    />
-                                </div>
+      {/* Form nhập liệu cực gọn */}
+      <form onSubmit={handleUpdateVehicle} className="station-form">
+        <div className="form-grid">
+          <div className="form-group">
+            <label>Trạng thái</label>
+            <select
+              name="status"
+              value={vehicleFormData.status}
+              onChange={handleVehicleInputChange}
+              required
+            >
+              <option value="">-- Chọn trạng thái --</option>
+              <option value="AVAILABLE">AVAILABLE</option>
+              <option value="RENTED">RENTED</option>
+              <option value="MAINTENANCE">MAINTENANCE</option>
+            </select>
+          </div>
 
-                                <div className="form-group">
-                                    <label>Hãng xe <span className="required">*</span></label>
-                                    <select
-                                        name="vehicleName"
-                                        value={vehicleFormData.vehicleName}
-                                        onChange={handleVehicleInputChange}
-                                        required
-                                    >
-                                        <option value="">-- Chọn hãng xe --</option>
-                                        <option value="VinFast">VinFast</option>
-                                        <option value="BMW">BMW</option>
-                                        <option value="Tesla">Tesla</option>
-                                    </select>
-                                </div>
+          <div className="form-group">
+            <label>Màu sắc</label>
+            <select
+              name="color"
+              value={vehicleFormData.color}
+              onChange={handleVehicleInputChange}
+              required
+            >
+              <option value="">-- Chọn màu --</option>
+              <option value="White">Trắng</option>
+              <option value="Black">Đen</option>
+              <option value="Silver">Bạc</option>
+              <option value="Red">Đỏ</option>
+              <option value="Blue">Xanh dương</option>
+              <option value="Gray">Xám</option>
+            </select>
+          </div>
 
-                                <div className="form-group">
-                                    <label>Màu sắc <span className="required">*</span></label>
-                                    <select
-                                        name="color"
-                                        value={vehicleFormData.color}
-                                        onChange={handleVehicleInputChange}
-                                        required
-                                    >
-                                        <option value="">-- Chọn màu --</option>
-                                        <option value="White">Trắng</option>
-                                        <option value="Black">Đen</option>
-                                        <option value="Silver">Bạc</option>
-                                        <option value="Red">Đỏ</option>
-                                        <option value="Blue">Xanh dương</option>
-                                        <option value="Gray">Xám</option>
-                                    </select>
-                                </div>
+          <div className="form-group">
+            <label>Số chỗ ngồi</label>
+            <select
+              name="seatCount"
+              value={vehicleFormData.seatCount}
+              onChange={handleVehicleInputChange}
+              required
+            >
+              <option value="">-- Chọn số chỗ --</option>
+              <option value="4">4</option>
+              <option value="7">7</option>
+            </select>
+          </div>
 
-                                <div className="form-group">
-                                    <label>Số chỗ ngồi <span className="required">*</span></label>
-                                    <select
-                                        name="seatCount"
-                                        value={vehicleFormData.seatCount}
-                                        onChange={handleVehicleInputChange}
-                                        required
-                                    >
-                                        <option value="">-- Chọn số chỗ --</option>
-                                        <option value="4">4 chỗ</option>
-                                        <option value="7">7 chỗ</option>
-                                    </select>
-                                </div>
+          <div className="form-group">
+            <label>Pin hiện tại (%)</label>
+            <input
+              type="text"
+              name="batteryStatus"
+              value={vehicleFormData.batteryStatus}
+              onChange={handleVehicleInputChange}
+              placeholder="VD: 90%"
+            />
+          </div>
 
-                                <div className="form-group">
-                                    <label>Loại xe <span className="required">*</span></label>
-                                    <select
-                                        name="variant"
-                                        value={vehicleFormData.variant}
-                                        onChange={handleVehicleInputChange}
-                                        required
-                                    >
-                                        <option value="">-- Chọn loại xe --</option>
-                                        <option value="AIR">Air</option>
-                                        <option value="PLUS">Plus</option>
-                                        <option value="PRO">Pro</option>
-                                    </select>
-                                </div>
+          <div className="form-group">
+            <label>Dung lượng pin (kWh)</label>
+            <input
+              type="text"
+              name="batteryCapacity"
+              value={vehicleFormData.batteryCapacity}
+              onChange={handleVehicleInputChange}
+              placeholder="VD: 100 kWh"
+            />
+          </div>
 
-                                <div className="form-group">
-                                    <label>Trạng thái <span className="required">*</span></label>
-                                    <select
-                                        name="status"
-                                        value={vehicleFormData.status}
-                                        onChange={handleVehicleInputChange}
-                                        required
-                                    >
-                                        <option value="">-- Chọn trạng thái --</option>
-                                        <option value="AVAILABLE">Sẵn sàng</option>
-                                        <option value="RENTED">Đang thuê</option>
-                                        <option value="MAINTENANCE">Bảo trì</option>
-                                    </select>
-                                </div>
+          <div className="form-group">
+            <label>Phạm vi di chuyển (km)</label>
+            <input
+              type="number"
+              name="rangeKm"
+              value={vehicleFormData.rangeKm || 0}
+              onChange={handleVehicleInputChange}
+              placeholder="VD: 450"
+            />
+          </div>
+        </div>
 
-                                <div className="form-group">
-                                    <label>Pin hiện tại (%)</label>
-                                    <input
-                                        type="text"
-                                        name="batteryStatus"
-                                        value={vehicleFormData.batteryStatus}
-                                        onChange={handleVehicleInputChange}
-                                        placeholder="VD: 100%"
-                                    />
-                                </div>
+        <div className="form-actions">
+          <button type="button" className="btn-cancel" onClick={handleCloseEditVehicleModal}>
+            Hủy
+          </button>
+          <button type="submit" className="btn-submit">Lưu thay đổi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
 
-                                <div className="form-group">
-                                    <label>Dung lượng pin (kWh)</label>
-                                    <input
-                                        type="text"
-                                        name="batteryCapacity"
-                                        value={vehicleFormData.batteryCapacity}
-                                        onChange={handleVehicleInputChange}
-                                        placeholder="VD: 100 kWh"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="form-actions">
-                                <button type="button" className="btn-cancel" onClick={handleCloseEditVehicleModal}>
-                                    Hủy
-                                </button>
-                                <button type="submit" className="btn-submit">
-                                    Cập nhật
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
 
             {/* Order History Modal */}
             {showOrderHistoryModal && selectedVehicleForHistory && (

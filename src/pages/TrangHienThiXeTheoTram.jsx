@@ -1,8 +1,7 @@
-// pages/TrangHienThiXeTheoTram.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import "./TrangHienThiXeTheoTram.css";
+import "../components/admin/VehicleManagement.css";
 
 // Import ảnh 4 chỗ từ các thư mục riêng
 // BMW 4 chỗ
@@ -99,6 +98,17 @@ const TrangHienThiXeTheoTram = () => {
     seatCount: 4
   });
   const [notification, setNotification] = useState({ show: false, message: "", type: "success" });
+  
+  // Search and Filter states (from CarRent)
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  // Bộ lọc
+  const [filters, setFilters] = useState({
+    colors: [],
+    seatCounts: [],
+    statuses: [],
+  });
 
   // Hàm hiển thị thông báo
   const showNotification = (message, type = "success") => {
@@ -157,6 +167,60 @@ const TrangHienThiXeTheoTram = () => {
     if (statusUpper.includes("CONFIRMED") || statusUpper.includes("ACTIVE") || statusUpper.includes("IN_PROGRESS")) return "IN_USE";
     return "AVAILABLE";
   };
+
+  // Search and Filter helper functions (from CarRent)
+  // Dropdown ngoài click tự đóng
+  const menuRef = useRef(null);
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        // Only handle if not related to existing menu logic
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Các bộ lọc duy nhất
+  const getUniqueColors = () => [...new Set(vehicles.map((v) => v.color).filter(Boolean))];
+  const getUniqueSeatCounts = () =>
+    [...new Set(vehicles.map((v) => v.seatCount || v.seat_count).filter(Boolean))].sort(
+      (a, b) => a - b
+    );
+  const getAllStatuses = () => ["Available", "Rented", "Maintenance"];
+
+  // Toggle filter
+  const toggleFilter = (type, value) => {
+    setFilters((prev) => {
+      const updated = prev[type].includes(value)
+        ? prev[type].filter((x) => x !== value)
+        : [...prev[type], value];
+      return { ...prev, [type]: updated };
+    });
+  };
+
+  const clearFilters = () =>
+    setFilters({ colors: [], seatCounts: [], statuses: [] });
+
+  // Lọc xe theo search + filter
+  const filteredVehicles = vehicles.filter((v) => {
+    const matchesSearch =
+      !searchTerm ||
+      v.vehicleName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      v.plateNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      v.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      v.color?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesColor =
+      filters.colors.length === 0 || filters.colors.includes(v.color);
+    const matchesSeat =
+      filters.seatCounts.length === 0 ||
+      filters.seatCounts.includes(v.seatCount || v.seat_count);
+    const matchesStatus =
+      filters.statuses.length === 0 || filters.statuses.includes(v.status);
+
+    return matchesSearch && matchesColor && matchesSeat && matchesStatus;
+  });
 
   // Hàm fetch lại danh sách xe
   const fetchVehicles = async () => {
@@ -888,8 +952,10 @@ const TrangHienThiXeTheoTram = () => {
         if (filtered.length > 0 && filtered[0].stationName) {
           setStationName(filtered[0].stationName);
         }
+        setError(null);
       } catch (err) {
         console.error("Lỗi tải xe:", err);
+        setError("Không thể tải danh sách xe. Vui lòng thử lại sau.");
       } finally {
         setLoading(false);
       }
@@ -907,6 +973,7 @@ const TrangHienThiXeTheoTram = () => {
     );
   }
 
+  // Render
   return (
     <div className="station-vehicle-page">
       {/* Header */}
@@ -915,8 +982,101 @@ const TrangHienThiXeTheoTram = () => {
         {stationName && <p className="station-name-large">{stationName}</p>}
       </div>
 
+      {/* Search Bar (from CarRent) */}
+      <div className="search-bar" style={{ marginBottom: "20px", padding: "0 20px" }}>
+        <input
+          type="text"
+          placeholder="🔍 Tìm theo tên, biển số, màu..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "10px",
+            fontSize: "16px",
+            border: "1px solid #ddd",
+            borderRadius: "4px"
+          }}
+        />
+      </div>
+
+      {/* Filter Section (from CarRent) */}
+      <div className="filters-section" style={{ marginBottom: "20px", padding: "0 20px" }}>
+        <div className="filter-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
+          <h3 style={{ margin: 0 }}>🔍 Bộ lọc</h3>
+          {(filters.colors.length > 0 ||
+            filters.seatCounts.length > 0 ||
+            filters.statuses.length > 0) && (
+            <button className="btn-clear-filters" onClick={clearFilters} style={{
+              padding: "5px 15px",
+              backgroundColor: "#f0f0f0",
+              border: "1px solid #ddd",
+              borderRadius: "4px",
+              cursor: "pointer"
+            }}>
+              Xóa bộ lọc
+            </button>
+          )}
+        </div>
+
+        <div className="filters-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px" }}>
+          {/* Màu sắc */}
+          <div className="filter-group">
+            <h4 style={{ marginBottom: "10px" }}>🎨 Màu sắc</h4>
+            <div className="filter-options" style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+              {getUniqueColors().map((color) => (
+                <label key={color} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={filters.colors.includes(color)}
+                    onChange={() => toggleFilter("colors", color)}
+                  />
+                  <span>{color}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Số ghế */}
+          <div className="filter-group">
+            <h4 style={{ marginBottom: "10px" }}>💺 Số ghế</h4>
+            <div className="filter-options" style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+              {getUniqueSeatCounts().map((seat) => (
+                <label key={seat} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={filters.seatCounts.includes(seat)}
+                    onChange={() => toggleFilter("seatCounts", seat)}
+                  />
+                  <span>{seat} chỗ</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Trạng thái */}
+          <div className="filter-group">
+            <h4 style={{ marginBottom: "10px" }}>📊 Trạng thái</h4>
+            <div className="filter-options" style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+              {getAllStatuses().map((st) => {
+                const info = getStatusInfo(st);
+                return (
+                  <label key={st} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      checked={filters.statuses.includes(st)}
+                      onChange={() => toggleFilter("statuses", st)}
+                    />
+                    <span>{info.display || info.text}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Action Button */}
-      <div className="table-header-actions">
+      <div className="table-header-actions" style={{ padding: "0 20px", marginBottom: "20px" }}>
         <button 
           className="btn-add-vehicle"
           onClick={handleOpenAddModal}
@@ -925,7 +1085,29 @@ const TrangHienThiXeTheoTram = () => {
         </button>
       </div>
 
-      {vehicles.length === 0 ? (
+      {error && (
+        <div style={{ padding: "20px", textAlign: "center", color: "#d32f2f", backgroundColor: "#ffebee", margin: "0 20px 20px", borderRadius: "4px" }}>
+          {error}
+        </div>
+      )}
+
+      {filteredVehicles.length === 0 && vehicles.length > 0 ? (
+        <div className="empty-state" style={{ padding: "40px", textAlign: "center" }}>
+          <div style={{ fontSize: "48px", marginBottom: "16px" }}>📭</div>
+          <p>Không có xe nào phù hợp với bộ lọc</p>
+          <button onClick={clearFilters} style={{
+            marginTop: "10px",
+            padding: "8px 16px",
+            backgroundColor: "#1976d2",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer"
+          }}>
+            Xóa bộ lọc
+          </button>
+        </div>
+      ) : filteredVehicles.length === 0 && vehicles.length === 0 ? (
         <div className="empty-state">
           <div style={{ fontSize: "48px", marginBottom: "16px" }}>📭</div>
           <p>Không có xe nào tại trạm này</p>
@@ -951,7 +1133,7 @@ const TrangHienThiXeTheoTram = () => {
             </thead>
 
             <tbody>
-              {vehicles.map((v, index) => {
+              {filteredVehicles.map((v, index) => {
                 const statusInfo = getStatusInfo(v.status);
                 const batteryStatus = parseInt(v.batteryStatus || v.battery_status || 0);
                 const batteryClass = batteryStatus >= 70 ? "high" : batteryStatus >= 40 ? "medium" : "low";
