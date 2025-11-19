@@ -59,7 +59,16 @@ const Offers = () => {
             navigate('/login');
             return;
         }
-        navigate(path, { state: { gradeFilter } });
+        // Xác định seatCount từ path
+        const seatCount = path.includes('4seater') ? 4 : 7;
+        // Điều hướng đến LocationSelect với thông tin về loại xe và gradeFilter
+        navigate('/location-select', { 
+            state: { 
+                gradeFilter,
+                seatCount,
+                bookingPath: path // Lưu path booking để điều hướng sau khi chọn trạm
+            } 
+        });
     };
 
     return (
