@@ -15,12 +15,23 @@
     text-align: center;
     color: #000000;
     margin-bottom: 10px;
-    letter-spacing: 2px;
+    letter-spacing: 3px;
     text-transform: uppercase;
-    border-bottom: 4px solid #DC0000;
     padding-bottom: 20px;
+    position: relative;
     display: inline-block;
     width: 100%;
+}
+
+.confirm-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, #DC0000 20%, #DC0000 80%, transparent);
 }
 
 .confirm-subtitle {
@@ -29,6 +40,7 @@
     color: #666666;
     margin-bottom: 40px;
     font-weight: 500;
+    letter-spacing: 1px;
 }
 
 .confirm-content {
@@ -39,11 +51,13 @@
 
 .confirm-section {
     background: #FFFFFF;
-    border-radius: 8px;
+    border-radius: 0;
     padding: 32px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 2px solid #E5E5E5;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 2px solid #000000;
+    border-top: 4px solid #DC0000;
     margin-bottom: 24px;
+    position: relative;
 }
 
 .confirm-section h2 {
@@ -55,9 +69,19 @@
     align-items: center;
     gap: 8px;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    border-bottom: 3px solid #DC0000;
+    letter-spacing: 2px;
     padding-bottom: 12px;
+    position: relative;
+}
+
+.confirm-section h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 150px;
+    height: 3px;
+    background: linear-gradient(90deg, #DC0000, transparent);
 }
 
 /* Car Details */
@@ -68,17 +92,16 @@
     align-items: start;
     padding: 20px;
     background: #FFFFFF;
-    border-radius: 8px;
-    border: 2px solid #E5E5E5;
+    border-radius: 0;
+    border: 2px solid #000000;
 }
 
 .car-image {
     width: 100%;
     height: 380px;
     object-fit: cover;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    border: 4px solid #DC0000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: 2px solid #000000;
 }
 
 .car-info h3 {
@@ -87,9 +110,19 @@
     color: #000000;
     margin-bottom: 20px;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    border-bottom: 2px solid #DC0000;
+    letter-spacing: 2px;
     padding-bottom: 10px;
+    position: relative;
+}
+
+.car-info h3::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 120px;
+    height: 2px;
+    background: linear-gradient(90deg, #DC0000, transparent);
 }
 
 .info-row {
@@ -104,13 +137,15 @@
 }
 
 .info-row .label {
-    font-weight: 600;
+    font-weight: 700;
     color: #000000;
     font-size: 15px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
 }
 
 .info-row .value {
-    color: #666666;
+    color: #333333;
     font-weight: 500;
     font-size: 15px;
 }
@@ -125,19 +160,25 @@
 .detail-item {
     padding: 20px;
     background: #FFFFFF;
-    border-radius: 8px;
-    border: 2px solid #E5E5E5;
-    border-left: 5px solid #DC0000;
+    border-radius: 0;
+    border: 2px solid #000000;
+    border-left: 4px solid #DC0000;
+    transition: all 0.3s ease;
+}
+
+.detail-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
 }
 
 .detail-item .label {
     display: block;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
     color: #000000;
     margin-bottom: 8px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
 }
 
 .detail-item .value {
@@ -145,6 +186,7 @@
     font-size: 18px;
     font-weight: 700;
     color: #000000;
+    letter-spacing: 0.5px;
 }
 
 .detail-item .value.highlight {
@@ -153,19 +195,21 @@
 
 .detail-item .value.coupon {
     color: #DC0000;
-    background: #FFE5E5;
-    padding: 4px 12px;
-    border-radius: 6px;
+    background: #FFFFFF;
+    padding: 6px 14px;
+    border-radius: 0;
     display: inline-block;
     font-family: monospace;
-    border: 1px solid #DC0000;
+    border: 2px solid #DC0000;
     font-weight: 700;
+    letter-spacing: 1px;
 }
 
 /* Summary */
 .summary {
     background: #FFFFFF;
-    border: 3px solid #DC0000;
+    border: 2px solid #000000;
+    border-top: 4px solid #DC0000;
 }
 
 .summary h2 {
@@ -177,12 +221,12 @@
     justify-content: space-between;
     align-items: center;
     padding: 20px 24px;
-    background: #F8F8F8;
-    border-radius: 8px;
+    background: #FFFFFF;
+    border-radius: 0;
     margin-bottom: 12px;
     font-size: 18px;
     gap: 20px;
-    border: 1px solid #E5E5E5;
+    border: 1px solid #000000;
 }
 
 .summary-item .label {
@@ -191,7 +235,7 @@
     white-space: nowrap;
     flex-shrink: 0;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
 }
 
 .summary-item .value {
@@ -204,23 +248,24 @@
     color: #DC0000 !important;
     background: #FFFFFF;
     padding: 10px 24px;
-    border-radius: 4px;
+    border-radius: 0;
     font-size: 16px;
     font-weight: 700;
     display: inline-block;
     border: 2px solid #DC0000;
     white-space: nowrap;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
 }
 
 .summary-note {
     display: flex;
     gap: 12px;
     padding: 16px 20px;
-    background: #F8F8F8;
-    border-radius: 8px;
-    border: 2px solid #DC0000;
+    background: #FFFFFF;
+    border-radius: 0;
+    border: 2px solid #000000;
+    border-left: 4px solid #DC0000;
     margin-top: 8px;
 }
 
@@ -248,7 +293,7 @@
 /* Action Buttons */
 .confirm-actions {
     display: flex;
-    gap: 12px;
+    gap: 16px;
     justify-content: flex-start;
     align-items: center;
     margin-top: 40px;
@@ -260,13 +305,15 @@
     font-size: 18px;
     font-weight: 700;
     border: 2px solid;
-    border-radius: 4px;
+    border-radius: 0;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
     white-space: nowrap;
+    position: relative;
+    overflow: hidden;
 }
 
 .btn-back {
@@ -276,11 +323,26 @@
     border: 2px solid #000000;
 }
 
-.btn-back:hover:not(:disabled) {
+.btn-back::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
     background: #333333;
-    border-color: #333333;
+    transition: left 0.3s ease;
+    z-index: -1;
+}
+
+.btn-back:hover:not(:disabled) {
+    color: #FFFFFF;
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.btn-back:hover:not(:disabled)::before {
+    left: 0;
 }
 
 .btn-confirm {
@@ -290,17 +352,33 @@
     border: 2px solid #DC0000;
 }
 
+.btn-confirm::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: #B80000;
+    transition: left 0.3s ease;
+    z-index: -1;
+}
+
 .btn-confirm:hover:not(:disabled) {
-    background: #C41E3A;
-    border-color: #C41E3A;
+    color: #FFFFFF;
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(220, 0, 0, 0.4);
+    box-shadow: 0 6px 20px rgba(220, 0, 0, 0.5);
+}
+
+.btn-confirm:hover:not(:disabled)::before {
+    left: 0;
 }
 
 .btn-back:disabled,
 .btn-confirm:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
+    transform: none !important;
 }
 
 /* Responsive */

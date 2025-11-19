@@ -4,7 +4,7 @@ import { useVehicles } from '../hooks/useVehicles';
 
 import './CarFilter.css';
 
-const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [] }) => {
+const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [], gradeFilter: initialGradeFilter = '', seatCount: initialSeatCount = null }) => {
     const navigate = useNavigate();
     const { vehicles: cars, loading, error, refetch } = useVehicles();
     
@@ -13,9 +13,17 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [] }) => {
     const isLoadingData = propsVehicles && propsVehicles.length > 0 ? false : loading;
     
     const [brand, setBrand] = useState('');
-    const [grade, setGrade] = useState('');
+    // ✅ Tự động set grade từ gradeFilter nếu có (từ Offers)
+    const [grade, setGrade] = useState(initialGradeFilter || '');
     const [selectedColors, setSelectedColors] = useState([]);
     const [sortBy, setSortBy] = useState('name-asc');
+    
+    // ✅ Cập nhật grade khi initialGradeFilter thay đổi
+    useEffect(() => {
+        if (initialGradeFilter) {
+            setGrade(initialGradeFilter);
+        }
+    }, [initialGradeFilter]);
 
     // Get unique colors from available cars
     const availableColors = [...new Set(vehicleData
@@ -37,7 +45,24 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [] }) => {
             return false;
         }
 
-        // 2. LỌC THEO CHI NHÁNH (nếu có chọn)
+        // 2. ✅ LỌC THEO SỐ CHỖ (nếu có từ Offers - 4 chỗ hoặc 7 chỗ)
+        if (initialSeatCount !== null && initialSeatCount !== undefined) {
+            const carSeatCount = car.seatCount || car.seat_count || 0;
+            const carType = car.type || '';
+            
+            // Kiểm tra theo seatCount hoặc type
+            const isFourSeater = carSeatCount === 4 || carType === '4-seater' || carType === '4-seat';
+            const isSevenSeater = carSeatCount === 7 || carType === '7-seater' || carType === '7-seat';
+            
+            if (initialSeatCount === 4 && !isFourSeater) {
+                return false;
+            }
+            if (initialSeatCount === 7 && !isSevenSeater) {
+                return false;
+            }
+        }
+
+        // 3. LỌC THEO CHI NHÁNH (nếu có chọn)
         if (selectedBranch) {
             const carStationId = String(car.stationId || car.branch || '');
             const selectedStationId = String(selectedBranch);
@@ -46,7 +71,7 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [] }) => {
             }
         }
 
-        // 3. LỌC THEO HÃNG XE (thay vì loại xe)
+        // 4. LỌC THEO HÃNG XE (thay vì loại xe)
         if (brand) {
             const carBrand = car.brand || car.manufacturer || '';
             if (!carBrand || String(carBrand).toLowerCase() !== String(brand).toLowerCase()) {
@@ -54,7 +79,7 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [] }) => {
             }
         }
 
-        // 4. LỌC THEO HẠNG XE (nếu có chọn)
+        // 5. LỌC THEO HẠNG XE (nếu có chọn)
         if (grade) {
             // ✅ Lấy variant từ API
             const carVariant = car.variant || car.grade;
@@ -73,7 +98,7 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [] }) => {
             }
         }
 
-        // 5. LỌC THEO MÀU SẮC (nếu có chọn)
+        // 6. LỌC THEO MÀU SẮC (nếu có chọn)
         if (selectedColors.length > 0) {
             if (!car.color || !selectedColors.includes(car.color)) {
                 return false;
@@ -105,12 +130,13 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [] }) => {
     useEffect(() => {
         console.log(' [CarFilter] Debug Info:');
         console.log('   Branch:', selectedBranch || 'All');
+        console.log('   SeatCount:', initialSeatCount || 'All');
         console.log('   Brand:', brand || 'All');
         console.log('   Grade:', grade || 'All');
         console.log('   Colors:', selectedColors.length > 0 ? selectedColors.join(', ') : 'All');
         console.log('   Total cars:', cars.length);
         console.log('   Filtered cars:', filteredCars.length);
-    }, [selectedBranch, brand, grade, selectedColors, sortBy, cars.length, filteredCars.length, cars]);
+    }, [selectedBranch, initialSeatCount, brand, grade, selectedColors, sortBy, cars.length, filteredCars.length, cars]);
 
     // Xử lý khi thay đổi hãng xe
     // const handleBrandChange = (value) => {

@@ -8,6 +8,8 @@ const ListCarPage = () => {
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
     const selectedBranch = queryParams.get('branch') || '';
+    // Nhận gradeFilter và seatCount từ state (nếu có từ LocationSelect/Offers)
+    const { gradeFilter, seatCount } = location.state || {};
     const [branchName, setBranchName] = useState('');
     const [loading, setLoading] = useState(true);
     const [vehicles, setVehicles] = useState([]);
@@ -83,7 +85,12 @@ const ListCarPage = () => {
                     <p className="branch-name">{branchName}</p>
                 )}
             </div>
-            <CarFilter selectedBranch={selectedBranch} vehicles={vehicles} />
+            <CarFilter 
+                selectedBranch={selectedBranch} 
+                vehicles={vehicles} 
+                gradeFilter={gradeFilter}
+                seatCount={seatCount}
+            />
         </div>
     );
 };
