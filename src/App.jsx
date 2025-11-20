@@ -41,6 +41,7 @@ import DichVuPage from './pages/DichVuPage.jsx';
 import OrderDetailPage from './pages/OrderDetailPage.jsx'; 
 import  ForgotPage from './pages/ForgotPage.jsx'
 import OrderDetailCusPage from './pages/OrderDetailCusPage.jsx';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage.jsx';
 import QuanLiXeTaiTram from './pages/QuanLiXeTaiTram.jsx';
 import TrangHienThiXeTheoTram from './pages/TrangHienThiXeTheoTram.jsx';
 import ChiTietKhachHang from './pages/ChiTietKhachHang.jsx';
@@ -164,6 +165,7 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/verify-otp" element={<VerifyOtpPage />} />

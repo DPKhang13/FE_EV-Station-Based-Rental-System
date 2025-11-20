@@ -288,6 +288,15 @@ const QuanLyXePage = () => {
                   </>
                 )}
               </div>
+              <button
+                className="btn-view-detail"
+                onClick={() => {
+                  // TODO: Thêm logic xem chi tiết xe
+                  console.log("Xem chi tiết xe:", xe);
+                }}
+              >
+                Xem chi tiết
+              </button>
             </div>
           ))}
         </div>

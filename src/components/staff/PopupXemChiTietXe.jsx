@@ -14,14 +14,14 @@ const PopupXemChiTietXe = ({ vehicleId, onClose, onReload }) => {
       try {
         setLoading(true);
         setError(null);
-        console.log("🔍 Đang tải chi tiết xe ID:", vehicleId);
+        console.log(" Đang tải chi tiết xe ID:", vehicleId);
         
         const data = await vehicleService.getVehicleDetail(vehicleId);
-        console.log("✅ Dữ liệu xe nhận được:", data);
+        console.log(" Dữ liệu xe nhận được:", data);
         
         setVehicleDetail(data);
       } catch (err) {
-        console.error("❌ Lỗi khi tải chi tiết xe:", err);
+        console.error(" Lỗi khi tải chi tiết xe:", err);
         setError("Không thể tải thông tin xe. Vui lòng thử lại.");
       } finally {
         setLoading(false);
@@ -53,7 +53,7 @@ const PopupXemChiTietXe = ({ vehicleId, onClose, onReload }) => {
         const data = await vehicleService.getVehicleDetail(vehicleId);
         setVehicleDetail(data);
       } catch (err) {
-        console.error("❌ Lỗi khi tải lại chi tiết xe:", err);
+        console.error(" Lỗi khi tải lại chi tiết xe:", err);
       } finally {
         setLoading(false);
       }
@@ -70,7 +70,7 @@ const PopupXemChiTietXe = ({ vehicleId, onClose, onReload }) => {
     <div className="popup-overlay" onClick={onClose}>
       <div className="popup-content-detail" onClick={(e) => e.stopPropagation()}>
         <div className="popup-header">
-          <h2>📋 Thông tin chi tiết xe</h2>
+          <h2>Thông tin chi tiết xe</h2>
           <button className="close-btn" onClick={onClose}>✕</button>
         </div>
 
@@ -231,7 +231,7 @@ const PopupXemChiTietXe = ({ vehicleId, onClose, onReload }) => {
             className="btn-primary"
             style={{ marginRight: 'auto' }}
           >
-            🔧 Cập nhật trạng thái hoặc pin
+            Cập nhật trạng thái hoặc pin
           </button>
           <button onClick={onClose} className="btn-secondary">
             Đóng

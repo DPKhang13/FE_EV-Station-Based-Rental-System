@@ -68,87 +68,248 @@
   gap: 20px;
 }
 
-/* Thẻ xe */
+/* Thẻ xe - Mercedes Style */
 .xe-card {
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  padding: 16px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  background: #FFFFFF;
+  border: 2px solid #000000;
+  border-radius: 0;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   text-align: center;
-  transition: transform 0.2s ease;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.xe-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: #DC0000;
+  transform: scaleY(0);
+  transition: transform 0.3s ease;
 }
 
 .xe-card:hover {
   transform: translateY(-5px);
+  border-color: #DC0000;
+  box-shadow: 0 8px 20px rgba(220, 0, 0, 0.2);
+}
+
+.xe-card:hover::before {
+  transform: scaleY(1);
 }
 
 .xe-img {
   width: 100%;
   height: 150px;
   object-fit: cover;
-  border-radius: 6px;
-  margin-bottom: 10px;
+  border-radius: 0;
+  margin-bottom: 12px;
+  border: 1px solid #E0E0E0;
 }
 
 .xe-card h3 {
-  margin: 6px 0;
+  margin: 8px 0;
   font-size: 18px;
-  color: #222;
+  font-weight: 700;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .xe-card p {
-  margin: 4px 0;
+  margin: 6px 0;
   font-size: 14px;
-  color: #555;
+  color: #333333;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+}
+
+.xe-card p strong {
+  color: #000000;
+  font-weight: 600;
 }
 
 .status {
-  font-weight: bold;
-  color: #007bff;
-  margin-top: 6px;
+  font-weight: 700;
+  color: #DC0000;
+  margin-top: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 13px;
 }
 
 /* Nút hành động */
 .xe-actions {
-  margin-top: 10px;
+  margin-top: 12px;
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
   justify-content: center;
 }
 
 .xe-actions button {
   flex: 1;
   min-width: 80px;
-  padding: 6px 10px;
-  font-size: 14px;
-  border: none;
-  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  border: 2px solid;
+  border-radius: 0;
   cursor: pointer;
-  transition: all 0.2s;
-  color: white;
+  transition: all 0.3s ease;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.xe-actions button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  transition: left 0.3s ease;
+  z-index: -1;
 }
 
 .btn-update {
-  background-color: #28a745;
+  background-color: #000000;
+  color: #FFFFFF;
+  border-color: #000000;
+}
+
+.btn-update::before {
+  background: #333333;
+}
+
+.btn-update:hover {
+  background: #333333;
+  border-color: #333333;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn-update:hover::before {
+  left: 0;
 }
 
 .btn-report {
-  background-color: #ffc107;
-  color: #222;
+  background-color: #FFFFFF;
+  color: #000000;
+  border-color: #000000;
+}
+
+.btn-report::before {
+  background: #000000;
+}
+
+.btn-report:hover {
+  background: #000000;
+  color: #FFFFFF;
+  border-color: #000000;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn-report:hover::before {
+  left: 0;
 }
 
 .btn-maintain {
-  background-color: #dc3545;
+  background-color: #DC0000;
+  color: #FFFFFF;
+  border-color: #DC0000;
+}
+
+.btn-maintain::before {
+  background: #B80000;
+}
+
+.btn-maintain:hover {
+  background: #B80000;
+  border-color: #B80000;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 0, 0, 0.4);
+}
+
+.btn-maintain:hover::before {
+  left: 0;
 }
 
 .btn-checking {
-  background-color: #17a2b8;
+  background-color: #000000;
+  color: #FFFFFF;
+  border-color: #000000;
+}
+
+.btn-checking::before {
+  background: #333333;
+}
+
+.btn-checking:hover {
+  background: #333333;
+  border-color: #333333;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn-checking:hover::before {
+  left: 0;
+}
+
+/* Nút Xem chi tiết - Mercedes Style */
+.btn-view-detail {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 16px;
+  background: #000000;
+  color: #FFFFFF;
+  border: 2px solid #000000;
+  border-radius: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.btn-view-detail::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: #DC0000;
+  transition: left 0.3s ease;
+  z-index: -1;
+}
+
+.btn-view-detail:hover {
+  color: #FFFFFF;
+  border-color: #DC0000;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 0, 0, 0.4);
+}
+
+.btn-view-detail:hover::before {
+  left: 0;
 }
 
 .xe-actions button:hover {
-  opacity: 0.9;
+  opacity: 1;
 }
 
 .xe-actions button:disabled {

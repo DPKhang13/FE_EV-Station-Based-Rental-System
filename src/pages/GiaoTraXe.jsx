@@ -390,7 +390,7 @@ const getCarImage = (brand, color, seatCount) => {
                 }}
                 style={{ marginTop: '10px', width: '100%' }}
               >
-                📋 Xem chi tiết
+                Xem chi tiết
               </button>
             </div>
           ))}

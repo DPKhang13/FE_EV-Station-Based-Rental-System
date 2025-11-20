@@ -289,20 +289,50 @@
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
 }
 
-/* Nút secondary (Xem chi tiết) */
+/* Nút secondary (Xem chi tiết) - Mercedes Style */
 .btn-action-compact.btn-secondary {
-  background: linear-gradient(135deg, #6c757d, #5a6268);
-  border-color: #6c757d;
-  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.25);
+  background: #000000;
+  color: #FFFFFF;
+  border: 2px solid #000000;
+  border-radius: 0;
+  padding: 12px 24px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  white-space: nowrap;
 }
 
 .btn-action-compact.btn-secondary::before {
-  background: #495057;
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: #DC0000;
+  transition: left 0.3s ease;
+  z-index: -1;
 }
 
 .btn-action-compact.btn-secondary:hover {
-  border-color: #495057;
-  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.35);
+  color: #FFFFFF;
+  border-color: #DC0000;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(220, 0, 0, 0.4);
+}
+
+.btn-action-compact.btn-secondary:hover::before {
+  left: 0;
 }
 
 /* ⏳ Loading + Empty */
