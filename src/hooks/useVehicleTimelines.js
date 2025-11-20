@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { vehicleTimelineService } from '../services/vehicleTimelineService';
 
 /**
@@ -71,22 +71,22 @@ export const useVehicleTimelines = (vehicles = []) => {
   /**
    * Lấy timeline của một xe cụ thể
    */
-  const getVehicleTimeline = (vehicleId) => {
+  const getVehicleTimeline = useCallback((vehicleId) => {
     return timelines[vehicleId] || [];
-  };
+  }, [timelines]);
 
   /**
    * Kiểm tra xe có timeline đang booked không
    */
-  const hasBookedSlots = (vehicleId) => {
+  const hasBookedSlots = useCallback((vehicleId) => {
     const slots = timelines[vehicleId] || [];
     return slots.length > 0;
-  };
+  }, [timelines]);
 
   /**
    * Kiểm tra có overlap với timeline không
    */
-  const hasOverlap = (vehicleId, startTime, endTime) => {
+  const hasOverlap = useCallback((vehicleId, startTime, endTime) => {
     const slots = timelines[vehicleId] || [];
     const start = new Date(startTime);
     const end = new Date(endTime);
@@ -94,12 +94,12 @@ export const useVehicleTimelines = (vehicles = []) => {
     return slots.some((slot) => {
       return start < slot.end && end > slot.start;
     });
-  };
+  }, [timelines]);
 
   /**
    * Lấy thông báo timeline cho xe
    */
-  const getTimelineMessage = (vehicleId) => {
+  const getTimelineMessage = useCallback((vehicleId) => {
     const slots = timelines[vehicleId] || [];
     if (slots.length === 0) return null;
 
@@ -116,7 +116,7 @@ export const useVehicleTimelines = (vehicles = []) => {
         ? 'Xe có 1 lịch đặt trước'
         : `Xe có ${activeSlots.length} lịch đặt trước`
     };
-  };
+  }, [timelines]);
 
   return {
     timelines,

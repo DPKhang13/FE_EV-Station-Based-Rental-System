@@ -6,6 +6,46 @@ import vehicleService from "../services/vehicleService";
 import { orderService } from "../services";
 import { AuthContext } from "../context/AuthContext";
 
+// Import ảnh 4 chỗ
+import BMW4_Red from "../assets/BMW4/red.png";
+import BMW4_White from "../assets/BMW4/white.jpg";
+import BMW4_Blue from "../assets/BMW4/blue.jpg";
+import BMW4_Black from "../assets/BMW4/black.png";
+import BMW4_Silver from "../assets/BMW4/silver.jpg";
+
+import Tesla4_Red from "../assets/Tes4/red.jpg";
+import Tesla4_White from "../assets/Tes4/white.jpg";
+import Tesla4_Blue from "../assets/Tes4/blue.jpg";
+import Tesla4_Black from "../assets/Tes4/black.jpg";
+import Tesla4_Silver from "../assets/Tes4/silver.jpg";
+
+import VinFast4_Red from "../assets/Vin4/red.png";
+import VinFast4_White from "../assets/Vin4/white.jpg";
+import VinFast4_Blue from "../assets/Vin4/blue.jpg";
+import VinFast4_Black from "../assets/Vin4/black.png";
+import VinFast4_Silver from "../assets/Vin4/silver.png";
+
+// Import ảnh 7 chỗ
+import BMW7_Red from "../assets/BMW7/red.jpg";
+import BMW7_White from "../assets/BMW7/white.jpg";
+import BMW7_Blue from "../assets/BMW7/blue.jpg";
+import BMW7_Black from "../assets/BMW7/black.jpg";
+import BMW7_Silver from "../assets/BMW7/silver.jpg";
+
+import Tesla7_Red from "../assets/Tes7/red.jpg";
+import Tesla7_White from "../assets/Tes7/white.jpg";
+import Tesla7_Blue from "../assets/Tes7/blue.jpg";
+import Tesla7_Black from "../assets/Tes7/black.jpg";
+import Tesla7_Silver from "../assets/Tes7/silver.jpg";
+
+import VinFast7_Red from "../assets/Vin7/red.jpg";
+import VinFast7_White from "../assets/Vin7/white.jpg";
+import VinFast7_Blue from "../assets/Vin7/blue.jpg";
+import VinFast7_Black from "../assets/Vin7/black.jpg";
+import VinFast7_Silver from "../assets/Vin7/silver.jpg";
+
+import DefaultCar from "../assets/4standard.jpg";
+
 // Popups
 import PopupDatTruoc from "../components/staff/PopupDatTruoc";
 import PopupNhanXe from "../components/staff/PopUpNhanXe";
@@ -40,45 +80,43 @@ const GiaoTraXe = () => {
     try {
       setLoading(true);
 
-      console.log("🔄 Bắt đầu fetch vehicles...");
-      const vehicles = await vehicleService.fetchAndTransformVehicles();
+      console.log("🔄 Bắt đầu fetch vehicles cho trạm:", stationId);
+      // ✅ Gọi API theo stationId (không load tất cả 120 xe)
+      const vehicles = await vehicleService.fetchAndTransformVehicles(stationId);
       console.log("✅ Vehicles loaded:", vehicles?.length || 0);
 
-      console.log("🔄 Bắt đầu fetch orders...");
-      const ordersRes = await orderService.getAll();
-      console.log("✅ Orders loaded:", ordersRes?.data?.length || ordersRes?.length || 0);
+      // ✅ Không fetch orders ở đây - chỉ fetch khi cần thiết (khi bấm quản lý đơn hàng)
 
-      const vehiclesAtStation = (vehicles || [])
-        .filter((v) => Number(v.stationId) === Number(stationId))
-        .map((v) => {
-          const seatCount = v.seatCount || v.seat_count || 4;
-          return {
-            id: v.id || v.vehicleId,
-            ten: v.vehicle_name || v.vehicleName || v.name || "Xe điện",
-            bienSo: v.plate_number || v.plateNumber || "N/A",
-            pin: parseInt(v.battery_status?.replace("%", "") || v.batteryStatus?.replace("%", "") || "100"),
-            trangThai: formatStatus(v.status),
-            mau: v.color || "White",
-            hang: v.brand || "VinFast",
-            nam: v.year_of_manufacture || v.year || 2024,
-            tram: v.stationName || user?.stationName || `Trạm ${stationId}`,
-            seatCount: seatCount,
-            hinhAnh: getCarImage(v.brand || "VinFast", v.color || "White", seatCount),
-          };
-        })
-        .sort((a, b) => a.id - b.id);
+      // ✅ API đã trả về xe của trạm rồi, không cần filter nữa
+      const vehiclesAtStation = (vehicles || []).map((v) => {
+        const seatCount = v.seatCount || v.seat_count || 4;
+        return {
+          id: v.id || v.vehicleId,
+          ten: v.vehicle_name || v.vehicleName || v.name || "Xe điện",
+          bienSo: v.plate_number || v.plateNumber || "N/A",
+          pin: parseInt(v.battery_status?.replace("%", "") || v.batteryStatus?.replace("%", "") || "100"),
+          trangThai: formatStatus(v.status),
+          mau: v.color || "White",
+          hang: v.brand || "VinFast",
+          nam: v.year_of_manufacture || v.year || 2024,
+          tram: v.stationName || user?.stationName || `Trạm ${stationId}`,
+          seatCount: seatCount,
+          hinhAnh: getCarImage(v.brand || "VinFast", v.color || "White", seatCount),
+        };
+      })
+      .sort((a, b) => a.id - b.id);
 
       console.log("✅ Vehicles at station:", vehiclesAtStation.length);
 
       setVehicleList(vehiclesAtStation);
-      setOrders(Array.isArray(ordersRes?.data) ? ordersRes.data : (Array.isArray(ordersRes) ? ordersRes : []));
+      // ✅ Không set orders ở đây - chỉ fetch khi cần thiết
     } catch (err) {
       console.error("❌ Lỗi khi tải dữ liệu:", err);
       console.error("❌ Chi tiết lỗi:", err.message);
       
       // Set empty data để tránh crash
       setVehicleList([]);
-      setOrders([]);
+      // ✅ Không set orders ở đây
       
       // Hiển thị thông báo lỗi cho user
       alert("⚠️ Không thể tải dữ liệu xe. Vui lòng kiểm tra kết nối backend hoặc thử lại sau.");
@@ -131,9 +169,29 @@ const formatStatus = (status) => {
   };
 
   /** ================================
+   * 🔄 Fetch orders khi cần thiết
+   * ================================ */
+  const fetchOrdersIfNeeded = async () => {
+    if (orders.length === 0) {
+      try {
+        console.log("🔄 Fetching orders on-demand...");
+        const ordersRes = await orderService.getAll();
+        const ordersList = Array.isArray(ordersRes?.data) ? ordersRes.data : (Array.isArray(ordersRes) ? ordersRes : []);
+        setOrders(ordersList);
+        console.log("✅ Orders loaded:", ordersList.length);
+        return ordersList;
+      } catch (err) {
+        console.error("❌ Lỗi khi fetch orders:", err);
+        return [];
+      }
+    }
+    return orders;
+  };
+
+  /** ================================
    * 🎬 Hành động theo trạng thái xe
    * ================================ */
-  const handleVehicleAction = (xe) => {
+  const handleVehicleAction = async (xe) => {
     switch (xe.trangThai) {
       case "Có sẵn":
         setSelectedVehicle(xe);
@@ -146,7 +204,9 @@ const formatStatus = (status) => {
         break;
 
       case "Đang cho thuê": {
-        const rentalOrder = orders.find(
+        // ✅ Fetch orders nếu chưa có
+        const currentOrders = await fetchOrdersIfNeeded();
+        const rentalOrder = currentOrders.find(
           (o) =>
             Number(o.vehicleId) === Number(xe.id) &&
             ["RENTAL", "Rented", "ON_RENT", "IN_USE"].includes(o.status)
@@ -172,7 +232,9 @@ const formatStatus = (status) => {
         break;
 
       case "Đang kiểm tra": {
-        const relatedOrder = orders.find(
+        // ✅ Fetch orders nếu chưa có
+        const currentOrders = await fetchOrdersIfNeeded();
+        const relatedOrder = currentOrders.find(
           (o) => Number(o.vehicleId) === Number(xe.id)
         );
         if (!relatedOrder) {
@@ -210,77 +272,79 @@ const formatStatus = (status) => {
 
     return matchTab && matchSearch;
   });
-  // Map ảnh theo hãng + màu + loại xe
+  // Map ảnh theo hãng + màu + loại xe - Sử dụng ảnh từ assets
 const getCarImage = (brand, color, seatCount) => {
-  const base = "https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar";
-  const seatType = seatCount > 4 ? "7_Cho" : "4_Cho";
-  const brandKey = brand?.toLowerCase();
+  const seatType = seatCount > 4 ? "7" : "4";
+  const brandKey = brand?.toLowerCase()?.trim();
+  const colorKey = color?.toLowerCase()?.trim() || "white";
 
-  // Chuẩn hóa màu về tiếng Việt
-  const colorMap = {
-    white: "trắng",
-    silver: "bạc",
-    black: "đen",
-    red: "đỏ",
-    blue: "xanh",
-  };
-  const colorKey = colorMap[color?.toLowerCase()] || "trắng"; // fallback trắng nếu không match
-
-  const imgMap = {
+  // Map ảnh theo brand và seatType
+  const imageMap = {
     vinfast: {
-      "7_Cho": {
-        trắng: `${base}/7_Cho/Vinfast/unnamed.jpg`,
-        bạc: `${base}/7_Cho/Vinfast/unnamed%20(4).jpg`,
-        đen: `${base}/7_Cho/Vinfast/unnamed%20(3).jpg`,
-        đỏ: `${base}/7_Cho/Vinfast/unnamed%20(2).jpg`,
-        xanh: `${base}/7_Cho/Vinfast/unnamed%20(1).jpg`,
+      "4": {
+        red: VinFast4_Red,
+        white: VinFast4_White,
+        blue: VinFast4_Blue,
+        black: VinFast4_Black,
+        silver: VinFast4_Silver,
       },
-      "4_Cho": {
-        trắng: `${base}/4_Cho/Vinfast/unnamed.jpg`,
-        bạc: `${base}/4_Cho/Vinfast/b76c51c2-6e69-491c-ae83-0d36ff93cdff.png`,
-        đen: `${base}/4_Cho/Vinfast/e88bd242-3df4-48a7-8fe2-a9a3466f939f.png`,
-        đỏ: `${base}/4_Cho/Vinfast/e420cb1b-1710-4dbe-a5e3-e1285c690b6e.png`,
-        xanh: `${base}/4_Cho/Vinfast/a80cae76-5c8a-4226-ac85-116ba2da7a3a.png`,
-      },
-    },
-    bmw: {
-      "7_Cho": {
-        trắng: `${base}/7_Cho/BMW/unnamed.jpg`,
-        bạc: `${base}/7_Cho/BMW/unnamed%20(3).jpg`,
-        đen: `${base}/7_Cho/BMW/unnamed%20(4).jpg`,
-        đỏ: `${base}/7_Cho/BMW/unnamed%20(1).jpg`,
-        xanh: `${base}/7_Cho/BMW/unnamed%20(2).jpg`,
-      },
-      "4_Cho": {
-        trắng: `${base}/4_Cho/BMW/white.jpg`,
-        bạc: `${base}/4_Cho/BMW/unnamed%20(1).jpg`,
-        đen: `${base}/4_Cho/BMW/8f9f3e31-0c04-4441-bb40-97778c9824e0.png`,
-        đỏ: `${base}/4_Cho/BMW/7f3edc23-30ba-4e84-83a9-c8c418f2362d.png`,
-        xanh: `${base}/4_Cho/BMW/blue.jpg`,
+      "7": {
+        red: VinFast7_Red,
+        white: VinFast7_White,
+        blue: VinFast7_Blue,
+        black: VinFast7_Black,
+        silver: VinFast7_Silver,
       },
     },
     tesla: {
-      "7_Cho": {
-        trắng: `${base}/7_Cho/Tesla/unnamed.jpg`,
-        bạc: `${base}/7_Cho/Tesla/unnamed%20(4).jpg`,
-        đen: `${base}/7_Cho/Tesla/unnamed%20(3).jpg`,
-        đỏ: `${base}/7_Cho/Tesla/unnamed%20(2).jpg`,
-        xanh: `${base}/7_Cho/Tesla/unnamed%20(1).jpg`,
+      "4": {
+        red: Tesla4_Red,
+        white: Tesla4_White,
+        blue: Tesla4_Blue,
+        black: Tesla4_Black,
+        silver: Tesla4_Silver,
       },
-      "4_Cho": {
-        trắng: `${base}/4_Cho/Tesla/unnamed%20(2).jpg`,
-        bạc: `${base}/4_Cho/Tesla/unnamed4.jpg`,
-        đen: `${base}/4_Cho/Tesla/unnamed%20(3).jpg`,
-        đỏ: `${base}/4_Cho/Tesla/unnamed%20(1).jpg`,
-        xanh: `${base}/4_Cho/Tesla/unnamed.jpg`,
+      "7": {
+        red: Tesla7_Red,
+        white: Tesla7_White,
+        blue: Tesla7_Blue,
+        black: Tesla7_Black,
+        silver: Tesla7_Silver,
+      },
+    },
+    bmw: {
+      "4": {
+        red: BMW4_Red,
+        white: BMW4_White,
+        blue: BMW4_Blue,
+        black: BMW4_Black,
+        silver: BMW4_Silver,
+      },
+      "7": {
+        red: BMW7_Red,
+        white: BMW7_White,
+        blue: BMW7_Blue,
+        black: BMW7_Black,
+        silver: BMW7_Silver,
       },
     },
   };
 
-  return (
-    imgMap[brandKey]?.[seatType]?.[colorKey] ||
-    "https://live.staticflickr.com/65535/49932658111_30214a4229_b.jpg"
-  );
+  // Tìm ảnh phù hợp
+  const image = imageMap[brandKey]?.[seatType]?.[colorKey];
+  
+  if (!image) {
+    console.warn(`⚠️ [getCarImage] Không tìm thấy ảnh cho:`, {
+      brand: brand,
+      brandKey: brandKey,
+      color: color,
+      colorKey: colorKey,
+      seatCount: seatCount,
+      seatType: seatType
+    });
+  }
+
+  return image || DefaultCar;
 };
 
 
@@ -332,22 +396,24 @@ const getCarImage = (brand, color, seatCount) => {
         <div className="xe-grid">
           {filteredVehicles.map((xe) => (
             <div className="xe-card" key={xe.id}>
-           <img
-  src={xe.hinhAnh}
-  alt={`${xe.hang} ${xe.mau}`}
-  className="xe-img"
-/>
-
+              <div className="xe-img-wrapper">
+                <img
+                  src={xe.hinhAnh}
+                  alt={`${xe.hang} ${xe.mau}`}
+                  className="xe-img"
+                />
+                {/* Badge "Đang chờ bàn giao" ở phía dưới trong ảnh */}
+                {xe.trangThai === "Đã đặt trước" && (
+                  <div className="xe-badge awaiting-delivery">
+                    Đang chờ bàn giao
+                  </div>
+                )}
+              </div>
 
               <h3>{xe.ten}</h3>
-              <p>Biển số: {xe.bienSo}</p>
-              <p>Pin: {xe.pin}%</p>
-              <p>Hãng: {xe.hang}</p>
-              <p>Trạm: {xe.tram}</p>
-
-              <p className={`xe-status status-${getStatusColor(xe.trangThai)}`}>
-                {xe.trangThai}
-              </p>
+              <p><strong>Biển số:</strong> {xe.bienSo}</p>
+              <p><strong>Trạng thái:</strong> <span className={`xe-status status-${getStatusColor(xe.trangThai)}`}>{xe.trangThai}</span></p>
+              <p><strong>Màu sắc:</strong> {xe.mau}</p>
 
               {/* Nút hành động */}
               {xe.trangThai === "Đang cho thuê" && (
@@ -357,16 +423,6 @@ const getCarImage = (brand, color, seatCount) => {
                   style={{ marginTop: '10px' }}
                 >
                   Nhận xe trả
-                </button>
-              )}
-
-              {xe.trangThai === "Đã đặt trước" && (
-                <button
-                  className="btn-action"
-                  onClick={() => handleVehicleAction(xe)}
-                  style={{ marginTop: '10px' }}
-                >
-                  Đang chờ bàn giao
                 </button>
               )}
 

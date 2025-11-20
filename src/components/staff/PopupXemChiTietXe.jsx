@@ -76,7 +76,11 @@ const PopupXemChiTietXe = ({ vehicleId, onClose, onReload }) => {
 
         {loading ? (
           <div className="popup-body">
-            <div className="loading-spinner">Đang tải thông tin...</div>
+            <div className="loading-container">
+              <div className="spinner"></div>
+              <p className="loading-text">Vui lòng chờ trong giây lát</p>
+              <p className="loading-subtext">Đang tải thông tin xe...</p>
+            </div>
           </div>
         ) : error ? (
           <div className="popup-body">

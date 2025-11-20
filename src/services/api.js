@@ -74,24 +74,49 @@ const handleResponse = async (response) => {
         throw error;
     }
 
-    // ✅ Extract new AccessToken from Set-Cookie header if present
-    const setCookieHeader = response.headers.get('set-cookie');
-    if (setCookieHeader && setCookieHeader.includes('AccessToken=')) {
-        const match = setCookieHeader.match(/AccessToken=([^;]+)/);
-        if (match && match[1]) {
-            const newToken = match[1];
-            localStorage.setItem('accessToken', newToken);
-            console.log('✅ New AccessToken extracted and saved to localStorage');
+    // ✅ Extract new AccessToken từ response (body hoặc Set-Cookie header)
+    // Chỉ extract nếu response thành công
+    let responseData = null;
+    const contentType = response.headers.get('content-type');
+    
+    if (response.ok) {
+        // 1. Thử lấy từ Set-Cookie header trước (không cần đọc body)
+        const setCookieHeader = response.headers.get('set-cookie');
+        if (setCookieHeader && setCookieHeader.includes('AccessToken=')) {
+            const match = setCookieHeader.match(/AccessToken=([^;]+)/);
+            if (match && match[1]) {
+                const newToken = match[1];
+                localStorage.setItem('accessToken', newToken);
+                setTokenCookie(newToken);
+                console.log('✅ New AccessToken extracted from Set-Cookie header');
+            }
+        }
+        
+        // 2. Đọc response body (chỉ một lần)
+        if (contentType && contentType.includes('application/json')) {
+            responseData = await response.json();
+            
+            // Kiểm tra token trong body (nếu chưa có từ header)
+            const newToken = responseData?.accessToken || responseData?.jwtToken || responseData?.token;
+            if (newToken) {
+                const currentToken = localStorage.getItem('accessToken');
+                // Update nếu token mới khác với token hiện tại
+                if (newToken !== currentToken) {
+                    localStorage.setItem('accessToken', newToken);
+                    setTokenCookie(newToken);
+                    console.log('✅ New AccessToken extracted from response body');
+                }
+            }
+            
+            return responseData;
+        } else {
+            responseData = await response.text();
+            return responseData;
         }
     }
 
-    // Check if response has content
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-        return response.json();
-    }
-
-    return response.text();
+    // Nếu không phải success, đã throw error ở trên
+    return null;
 };
 
 // ✅ Import authService để tránh circular dependency
@@ -122,9 +147,30 @@ export const apiFetch = async (endpoint, options = {}) => {
 
         let response = await fetch(url, config);
 
-        // ✅ Nếu nhận 401/403 (token expired), tự động refresh
-        if ((response.status === 401 || response.status === 403) && endpoint !== '/auth/refresh' && endpoint !== '/auth/login') {
-            console.log('⚠️ Token expired, attempting refresh...');
+        // ✅ Kiểm tra nếu response là lỗi authentication (401, 403, hoặc 400 với message về token)
+        let isAuthError = false;
+        if (response.status === 401 || response.status === 403) {
+            isAuthError = true;
+        } else if (response.status === 400) {
+            // Kiểm tra xem có phải lỗi về token không
+            try {
+                const errorData = await response.clone().json();
+                if (errorData.message && (
+                    errorData.message.includes('Phiên đăng nhập không hợp lệ') ||
+                    errorData.message.includes('token') ||
+                    errorData.message.includes('authentication') ||
+                    errorData.message.includes('unauthorized')
+                )) {
+                    isAuthError = true;
+                }
+            } catch (e) {
+                // Không phải JSON, bỏ qua
+            }
+        }
+
+        // ✅ Nếu là lỗi authentication, tự động refresh token
+        if (isAuthError && endpoint !== '/auth/refresh' && endpoint !== '/auth/login') {
+            console.log('⚠️ Token expired or invalid, attempting refresh...');
 
             // ✅ Tránh multiple refresh cùng lúc
             if (!refreshTokenPromise) {
@@ -134,32 +180,82 @@ export const apiFetch = async (endpoint, options = {}) => {
                     credentials: 'include'
                 }).then(async (refreshResponse) => {
                     if (refreshResponse.ok) {
-                        // Extract new token from cookie
-                        const cookies = document.cookie.split(';');
-                        const accessTokenCookie = cookies.find(c => c.trim().startsWith('AccessToken='));
-                        if (accessTokenCookie) {
-                            const token = accessTokenCookie.split('=')[1];
-                            localStorage.setItem('accessToken', token);
-                            console.log('✅ Token refreshed successfully');
+                        let newToken = null;
+                        
+                        // ✅ 1. Thử lấy token từ response body
+                        try {
+                            const refreshData = await refreshResponse.json();
+                            newToken = refreshData.accessToken || refreshData.jwtToken || refreshData.token;
+                            if (newToken) {
+                                console.log('✅ Token found in response body');
+                            }
+                        } catch (e) {
+                            // Không phải JSON, bỏ qua
                         }
-                        return true;
+                        
+                        // ✅ 2. Nếu không có trong body, thử lấy từ Set-Cookie header
+                        if (!newToken) {
+                            const setCookieHeader = refreshResponse.headers.get('set-cookie');
+                            if (setCookieHeader && setCookieHeader.includes('AccessToken=')) {
+                                const match = setCookieHeader.match(/AccessToken=([^;]+)/);
+                                if (match && match[1]) {
+                                    newToken = match[1];
+                                    console.log('✅ Token found in Set-Cookie header');
+                                }
+                            }
+                        }
+                        
+                        // ✅ 3. Nếu vẫn không có, thử lấy từ cookie hiện tại (backend có thể set tự động)
+                        if (!newToken) {
+                            const cookies = document.cookie.split(';');
+                            const accessTokenCookie = cookies.find(c => c.trim().startsWith('AccessToken='));
+                            if (accessTokenCookie) {
+                                newToken = accessTokenCookie.split('=')[1];
+                                console.log('✅ Token found in current cookies');
+                            }
+                        }
+                        
+                        if (newToken) {
+                            localStorage.setItem('accessToken', newToken);
+                            setTokenCookie(newToken); // Update cookie
+                            console.log('✅ Token refreshed and saved successfully');
+                            return { success: true, token: newToken };
+                        } else {
+                            console.error('❌ No token found in refresh response');
+                            return { success: false };
+                        }
                     } else {
                         console.error('❌ Refresh token failed, redirecting to login...');
                         localStorage.clear();
-                        window.location.href = '/login';
-                        return false;
+                        document.cookie = 'AccessToken=; path=/; max-age=0';
+                        document.cookie = 'RefreshToken=; path=/; max-age=0';
+                        return { success: false };
                     }
                 }).finally(() => {
                     refreshTokenPromise = null;
                 });
             }
 
-            const refreshSuccess = await refreshTokenPromise;
+            const refreshResult = await refreshTokenPromise;
 
-            if (refreshSuccess) {
-                // Retry original request với token mới
+            if (refreshResult && refreshResult.success) {
+                // ✅ Retry original request với token mới
                 console.log('🔄 Retrying original request with new token...');
-                response = await fetch(url, config);
+                // Update headers với token mới
+                const newHeaders = ensureTokenCookie();
+                const retryConfig = {
+                    ...options,
+                    headers: {
+                        ...newHeaders,
+                        ...options.headers
+                    },
+                    credentials: 'include'
+                };
+                response = await fetch(url, retryConfig);
+            } else {
+                // Refresh failed, redirect to login
+                window.location.href = '/login';
+                throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
             }
         }
 

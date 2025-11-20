@@ -206,11 +206,12 @@ const SAMPLE_VEHICLES = [
 
 /**
  * Custom hook để lấy dữ liệu xe từ API với fallback data
+ * @param {boolean} autoLoad - Tự động load khi component mount (mặc định: false)
  * @returns {Object} { vehicles, loading, error, refetch }
  */
-export const useVehicles = () => {
+export const useVehicles = (autoLoad = false) => {
     const [vehicles, setVehicles] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(autoLoad); // Chỉ set loading = true nếu autoLoad = true
     const [error, setError] = useState(null);
 
     const fetchVehicles = async () => {
@@ -254,8 +255,10 @@ export const useVehicles = () => {
     };
 
     useEffect(() => {
-        fetchVehicles();
-    }, []);
+        if (autoLoad) {
+            fetchVehicles();
+        }
+    }, [autoLoad]);
 
     return {
         vehicles,

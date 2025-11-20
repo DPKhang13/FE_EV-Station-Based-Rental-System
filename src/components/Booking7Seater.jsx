@@ -5,6 +5,7 @@ import { useVehicleTimelines } from "../hooks/useVehicleTimelines";
 import { AuthContext } from "../context/AuthContext";
 import { validateVehicleForBooking } from "../utils/vehicleValidator";
 import { orderService } from "../services";
+import { getSimilarVehicles } from "../services/vehicleService";
 
 
 
@@ -27,7 +28,7 @@ const Booking7Seater = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
-  const { vehicles: cars, loading } = useVehicles();
+  const { vehicles: cars, loading } = useVehicles(true); // Auto-load khi component mount
 
   const preSelectedCar = location.state?.car;
   const gradeFilter = location.state?.gradeFilter;
@@ -47,6 +48,10 @@ const Booking7Seater = () => {
   const [selectedColor, setSelectedColor] = useState("");
   const [hasActiveRental, setHasActiveRental] = useState(false);
   const [checkingRental, setCheckingRental] = useState(true);
+  
+  // State cho xe tương tự
+  const [similarCars, setSimilarCars] = useState([]);
+  const [loadingSimilarCars, setLoadingSimilarCars] = useState(false);
   const [formData, setFormData] = useState({
     startTime: "",
     endTime: "",
@@ -117,6 +122,36 @@ const Booking7Seater = () => {
       setSelectedColor(preSelectedCar.color);
     }
   }, [preSelectedCar, selectedColor]);
+
+  // Load xe tương tự khi có selectedCar
+  useEffect(() => {
+    const loadSimilarCars = async () => {
+      if (!selectedCar) {
+        setSimilarCars([]);
+        return;
+      }
+
+      const vehicleId = selectedCar.vehicleId || selectedCar.id || selectedCar.vehicle_id;
+      if (!vehicleId) {
+        setSimilarCars([]);
+        return;
+      }
+
+      try {
+        setLoadingSimilarCars(true);
+        const similar = await getSimilarVehicles(vehicleId);
+        // Chỉ lấy 2 xe đầu tiên
+        setSimilarCars(similar.slice(0, 2));
+      } catch (error) {
+        console.error('❌ Lỗi khi load xe tương tự:', error);
+        setSimilarCars([]);
+      } finally {
+        setLoadingSimilarCars(false);
+      }
+    };
+
+    loadSimilarCars();
+  }, [selectedCar]);
 
   // ✅ Cập nhật selectedCar từ danh sách cars khi có preSelectedCar
   useEffect(() => {
@@ -514,31 +549,152 @@ const Booking7Seater = () => {
               XÁC NHẬN ĐẶT XE
             </button>
           </form>
+
+          {/* Điều kiện thuê xe - Sang trái */}
+          <div className="rental-conditions-container">
+            <div className="rental-condition-box">
+              <h3 className="rental-condition-box-title">Điều kiện thuê xe</h3>
+              
+              <div className="rental-condition-subsection">
+                <h4 className="rental-condition-subtitle">Thông tin cần có khi nhận xe</h4>
+                <ul className="rental-condition-list">
+                  <li>CCCD hoặc Hộ chiếu còn thời hạn</li>
+                  <li>Bằng lái hợp lệ, còn thời hạn</li>
+                </ul>
+              </div>
+
+              <div className="rental-condition-subsection">
+                <h4 className="rental-condition-subtitle">Hình thức thanh toán</h4>
+                <ul className="rental-condition-list">
+                  <li>Trả trước</li>
+                  <li>Thời hạn thanh toán: đặt cọc giữ xe thanh toán 100% khi kí hợp đồng và nhận xe</li>
+                </ul>
+              </div>
+
+              <div className="rental-condition-subsection">
+                <h4 className="rental-condition-subtitle">Chính sách đặt cọc (thế chân)</h4>
+                <ul className="rental-condition-list">
+                  <li>Khách hàng phải thanh toán số tiền cọc là 5.000.000₫</li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* ✅ Hiển thị xe đã chọn */}
-        <div className="booking-car-display">
-          <h2>Xe Đã Chọn</h2>
-          {!selectedCar ? (
-            <p>Vui lòng chọn xe từ danh sách để xem chi tiết.</p>
-          ) : (
-            <>
-              <img
-                src={getCarImageByColor(selectedCar.color)}
-                alt={selectedCar.vehicle_name || selectedCar.vehicleName || selectedCar.name || "Xe 7 chỗ"}
-                className="car-display-image"
-              />
-              <div className="car-display-details">
-                <h3>{selectedCar.vehicle_name || selectedCar.vehicleName || selectedCar.name}</h3>
-                <p>Hãng: {selectedCar.brand || "N/A"}</p>
-                <p>Màu: {selectedCar.color || "N/A"}</p>
-                <p>Số chỗ: {selectedCar.seat_count || selectedCar.seatCount || "N/A"}</p>
-                <p>Biển số: {selectedCar.plate_number || selectedCar.plateNumber || "N/A"}</p>
-                <p>Pin: {selectedCar.battery_status || selectedCar.batteryStatus || "N/A"}</p>
-                <p>Quãng đường: {selectedCar.range_km || selectedCar.rangeKm ? `${selectedCar.range_km || selectedCar.rangeKm} km` : "N/A"}</p>
-                {selectedCar.stationName && <p>Trạm: {selectedCar.stationName}</p>}
-              </div>
-            </>
+        {/* Right Column - Car Display and Similar Cars */}
+        <div className="booking-right-column">
+          {/* ✅ Hiển thị xe đã chọn */}
+          <div className="booking-car-display">
+            <h2>Xe Đã Chọn</h2>
+            {!selectedCar ? (
+              <p>Vui lòng chọn xe từ danh sách để xem chi tiết.</p>
+            ) : (
+              <>
+                <img
+                  src={getCarImageByColor(selectedCar.color)}
+                  alt={selectedCar.vehicle_name || selectedCar.vehicleName || selectedCar.name || "Xe 7 chỗ"}
+                  className="car-display-image"
+                />
+                <div className="car-display-details">
+                  <h3>{selectedCar.vehicle_name || selectedCar.vehicleName || selectedCar.name}</h3>
+                  <div className="car-specs-grid">
+                    <div className="car-spec-item">
+                      <svg className="car-spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1" />
+                        <path d="M12 15l-3-3H7a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-2l-3 3z" />
+                      </svg>
+                      <span className="car-spec-text">{selectedCar.plateNumber || selectedCar.plate_number || 'N/A'}</span>
+                    </div>
+                    <div className="car-spec-item">
+                      <svg className="car-spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                      </svg>
+                      <span className="car-spec-text">{selectedCar.seatCount || selectedCar.seat_count || 4} chỗ</span>
+                    </div>
+                    <div className="car-spec-item">
+                      <svg className="car-spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M5 17h14l-1-7H6l-1 7z" />
+                        <path d="M7 17v-5" />
+                        <path d="M17 17v-5" />
+                        <path d="M5 10h14" />
+                        <path d="M9 10V7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v3" />
+                      </svg>
+                      <span className="car-spec-text">{selectedCar.carmodel || selectedCar.carModel || 'N/A'}</span>
+                    </div>
+                    <div className="car-spec-item">
+                      <svg className="car-spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="1" y="6" width="18" height="12" rx="2" ry="2" />
+                        <line x1="23" y1="10" x2="23" y2="14" />
+                      </svg>
+                      <span className="car-spec-text">{selectedCar.batteryStatus || selectedCar.battery_status || 'N/A'}</span>
+                    </div>
+                    <div className="car-spec-item">
+                      <svg className="car-spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                        <path d="M2 17l10 5 10-5" />
+                        <path d="M2 12l10 5 10-5" />
+                      </svg>
+                      <span className="car-spec-text">{selectedCar.variant || selectedCar.grade || 'N/A'}</span>
+                    </div>
+                    <div className="car-spec-item">
+                      <svg className="car-spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+                      </svg>
+                      <span className="car-spec-text">
+                        {selectedCar.color || 'N/A'}
+                        {selectedCar.color && selectedCar.color !== 'N/A' && (
+                          <span 
+                            className="car-color-swatch-inline"
+                            style={{ 
+                              backgroundColor: selectedCar.color === 'Red' || selectedCar.color === 'Đỏ' ? '#FF0000' :
+                                             selectedCar.color === 'Blue' || selectedCar.color === 'Xanh dương' ? '#0000FF' :
+                                             selectedCar.color === 'White' || selectedCar.color === 'Trắng' ? '#FFFFFF' :
+                                             selectedCar.color === 'Black' || selectedCar.color === 'Đen' ? '#000000' :
+                                             selectedCar.color === 'Silver' || selectedCar.color === 'Bạc' ? '#C0C0C0' : '#CCCCCC',
+                              border: (selectedCar.color === 'White' || selectedCar.color === 'Trắng') ? '1px solid #E5E5E5' : 'none'
+                            }}
+                          ></span>
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Xe tương tự - Sang phải */}
+          {selectedCar && (
+            <div className="similar-cars-section">
+              <h3 className="similar-cars-title">Xe tương tự</h3>
+              {loadingSimilarCars ? (
+                <p className="loading-similar-cars">Đang tải xe tương tự...</p>
+              ) : (
+                <div className="similar-cars-grid">
+                  {similarCars.length > 0 ? (
+                    similarCars.map(car => (
+                      <div key={car.vehicleId || car.id || car.vehicle_id} className="similar-car-card">
+                        <img
+                          src={getCarImageByColor(car.color)}
+                          alt={car.vehicleName || car.vehicle_name}
+                          className="similar-car-image"
+                        />
+                        <div className="similar-car-info">
+                          <h4 className="similar-car-name">{car.vehicleName || car.vehicle_name}</h4>
+                          <p className="similar-car-price">Giá thuê theo ngày</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="no-similar-cars">Không có xe tương tự</p>
+                  )}
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>

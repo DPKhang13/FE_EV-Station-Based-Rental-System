@@ -1,25 +1,19 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useVehicles } from "../hooks/useVehicles";
 import { useVehicleTimelines } from "../hooks/useVehicleTimelines";
 import { AuthContext } from "../context/AuthContext";
 import { validateVehicleForBooking } from "../utils/vehicleValidator";
-import { orderService } from "../services";
-
-
-
-import "./Booking4Seater.css";
-import "./BookingCalendar.css";
+import { getSimilarVehicles } from "../services/vehicleService";
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+
 import "./Booking4Seater.css";
 import "./BookingCalendar.css";
 
-
 import car4SeatBlack from "../assets/4seatblack.png";
 import car4SeatBlue from "../assets/4seatblue.png";
-import car4SeatRed from "../assets/4seatred.png"; 
+import car4SeatRed from "../assets/4seatred.png";
 import car4SeatSilver from "../assets/4seatsilver.png";
 import car4SeatWhite from "../assets/4seatwhite.png";
 
@@ -27,259 +21,159 @@ const Booking4Seater = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
-  const { vehicles: cars, loading } = useVehicles();
 
-  const preSelectedCar = location.state?.car;
-  const gradeFilter = location.state?.gradeFilter;
+  // ⚡ LẤY XE TRUYỀN TỪ CarFilter
+  const preSelectedCar = location.state?.car || null;
+  console.log("🔥 XE TRUYỀN SANG BOOK:", preSelectedCar);
 
-  // ✅ Sử dụng hook mới để fetch timeline cho tất cả xe
-  const { 
-    getVehicleTimeline, 
-    getTimelineMessage,
-    loading: timelinesLoading 
-  } = useVehicleTimelines(cars);
+  const gradeFilter = location.state?.gradeFilter || null;
+
+  // ⚡ CHỈ DÙNG 1 xe → không load lại API get-all-vehicles
+  const cars = preSelectedCar ? [preSelectedCar] : [];
+  const loading = false;
+  
+  // State cho xe tương tự
+  const [similarCars, setSimilarCars] = useState([]);
+  const [loadingSimilarCars, setLoadingSimilarCars] = useState(false);
+
+  // ⚡ Tạo timeline cho xe truyền sang
+  const { getVehicleTimeline, getTimelineMessage, loading: timelinesLoading, timelines } =
+    useVehicleTimelines(cars);
 
   const [bookedSlots, setBookedSlots] = useState([]);
-  const [selectedCarId, setSelectedCarId] = useState(
-    preSelectedCar ? String(preSelectedCar.vehicleId || preSelectedCar.id || preSelectedCar.vehicle_id || "") : ""
-  );
   const [selectedCar, setSelectedCar] = useState(preSelectedCar || null);
-  const [selectedColor, setSelectedColor] = useState("");
-  const [hasActiveRental, setHasActiveRental] = useState(false);
-  const [checkingRental, setCheckingRental] = useState(true);
+  const [selectedCarId, setSelectedCarId] = useState(
+    preSelectedCar
+      ? String(preSelectedCar.vehicleId || preSelectedCar.id)
+      : ""
+  );
+
+  const [selectedColor, setSelectedColor] = useState(
+    preSelectedCar?.color || ""
+  );
+
   const [formData, setFormData] = useState({
     startTime: "",
     endTime: "",
     couponCode: "",
   });
 
+  // 🖼 Chọn ảnh theo màu
   const getCarImageByColor = (color) => {
     if (!color) return car4SeatSilver;
     const c = color.toLowerCase();
-    if (c.includes("black") || c.includes("đen")) return car4SeatBlack;
+    if (c.includes("đen") || c.includes("black")) return car4SeatBlack;
     if (c.includes("blue") || c.includes("xanh")) return car4SeatBlue;
-    if (c.includes("red") || c.includes("đỏ")) return car4SeatRed;
-    if (c.includes("silver") || c.includes("bạc")) return car4SeatSilver;
+    if (c.includes("đỏ") || c.includes("red")) return car4SeatRed;
     if (c.includes("white") || c.includes("trắng")) return car4SeatWhite;
+    if (c.includes("silver") || c.includes("bạc")) return car4SeatSilver;
     return car4SeatSilver;
   };
 
-  const formatDateTimeForBackend = (dateStr, isStart = true) => {
-    if (!dateStr) return null;
-    if (dateStr.includes("T")) {
-      const [date, time] = dateStr.split("T");
-      const formatted = time.length === 5 ? `${time}:00` : time;
-      return `${date} ${formatted}`;
-    }
-    if (dateStr.length === 10)
-      return isStart ? `${dateStr} 00:00:00` : `${dateStr} 23:59:59`;
-    return dateStr;
+  // 🗂 Format gửi backend
+  const formatDateTimeForBackend = (str, isStart) => {
+    if (!str) return null;
+    const date = new Date(str);
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    const hh = String(date.getHours()).padStart(2, "0");
+    const mm = String(date.getMinutes()).padStart(2, "0");
+    return `${y}-${m}-${d} ${hh}:${mm}:00`;
   };
 
-  const availableCars = cars.filter((car) => {
-    // ✅ Filter chính xác: chỉ lấy xe 4 chỗ
-    const seatCount = car.seat_count || car.seatCount || 0;
-    const isFourSeater = (car.type === "4-seater") || (seatCount >= 1 && seatCount < 7);
-    // ✅ HIỂN THỊ TẤT CẢ XE (kể cả BOOKED/RENTAL/CHECKING)
-    // Timeline sẽ được check để disable các khung giờ đã book
-    const matchesGrade = gradeFilter ? car.grade === gradeFilter : true;
-    const matchesColor = selectedColor ? car.color === selectedColor : true;
-    return isFourSeater && matchesGrade && matchesColor;
-  });
-
-  const availableColors = [
-    ...new Set(
-      cars
-        .filter(
-          (car) => {
-            const seatCount = car.seat_count || car.seatCount || 0;
-            const isFourSeater = (car.type === "4-seater") || (seatCount >= 1 && seatCount < 7);
-            return (
-              isFourSeater &&
-              car.color &&
-              car.color !== "N/A" &&
-              car.color !== "null" &&
-              (!gradeFilter || car.grade === gradeFilter)
-            );
-          }
-        )
-        .map((car) => car.color)
-    ),
-  ].sort();
-
+  // Load xe tương tự khi có selectedCar
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" });
-  }, []);
-
-  // ✅ Tự động set selectedColor từ preSelectedCar để đảm bảo xe có trong availableCars
-  useEffect(() => {
-    if (preSelectedCar?.color && !selectedColor) {
-      setSelectedColor(preSelectedCar.color);
-    }
-  }, [preSelectedCar, selectedColor]);
-
-  // ✅ Cập nhật selectedCar từ danh sách cars khi có preSelectedCar
-  useEffect(() => {
-    if (preSelectedCar && cars.length > 0) {
-      const carId = preSelectedCar.vehicleId || preSelectedCar.id || preSelectedCar.vehicle_id;
-      if (carId) {
-        // Tìm xe trong tất cả cars (không filter) để đảm bảo tìm thấy
-        const fullCar = cars.find(
-          (c) => {
-            const cId = c.vehicleId || c.id || c.vehicle_id;
-            return (
-              String(cId) === String(carId) ||
-              cId === carId ||
-              cId === parseInt(carId) ||
-              parseInt(cId) === parseInt(carId) ||
-              String(c.vehicleId) === String(carId) ||
-              String(c.id) === String(carId) ||
-              String(c.vehicle_id) === String(carId)
-            );
-          }
-        );
-        
-        if (fullCar) {
-          setSelectedCar(fullCar);
-          const timeline = getVehicleTimeline(fullCar.vehicleId || fullCar.id || fullCar.vehicle_id);
-          setBookedSlots(timeline);
-        }
+    const loadSimilarCars = async () => {
+      if (!selectedCar) {
+        setSimilarCars([]);
+        return;
       }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cars, preSelectedCar]);
 
-  // ✅ Set selectedCarId sau khi availableCars đã được cập nhật (sau khi selectedColor được set)
-  useEffect(() => {
-    if (selectedCar && availableCars.length > 0) {
-      const carId = selectedCar.vehicleId || selectedCar.id || selectedCar.vehicle_id;
-      if (carId) {
-        // Kiểm tra xem xe có trong availableCars không
-        const foundInAvailable = availableCars.find(
-          (c) => {
-            const cId = c.vehicleId || c.id || c.vehicle_id;
-            return String(cId) === String(carId) || cId === carId;
-          }
-        );
-        
-        if (foundInAvailable) {
-          const fullCarId = foundInAvailable.vehicleId || foundInAvailable.id || foundInAvailable.vehicle_id;
-          const fullCarIdStr = String(fullCarId);
-          // Chỉ set nếu chưa được set hoặc khác với giá trị hiện tại
-          if (selectedCarId !== fullCarIdStr) {
-            setSelectedCarId(fullCarIdStr);
-          }
-        }
+      const vehicleId = selectedCar.vehicleId || selectedCar.id || selectedCar.vehicle_id;
+      if (!vehicleId) {
+        setSimilarCars([]);
+        return;
       }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCar, availableCars]);
 
-  useEffect(() => {
-    const checkActiveRental = async () => {
       try {
-        setCheckingRental(true);
-        const orders = await orderService.getMyOrders();
-        if (!Array.isArray(orders)) {
-          setCheckingRental(false);
-          return;
-        }
-        for (const order of orders) {
-          try {
-            const preview = await orderService.getReturnPreview(order.orderId);
-            if (preview.status === "RENTAL") {
-              setHasActiveRental(true);
-              break;
-            }
-          } catch {
-            if (order.status === "RENTAL") {
-              setHasActiveRental(true);
-              break;
-            }
-          }
-        }
+        setLoadingSimilarCars(true);
+        const similar = await getSimilarVehicles(vehicleId);
+        // Chỉ lấy 2 xe đầu tiên
+        setSimilarCars(similar.slice(0, 2));
+      } catch (error) {
+        console.error('❌ Lỗi khi load xe tương tự:', error);
+        setSimilarCars([]);
       } finally {
-        setCheckingRental(false);
+        setLoadingSimilarCars(false);
       }
     };
-    if (user) checkActiveRental();
-    else setCheckingRental(false);
-  }, [user]);
 
-  const handleCarSelect = (e) => {
-    const carId = e.target.value;
-    console.log("🚗 Đã chọn xe ID:", carId);
-    setSelectedCarId(carId);
+    loadSimilarCars();
+  }, [selectedCar]);
 
-    const car = carId
-      ? availableCars.find(
-          (c) => 
-            String(c.vehicleId) === carId || 
-            String(c.id) === carId || 
-            String(c.vehicle_id) === carId ||
-            c.vehicleId === parseInt(carId) || 
-            c.id === parseInt(carId)
-        )
-      : null;
+  // ⚡ Khi page load → set timeline
+  useEffect(() => {
+    if (!preSelectedCar || !timelines) return;
+    
+    const id =
+      preSelectedCar.vehicleId ||
+      preSelectedCar.id ||
+      preSelectedCar.vehicle_id;
+    
+    if (!id) return;
+    
+    // Sử dụng timelines trực tiếp thay vì function để tránh vòng lặp
+    const timeline = timelines[id] || [];
+    
+    // Chỉ set nếu có timeline mới (tránh set lại cùng giá trị)
+    setBookedSlots(prev => {
+      // So sánh nhanh: nếu length khác hoặc có slot mới
+      if (prev.length !== timeline.length) {
+        return timeline;
+      }
+      // Nếu length giống, so sánh từng slot
+      const hasChanged = timeline.some((slot, idx) => {
+        const prevSlot = prev[idx];
+        return !prevSlot || 
+               slot.start.getTime() !== prevSlot.start.getTime() ||
+               slot.end.getTime() !== prevSlot.end.getTime();
+      });
+      return hasChanged ? timeline : prev;
+    });
+  }, [preSelectedCar, timelines]);
 
-    setSelectedCar(car);
-
-    // ✅ Lấy timeline từ hook (đã được fetch sẵn)
-    if (carId) {
-      const timeline = getVehicleTimeline(carId);
-      console.log("📦 Timeline từ hook:", timeline);
-      setBookedSlots(timeline);
-    } else {
-      setBookedSlots([]);
-    }
+  // 🟡 Kiểm tra slot đã book
+  const isBooked = (date) => {
+    return bookedSlots.some((slot) => date >= slot.start && date <= slot.end);
   };
 
-  function isBooked(date) {
-    return bookedSlots.some((slot) => date >= slot.start && date <= slot.end);
-  }
-
+  // 📝 Change field
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // 📌 Submit booking
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!selectedCar) {
-      alert("Vui lòng chọn xe trước khi xác nhận đặt xe.");
-      return;
-    }
-    if (!formData.startTime || !formData.endTime) {
-      alert("Vui lòng chọn thời gian nhận và trả xe.");
-      return;
-    }
+    if (!selectedCar) return alert("Vui lòng chọn xe.");
+
+    if (!formData.startTime || !formData.endTime)
+      return alert("Vui lòng chọn thời gian.");
 
     const start = new Date(formData.startTime);
     const end = new Date(formData.endTime);
-    const now = new Date();
 
-    if (start < now) {
-      alert("Thời gian nhận xe phải trong tương lai!");
-      return;
-    }
-    if (end <= start) {
-      alert("Thời gian trả xe phải sau thời gian nhận xe!");
-      return;
-    }
+    if (end <= start)
+      return alert("Thời gian trả xe phải sau thời gian nhận xe.");
 
-    // ✅ VALIDATE: Kiểm tra overlap với timeline đã book
-    const hasOverlap = bookedSlots.some((slot) => {
-      // Overlap condition: (start1 < end2) AND (end1 > start2)
-      return start < slot.end && end > slot.start;
-    });
-
-    if (hasOverlap) {
-      alert(
-        "⚠️ Xe này đã được đặt trong khoảng thời gian bạn chọn!\n\n" +
-        "Vui lòng chọn thời gian khác hoặc chọn xe khác."
-      );
-      return;
-    }
+    // ⚠ Kiểm tra timeline trùng
+    const hasOverlap = bookedSlots.some(
+      (slot) => start < slot.end && end > slot.start
+    );
+    if (hasOverlap)
+      return alert("Xe đã được đặt trong thời gian bạn chọn!");
 
     if (!user) {
       navigate("/login");
@@ -287,10 +181,7 @@ const Booking4Seater = () => {
     }
 
     const validation = validateVehicleForBooking(selectedCar);
-    if (!validation.valid) {
-      alert(`Xe không đủ thông tin:\n${validation.errors.join("\n")}`);
-      return;
-    }
+    if (!validation.valid) return alert(validation.errors.join("\n"));
 
     const startTimeFormatted = formatDateTimeForBackend(formData.startTime, true);
     const endTimeFormatted = formatDateTimeForBackend(formData.endTime, false);
@@ -298,13 +189,20 @@ const Booking4Seater = () => {
     const bookingData = {
       car: selectedCar,
       orderData: {
-        vehicleId:
-          selectedCar.vehicleId ?? selectedCar.id ?? selectedCar.vehicle_id,
+        vehicleId: Number(
+          selectedCar.vehicleId ??
+          selectedCar.id ??
+          selectedCar.vehicle_id ??
+          selectedCar.vehicleID ??
+          selectedCar.vehicle_id_pk ??
+          selectedCar.vehicleIdFromFilter
+        ),
         startTime: startTimeFormatted,
         endTime: endTimeFormatted,
         couponCode: formData.couponCode || null,
         holiday: false,
       },
+    
       startTime: startTimeFormatted,
       endTime: endTimeFormatted,
       customerName:
@@ -316,197 +214,76 @@ const Booking4Seater = () => {
       customerPhone:
         user?.phonenumber || user?.phoneNumber || user?.phone || "N/A",
     };
-
-    console.log("🚀 bookingData gửi sang Confirm:", bookingData);
+    
+    // ❗ Chặn lỗi trước khi navigate
+    if (!bookingData.orderData.vehicleId || isNaN(bookingData.orderData.vehicleId)) {
+      console.error("❌ ERROR: Missing vehicleId in selectedCar:", selectedCar);
+      alert("Xe không có vehicleId hợp lệ. Vui lòng chọn xe khác!");
+      return;
+    }
+    
     navigate("/confirm-booking", { state: { bookingData } });
+    
   };
-
-  if (loading) return <div className="booking-container">Đang tải dữ liệu xe...</div>;
-  if (checkingRental)
-    return (
-      <div className="booking-container">
-        <p>Đang kiểm tra trạng thái thuê xe...</p>
-      </div>
-    );
-  if (hasActiveRental)
-    return (
-      <div className="booking-container">
-        <p>Bạn đang có đơn thuê xe đang hoạt động. Hoàn thành trước khi đặt xe mới.</p>
-        <button onClick={() => navigate("/my-bookings")}>Xem đơn đặt xe</button>
-      </div>
-    );
 
   return (
     <div className="booking-container">
       <h1 className="booking-title">Đặt Xe 4 Chỗ</h1>
+
       <div className="booking-content">
+        {/* Form */}
         <div className="booking-form-section">
           <form onSubmit={handleSubmit} className="booking-form">
-            {!preSelectedCar && availableColors.length > 0 && (
-              <div className="form-group">
-                <label>Chọn Màu</label>
-                <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                  {availableColors.map((color) => (
-                    <div
-                      key={color}
-                      onClick={() => setSelectedColor(color)}
-                      style={{
-                        width: 50,
-                        height: 50,
-                        backgroundColor: color.toLowerCase(),
-                        border:
-                          selectedColor === color
-                            ? "3px solid #667eea"
-                            : "1px solid #ccc",
-                        borderRadius: 8,
-                        cursor: "pointer",
-                      }}
-                    ></div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* ✅ Chọn xe với thông báo timeline */}
-            <div className="form-group">
-              <label htmlFor="carSelect">Chọn Xe *</label>
-              <select
-                id="carSelect"
-                value={selectedCarId}
-                onChange={handleCarSelect}
-                required
-              >
-                <option value="">Chọn một xe</option>
-                {availableCars.map((car) => {
-                  const vehicleId = car.vehicleId || car.id || car.vehicle_id;
-                  const vehicleIdStr = String(vehicleId); // Đảm bảo value là string
-                  const timelineMsg = getTimelineMessage(vehicleId);
-                  const displayName = car.vehicle_name || car.vehicleName || car.plateNumber;
-                  
-                  return (
-                    <option
-                      key={vehicleIdStr}
-                      value={vehicleIdStr}
-                    >
-                      {displayName}
-                      {timelineMsg ? ` (${timelineMsg.summary})` : ' (Trống lịch)'}
-                    </option>
-                  );
-                })}
-              </select>
-              {timelinesLoading && (
-                <small style={{ color: '#666', fontSize: '12px', display: 'block', marginTop: '4px' }}>
-                  Đang tải thông tin lịch đặt xe...
-                </small>
-              )}
-            </div>
-
-            {/* ✅ Hiển thị timeline đã book (nếu có) - Cải tiến với status */}
-            {selectedCar && bookedSlots.length > 0 && (
-              <div style={{
-                padding: "12px",
-                background: "#fff3cd",
-                border: "1px solid #ffc107",
-                borderRadius: "8px",
-                marginBottom: "16px"
-              }}>
-                <p style={{ margin: "0 0 8px", fontWeight: "600", color: "#856404" }}>
-                  Xe này đã được đặt trong các khung giờ sau:
-                </p>
-                <ul style={{ margin: "0", paddingLeft: "20px", color: "#856404" }}>
-                  {bookedSlots.map((slot, idx) => {
-                    const statusLabel = slot.status === 'MAINTENANCE' 
-                      ? 'Bảo trì' 
-                      : slot.status === 'CHECKING' 
-                      ? 'Kiểm tra' 
-                      : slot.status === 'RENTAL'
-                      ? 'Đang thuê'
-                      : 'Đã đặt';
-                    
-                    // Lọc bỏ mã đơn hàng khỏi note (nếu có)
-                    const cleanNote = slot.note ? slot.note.replace(/\(Xe được đặt cho đơn thuê #.*?\)/gi, '').replace(/đơn thuê #.*/gi, '').trim() : null;
-                    
-                    return (
-                      <li key={idx} style={{ marginBottom: "4px" }}>
-                        <strong>{statusLabel}:</strong>{" "}
-                        {new Date(slot.start).toLocaleString("vi-VN")} → {new Date(slot.end).toLocaleString("vi-VN")}
-                        {cleanNote && cleanNote.length > 0 && <em style={{ fontSize: "11px", display: "block", marginTop: "2px" }}>({cleanNote})</em>}
-                      </li>
-                    );
-                  })}
-                </ul>
-                <p style={{ margin: "8px 0 0", fontSize: "13px", color: "#856404" }}>
-                  Vui lòng chọn thời gian khác để đặt xe.
-                </p>
-              </div>
-            )}
-
-            {/* ✅ Ngày & giờ nhận xe */}
+            {/* Ngày/giờ pickup */}
             <div className="form-group">
               <label>Ngày & Giờ Nhận Xe *</label>
               <DatePicker
-                selected={formData.startTime ? new Date(formData.startTime) : null}
+                selected={
+                  formData.startTime ? new Date(formData.startTime) : null
+                }
                 onChange={(date) => {
                   if (!date) return;
-                  if (isBooked(date)) {
-                    alert("Xe này đã được đặt trong thời gian này!");
-                    return;
-                  }
+                  if (isBooked(date)) return alert("Thời gian đã bị đặt.");
                   setFormData({
                     ...formData,
                     startTime: date.toISOString(),
                   });
                 }}
                 showTimeSelect
-                timeFormat="HH:mm"
-                timeIntervals={30}
                 dateFormat="yyyy-MM-dd HH:mm"
                 minDate={new Date()}
-                dayClassName={(date) =>
-                  isBooked(date) ? "booked-day" : undefined
-                }
-                placeholderText="Chọn ngày & giờ nhận xe"
               />
             </div>
 
-            {/* ✅ Ngày & giờ trả xe */}
+            {/* Trả xe */}
             <div className="form-group">
               <label>Ngày & Giờ Trả Xe *</label>
               <DatePicker
                 selected={formData.endTime ? new Date(formData.endTime) : null}
                 onChange={(date) => {
                   if (!date) return;
-                  if (isBooked(date)) {
-                    alert("Xe này đã được đặt trong thời gian này!");
-                    return;
-                  }
+                  if (isBooked(date)) return alert("Thời gian đã bị đặt.");
                   setFormData({
                     ...formData,
                     endTime: date.toISOString(),
                   });
                 }}
                 showTimeSelect
-                timeFormat="HH:mm"
-                timeIntervals={30}
                 dateFormat="yyyy-MM-dd HH:mm"
-                minDate={formData.startTime ? new Date(formData.startTime) : new Date()}
-                dayClassName={(date) =>
-                  isBooked(date) ? "booked-day" : undefined
+                minDate={
+                  formData.startTime ? new Date(formData.startTime) : new Date()
                 }
-                placeholderText="Chọn ngày & giờ trả xe"
               />
             </div>
 
-            {/* ✅ Mã giảm giá */}
+            {/* Mã giảm giá */}
             <div className="form-group">
-              <label htmlFor="couponCode">Mã Giảm Giá (Không bắt buộc)</label>
+              <label>Mã giảm giá</label>
               <input
                 type="text"
-                id="couponCode"
                 name="couponCode"
                 value={formData.couponCode}
                 onChange={handleChange}
-                placeholder="Nhập mã giảm giá nếu có"
               />
             </div>
 
@@ -514,31 +291,152 @@ const Booking4Seater = () => {
               XÁC NHẬN ĐẶT XE
             </button>
           </form>
+
+          {/* Điều kiện thuê xe - Sang trái */}
+          <div className="rental-conditions-container">
+            <div className="rental-condition-box">
+              <h3 className="rental-condition-box-title">Điều kiện thuê xe</h3>
+              
+              <div className="rental-condition-subsection">
+                <h4 className="rental-condition-subtitle">Thông tin cần có khi nhận xe</h4>
+                <ul className="rental-condition-list">
+                  <li>CCCD hoặc Hộ chiếu còn thời hạn</li>
+                  <li>Bằng lái hợp lệ, còn thời hạn</li>
+                </ul>
+              </div>
+
+              <div className="rental-condition-subsection">
+                <h4 className="rental-condition-subtitle">Hình thức thanh toán</h4>
+                <ul className="rental-condition-list">
+                  <li>Trả trước</li>
+                  <li>Thời hạn thanh toán: đặt cọc giữ xe thanh toán 100% khi kí hợp đồng và nhận xe</li>
+                </ul>
+              </div>
+
+              <div className="rental-condition-subsection">
+                <h4 className="rental-condition-subtitle">Chính sách đặt cọc (thế chân)</h4>
+                <ul className="rental-condition-list">
+                  <li>Khách hàng phải thanh toán số tiền cọc là 5.000.000₫</li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* ✅ Hiển thị xe đã chọn */}
-        <div className="booking-car-display">
-          <h2>Xe Đã Chọn</h2>
-          {!selectedCar ? (
-            <p>Vui lòng chọn xe từ danh sách để xem chi tiết.</p>
-          ) : (
-            <>
-              <img
-                src={getCarImageByColor(selectedCar.color)}
-                alt={selectedCar.vehicle_name || selectedCar.vehicleName || selectedCar.name || "Xe 4 chỗ"}
-                className="car-display-image"
-              />
-              <div className="car-display-details">
-                <h3>{selectedCar.vehicle_name || selectedCar.vehicleName || selectedCar.name}</h3>
-                <p>Hãng: {selectedCar.brand || "N/A"}</p>
-                <p>Màu: {selectedCar.color || "N/A"}</p>
-                <p>Số chỗ: {selectedCar.seat_count || selectedCar.seatCount || "N/A"}</p>
-                <p>Biển số: {selectedCar.plate_number || selectedCar.plateNumber || "N/A"}</p>
-                <p>Pin: {selectedCar.battery_status || selectedCar.batteryStatus || "N/A"}</p>
-                <p>Quãng đường: {selectedCar.range_km || selectedCar.rangeKm ? `${selectedCar.range_km || selectedCar.rangeKm} km` : "N/A"}</p>
-                {selectedCar.stationName && <p>Trạm: {selectedCar.stationName}</p>}
-              </div>
-            </>
+        {/* Right Column - Car Display and Similar Cars */}
+        <div className="booking-right-column">
+          {/* Hiển thị xe */}
+          <div className="booking-car-display">
+            <h2>Xe Đã Chọn</h2>
+
+            {!selectedCar ? (
+              <p>Không tìm thấy xe.</p>
+            ) : (
+              <>
+                <img
+                  src={getCarImageByColor(selectedCar.color)}
+                  className="car-display-image"
+                />
+                <div className="car-display-details">
+                  <h3>{selectedCar.vehicle_name || selectedCar.vehicleName}</h3>
+                  <div className="car-specs-grid">
+                    <div className="car-spec-item">
+                      <svg className="car-spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1" />
+                        <path d="M12 15l-3-3H7a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-2l-3 3z" />
+                      </svg>
+                      <span className="car-spec-text">{selectedCar.plateNumber || selectedCar.plate_number || 'N/A'}</span>
+                    </div>
+                    <div className="car-spec-item">
+                      <svg className="car-spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                      </svg>
+                      <span className="car-spec-text">{selectedCar.seatCount || selectedCar.seat_count || 4} chỗ</span>
+                    </div>
+                    <div className="car-spec-item">
+                      <svg className="car-spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M5 17h14l-1-7H6l-1 7z" />
+                        <path d="M7 17v-5" />
+                        <path d="M17 17v-5" />
+                        <path d="M5 10h14" />
+                        <path d="M9 10V7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v3" />
+                      </svg>
+                      <span className="car-spec-text">{selectedCar.carmodel || selectedCar.carModel || 'N/A'}</span>
+                    </div>
+                    <div className="car-spec-item">
+                      <svg className="car-spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="1" y="6" width="18" height="12" rx="2" ry="2" />
+                        <line x1="23" y1="10" x2="23" y2="14" />
+                      </svg>
+                      <span className="car-spec-text">{selectedCar.batteryStatus || selectedCar.battery_status || 'N/A'}</span>
+                    </div>
+                    <div className="car-spec-item">
+                      <svg className="car-spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                        <path d="M2 17l10 5 10-5" />
+                        <path d="M2 12l10 5 10-5" />
+                      </svg>
+                      <span className="car-spec-text">{selectedCar.variant || selectedCar.grade || 'N/A'}</span>
+                    </div>
+                    <div className="car-spec-item">
+                      <svg className="car-spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+                      </svg>
+                      <span className="car-spec-text">
+                        {selectedCar.color || 'N/A'}
+                        {selectedCar.color && selectedCar.color !== 'N/A' && (
+                          <span 
+                            className="car-color-swatch-inline"
+                            style={{ 
+                              backgroundColor: selectedCar.color === 'Red' || selectedCar.color === 'Đỏ' ? '#FF0000' :
+                                             selectedCar.color === 'Blue' || selectedCar.color === 'Xanh dương' ? '#0000FF' :
+                                             selectedCar.color === 'White' || selectedCar.color === 'Trắng' ? '#FFFFFF' :
+                                             selectedCar.color === 'Black' || selectedCar.color === 'Đen' ? '#000000' :
+                                             selectedCar.color === 'Silver' || selectedCar.color === 'Bạc' ? '#C0C0C0' : '#CCCCCC',
+                              border: (selectedCar.color === 'White' || selectedCar.color === 'Trắng') ? '1px solid #E5E5E5' : 'none'
+                            }}
+                          ></span>
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Xe tương tự - Sang phải */}
+          {selectedCar && (
+            <div className="similar-cars-section">
+              <h3 className="similar-cars-title">Xe tương tự</h3>
+              {loadingSimilarCars ? (
+                <p className="loading-similar-cars">Đang tải xe tương tự...</p>
+              ) : (
+                <div className="similar-cars-grid">
+                  {similarCars.length > 0 ? (
+                    similarCars.map(car => (
+                      <div key={car.vehicleId || car.id || car.vehicle_id} className="similar-car-card">
+                        <img
+                          src={getCarImageByColor(car.color)}
+                          alt={car.vehicleName || car.vehicle_name}
+                          className="similar-car-image"
+                        />
+                        <div className="similar-car-info">
+                          <h4 className="similar-car-name">{car.vehicleName || car.vehicle_name}</h4>
+                          <p className="similar-car-price">Giá thuê theo ngày</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="no-similar-cars">Không có xe tương tự</p>
+                  )}
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
