@@ -99,29 +99,8 @@ const MyBookingsPage = () => {
 
     try {
       console.log("🚗 [MyBookings] Fetching vehicle details...");
-      const vehicles = await vehicleService.getVehicles();
-
-      finalOrders = orders.map((order) => {
-        const vehicle = vehicles.find((v) => v.vehicleId === order.vehicleId);
-
-        // Ưu tiên dữ liệu từ backend (nếu đã có)
-        if (order.vehicleName || order.plateNumber) return order;
-
-        // Ghép thêm thông tin xe nếu có
-        return vehicle
-          ? {
-              ...order,
-              vehicleName: vehicle.vehicleName,
-              plateNumber: vehicle.plateNumber,
-              vehicleColor: vehicle.color,
-              vehicleType: vehicle.seatCount >= 7 ? "7-seater" : "4-seater",
-            }
-          : {
-              ...order,
-              vehicleName: "Chưa cập nhật",
-              plateNumber: "Chưa cập nhật",
-            };
-      });
+      
+      
     } catch (vehicleErr) {
       console.warn("⚠️ Vehicle API failed:", vehicleErr);
     }

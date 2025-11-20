@@ -67,8 +67,12 @@ export const AuthProvider = ({ children }) => {
   // 🔹 Đăng xuất
   const logout = () => {
     localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("role");
     localStorage.removeItem("user");
+    // Clear cookies
+    document.cookie = 'AccessToken=; path=/; max-age=0';
+    document.cookie = 'RefreshToken=; path=/; max-age=0';
     setToken(null);
     setUser(null);
     console.log("👋 User logged out");

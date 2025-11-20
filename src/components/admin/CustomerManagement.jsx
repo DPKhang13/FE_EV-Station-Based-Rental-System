@@ -8,7 +8,6 @@ const CustomerManagement = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [filterRole, setFilterRole] = useState('all');
-    const [filterStatus, setFilterStatus] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
 
     const navigate = useNavigate();                   // 👈 thêm
@@ -33,13 +32,12 @@ const CustomerManagement = () => {
 
     const filteredUsers = users.filter(user => {
         const matchRole = filterRole === 'all' || user.role === filterRole;
-        const matchStatus = filterStatus === 'all' || user.status === filterStatus;
         const matchSearch = !searchQuery ||
             user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
             user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
             user.phone.includes(searchQuery);
 
-        return matchRole && matchStatus && matchSearch;
+        return matchRole && matchSearch;
     });
 
     const getRoleBadgeClass = (role) => {
@@ -121,18 +119,6 @@ const CustomerManagement = () => {
             )}
 
             <div className="customer-filters">
-                <div className="filter-left">
-                    <div className="filter-group">
-                        <label>Trạng thái:</label>
-                        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                            <option value="all">Tất cả</option>
-                            <option value="ACTIVE">Hoạt động</option>
-                            <option value="VERIFIED">Đã xác thực</option>
-                            <option value="BANNED">Bị cấm</option>
-                        </select>
-                    </div>
-                </div>
-
                 <div className="filter-right">
                     <input
                         type="text"

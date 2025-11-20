@@ -4,13 +4,19 @@ import { useVehicles } from '../hooks/useVehicles';
 
 import './CarFilter.css';
 
-const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [], gradeFilter: initialGradeFilter = '', seatCount: initialSeatCount = null }) => {
+const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [], gradeFilter: initialGradeFilter = '', seatCount: initialSeatCount = null, loading: propsLoading = false }) => {
     const navigate = useNavigate();
-    const { vehicles: cars, loading, error, refetch } = useVehicles();
+    
+    // ✅ Chỉ auto-load khi KHÔNG có vehicles từ props VÀ không có selectedBranch
+    // Nếu có selectedBranch → ListCarPage sẽ load vehicles theo station → không cần load tất cả 120 xe
+    // Nếu có propsVehicles → đã có data → không cần load
+    const shouldAutoLoad = (!selectedBranch && (!propsVehicles || propsVehicles.length === 0));
+    const { vehicles: cars, loading: hookLoading, error, refetch } = useVehicles(shouldAutoLoad);
     
     // Use vehicles from props if available, otherwise use hook data
     const vehicleData = propsVehicles && propsVehicles.length > 0 ? propsVehicles : cars;
-    const isLoadingData = propsVehicles && propsVehicles.length > 0 ? false : loading;
+    // ✅ Nếu có selectedBranch (từ ListCarPage), sử dụng propsLoading; nếu không, sử dụng hookLoading
+    const isLoadingData = selectedBranch ? propsLoading : hookLoading;
     
     const [brand, setBrand] = useState('');
     // ✅ Tự động set grade từ gradeFilter nếu có (từ Offers)
@@ -218,20 +224,49 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [], gradeFilter: 
 
     // Điều hướng đến trang booking - Truyền đầy đủ thông tin xe
     const handleRentCar = (car) => {
-        if (car) {
-            const bookingPage = car.type === '4-seater' ? '/booking-4seater' : '/booking-7seater';
-            // Truyền đầy đủ thông tin xe bao gồm ảnh, tên xe, biển số, grade, màu sắc
-            navigate(bookingPage, {
-                state: {
-                    car: car,
-                    vehicleImage: car.image,
-                    vehicleName: car.vehicle_name,
-                    plateNumber: car.plate_number,
-                    grade: car.grade || car.variant,
-                    color: car.color
-                }
-            });
+    if (!car) return;
+
+    // Xác định trang booking dựa vào seatCount từ API
+    const bookingPage =
+        car.seatCount === 4
+            ? "/booking-4seater"
+            : car.seatCount === 7
+                ? "/booking-7seater"
+                : "/booking-4seater"; // fallback
+
+    navigate(bookingPage, {
+        state: {
+            car: car,
+            vehicleImage: car.image,
+            vehicleName: car.vehicleName || car.vehicle_name,
+            plateNumber: car.plateNumber || car.plate_number,
+            grade: car.grade || car.variant,
+            color: car.color
         }
+    });
+};
+
+
+    // State cho collapse/expand các filter sections
+    const [expandedSections, setExpandedSections] = useState({
+        color: true,
+        brand: true,
+        grade: true,
+        sort: true
+    });
+
+    const toggleSection = (section) => {
+        setExpandedSections(prev => ({
+            ...prev,
+            [section]: !prev[section]
+        }));
+    };
+
+    const resetFilters = () => {
+        setBrand('');
+        setGrade('');
+        setSelectedColors([]);
+        setSortBy('name-asc');
     };
 
     return (
@@ -258,124 +293,152 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [], gradeFilter: 
 
             {/* Main content - only show when not loading */}
             {!isLoadingData && (
-                <>
-                    {/* Filters Compact Box */}
-                    <div className="filters-compact-box">
-                        {/* Dòng 1: Chọn màu - Click để toggle */}
-                        <div>
-                            <label className="filter-label" style={{ display: 'block', marginBottom: 12 }}>Chọn Màu</label>
-                            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                                {availableColors.map(color => {
-                                    const isSelected = selectedColors.includes(color);
-                                    return (
-                                        <div
-                                            key={color}
-                                            onClick={() => {
-                                                if (isSelected) {
-                                                    // Click lại để bỏ chọn
-                                                    setSelectedColors(selectedColors.filter(c => c !== color));
-                                                } else {
-                                                    // Chọn màu mới
-                                                    setSelectedColors([...selectedColors, color]);
-                                                }
-                                            }}
-                                            style={{
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                alignItems: 'center',
-                                                gap: 8,
-                                                cursor: 'pointer',
-                                                padding: 8,
-                                                borderRadius: 8,
-                                                border: isSelected ? '3px solid #DC0000' : '2px solid #E5E5E5',
-                                                backgroundColor: isSelected ? '#FFF5F5' : '#FFFFFF',
-                                                transition: 'all 0.3s',
-                                                minWidth: 80
-                                            }}
-                                        >
-                                            <div
-                                                style={{
-                                                    width: 50,
-                                                    height: 50,
-                                                    backgroundColor: getColorHex(color),
-                                                    borderRadius: 8,
-                                                    border: (color === 'White' || color === 'Trắng') ? '2px solid #E5E5E5' : 'none',
-                                                    boxShadow: isSelected ? '0 4px 12px rgba(220, 0, 0, 0.3)' : '0 2px 8px rgba(0,0,0,0.1)'
-                                                }}
-                                            />
-                                            <span style={{
-                                                fontSize: 13,
-                                                fontWeight: isSelected ? 600 : 500,
-                                                color: isSelected ? '#DC0000' : '#333333',
-                                                textAlign: 'center'
-                                            }}>
-                                                {color}
-                                            </span>
-                                        </div>
-                                    );
-                                })}
+                <div className="filter-layout">
+                    {/* Left Filter Panel */}
+                    <div className="filter-panel">
+                        {/* Section: Chọn Màu */}
+                        <div className="filter-section">
+                            <div className="filter-section-header">
+                                <span className="filter-section-title">Màu Sắc</span>
+                                {selectedColors.length > 0 && (
+                                    <span 
+                                        className="filter-section-close"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedColors([]);
+                                        }}
+                                    >
+                                        ×
+                                    </span>
+                                )}
+                                <span className="filter-section-toggle" onClick={() => toggleSection('color')}>
+                                    {expandedSections.color ? '−' : '+'}
+                                </span>
                             </div>
+                            {expandedSections.color && (
+                                <div className="filter-section-content">
+                                    <div className="color-grid">
+                                        {availableColors.map(color => {
+                                            const isSelected = selectedColors.includes(color);
+                                            return (
+                                                <div
+                                                    key={color}
+                                                    onClick={() => {
+                                                        if (isSelected) {
+                                                            setSelectedColors(selectedColors.filter(c => c !== color));
+                                                        } else {
+                                                            setSelectedColors([...selectedColors, color]);
+                                                        }
+                                                    }}
+                                                    className={`color-option ${isSelected ? 'selected' : ''}`}
+                                                    title={color}
+                                                >
+                                                    <div
+                                                        className="color-swatch"
+                                                        style={{
+                                                            backgroundColor: getColorHex(color),
+                                                            border: (color === 'White' || color === 'Trắng') ? '2px solid #E5E5E5' : 'none'
+                                                        }}
+                                                    />
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
-                        {/* Dòng 2: Hãng xe + Hạng xe + Sắp xếp */}
-                        <div className="filters-grid" style={{ marginTop: 24 }}>
-                            {/* Hãng xe */}
-                            <div className="filter-group">
-                                <label className="filter-label">Chọn xe</label>
-                                <select
-                                    className="filter-select"
-                                    value={brand}
-                                    onChange={e => setBrand(e.target.value)}
-                                >
-                                    <option value="">-- Chọn một xe --</option>
-                                    <option value="BMW">BMW</option>
-                                    <option value="Tesla">Tesla</option>
-                                    <option value="VinFast">VinFast</option>
-                                </select>
+                        {/* Section: Chọn Xe */}
+                        <div className="filter-section">
+                            <div className="filter-section-header" onClick={() => toggleSection('brand')}>
+                                <span className="filter-section-title">Chọn Xe</span>
+                                <span className="filter-section-toggle">
+                                    {expandedSections.brand ? '−' : '+'}
+                                </span>
                             </div>
-
-                            {/* Hạng xe */}
-                            <div className="filter-group">
-                                <label className="filter-label">Hạng xe</label>
-                                <select
-                                    className="filter-select"
-                                    value={grade}
-                                    onChange={e => setGrade(e.target.value)}
-                                >
-                                    <option value="">-- Chọn hạng xe --</option>
-                                    <option value="Air">Air</option>
-                                    <option value="Plus">Plus</option>
-                                    <option value="Pro">Pro</option>
-                                </select>
-                            </div>
-
-                            {/* Sắp xếp */}
-                            <div className="filter-group">
-                                <label className="filter-label">Sắp xếp</label>
-                                <select
-                                    className="filter-select"
-                                    value={sortBy}
-                                    onChange={e => setSortBy(e.target.value)}
-                                >
-                                    <option value="name-asc">Tên A-Z</option>
-                                    <option value="name-desc">Tên Z-A</option>
-                                    <option value="grade-asc">Hạng thấp → cao</option>
-                                    <option value="grade-desc">Hạng cao → thấp</option>
-                                </select>
-                            </div>
+                            {expandedSections.brand && (
+                                <div className="filter-section-content">
+                                    <select
+                                        className="filter-select-panel"
+                                        value={brand}
+                                        onChange={e => setBrand(e.target.value)}
+                                    >
+                                        <option value="">-- Chọn một xe --</option>
+                                        <option value="BMW">BMW</option>
+                                        <option value="Tesla">Tesla</option>
+                                        <option value="VinFast">VinFast</option>
+                                    </select>
+                                </div>
+                            )}
                         </div>
 
-                        {/* Clear button */}
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 24, paddingTop: 20, borderTop: '1px solid #E5E5E5' }}>
-                            <button className="clear-filters-btn" onClick={clearFilters}>
-                                <span>Reset bộ lọc</span>
-                            </button>
+                        {/* Section: Hãng Xe */}
+                        <div className="filter-section">
+                            <div className="filter-section-header" onClick={() => toggleSection('grade')}>
+                                <span className="filter-section-title">Hãng Xe</span>
+                                <span className="filter-section-toggle">
+                                    {expandedSections.grade ? '−' : '+'}
+                                </span>
+                            </div>
+                            {expandedSections.grade && (
+                                <div className="filter-section-content">
+                                    <select
+                                        className="filter-select-panel"
+                                        value={grade}
+                                        onChange={e => setGrade(e.target.value)}
+                                    >
+                                        <option value="">Tất cả</option>
+                                        <option value="Air">Air</option>
+                                        <option value="Plus">Plus</option>
+                                        <option value="Pro">Pro</option>
+                                    </select>
+                                </div>
+                            )}
                         </div>
+
+                        {/* Section: Sắp Xếp */}
+                        <div className="filter-section">
+                            <div className="filter-section-header" onClick={() => toggleSection('sort')}>
+                                <span className="filter-section-title">Sắp Xếp</span>
+                                <span className="filter-section-toggle">
+                                    {expandedSections.sort ? '−' : '+'}
+                                </span>
+                            </div>
+                            {expandedSections.sort && (
+                                <div className="filter-section-content">
+                                    <select
+                                        className="filter-select-panel"
+                                        value={sortBy}
+                                        onChange={e => setSortBy(e.target.value)}
+                                    >
+                                        <option value="name-asc">Tên A-Z</option>
+                                        <option value="name-desc">Tên Z-A</option>
+                                        <option value="grade-asc">Hạng thấp đến cao</option>
+                                        <option value="grade-desc">Hạng cao đến thấp</option>
+                                    </select>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Reset Button */}
+                        <button className="reset-filters-btn" onClick={resetFilters}>
+                            RESET BỘ LỌC
+                        </button>
                     </div>
 
-                    {/* Cars Grid */}
-                    <div className="cars-grid">
-                        {sortedCars.length === 0 ? (
+                    {/* Right Content Area - Cars Grid */}
+                    <div className="cars-content-area">
+                        {/* Cars Grid */}
+                        <div className="cars-grid">
+                        {isLoadingData ? (
+                            <div className="empty-state" style={{ gridColumn: '1 / -1' }}>
+                                <div className="empty-icon">⏳</div>
+                                <h3 className="empty-title">Vui lòng chờ trong giây lát</h3>
+                                <p className="empty-message">
+                                    Đang tải danh sách xe...
+                                </p>
+                            </div>
+                        ) : sortedCars.length === 0 ? (
                             <div className="empty-state" style={{ gridColumn: '1 / -1' }}>
                                 <div className="empty-icon">🚗</div>
                                 <h3 className="empty-title">Không tìm thấy xe phù hợp</h3>
@@ -408,34 +471,62 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [], gradeFilter: 
                                     <div className="car-info">
                                         <h3 className="car-name">{car.vehicleName || car.vehicle_name}</h3>
 
-                                        <div className="car-details">
-                                            <div className="car-detail-item">
-                                                <span className="car-detail-label">Biển số:</span>
-                                                <span>{car.plateNumber || car.plate_number}</span>
+                                        <div className="car-specs-grid">
+                                            <div className="car-spec-item">
+                                                <svg className="car-spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1" />
+                                                    <path d="M12 15l-3-3H7a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-2l-3 3z" />
+                                                </svg>
+                                                <span className="car-spec-text">{car.plateNumber || car.plate_number || 'N/A'}</span>
                                             </div>
-                                            <div className="car-detail-item">
-                                                <span className="car-detail-label">Hãng xe:</span>
-                                                <span>{car.brand || 'N/A'}</span>
+                                            <div className="car-spec-item">
+                                                <svg className="car-spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                                    <circle cx="9" cy="7" r="4" />
+                                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                                                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                                                </svg>
+                                                <span className="car-spec-text">{car.seatCount || car.seat_count || 4} chỗ</span>
                                             </div>
-                                            <div className="car-detail-item">
-                                                <span className="car-detail-label">Hạng xe:</span>
-                                                <span>{car.variant || car.grade || 'N/A'}</span>
+                                            <div className="car-spec-item">
+                                                <svg className="car-spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <path d="M5 17h14l-1-7H6l-1 7z" />
+                                                    <path d="M7 17v-5" />
+                                                    <path d="M17 17v-5" />
+                                                    <path d="M5 10h14" />
+                                                    <path d="M9 10V7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v3" />
+                                                </svg>
+                                                <span className="car-spec-text">{car.carmodel || car.carModel || 'N/A'}</span>
                                             </div>
-                                            <div className="car-detail-item">
-                                                <span className="car-detail-label">Màu sắc:</span>
-                                                <span>
+                                            <div className="car-spec-item">
+                                                <svg className="car-spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <rect x="1" y="6" width="18" height="12" rx="2" ry="2" />
+                                                    <line x1="23" y1="10" x2="23" y2="14" />
+                                                </svg>
+                                                <span className="car-spec-text">{car.batteryStatus || car.battery_status || 'N/A'}</span>
+                                            </div>
+                                            <div className="car-spec-item">
+                                                <svg className="car-spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                                                    <path d="M2 17l10 5 10-5" />
+                                                    <path d="M2 12l10 5 10-5" />
+                                                </svg>
+                                                <span className="car-spec-text">{car.variant || car.grade || 'N/A'}</span>
+                                            </div>
+                                            <div className="car-spec-item">
+                                                <svg className="car-spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <circle cx="12" cy="12" r="10" />
+                                                    <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+                                                </svg>
+                                                <span className="car-spec-text">
                                                     {car.color || 'N/A'}
                                                     {car.color && car.color !== 'N/A' && (
                                                         <span 
-                                                            className="car-color-swatch"
+                                                            className="car-color-swatch-inline"
                                                             style={{ backgroundColor: getColorHex(car.color) }}
                                                         ></span>
                                                     )}
                                                 </span>
-                                            </div>
-                                            <div className="car-detail-item">
-                                                <span className="car-detail-label">Loại xe:</span>
-                                                <span>{car.seatCount === 4 ? '4 Chỗ' : car.seatCount === 7 ? '7 Chỗ' : (car.type === '4-seater' ? '4 Chỗ' : '7 Chỗ')}</span>
                                             </div>
                                         </div>
 
@@ -446,8 +537,9 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [], gradeFilter: 
                                 </div>
                             ))
                         )}
+                        </div>
                     </div>
-                </>
+                </div>
             )}
         </div>
     );

@@ -106,12 +106,12 @@
 /* Filters - Mercedes Style */
 .customer-filters {
     display: flex;
-    justify-content: space-between;
-    align-items: stretch;
+    justify-content: center;
+    align-items: center;
     gap: 0;
     margin-bottom: 30px;
-    border: 2px solid #000000;
-    background: #FFFFFF;
+    border: none;
+    background: transparent;
 }
 
 .filter-group {
@@ -166,15 +166,17 @@
 
 .filter-right {
     display: flex;
-    align-items: stretch;
+    align-items: center;
+    justify-content: center;
 }
 
 .search-input {
-    padding: 16px 24px;
-    border: none;
+    padding: 12px 20px;
+    border: 2px solid #000000;
     border-radius: 0;
     font-size: 14px;
-    min-width: 350px;
+    width: 400px;
+    max-width: 90%;
     background: #FFFFFF;
     color: #000000;
     letter-spacing: 0.5px;
