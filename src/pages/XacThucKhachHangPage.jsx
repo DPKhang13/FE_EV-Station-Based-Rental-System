@@ -63,16 +63,6 @@ export default function VerifyCustomerPage() {
     fetchStations(); 
   }, [user?.stationId, location]); // ✅ Thêm user.stationId và location vào dependency
 
-  // ✅ Tự động mở chi tiết đơn hàng khi navigate từ GiaoTraXe
-  useEffect(() => {
-    if (location.state?.autoOpenOrderDetail && orders.length > 0) {
-      const { autoOpenOrderDetail: orderId, userId } = location.state;
-      console.log('🎯 Auto opening order detail:', { orderId, userId });
-      // Không cần delay, orders đã ready
-      handleViewOrderDetail(orderId, userId);
-    }
-  }, [location.state?.autoOpenOrderDetail, orders]);
-
   // 🔍 Tìm kiếm
   const filtered = orders.filter((x) => {
   if (!search.trim()) return true;
@@ -133,10 +123,30 @@ export default function VerifyCustomerPage() {
     nav(`/staff/chitiet/${orderId}/${userId}`);
   }, [nav]);
 
+  // ✅ Tự động mở chi tiết đơn hàng khi navigate từ GiaoTraXe
+  useEffect(() => {
+    if (location.state?.autoOpenOrderDetail && orders.length > 0) {
+      const { autoOpenOrderDetail: orderId } = location.state;
+      
+      // ✅ Tự động tìm userId từ orders dựa vào orderId
+      const order = orders.find(o => String(o.orderId) === String(orderId));
+      const userId = order?.userId;
+      
+      if (!userId) {
+        console.error('❌ Không tìm thấy userId cho orderId:', orderId);
+        return;
+      }
+      
+      console.log('🎯 Auto opening order detail:', { orderId, userId });
+      // Tự động mở chi tiết đơn hàng
+      handleViewOrderDetail(orderId, userId);
+    }
+  }, [location.state?.autoOpenOrderDetail, orders, handleViewOrderDetail]);
+
   if (loading)
     return (
       <div className="verify-container">
-        <h1 className="verify-title">Xác thực khách hàng</h1>
+        <h1 className="verify-title">Quản lí đơn hàng</h1>
         <p style={{ textAlign: "center", padding: 40 }}>Đang tải dữ liệu...</p>
       </div>
     );
@@ -144,7 +154,7 @@ export default function VerifyCustomerPage() {
   return (
     <>
       <div className="verify-container">
-        <h1 className="verify-title">Xác thực khách hàng</h1>
+        <h1 className="verify-title">Quản lí đơn hàng</h1>
         <p className="verify-subtitle">Kiểm tra giấy tờ và xử lý hồ sơ đặt xe</p>
 
         {/* 🔍 Tìm kiếm */}

@@ -31,6 +31,7 @@ const translateType = (type = "") => {
     RENTAL_PAYMENT: "Thanh toán thuê xe",
     REFUND: "Hoàn tiền",
     TOP_UP: "Nạp tài khoản",
+    PICKUP: "Tiền còn lại sau cọc",
   };
   return map[type.toUpperCase()] || "Khác";
 };

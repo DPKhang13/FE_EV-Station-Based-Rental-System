@@ -17,6 +17,7 @@ export default function OrderDetailPage() {
   const [returnPreview, setReturnPreview] = useState(null);
   const [returnTime, setReturnTime] = useState("");
   const [showReturnModal, setShowReturnModal] = useState(false);
+  const [returnLoading, setReturnLoading] = useState(false); // Loading cho nút xác nhận trả xe
 
   const [service, setService] = useState({
     serviceType: "",
@@ -32,6 +33,7 @@ export default function OrderDetailPage() {
   const [toast, setToast] = useState(null);
   const [payments, setPayments] = useState([]); // Used for payment status checks
   const [processing, setProcessing] = useState(false);
+  const [handoverLoading, setHandoverLoading] = useState(false); // Loading cho các nút hành động bàn giao
   const [otherOrders, setOtherOrders] = useState([]); // Các order khác cùng vehicleId
   const [orderStatus, setOrderStatus] = useState(""); // Order status để kiểm tra đơn đã hoàn thành chưa
   
@@ -161,6 +163,7 @@ export default function OrderDetailPage() {
 
   const handlePreviewReturn = async () => {
     try {
+      setHandoverLoading(true);
       const res = await fetch(
         `http://localhost:8080/api/order/${orderId}/preview-return`
       );
@@ -171,6 +174,8 @@ export default function OrderDetailPage() {
     } catch (err) {
       console.error(err);
       showToast("error", "Không thể load thông tin trả xe!");
+    } finally {
+      setHandoverLoading(false);
     }
   };
 
@@ -181,6 +186,7 @@ export default function OrderDetailPage() {
         : new Date().toISOString().slice(0, 19).replace("T", " ");
 
     try {
+      setReturnLoading(true);
       await fetch(`http://localhost:8080/api/order/${orderId}/return`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -194,6 +200,8 @@ export default function OrderDetailPage() {
     } catch (err) {
       console.error(err);
       showToast("error", "Trả xe thất bại!");
+    } finally {
+      setReturnLoading(false);
     }
   };
 
@@ -242,12 +250,15 @@ export default function OrderDetailPage() {
     if (!ok) return;
 
     try {
+      setHandoverLoading(true);
       await orderService.pickup(orderId);
       showToast("success", "✅ Đã xác nhận bàn giao!");
       await refetchDetails();
     } catch (e) {
       console.error(e);
       showToast("error", getApiMessage(e));
+    } finally {
+      setHandoverLoading(false);
     }
   };
 
@@ -256,6 +267,7 @@ export default function OrderDetailPage() {
     if (!ok) return;
 
     try {
+      setHandoverLoading(true);
       const vehicleId = orderDetails?.[0]?.vehicleId;
 
       await orderService.update(orderId, {
@@ -265,10 +277,12 @@ export default function OrderDetailPage() {
       });
 
       showToast("success", "❌ Đã hủy bàn giao / hủy đơn!");
-      refetchDetails();
+      await refetchDetails();
     } catch (err) {
       console.error(err);
       showToast("error", getApiMessage(err));
+    } finally {
+      setHandoverLoading(false);
     }
   };
 
@@ -1102,15 +1116,15 @@ export default function OrderDetailPage() {
               return (
                 <>
                   <button
-                    className="btn-receive"
+                    className="btn-receive-car"
                     onClick={handlePreviewReturn}
-                    disabled={hasPendingOrderDetail}
-                    style={{
-                      opacity: hasPendingOrderDetail ? 0.5 : 1,
-                      cursor: hasPendingOrderDetail ? "not-allowed" : "pointer"
-                    }}
+                    disabled={hasPendingOrderDetail || handoverLoading || loading}
                   >
-                    🚗 Nhận xe
+                    <svg style={{ width: "18px", height: "18px", marginRight: "8px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1"></path>
+                      <polygon points="12 15 17 21 7 21 12 15"></polygon>
+                    </svg>
+                    {handoverLoading || loading ? "Đang xử lý..." : "NHẬN XE"}
                   </button>
 
                   {hasPendingOrderDetail && (
@@ -1172,19 +1186,26 @@ export default function OrderDetailPage() {
                   return (
                     <>
                       <button
-                        className="btn btn-primary"
+                        className="btn btn-confirm-handover"
                         onClick={handleConfirmHandover}
-                        disabled={false}
+                        disabled={handoverLoading || loading}
                       >
-                        ✅ Xác nhận bàn giao
+                        <svg style={{ width: "18px", height: "18px", marginRight: "8px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        {handoverLoading || loading ? "Đang xử lý..." : "XÁC NHẬN BÀN GIAO"}
                       </button>
 
                       <button
-                        className="btn btn-danger"
+                        className="btn btn-cancel-handover"
                         onClick={handleCancelHandover}
-                        disabled={pickupOK || fullOK}
+                        disabled={pickupOK || fullOK || handoverLoading || loading}
                       >
-                        ❌ Hủy bàn giao
+                        <svg style={{ width: "18px", height: "18px", marginRight: "8px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="18" y1="6" x2="6" y2="18"></line>
+                          <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                        {handoverLoading || loading ? "Đang xử lý..." : "HỦY BÀN GIAO"}
                       </button>
                     </>
                   );
@@ -1243,14 +1264,26 @@ export default function OrderDetailPage() {
             />
 
             <div className="modal-actions">
-              <button className="btn btn-primary" onClick={handleConfirmReturn}>
-                ✔ Xác nhận trả xe
+              <button 
+                className="btn btn-confirm-return" 
+                onClick={handleConfirmReturn}
+                disabled={returnLoading}
+              >
+                <svg style={{ width: "18px", height: "18px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                {returnLoading ? "Đang xử lý..." : "XÁC NHẬN TRẢ XE"}
               </button>
               <button
-                className="btn btn-danger"
+                className="btn btn-close-modal"
                 onClick={() => setShowReturnModal(false)}
+                disabled={returnLoading}
               >
-                ✖ Đóng
+                <svg style={{ width: "18px", height: "18px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                ĐÓNG
               </button>
             </div>
           </div>

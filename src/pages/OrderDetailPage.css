@@ -381,6 +381,194 @@
   border-color: #333333;
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
 }
+
+/* =========================
+   Handover Buttons – Professional Red/White/Black Theme
+   ========================= */
+
+/* Xác nhận bàn giao – Đen với accent đỏ */
+.btn-confirm-handover {
+  background: #000000;
+  border: 2px solid #DC0000;
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 24px;
+  min-width: 220px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.btn-confirm-handover::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(220, 0, 0, 0.2), transparent);
+  transition: left 0.5s ease;
+  z-index: -1;
+}
+
+.btn-confirm-handover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(220, 0, 0, 0.15) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.btn-confirm-handover:hover {
+  transform: translateY(-2px);
+  border-color: #FF0000;
+  box-shadow: 
+    0 8px 24px rgba(220, 0, 0, 0.4),
+    0 0 0 1px rgba(220, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: #1a1a1a;
+}
+
+.btn-confirm-handover:hover::before {
+  left: 100%;
+}
+
+.btn-confirm-handover:hover::after {
+  opacity: 1;
+}
+
+.btn-confirm-handover:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 2px 8px rgba(220, 0, 0, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.btn-confirm-handover:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-confirm-handover svg {
+  flex-shrink: 0;
+  stroke: #10B981;
+  filter: drop-shadow(0 0 2px rgba(16, 185, 129, 0.5));
+}
+
+/* Hủy bàn giao – Trắng với border và text đỏ */
+.btn-cancel-handover {
+  background: #FFFFFF;
+  border: 2px solid #DC0000;
+  color: #DC0000;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 24px;
+  min-width: 220px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 4px 12px rgba(220, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.btn-cancel-handover::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(220, 0, 0, 0.1), transparent);
+  transition: left 0.5s ease;
+  z-index: -1;
+}
+
+.btn-cancel-handover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #DC0000;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  transform: scale(0.8);
+  z-index: -1;
+}
+
+.btn-cancel-handover:hover {
+  transform: translateY(-2px);
+  border-color: #FF0000;
+  color: #FFFFFF;
+  box-shadow: 
+    0 8px 24px rgba(220, 0, 0, 0.3),
+    0 0 0 1px rgba(220, 0, 0, 0.2);
+}
+
+.btn-cancel-handover:hover::before {
+  left: 100%;
+}
+
+.btn-cancel-handover:hover::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.btn-cancel-handover:hover svg {
+  stroke: #FFFFFF;
+}
+
+.btn-cancel-handover:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 2px 8px rgba(220, 0, 0, 0.2),
+    inset 0 2px 4px rgba(220, 0, 0, 0.2);
+}
+
+.btn-cancel-handover:active::after {
+  transform: scale(0.95);
+}
+
+.btn-cancel-handover:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  background: #F5F5F5;
+  border-color: #CCCCCC;
+  color: #999999;
+}
+
+.btn-cancel-handover:disabled svg {
+  stroke: #999999;
+}
+
+.btn-cancel-handover svg {
+  flex-shrink: 0;
+  stroke: #DC0000;
+  transition: stroke 0.3s ease;
+}
 /* Toast */
 .toast{
   position: fixed;
@@ -407,94 +595,404 @@
   to{ opacity:0; transform: translateY(-6px); }
 }
 /* =========================
-   Receive Button – Warning Neon
+   Receive Button – Professional Black/White/Red Theme
    ========================= */
 
-.btn-receive {
-  background: #DC0000;
+.btn-receive-car {
+  background: #000000;
   border: 2px solid #DC0000;
   color: #FFFFFF;
-  position: relative;
-  padding: 13px 18px;
-  min-width: 200px;
-  border-radius: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 24px;
+  min-width: 220px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: 1.5px;
-  cursor: pointer;
+  letter-spacing: 1.2px;
   text-transform: uppercase;
-  transition: all 0.3s ease;
+  position: relative;
   overflow: hidden;
   z-index: 1;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.btn-receive::before{
-  content:"";
-  position:absolute; 
+.btn-receive-car::before {
+  content: "";
+  position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: #B80000;
-  transition: left 0.3s ease;
+  background: linear-gradient(90deg, transparent, rgba(220, 0, 0, 0.2), transparent);
+  transition: left 0.5s ease;
   z-index: -1;
 }
 
-.btn-receive:hover{
+.btn-receive-car::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(220, 0, 0, 0.15) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.btn-receive-car:hover {
   transform: translateY(-2px);
-  border-color: #B80000;
-  box-shadow: 0 5px 20px rgba(220, 0, 0, 0.5);
+  border-color: #FF0000;
+  box-shadow: 
+    0 8px 24px rgba(220, 0, 0, 0.4),
+    0 0 0 1px rgba(220, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: #1a1a1a;
 }
 
-.btn-receive:hover::before{
-  left: 0;
+.btn-receive-car:hover::before {
+  left: 100%;
 }
 
-.btn-receive:active{
+.btn-receive-car:hover::after {
+  opacity: 1;
+}
+
+.btn-receive-car:active {
   transform: translateY(0);
+  box-shadow: 
+    0 2px 8px rgba(220, 0, 0, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.btn-receive:disabled{
-  opacity:.5;
-  cursor:not-allowed;
-  transform:none;
-  filter:none;
+.btn-receive-car:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  background: #1a1a1a;
+  border-color: #666666;
+  pointer-events: none;
 }
+
+.btn-receive-car:disabled:hover {
+  transform: none;
+  border-color: #666666;
+  background: #1a1a1a;
+  box-shadow: none;
+}
+
+.btn-receive-car svg {
+  flex-shrink: 0;
+  stroke: #FFFFFF;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
+}
+/* =========================
+   Return Modal – Professional Red/White/Black Theme
+   ========================= */
 .modal-overlay{
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,.45);
-  display:flex; justify-content:center; align-items:center;
+  position: fixed; 
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex; 
+  justify-content: center; 
+  align-items: center;
   z-index: 9999;
+  animation: fadeIn 0.25s ease;
 }
 
-.modal{
-  background:#fff;
-  width: 420px;
-  padding: 20px 28px;
-  border-radius: 14px;
-  box-shadow: 0 10px 30px rgba(0,0,0,.2);
-  animation: fadeIn .25s ease;
+/* Return Modal - Specific styles với higher specificity */
+.order-detail-page .modal-overlay .modal{
+  background: #000000 !important;
+  width: 480px;
+  max-width: 90vw;
+  padding: 32px;
+  border-radius: 0;
+  border: 2px solid #DC0000 !important;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(220, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
 }
 
-.modal h2{
-  margin-bottom: 12px;
-  font-size: 1.3rem;
-  color:#2563eb;
+.order-detail-page .modal-overlay .modal::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #DC0000, #FF0000, #DC0000);
 }
 
-.modal p{
-  margin: 6px 0;
+.order-detail-page .modal-overlay .modal h2{
+  margin: 0 0 24px 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #FFFFFF !important;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-bottom: 2px solid #DC0000;
+  padding-bottom: 12px;
 }
 
-.modal input{
-  width:100%; padding:10px;
-  margin-top:6px;
-  border:1px solid #ddd;
-  border-radius:8px;
+.order-detail-page .modal-overlay .modal p{
+  margin: 12px 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #FFFFFF !important;
 }
 
-.modal-actions{
-  margin-top:16px;
-  display:flex; justify-content:space-between;
+.order-detail-page .modal-overlay .modal p strong {
+  color: #FFFFFF !important;
+  font-weight: 700;
+  min-width: 140px;
+  display: inline-block;
+}
+
+.order-detail-page .modal-overlay .modal label{
+  display: block;
+  margin-top: 20px;
+  margin-bottom: 8px;
+  font-weight: 700;
+  color: #FFFFFF !important;
+  font-size: 14px;
+  letter-spacing: 0.3px;
+}
+
+.order-detail-page .modal-overlay .modal input{
+  width: 100%;
+  padding: 12px 16px;
+  margin-top: 6px;
+  border: 2px solid #DC0000 !important;
+  border-radius: 0;
+  background: #1a1a1a !important;
+  color: #FFFFFF !important;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.order-detail-page .modal-overlay .modal input:focus {
+  outline: none;
+  border-color: #FF0000 !important;
+  box-shadow: 0 0 0 3px rgba(220, 0, 0, 0.3);
+  background: #2a2a2a !important;
+}
+
+.order-detail-page .modal-overlay .modal input::placeholder {
+  color: #999999 !important;
+  font-style: italic;
+}
+
+.order-detail-page .modal-overlay .modal .modal-actions{
+  margin-top: 32px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.order-detail-page .modal-overlay .modal .modal-actions .btn {
+  flex: 1;
+  min-width: auto;
+  padding: 14px 24px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* =========================
+   Modal Buttons – Professional Red/White/Black Theme
+   ========================= */
+
+/* Nút Xác nhận trả xe – Đen với viền đỏ */
+.btn-confirm-return {
+  background: #000000;
+  border: 2px solid #DC0000;
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 24px;
+  min-width: 200px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+}
+
+.btn-confirm-return::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(220, 0, 0, 0.2), transparent);
+  transition: left 0.5s ease;
+  z-index: -1;
+}
+
+.btn-confirm-return::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(220, 0, 0, 0.15) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.btn-confirm-return:hover {
+  transform: translateY(-2px);
+  border-color: #FF0000;
+  background: #1a1a1a;
+  box-shadow: 
+    0 8px 24px rgba(220, 0, 0, 0.4),
+    0 0 0 1px rgba(220, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.btn-confirm-return:hover::before {
+  left: 100%;
+}
+
+.btn-confirm-return:hover::after {
+  opacity: 1;
+}
+
+.btn-confirm-return:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 2px 8px rgba(220, 0, 0, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.btn-confirm-return:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-confirm-return svg {
+  flex-shrink: 0;
+  stroke: #FFFFFF;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
+}
+
+/* Nút Đóng – Đen với viền đỏ, chữ trắng */
+.btn-close-modal {
+  background: #000000;
+  border: 2px solid #DC0000;
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 24px;
+  min-width: 200px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+}
+
+.btn-close-modal::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(220, 0, 0, 0.2), transparent);
+  transition: left 0.5s ease;
+  z-index: -1;
+}
+
+.btn-close-modal::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(220, 0, 0, 0.15) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.btn-close-modal:hover {
+  transform: translateY(-2px);
+  border-color: #FF0000;
+  background: #1a1a1a;
+  box-shadow: 
+    0 8px 24px rgba(220, 0, 0, 0.4),
+    0 0 0 1px rgba(220, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.btn-close-modal:hover::before {
+  left: 100%;
+}
+
+.btn-close-modal:hover::after {
+  opacity: 1;
+}
+
+.btn-close-modal:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 2px 8px rgba(220, 0, 0, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.btn-close-modal svg {
+  flex-shrink: 0;
+  stroke: #FFFFFF;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
+  transition: stroke 0.3s ease;
 }
 .fixed-services {
   display: flex;

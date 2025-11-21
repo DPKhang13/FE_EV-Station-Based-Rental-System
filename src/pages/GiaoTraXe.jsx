@@ -51,7 +51,6 @@ import PopupDatTruoc from "../components/staff/PopupDatTruoc";
 import PopupNhanXe from "../components/staff/PopUpNhanXe";
 import PopupXacThuc from "../components/staff/PopUpXacThuc";
 import PopupDaXacThuc from "../components/staff/PopUpDaXacThuc";
-import PopupNhanChecking from "../components/staff/PopupNhanChecking";
 import PopupXemChiTietXe from "../components/staff/PopupXemChiTietXe";
 
 const GiaoTraXe = () => {
@@ -212,11 +211,10 @@ const formatStatus = (status) => {
             ["RENTAL", "Rented", "ON_RENT", "IN_USE"].includes(o.status)
         );
         if (rentalOrder) {
-          // ✅ Điều hướng tới trang xác thực khách hàng và tự động mở chi tiết
+          // ✅ Điều hướng tới trang xác thực khách hàng và tự động mở chi tiết (chỉ truyền orderId)
           navigate("/staff/xacthuc", {
             state: {
               autoOpenOrderDetail: rentalOrder.orderId,
-              userId: rentalOrder.userId,
               fromGiaoTraXe: true
             }
           });
@@ -231,20 +229,6 @@ const formatStatus = (status) => {
         setPopupType("daXacThuc");
         break;
 
-      case "Đang kiểm tra": {
-        // ✅ Fetch orders nếu chưa có
-        const currentOrders = await fetchOrdersIfNeeded();
-        const relatedOrder = currentOrders.find(
-          (o) => Number(o.vehicleId) === Number(xe.id)
-        );
-        if (!relatedOrder) {
-          alert("⚠️ Không tìm thấy đơn hàng liên quan đến xe này!");
-          return;
-        }
-        setSelectedVehicle({ ...xe, order: relatedOrder });
-        setPopupType("nhanChecking");
-        break;
-      }
 
       default:
         break;
@@ -255,7 +239,7 @@ const formatStatus = (status) => {
    * 🔍 Lọc xe theo tab + tìm kiếm
    * ================================ */
   const stationId = user?.stationId || 1;
-  const stationName = user?.stationName || vehicleList[0]?.tram || `Trạm ${stationId}`;
+  const stationName = user?.stationName || vehicleList[0]?.tram || `Trạm...`;
   
   const filteredVehicles = vehicleList.filter((xe) => {
     const matchSearch = xe.bienSo
@@ -426,16 +410,6 @@ const getCarImage = (brand, color, seatCount) => {
                 </button>
               )}
 
-              {xe.trangThai === "Đang kiểm tra" && (
-                <button
-                  className="btn-action checking"
-                  onClick={() => handleVehicleAction(xe)}
-                  style={{ marginTop: '10px' }}
-                >
-                  Nhận Checking
-                </button>
-              )}
-
               {/* Nút Xem chi tiết - Hiển thị cho TẤT CẢ các xe */}
               <button
                 className="btn-action-compact btn-secondary"
@@ -468,13 +442,6 @@ const getCarImage = (brand, color, seatCount) => {
         <PopupDaXacThuc
           xe={selectedVehicle}
           onClose={() => setPopupType(null)}
-        />
-      )}
-      {popupType === "nhanChecking" && (
-        <PopupNhanChecking
-          xe={selectedVehicle}
-          onClose={() => setPopupType(null)}
-          onReload={fetchData} // ✅ callback reload
         />
       )}
       {popupType === "xemChiTiet" && selectedVehicle && (
