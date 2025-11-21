@@ -36,10 +36,7 @@ const ChiTietKhachHang = () => {
 
   return (
     <div className="ct-container">
-
-      
-
-      <h1 className="ct-title">Chi tiết khách hàng</h1>
+      <h1 className="ct-title">CHI TIẾT KHÁCH HÀNG</h1>
 
       <div className="ct-card">
 

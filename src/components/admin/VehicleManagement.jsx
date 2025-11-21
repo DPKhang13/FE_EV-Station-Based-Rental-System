@@ -2,31 +2,96 @@ import React, { useState, useEffect } from 'react';
 import './VehicleManagement.css';
 import vehicleService from '../../services/vehicleService';
 
-// Mapping ảnh xe theo hãng, màu sắc và số chỗ
-const CAR_IMAGE_MAPPING = {
-    '4': { // 4 chỗ
-        'Vinfast': {
-            'Blue': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/a80cae76-5c8a-4226-ac85-116ba2da7a3a.png',
-            'Silver': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/b76c51c2-6e69-491c-ae83-0d36ff93cdff.png',
-            'Black': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/e88bd242-3df4-48a7-8fe2-a9a3466f939f.png',
-            'Red': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/e420cb1b-1710-4dbe-a5e3-e1285c690b6e.png',
-            'White': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Vinfast/unnamed.jpg'
-        },
-        'BMW': {
-            'White': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/white.jpg',
-            'Silver': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/unnamed%20%281%29.jpg',
-            'Blue': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/blue.jpg',
-            'Black': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/8f9f3e31-0c04-4441-bb40-97778c9824e0.png',
-            'Red': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/BMW/7f3edc23-30ba-4e84-83a9-c8c418f2362d.png'
-        },
-        'Tesla': {
-            'Silver': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed4.jpg',
-            'Blue': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed.jpg',
-            'Black': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%283%29.jpg',
-            'White': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%282%29.jpg',
-            'Red': 'https://s3-hcm5-r1.longvan.net/19430189-verify-customer-docs/imgCar/4_Cho/Tesla/unnamed%20%281%29.jpg'
-        }
+// Import ảnh 4 chỗ từ các thư mục riêng
+// BMW 4 chỗ
+import BMW4_Red from '../../assets/BMW4/red.png';
+import BMW4_White from '../../assets/BMW4/white.jpg';
+import BMW4_Blue from '../../assets/BMW4/blue.jpg';
+import BMW4_Black from '../../assets/BMW4/black.png';
+import BMW4_Silver from '../../assets/BMW4/silver.jpg';
+
+// Tesla 4 chỗ
+import Tesla4_Red from '../../assets/Tes4/red.jpg';
+import Tesla4_White from '../../assets/Tes4/white.jpg';
+import Tesla4_Blue from '../../assets/Tes4/blue.jpg';
+import Tesla4_Black from '../../assets/Tes4/black.jpg';
+import Tesla4_Silver from '../../assets/Tes4/silver.jpg';
+
+// VinFast 4 chỗ
+import VinFast4_Red from '../../assets/Vin4/red.png';
+import VinFast4_White from '../../assets/Vin4/white.jpg';
+import VinFast4_Blue from '../../assets/Vin4/blue.jpg';
+import VinFast4_Black from '../../assets/Vin4/black.png';
+import VinFast4_Silver from '../../assets/Vin4/silver.png';
+
+// Import ảnh 7 chỗ từ các thư mục riêng
+// BMW 7 chỗ
+import BMW7_Red from '../../assets/BMW7/red.jpg';
+import BMW7_White from '../../assets/BMW7/white.jpg';
+import BMW7_Blue from '../../assets/BMW7/blue.jpg';
+import BMW7_Black from '../../assets/BMW7/black.jpg';
+import BMW7_Silver from '../../assets/BMW7/silver.jpg';
+
+// Tesla 7 chỗ
+import Tesla7_Red from '../../assets/Tes7/red.jpg';
+import Tesla7_White from '../../assets/Tes7/white.jpg';
+import Tesla7_Blue from '../../assets/Tes7/blue.jpg';
+import Tesla7_Black from '../../assets/Tes7/black.jpg';
+import Tesla7_Silver from '../../assets/Tes7/silver.jpg';
+
+// VinFast 7 chỗ
+import VinFast7_Red from '../../assets/Vin7/red.jpg';
+import VinFast7_White from '../../assets/Vin7/white.jpg';
+import VinFast7_Blue from '../../assets/Vin7/blue.jpg';
+import VinFast7_Black from '../../assets/Vin7/black.jpg';
+import VinFast7_Silver from '../../assets/Vin7/silver.jpg';
+
+import DefaultCar from '../../assets/4standard.jpg';
+
+// Hàm lấy ảnh xe dựa trên brand, seatCount và color (giống TrangHienThiXeTheoTram)
+const getVehicleImage = (brand, seatCount, color) => {
+    const mapColor = {
+        Red: "red",
+        White: "white",
+        Blue: "blue",
+        Black: "black",
+        Silver: "silver",
+        Đỏ: "red",
+        Trắng: "white",
+        Xanh: "blue",
+        Đen: "black",
+        Bạc: "silver"
+    };
+
+    const c = mapColor[color] || "white";
+    const b = (brand || "").toUpperCase();
+    const s = Number(seatCount) || 4;
+
+    let img = DefaultCar;
+
+    const choose = (obj) => obj[c] || DefaultCar;
+
+    if (b.includes("BMW")) {
+        img = choose(
+            s === 7
+                ? { red: BMW7_Red, white: BMW7_White, blue: BMW7_Blue, black: BMW7_Black, silver: BMW7_Silver }
+                : { red: BMW4_Red, white: BMW4_White, blue: BMW4_Blue, black: BMW4_Black, silver: BMW4_Silver }
+        );
+    } else if (b.includes("TES")) {
+        img = choose(
+            s === 7
+                ? { red: Tesla7_Red, white: Tesla7_White, blue: Tesla7_Blue, black: Tesla7_Black, silver: Tesla7_Silver }
+                : { red: Tesla4_Red, white: Tesla4_White, blue: Tesla4_Blue, black: Tesla4_Black, silver: Tesla4_Silver }
+        );
+    } else if (b.includes("VIN")) {
+        img = choose(
+            s === 7
+                ? { red: VinFast7_Red, white: VinFast7_White, blue: VinFast7_Blue, black: VinFast7_Black, silver: VinFast7_Silver }
+                : { red: VinFast4_Red, white: VinFast4_White, blue: VinFast4_Blue, black: VinFast4_Black, silver: VinFast4_Silver }
+        );
     }
+
+    return img;
 };
 
 const VehicleManagement = () => {
@@ -558,10 +623,14 @@ const VehicleManagement = () => {
                                         <td><strong>{index + 1}</strong></td>
                                         <td>
                                             <img
-                                                src={vehicle.image}
+                                                src={getVehicleImage(
+                                                    vehicle.brand,
+                                                    vehicle.seat_count || vehicle.seatCount,
+                                                    vehicle.color
+                                                )}
                                                 alt={vehicle.vehicle_name}
                                                 onError={(e) => {
-                                                    e.target.src = 'https://via.placeholder.com/100x60?text=No+Image';
+                                                    e.target.src = DefaultCar;
                                                 }}
                                             />
                                         </td>
@@ -604,22 +673,22 @@ const VehicleManagement = () => {
                                                 {openDropdown === vehicle.id && (
                                                     <div className="dropdown-menu">
                                                         <button
-                                                            className="dropdown-item btn-edit-item"
-                                                            onClick={() => {
-                                                                handleEditVehicle(vehicle);
-                                                                setOpenDropdown(null);
-                                                            }}
-                                                        >
-                                                            ✏️ Sửa
-                                                        </button>
-                                                        <button
                                                             className="dropdown-item btn-history-item"
                                                             onClick={() => {
                                                                 handleViewOrderHistory(vehicle);
                                                                 setOpenDropdown(null);
                                                             }}
                                                         >
-                                                            📋 Lịch sử
+                                                            Xem lịch sử thuê
+                                                        </button>
+                                                        <button
+                                                            className="dropdown-item btn-edit-item"
+                                                            onClick={() => {
+                                                                handleEditVehicle(vehicle);
+                                                                setOpenDropdown(null);
+                                                            }}
+                                                        >
+                                                            Sửa
                                                         </button>
                                                         <button
                                                             className="dropdown-item btn-delete-item"
@@ -628,7 +697,7 @@ const VehicleManagement = () => {
                                                                 setOpenDropdown(null);
                                                             }}
                                                         >
-                                                            🗑️ Xóa
+                                                            Xóa
                                                         </button>
                                                     </div>
                                                 )}

@@ -135,8 +135,8 @@ export default function OrderDetailPage() {
 
       showToast("success", "🚗 Đã trả xe thành công!");
       setShowReturnModal(false);
-      await refetchDetails(); // ⭐⭐ Refresh order status để ẩn nút bàn giao ⭐⭐
-      await fetchOrderStatus(); // ⭐⭐ Đảm bảo order status được cập nhật ⭐⭐
+      await refetchDetails(); // Refresh order status để ẩn nút bàn giao 
+      await fetchOrderStatus(); //  Đảm bảo order status được cập nhật 
     } catch (err) {
       console.error(err);
       showToast("error", "Trả xe thất bại!");
@@ -199,7 +199,7 @@ export default function OrderDetailPage() {
         couponCode: ""
       });
 
-      showToast("success", "❌ Đã hủy bàn giao / hủy đơn!");
+      showToast("success", " Đã hủy bàn giao / hủy đơn!");
       refetchDetails();
     } catch (err) {
       console.error(err);
@@ -259,7 +259,7 @@ export default function OrderDetailPage() {
                 otherRentalOrders: otherRentalOrders.map(o => ({ orderId: o.orderId || o.order_id, status: o.status }))
               });
             } catch (err) {
-              console.warn("⚠️ Cannot fetch other orders:", err);
+              console.warn(" Cannot fetch other orders:", err);
               setOtherOrders([]);
             }
           } else {
@@ -292,10 +292,10 @@ export default function OrderDetailPage() {
     try {
       setProcessing(true);
       await api.put(`/payment/cash/approve/order/${orderId}`);
-      showToast("success", "✅ Đã xác nhận thanh toán thành công!");
+      showToast("success", " Đã xác nhận thanh toán thành công!");
       await fetchPayments();
       await refetchDetails();
-      await fetchOrderStatus(); // ⭐⭐ Đảm bảo order status được cập nhật ⭐⭐
+      await fetchOrderStatus(); //Đảm bảo order status được cập nhật ⭐⭐
     } catch (err) {
       console.error("Lỗi xác nhận thanh toán:", err);
       const errorMsg = 
