@@ -203,7 +203,7 @@ const AdminDashBoardPage = () => {
 
       {/* INCIDENTS */}
       <div className="section incident">
-        <h2>⚠️ Báo cáo dịch vụ</h2>
+        <h2>TỶ LỆ SỬ DỤNG DỊCH VỤ</h2>
 
         <div className="incident-summary">
           <div className="card red">
@@ -225,7 +225,7 @@ const AdminDashBoardPage = () => {
           </div>
         </div>
 
-        <h3>🔍 Chi tiết dịch vụ gần đây</h3>
+        <h3>Chi tiết dịch vụ gần đây</h3>
         <div style={{ overflowX: 'auto', marginTop: '20px' }}>
           <table>
             <thead>
