@@ -1,94 +1,293 @@
+/* ================================
+   🎨 QUẢN LÝ XE TẠI TRẠM - Mercedes Professional Design
+   Tông màu: Trắng - Đỏ - Đen
+   ================================ */
+
 .station-page {
-  padding: 30px;
-  max-width: 1200px;
+  padding: 60px 40px;
+  max-width: 1400px;
   margin: 0 auto;
+  background: #FFFFFF;
+  min-height: 100vh;
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
+/* ================================
+   📋 TITLE - Mercedes Style
+   ================================ */
 .station-title {
-  font-size: 28px;
-  font-weight: 700;
-  margin-bottom: 20px;
-  color: #111827;
+  font-size: 36px;
+  font-weight: 300;
+  margin-bottom: 50px;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 6px;
+  text-align: center;
+  position: relative;
+  padding-bottom: 30px;
 }
 
+.station-title::after {
+  content: '';
+  display: block;
+  width: 120px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, #DC0000 50%, transparent 100%);
+  margin: 20px auto 0;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+}
+
+/* ================================
+   ⏳ LOADING & ERROR
+   ================================ */
 .station-loading {
-  padding: 40px;
+  padding: 80px 40px;
   text-align: center;
-  color: #6b7280;
+  color: #666666;
+  font-size: 16px;
+  font-weight: 300;
+  letter-spacing: 1px;
 }
 
 .station-error {
-  color: #b91c1c;
-  background: #fee2e2;
-  border: 1px solid #fecaca;
-  padding: 12px 16px;
-  border-radius: 10px;
-  margin-bottom: 16px;
+  color: #DC0000;
+  background: #FFFFFF;
+  border: 2px solid #DC0000;
+  padding: 16px 24px;
+  border-radius: 0;
+  margin-bottom: 30px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  text-align: center;
 }
 
-/* Lưới 3 khung trạm */
+/* ================================
+   🎴 GRID - Mercedes Grid Layout
+   ================================ */
 .station-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 30px;
+  margin-top: 40px;
 }
 
-/* Card trạm */
+/* ================================
+   🎴 CARD - Mercedes Card Design
+   ================================ */
 .station-card {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 18px 20px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-  border: 1px solid #e5e7eb;
+  background: #FFFFFF;
+  border: 2px solid #000000;
+  border-radius: 0;
+  padding: 30px 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  min-height: 200px;
 }
 
+/* Red accent line on left when hover */
+.station-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 100%;
+  background: #DC0000;
+  transition: width 0.3s ease;
+  z-index: 0;
+}
+
+.station-card:hover {
+  transform: translateY(-5px);
+  border-color: #DC0000;
+  box-shadow: 0 8px 30px rgba(220, 0, 0, 0.15);
+}
+
+.station-card:hover::before {
+  width: 4px;
+}
+
+/* Content above the accent line */
+.station-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ================================
+   📝 STATION NAME - Mercedes Typography
+   ================================ */
 .station-name {
-  font-size: 18px;
-  font-weight: 700;
-  margin: 0 0 6px;
-  color: #111827;
+  font-size: 20px;
+  font-weight: 400;
+  margin: 0 0 12px;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  line-height: 1.4;
 }
 
+/* ================================
+   📍 ADDRESS - Mercedes Typography
+   ================================ */
 .station-address {
   font-size: 14px;
-  color: #6b7280;
-  margin-bottom: 14px;
+  color: #666666;
+  margin-bottom: 24px;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+  line-height: 1.6;
+  flex-grow: 1;
 }
 
-/* Nút xem chi tiết */
+/* ================================
+   🔘 BUTTON - Mercedes Button Design
+   ================================ */
 .btn-station-detail {
   align-self: flex-start;
-  padding: 8px 14px;
-  border-radius: 999px;
-  border: 1px solid #2563eb;
-  background: #eff6ff;
-  color: #1d4ed8;
-  font-size: 13px;
-  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: 0;
+  border: 2px solid #000000;
+  background: #FFFFFF;
+  color: #000000;
+  font-size: 12px;
+  font-weight: 400;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  transition: all 0.15s ease;
+  gap: 8px;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Red background slide effect */
+.btn-station-detail::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: #DC0000;
+  transition: left 0.3s ease;
+  z-index: 0;
+}
+
+.btn-station-detail span,
+.btn-station-detail::after {
+  position: relative;
+  z-index: 1;
 }
 
 .btn-station-detail::after {
   content: "›";
-  font-size: 14px;
+  font-size: 18px;
+  font-weight: 300;
+  transition: transform 0.3s ease;
 }
 
+/* Hover state */
 .btn-station-detail:hover {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: #ffffff;
-  border-color: transparent;
-  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.35);
-  transform: translateY(-1px);
+  color: #FFFFFF;
+  border-color: #DC0000;
+  box-shadow: 0 4px 12px rgba(220, 0, 0, 0.2);
 }
 
+.btn-station-detail:hover::before {
+  left: 0;
+}
+
+.btn-station-detail:hover::after {
+  transform: translateX(4px);
+}
+
+/* Active state */
 .btn-station-detail:active {
-  transform: translateY(0);
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+  transform: translateY(1px);
+  box-shadow: 0 2px 8px rgba(220, 0, 0, 0.15);
+}
+
+/* ================================
+   📱 RESPONSIVE - Mobile Optimization
+   ================================ */
+@media (max-width: 768px) {
+  .station-page {
+    padding: 40px 20px;
+  }
+
+  .station-title {
+    font-size: 28px;
+    letter-spacing: 4px;
+    margin-bottom: 40px;
+  }
+
+  .station-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    margin-top: 30px;
+  }
+
+  .station-card {
+    padding: 24px 20px;
+    min-height: 180px;
+  }
+
+  .station-name {
+    font-size: 18px;
+    letter-spacing: 1.5px;
+  }
+
+  .station-address {
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+
+  .btn-station-detail {
+    padding: 10px 20px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .station-page {
+    padding: 30px 16px;
+  }
+
+  .station-title {
+    font-size: 24px;
+    letter-spacing: 3px;
+    padding-bottom: 20px;
+  }
+
+  .station-title::after {
+    width: 80px;
+    height: 2px;
+  }
+
+  .station-card {
+    padding: 20px 16px;
+  }
+
+  .station-name {
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+
+  .station-address {
+    font-size: 12px;
+    margin-bottom: 16px;
+  }
 }

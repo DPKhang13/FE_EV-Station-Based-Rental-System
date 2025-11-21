@@ -30,11 +30,6 @@ export default function SideBarAdmin() {
         <nav className="sidebar__nav">
           {/* --- Nhóm a. Quản lý đội xe & điểm thuê --- */}
           <p className="sidebar__section-title">🚗 Đội xe & Điểm thuê</p>
-          <NavLink to="/admin/vehicles" className="sidebar__btn">
-            <FaCar />
-            <span>Quản lý xe</span>
-          </NavLink>
-          
           <NavLink to="/admin/quanlyxetaitram" className="sidebar__btn">
             <FaCar />
             <span>Quản lý xe tại trạm</span>

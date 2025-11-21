@@ -76,6 +76,11 @@ const CustomerManagement = () => {
         }
     };
 
+    // 🔍 Xử lý tìm kiếm
+    const handleSearch = () => {
+        // Logic tìm kiếm đã được áp dụng trong filteredUsers thông qua searchQuery
+    };
+
     // 👇 hàm xem chi tiết
     const handleViewDetail = (user) => {
         const id = user.userId || user.id;
@@ -118,16 +123,18 @@ const CustomerManagement = () => {
                 </div>
             )}
 
-            <div className="customer-filters">
-                <div className="filter-right">
-                    <input
-                        type="text"
-                        className="search-input"
-                        placeholder="Tìm kiếm theo tên, email, SĐT..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                </div>
+            <div className="customer-search-section">
+                <input
+                    type="text"
+                    className="customer-search-input"
+                    placeholder="Tìm kiếm theo tên, email, SĐT..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                />
+                <button className="btn-search" onClick={handleSearch}>
+                    TÌM KIẾM
+                </button>
             </div>
 
             <div className="customer-table-container">

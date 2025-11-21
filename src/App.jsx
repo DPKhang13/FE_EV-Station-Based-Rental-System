@@ -23,7 +23,6 @@ import VerifyOtpPage from './pages/VerifyOtpPage.jsx';
 import AdminDashBoardPage from './pages/AdminDashBoardPage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
 import EmployeesPage from './pages/EmployeesPage.jsx';
-import VehicleManagement from './components/admin/VehicleManagement.jsx';
 import StationManagement from './components/admin/StationManagement.jsx';
 import CustomerManagement from './components/admin/CustomerManagement.jsx';
 import ConfirmBookingPage from './pages/ConfirmBookingPage.jsx';
@@ -190,7 +189,6 @@ function App() {
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="dashboard" element={<AdminDashBoardPage />} />
               <Route path="employees" element={<EmployeesPage />} />
-              <Route path="vehicles" element={<VehicleManagement />} />
               <Route path="quanlyxetaitram" element={<QuanLiXeTaiTram />} />
               <Route path="locations" element={<StationManagement />} />
               <Route path="customers" element={<CustomerManagement />} />

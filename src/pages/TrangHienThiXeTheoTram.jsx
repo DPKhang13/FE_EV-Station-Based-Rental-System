@@ -112,6 +112,14 @@ const TrangHienThiXeTheoTram = () => {
     type: "success"
   });
 
+  // Filter state
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    colors: [],
+    seatCounts: [],
+    statuses: []
+  });
+
   // Toast
   const showNotification = (message, type = "success") => {
     setNotification({ show: true, message, type });
@@ -743,6 +751,52 @@ batteryCapacity: String(vehicle.batteryCapacity ?? vehicle.battery_capacity ?? "
     return map[s] || { text: status, class: "AVAILABLE", display: status };
   };
 
+  // Filter functions
+  const getUniqueColors = () => [...new Set(vehicles.map(v => v.color).filter(Boolean))];
+  const getUniqueSeatCounts = () => [...new Set(vehicles.map(v => v.seatCount || v.seat_count).filter(Boolean))].sort((a, b) => a - b);
+  const getAllStatuses = () => {
+    const allStatuses = new Set();
+    vehicles.forEach(v => {
+      if (v.status) allStatuses.add(v.status);
+    });
+    return Array.from(allStatuses);
+  };
+
+  // Toggle filter
+  const toggleFilter = (filterType, value) => {
+    setFilters(prev => {
+      const current = prev[filterType];
+      const updated = current.includes(value)
+        ? current.filter(item => item !== value)
+        : [...current, value];
+      return { ...prev, [filterType]: updated };
+    });
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setFilters({
+      colors: [],
+      seatCounts: [],
+      statuses: []
+    });
+  };
+
+  // Filter vehicles
+  const filteredVehicles = vehicles.filter(vehicle => {
+    // Filter by color
+    const matchesColor = filters.colors.length === 0 || filters.colors.includes(vehicle.color);
+    
+    // Filter by seat count
+    const seatCount = vehicle.seatCount || vehicle.seat_count;
+    const matchesSeatCount = filters.seatCounts.length === 0 || filters.seatCounts.includes(seatCount);
+    
+    // Filter by status
+    const matchesStatus = filters.statuses.length === 0 || filters.statuses.includes(vehicle.status);
+    
+    return matchesColor && matchesSeatCount && matchesStatus;
+  });
+
   // Đóng menu khi click ra ngoài
   useEffect(() => {
     const close = (e) => {
@@ -795,10 +849,86 @@ batteryCapacity: String(vehicle.batteryCapacity ?? vehicle.battery_capacity ?? "
         </button>
       </div>
 
-      {vehicles.length === 0 ? (
+      {/* Filters Section */}
+      <div
+        className={`filters-section ${showFilters ? 'open' : ''}`}
+        onMouseEnter={() => setShowFilters(true)}
+        onMouseLeave={() => setShowFilters(false)}
+      >
+        <div className="filter-header">
+          <h3>BỘ LỌC {!showFilters && '(Di chuột vào để mở)'}</h3>
+          {(filters.colors.length > 0 || filters.seatCounts.length > 0 || filters.statuses.length > 0) && (
+            <button className="btn-clear-filters" onClick={clearFilters}>
+              Xóa bộ lọc
+            </button>
+          )}
+        </div>
+
+        <div className="filters-grid">
+          {/* Color Filter */}
+          <div className="filter-group">
+            <h4>🎨 MÀU SẮC</h4>
+            <div className="filter-options">
+              {getUniqueColors().map(color => (
+                <label key={color} className="filter-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={filters.colors.includes(color)}
+                    onChange={() => toggleFilter('colors', color)}
+                  />
+                  <span>{color}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Seat Count Filter */}
+          <div className="filter-group">
+            <h4>💺 SỐ GHẾ</h4>
+            <div className="filter-options">
+              {getUniqueSeatCounts().map(count => (
+                <label key={count} className="filter-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={filters.seatCounts.includes(count)}
+                    onChange={() => toggleFilter('seatCounts', count)}
+                  />
+                  <span>{count} CHỖ</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Status Filter */}
+          <div className="filter-group">
+            <h4>📊 TRẠNG THÁI</h4>
+            <div className="filter-options">
+              {getAllStatuses().map(status => {
+                const statusInfo = getStatusInfo(status);
+                return (
+                  <label key={status} className="filter-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={filters.statuses.includes(status)}
+                      onChange={() => toggleFilter('statuses', status)}
+                    />
+                    <span>{statusInfo.display || status}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {filteredVehicles.length === 0 ? (
         <div className="empty-state">
           <div style={{ fontSize: 48 }}>📭</div>
-          <p>Không có xe nào tại trạm này</p>
+          <p>
+            {vehicles.length === 0 
+              ? "Không có xe nào tại trạm này"
+              : "Không tìm thấy xe nào phù hợp với bộ lọc"}
+          </p>
         </div>
       ) : (
         <div className="table-container">
@@ -821,7 +951,7 @@ batteryCapacity: String(vehicle.batteryCapacity ?? vehicle.battery_capacity ?? "
             </thead>
 
             <tbody>
-              {vehicles.map((v, index) => {
+              {filteredVehicles.map((v, index) => {
                 const info = getStatusInfo(v.status);
               const rawBattery = v.batteryStatus || v.battery_status || "0";
 const battery = Number(String(rawBattery).replace("%", "").trim());
@@ -888,8 +1018,8 @@ const battery = Number(String(rawBattery).replace("%", "").trim());
                                 : v.vehicleId || v.id
                             )
                           }
+                          aria-label="Hành động"
                         >
-                          ⋮
                         </button>
 
                         {openMenuId === (v.vehicleId || v.id) && (
@@ -935,6 +1065,9 @@ const battery = Number(String(rawBattery).replace("%", "").trim());
           <div className="table-footer">
             <div className="stats">
               <span><strong>Tổng xe:</strong> {vehicles.length}</span>
+              {filteredVehicles.length !== vehicles.length && (
+                <span><strong>Hiển thị:</strong> {filteredVehicles.length}</span>
+              )}
               <span>
                 <strong>Sẵn sàng:</strong>{" "}
                 {vehicles.filter((v) =>

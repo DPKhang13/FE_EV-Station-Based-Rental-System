@@ -256,15 +256,14 @@ const [deleteEmail, setDeleteEmail] = useState("");
 
       {/* 🔘 Nút thao tác */}
       <div className="actions">
-        <button className="add-btn" onClick={handleAddEmployee}>Thêm nhân viên</button>
-        <button className="update-btn" onClick={handleUpdateEmployee}>🧾 Cập nhật thông tin</button>
+        <button className="add-btn" onClick={handleAddEmployee}>THÊM NHÂN VIÊN</button>
+        <button className="update-btn" onClick={handleUpdateEmployee}>Cập nhật thông tin</button>
         <button
-  className="delete-all-btn"
-  onClick={() => setShowDeleteModal(true)}
->
-  ❌ Xóa tài khoản vĩnh viễn
-</button>
-
+          className="delete-all-btn"
+          onClick={() => setShowDeleteModal(true)}
+        >
+          Xóa tài khoản vĩnh viễn
+        </button>
       </div>
 
       {/* 📊 Thống kê tổng quan */}
