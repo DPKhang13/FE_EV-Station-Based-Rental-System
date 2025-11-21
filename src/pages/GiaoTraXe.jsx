@@ -47,12 +47,12 @@ import VinFast7_Silver from "../assets/Vin7/silver.jpg";
 import DefaultCar from "../assets/4standard.jpg";
 
 // Popups
-import PopupDatTruoc from "../components/staff/PopupDatTruoc";
-import PopupNhanXe from "../components/staff/PopUpNhanXe";
-import PopupXacThuc from "../components/staff/PopUpXacThuc";
-import PopupDaXacThuc from "../components/staff/PopUpDaXacThuc";
-import PopupNhanChecking from "../components/staff/PopupNhanChecking";
-import PopupXemChiTietXe from "../components/staff/PopupXemChiTietXe";
+import PopupDatTruoc from "../components/popup/PopupDatTruoc";
+import PopupNhanXe from "../components/popup/PopUpNhanXe";
+import PopupXacThuc from "../components/popup/PopUpXacThuc";
+import PopupDaXacThuc from "../components/popup/PopUpDaXacThuc";
+import PopupNhanChecking from "../components/popup/PopupNhanChecking";
+import PopupXemChiTietXe from "../components/popup/PopupXemChiTietXe";
 
 const GiaoTraXe = () => {
   const { user } = useContext(AuthContext);

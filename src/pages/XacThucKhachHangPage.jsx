@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { orderService, authService } from "../services";
 import "./XacThucKhachHang.css";
-import PopupXacThucHoSoCaNhan from "../components/staff/PopupXacThucHoSoCaNhan";
+import PopupXacThucHoSoCaNhan from "../components/popup/PopupXacThucHoSoCaNhan";
 import { AuthContext } from "../context/AuthContext";
 
 // 🕒 Định dạng
