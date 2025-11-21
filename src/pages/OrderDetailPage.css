@@ -136,6 +136,11 @@
 .status-tag.failed,
 .status-tag.cancelled{ background: var(--danger); }
 .status-tag.processing{ background: var(--processing); }
+.status-tag.type-tag{ 
+  background: #e0e7ff; 
+  color: #3730a3; 
+  min-width: auto;
+}
 
 /* Detail grid */
 .detail-grid{

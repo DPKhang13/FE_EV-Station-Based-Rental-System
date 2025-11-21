@@ -144,6 +144,9 @@ export const apiFetch = async (endpoint, options = {}) => {
         console.log(`🚀 [API] ${options.method || 'GET'} ${url}`);
         console.log(`🍪 [API] Sending with credentials (cookies)`);
         console.log(`🔑 [API] Headers:`, config.headers);
+        if (options.body) {
+            console.log(`📦 [API] Request body:`, options.body);
+        }
 
         let response = await fetch(url, config);
 
@@ -280,10 +283,14 @@ export const api = {
         body: JSON.stringify(body)
     }),
 
-    put: (endpoint, body) => apiFetch(endpoint, {
-        method: 'PUT',
-        body: JSON.stringify(body)
-    }),
+    put: (endpoint, body) => {
+        const bodyData = body ? JSON.stringify(body) : undefined;
+        console.log(`📤 [API] PUT ${endpoint}`, body ? { body } : 'No body');
+        return apiFetch(endpoint, {
+            method: 'PUT',
+            body: bodyData
+        });
+    },
 
     delete: (endpoint) => apiFetch(endpoint, { method: 'DELETE' })
 };
