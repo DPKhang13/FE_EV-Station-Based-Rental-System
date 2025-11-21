@@ -68,7 +68,12 @@ export default function SideBarAdmin() {
             <span>Thống kê tổng quan</span>
           </NavLink>
 
-          
+          {/* --- Nhóm e. Bảng giá --- */}
+          <p className="sidebar__section-title">💰 Bảng giá</p>
+          <NavLink to="/admin/banggia" className="sidebar__btn">
+            <FaClipboardList />
+            <span>Bảng giá</span>
+          </NavLink>
 
         </nav>
       </div>

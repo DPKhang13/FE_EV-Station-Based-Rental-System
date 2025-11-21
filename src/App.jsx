@@ -36,6 +36,7 @@ import PaymentFailedPage from './pages/PaymentFailedPage.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import FeedbackPage from './pages/FeedbackPage.jsx';
 import BangGiaPage from './pages/BangGiaPage.jsx';
+import AdminBangGiaPage from './pages/AdminBangGiaPage.jsx';
 import DichVuPage from './pages/DichVuPage.jsx';
 import OrderDetailPage from './pages/OrderDetailPage.jsx'; 
 import  ForgotPage from './pages/ForgotPage.jsx'
@@ -197,6 +198,7 @@ function App() {
               <Route path="chitiet/:id" element={<ChiTietKhachHang/>}/>
               <Route path="lichsu-thue/:userId" element={<LichSuThue/>}/>
               <Route path="order-detail/:orderId" element={<ChiTietDonTrongAdmin/>}/>
+              <Route path="banggia" element={<AdminBangGiaPage/>}/>
             </Route>
           </Routes >
         </LayoutWrapper >
