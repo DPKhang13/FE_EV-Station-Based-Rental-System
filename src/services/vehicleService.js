@@ -95,6 +95,7 @@ export const transformVehicleData = (apiVehicle) => {
         vehicle_name: apiVehicle.vehicleName,
         brand: apiVehicle.brand,
         name: apiVehicle.vehicleName,
+        carmodel: apiVehicle.carmodel || apiVehicle.carModel || apiVehicle.car_model || null, // ✅ Thêm carmodel
         image: is7Seater ? image7Seater : image4Seater,
         type: vehicleType,
         seat_count: seatCount,

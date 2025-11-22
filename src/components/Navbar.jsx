@@ -1,5 +1,5 @@
 
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import './Navbar.css';
 import logo from '../assets/logo2.png';
@@ -11,16 +11,73 @@ const Navbar = () => {
     const [, setActiveCars] = useState('');
     const [showDropdown, setShowDropdown] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
     const { user, logout } = useContext(AuthContext);
+    
+    // ✅ Tự động set activeNav dựa trên URL hiện tại
     useEffect(() => {
-    if (user) {
-        if (user.role === "staff") {
-            navigate("/staff");
-        } else if (user.role === "admin") {
-            navigate("/admin");
+        const path = location.pathname;
+        const search = location.search;
+        
+        if (path === '/my-bookings') {
+            setActiveNav('booking');
+            setActiveCars('');
+        } else if (path.startsWith('/order-detail-cus/')) {
+            // Trang chi tiết đơn hàng của customer
+            setActiveNav('booking');
+            setActiveCars('');
+        } else if (path === '/location-select') {
+            setActiveNav('listcar');
+            setActiveCars('');
+        } else if (path === '/about') {
+            setActiveNav('about');
+            setActiveCars('');
+        } else if (path === '/' && search.includes('scroll=contact')) {
+            setActiveNav('contact');
+            setActiveCars('');
+        } else if (path === '/' && (search.includes('scroll=4-seater-cars') || search.includes('scroll=7-seater-cars'))) {
+            setActiveNav('offers');
+            if (search.includes('scroll=4-seater-cars')) {
+                setActiveCars('4');
+            } else if (search.includes('scroll=7-seater-cars')) {
+                setActiveCars('7');
+            }
+        } else if (path === '/') {
+            setActiveNav('home');
+            setActiveCars('');
+        } else {
+            // Reset về home nếu không match
+            setActiveNav('home');
+            setActiveCars('');
         }
-    }
-}, [user, navigate]);
+    }, [location.pathname, location.search]);
+    
+    // ✅ Chỉ redirect staff/admin về trang của họ khi ở trang chủ hoặc các trang không quan trọng
+    useEffect(() => {
+        if (user) {
+            const path = location.pathname;
+            // Không redirect nếu đang ở các trang quan trọng
+            const protectedPaths = [
+                '/order-detail-cus',
+                '/my-bookings',
+                '/confirm-booking',
+                '/booking-4seater',
+                '/booking-7seater',
+                '/location-select',
+                '/profile'
+            ];
+            
+            const isProtectedPath = protectedPaths.some(protectedPath => path.startsWith(protectedPath));
+            
+            if (!isProtectedPath) {
+                if (user.role === "staff") {
+                    navigate("/staff");
+                } else if (user.role === "admin") {
+                    navigate("/admin");
+                }
+            }
+        }
+    }, [user, navigate, location.pathname]);
 
 
     return (

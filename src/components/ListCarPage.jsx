@@ -128,41 +128,7 @@ const ListCarPage = () => {
         window.scrollTo({ top: 0, behavior: 'instant' });
     }, []);
 
-    // Load tên chi nhánh từ API
-    useEffect(() => {
-        const loadBranchName = async () => {
-            if (!selectedBranch) {
-                setBranchName('Tất cả chi nhánh');
-                setLoadingBranch(false);
-                return;
-            }
-
-            try {
-                setLoadingBranch(true);
-                const stations = await rentalStationService.getAll();
-                const station = stations.find(s =>
-                    String(s.id || '') === String(selectedBranch) ||
-                    String(s.stationid || '') === String(selectedBranch)
-                );
-
-                if (station) {
-                    setBranchName(station.name || `Chi nhánh ${selectedBranch}`);
-                } else {
-                    setBranchName(`Chi nhánh ${selectedBranch}`);
-                }
-                console.log('✅ Loaded branch name:', station?.name);
-            } catch (error) {
-                console.error(' Error loading branch name:', error);
-                setBranchName(`Chi nhánh ${selectedBranch}`);
-            } finally {
-                setLoadingBranch(false);
-            }
-        };
-
-        loadBranchName();
-    }, [selectedBranch]);
-
-    // Load vehicles từ API theo stationId (chỉ khi không có search)
+    // ✅ Load vehicles trước (ưu tiên) - branch name có thể load sau hoặc bỏ qua
     useEffect(() => {
         const loadVehicles = async () => {
             if (!selectedBranch) {
@@ -179,13 +145,28 @@ const ListCarPage = () => {
             try {
                 setLoadingVehicles(true);
                 const response = await fetch(`http://localhost:8080/api/vehicles/station/${selectedBranch}`);
-                if (!response.ok) throw new Error('Failed to fetch vehicles');
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`❌ API Error [${response.status}]:`, {
+                        status: response.status,
+                        statusText: response.statusText,
+                        url: response.url,
+                        error: errorText
+                    });
+                    throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                }
+                
                 const data = await response.json();
                 const vehicleList = Array.isArray(data) ? data : (data.data || []);
                 setVehicles(vehicleList);
                 console.log(`✅ Loaded ${vehicleList.length} vehicles for station ${selectedBranch}`);
             } catch (error) {
-                console.error(`❌ Error loading vehicles:`, error);
+                console.error(`❌ Error loading vehicles for station ${selectedBranch}:`, error);
+                // ⭐⭐ Hiển thị thông báo lỗi chi tiết hơn ⭐⭐
+                if (error.message.includes('500')) {
+                    console.error('⚠️ Backend server error (500). Please check backend logs.');
+                }
                 setVehicles([]);
             } finally {
                 setLoadingVehicles(false);
@@ -193,6 +174,41 @@ const ListCarPage = () => {
         };
 
         loadVehicles();
+    }, [selectedBranch, searching]);
+
+    // ✅ Load branch name sau (không ảnh hưởng đến hiển thị xe) - lazy load
+    useEffect(() => {
+        const loadBranchName = async () => {
+            if (!selectedBranch) {
+                setBranchName('Tất cả chi nhánh');
+                setLoadingBranch(false);
+                return;
+            }
+
+            // ✅ Set tên mặc định ngay, load chi tiết sau
+            setBranchName(`Chi nhánh ${selectedBranch}`);
+            setLoadingBranch(false);
+
+            // ✅ Load chi tiết tên station sau (không block UI)
+            try {
+                const stations = await rentalStationService.getAll();
+                const station = stations.find(s =>
+                    String(s.id || '') === String(selectedBranch) ||
+                    String(s.stationid || '') === String(selectedBranch)
+                );
+
+                if (station?.name) {
+                    setBranchName(station.name);
+                }
+            } catch (error) {
+                console.error('❌ Error loading branch name:', error);
+                // Giữ tên mặc định nếu lỗi
+            }
+        };
+
+        // ✅ Delay nhỏ để ưu tiên load vehicles trước
+        const timer = setTimeout(loadBranchName, 300);
+        return () => clearTimeout(timer);
     }, [selectedBranch]);
 
     // Format datetime cho API (ISO 8601: yyyy-MM-ddTHH:mm:ss)
@@ -341,6 +357,7 @@ const ListCarPage = () => {
                 gradeFilter={gradeFilter}
                 seatCount={seatCount}
                 loading={loadingVehicles}
+                branchName={branchName}
             />
         </div>
     );

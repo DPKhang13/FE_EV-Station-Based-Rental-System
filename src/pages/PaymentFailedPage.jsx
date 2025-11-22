@@ -51,7 +51,7 @@ const PaymentFailedPage = () => {
                 </div>
 
                 {/* Failed Message */}
-                <h1 className="failed-title">❌ Thanh toán thất bại</h1>
+                <h1 className="failed-title">Thanh toán thất bại</h1>
                 <p className="failed-subtitle">
                     Rất tiếc, giao dịch của bạn không thành công
                 </p>
@@ -59,7 +59,11 @@ const PaymentFailedPage = () => {
                 {/* Error Details */}
                 <div className="error-details">
                     <div className="error-message">
-                        <span className="error-icon">⚠️</span>
+                        <svg className="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                            <path d="M12 9v4" />
+                            <path d="M12 17h.01" />
+                        </svg>
                         <p>{getErrorMessage(responseCode || error)}</p>
                     </div>
 
@@ -91,12 +95,12 @@ const PaymentFailedPage = () => {
 
                 {/* Next Steps */}
                 <div className="next-steps">
-                    <h3>💡 Bạn có thể:</h3>
+                    <h3>Bạn có thể:</h3>
                     <ul>
-                        <li>✅ Thử lại thanh toán với phương thức khác</li>
-                        <li>✅ Kiểm tra số dư tài khoản</li>
-                        <li>✅ Liên hệ ngân hàng nếu vấn đề vẫn tiếp diễn</li>
-                        <li>✅ Thanh toán bằng tiền mặt tại điểm thuê</li>
+                        <li>Thử lại thanh toán với phương thức khác</li>
+                        <li>Kiểm tra số dư tài khoản</li>
+                        <li>Liên hệ ngân hàng nếu vấn đề vẫn tiếp diễn</li>
+                        <li>Thanh toán bằng tiền mặt tại điểm thuê</li>
                     </ul>
                 </div>
 
@@ -106,7 +110,10 @@ const PaymentFailedPage = () => {
                         onClick={() => navigate('/my-bookings')}
                         className="btn-primary"
                     >
-                        📋 Về trang đơn hàng
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z" />
+                        </svg>
+                        <span>Về trang đơn hàng</span>
                     </button>
                     {orderId && (
                         <button
@@ -118,7 +125,11 @@ const PaymentFailedPage = () => {
                             }}
                             className="btn-detail"
                         >
-                            🔍 Xem chi tiết đơn hàng
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="11" cy="11" r="8" />
+                                <path d="m21 21-4.35-4.35" />
+                            </svg>
+                            <span>Xem chi tiết đơn hàng</span>
                         </button>
                     )}
                     {orderId && (
@@ -126,14 +137,24 @@ const PaymentFailedPage = () => {
                             onClick={() => navigate(`/payment/${orderId}`)}
                             className="btn-retry"
                         >
-                            🔄 Thử lại thanh toán
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                                <path d="M21 3v5h-5" />
+                                <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                                <path d="M3 21v-5h5" />
+                            </svg>
+                            <span>Thử lại thanh toán</span>
                         </button>
                     )}
                     <button
                         onClick={() => navigate('/')}
                         className="btn-secondary"
                     >
-                        🏠 Về trang chủ
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                            <polyline points="9 22 9 12 15 12 15 22" />
+                        </svg>
+                        <span>Về trang chủ</span>
                     </button>
                 </div>
 

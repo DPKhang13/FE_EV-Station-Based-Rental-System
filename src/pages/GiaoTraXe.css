@@ -38,6 +38,17 @@
   align-items: center;
   gap: 0;
   margin-bottom: 40px;
+<<<<<<< HEAD
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.search-input {
+  width: 100%;
+  padding: 16px 24px;
+  border: 2px solid #E0E0E0;
+=======
   margin-right: 0;
 }
 
@@ -45,16 +56,21 @@
   padding: 8px 12px;
   border: 2px solid #000000;
   border-right: none;
+>>>>>>> bae100bf06495a1bb91fdb32b56c299523b195e0
   border-radius: 0;
   font-size: 13px;
   width: 280px;
   max-width: 100%;
   background: #FFFFFF;
+<<<<<<< HEAD
+  box-shadow: 0 0 0 1px #E0E0E0;
+=======
   color: #000000;
   letter-spacing: 0.5px;
   transition: all 0.3s;
   box-sizing: border-box;
   height: 36px;
+>>>>>>> bae100bf06495a1bb91fdb32b56c299523b195e0
 }
 
 .search-input:focus {

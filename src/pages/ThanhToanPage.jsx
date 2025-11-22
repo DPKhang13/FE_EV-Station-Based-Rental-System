@@ -16,31 +16,59 @@ const translateStatus = (status = "") => {
     SUCCESS: "Thành công",
     FAILED: "Thất bại",
     PENDING: "Đang xử lý",
+    FULL_PAYMENT: "Đã thanh toán toàn bộ",
+    DEPOSIT: "Đã đặt cọc",
+    PICKUP: "Đã trả phần còn lại",  
+    CANCELLED: "Đã hủy",
+    REFUND: "Đã hoàn tiền",
+    SERVICE: "Đã thanh toán dịch vụ",
+    SERVICE_SERVICE: "Đã thanh toán dịch vụ phát sinh",
+    FULL_PAYMENT_PENDING: "Đã thanh toán toàn bộ bằng tiền mặt",
+    DEPOSIT_PENDING: "Đã đặt cọc bằng tiền mặt",
+    PICKUP_PENDING: "Đã trả phần còn lại bằng tiền mặt",
+    
+   
   };
   return map[status.toUpperCase()] || "Không xác định";
 };
 
 // 🔤 Dịch loại giao dịch sang tiếng Việt
 const translateType = (type = "") => {
+  const typeUpper = type.toUpperCase();
+  
+  // Xử lý các loại _PENDING trước
+  if (typeUpper.includes("_PENDING")) {
+    const baseType = typeUpper.replace("_PENDING", "");
+    const pendingMap = {
+      "FULL_PAYMENT": "Thanh toán toàn bộ (tiền mặt)",
+      "DEPOSIT": "Đặt cọc (tiền mặt)",
+      "PICKUP": "Trả phần còn lại (tiền mặt)",
+    };
+    return pendingMap[baseType] || `${baseType} (tiền mặt)`;
+  }
+  
   const map = {
     DEPOSITED: "Đã cọc tiền",
     FINAL: "Đã thanh toán hết",
     FULL_PAYMENT: "Đã thanh toán toàn bộ",
-    DEPOSIT: "Đã cọc tiền",
+    DEPOSIT: "Đã đặt cọc",
     WITHDRAW: "Rút tiền",
     RENTAL_PAYMENT: "Thanh toán thuê xe",
     REFUND: "Hoàn tiền",
     TOP_UP: "Nạp tài khoản",
-    PICKUP: "Tiền còn lại sau cọc",
+    PICKUP: "Trả phần còn lại",
+    SERVICE: "Dịch vụ",
+    SERVICE_SERVICE: "Dịch vụ phát sinh",
   };
-  return map[type.toUpperCase()] || "Khác";
+  return map[typeUpper] || type || "Khác";
 };
 
 const ThanhToanPage = () => {
   const [transactions, setTransactions] = useState([]);
+  const [allTransactions, setAllTransactions] = useState([]); // Lưu tất cả transactions để filter
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [phone, setPhone] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // 🚀 Lấy toàn bộ giao dịch khi mở trang
   useEffect(() => {
@@ -53,35 +81,63 @@ const ThanhToanPage = () => {
       setLoading(true);
       const res = await transactionService.getAllTransactions();
       const data = Array.isArray(res?.data) ? res.data : res;
-      setTransactions(data || []);
+      const transactionsList = data || [];
+      setAllTransactions(transactionsList); // Lưu tất cả để filter
+      setTransactions(transactionsList); // Hiển thị tất cả ban đầu
     } catch (err) {
       console.error("❌ Lỗi tải giao dịch:", err);
+      setAllTransactions([]);
       setTransactions([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // 🔍 Tra cứu theo số điện thoại
-  const handleSearch = async () => {
-    if (!phone.trim()) {
-      fetchTransactions();
-      return;
+  // 🔍 Tìm kiếm theo nhiều tiêu chí (tên, số điện thoại, tên trạm) - partial match
+  const handleSearch = () => {
+    const query = searchQuery.trim().toLowerCase();
     
+    if (!query) {
+      // Nếu không có query, hiển thị tất cả
+      setTransactions(allTransactions);
+      setError("");
+      return;
     }
+
     setError("");
-    try {
-      setLoading(true);
-      const res = await transactionService.searchByUserId(phone);
-      setTransactions(Array.isArray(res) ? res : []);
-    } catch (err) {
-      console.error("❌ Lỗi tìm kiếm:", err);
+    
+    // ✅ Filter theo nhiều tiêu chí với partial match
+    const filtered = allTransactions.filter((t) => {
+      const customerName = (t.customerName || "").toLowerCase();
+      const customerPhone = (t.customerPhone || "").toLowerCase();
+      const stationName = (t.stationName || "").toLowerCase();
+      
+      // Tìm kiếm partial match trong tên, số điện thoại, hoặc tên trạm
+      return (
+        customerName.includes(query) ||
+        customerPhone.includes(query) ||
+        stationName.includes(query)
+      );
+    });
+
+    setTransactions(filtered);
+    
+    if (filtered.length === 0) {
       setError("Không tìm thấy dữ liệu giao dịch!");
-      setTransactions([]);
-    } finally {
-      setLoading(false);
     }
   };
+
+  // ✅ Tự động tìm kiếm khi nhập (debounce)
+  useEffect(() => {
+    if (!allTransactions.length) return; // Chưa load xong thì không search
+    
+    const timer = setTimeout(() => {
+      handleSearch();
+    }, 300); // Đợi 300ms sau khi người dùng ngừng gõ
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, allTransactions]);
 
   return (
     <div className="page-container">
@@ -91,9 +147,14 @@ const ThanhToanPage = () => {
         <div className="search-form">
           <input
             type="text"
-            placeholder="Nhập số điện thoại khách hàng"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Nhập tên, số điện thoại hoặc tên trạm..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === "Enter") {
+                handleSearch();
+              }
+            }}
           />
           <button onClick={handleSearch} disabled={loading}>
             {loading ? "Đang tìm..." : "Tìm kiếm"}
