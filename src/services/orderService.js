@@ -67,6 +67,38 @@ export const orderService = {
     },
 
     /**
+     * Hủy đơn hàng
+     * PUT /api/order/cancel/{orderId}
+     * @param {string} orderId - ID của đơn hàng
+     * @param {string} cancellationReason - Lý do hủy đơn hàng (tùy chọn)
+     */
+    cancel: async (orderId, cancellationReason) => {
+        // Lý do hủy là tùy chọn, có thể để trống
+        const reason = cancellationReason && typeof cancellationReason === 'string' 
+            ? cancellationReason.trim() 
+            : "";
+
+        const body = {
+            cancellationReason: reason
+        };
+        
+        console.log('🚀 [orderService.cancel] Request:', {
+            orderId,
+            body,
+            endpoint: `/order/cancel/${orderId}`
+        });
+        
+        try {
+            const result = await api.put(`/order/cancel/${orderId}`, body);
+            console.log('✅ [orderService.cancel] Success:', result);
+            return result;
+        } catch (error) {
+            console.error('❌ [orderService.cancel] Error:', error);
+            throw error;
+        }
+    },
+
+    /**
      * Pickup - Nhận xe
      * POST /api/order/{orderId}/pickup
      */

@@ -212,11 +212,10 @@ const formatStatus = (status) => {
             ["RENTAL", "Rented", "ON_RENT", "IN_USE"].includes(o.status)
         );
         if (rentalOrder) {
-          // ✅ Điều hướng tới trang xác thực khách hàng và tự động mở chi tiết
+          // ✅ Điều hướng tới trang xác thực khách hàng và tự động mở chi tiết (chỉ truyền orderId)
           navigate("/staff/xacthuc", {
             state: {
               autoOpenOrderDetail: rentalOrder.orderId,
-              userId: rentalOrder.userId,
               fromGiaoTraXe: true
             }
           });
@@ -231,20 +230,6 @@ const formatStatus = (status) => {
         setPopupType("daXacThuc");
         break;
 
-      case "Đang kiểm tra": {
-        // ✅ Fetch orders nếu chưa có
-        const currentOrders = await fetchOrdersIfNeeded();
-        const relatedOrder = currentOrders.find(
-          (o) => Number(o.vehicleId) === Number(xe.id)
-        );
-        if (!relatedOrder) {
-          alert("⚠️ Không tìm thấy đơn hàng liên quan đến xe này!");
-          return;
-        }
-        setSelectedVehicle({ ...xe, order: relatedOrder });
-        setPopupType("nhanChecking");
-        break;
-      }
 
       default:
         break;
@@ -255,7 +240,7 @@ const formatStatus = (status) => {
    * 🔍 Lọc xe theo tab + tìm kiếm
    * ================================ */
   const stationId = user?.stationId || 1;
-  const stationName = user?.stationName || vehicleList[0]?.tram || `Trạm ${stationId}`;
+  const stationName = user?.stationName || vehicleList[0]?.tram || `Trạm...`;
   
   const filteredVehicles = vehicleList.filter((xe) => {
     const matchSearch = xe.bienSo
@@ -360,11 +345,18 @@ const getCarImage = (brand, color, seatCount) => {
       <div className="search-bar">
         <input
           type="text"
-          placeholder="🔍 Tìm theo biển số..."
+          placeholder="Tìm theo biển số..."
           className="search-input"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && setSearchTerm(e.target.value)}
         />
+        <button
+          className="btn-search"
+          onClick={() => setSearchTerm(searchTerm)}
+        >
+          TÌM KIẾM
+        </button>
       </div>
 
       {/* Tabs */}
@@ -415,39 +407,30 @@ const getCarImage = (brand, color, seatCount) => {
               <p><strong>Trạng thái:</strong> <span className={`xe-status status-${getStatusColor(xe.trangThai)}`}>{xe.trangThai}</span></p>
               <p><strong>Màu sắc:</strong> {xe.mau}</p>
 
-              {/* Nút hành động */}
-              {xe.trangThai === "Đang cho thuê" && (
-                <button
-                  className="btn-action"
-                  onClick={() => handleVehicleAction(xe)}
-                  style={{ marginTop: '10px' }}
-                >
-                  Nhận xe trả
-                </button>
-              )}
+              {/* Wrapper cho các nút để căn chỉnh đều */}
+              <div className="btn-wrapper">
+                {/* Nút hành động */}
+                {xe.trangThai === "Đang cho thuê" && (
+                  <button
+                    className="btn-action"
+                    onClick={() => handleVehicleAction(xe)}
+                  >
+                    Nhận xe trả
+                  </button>
+                )}
 
-              {xe.trangThai === "Đang kiểm tra" && (
+                {/* Nút Xem chi tiết - Hiển thị cho TẤT CẢ các xe */}
                 <button
-                  className="btn-action checking"
-                  onClick={() => handleVehicleAction(xe)}
-                  style={{ marginTop: '10px' }}
+                  className="btn-action-compact btn-secondary"
+                  onClick={() => {
+                    // Mở popup xem chi tiết xe với API
+                    setSelectedVehicle(xe);
+                    setPopupType("xemChiTiet");
+                  }}
                 >
-                  Nhận Checking
+                  XEM CHI TIẾT
                 </button>
-              )}
-
-              {/* Nút Xem chi tiết - Hiển thị cho TẤT CẢ các xe */}
-              <button
-                className="btn-action-compact btn-secondary"
-                onClick={() => {
-                  // Mở popup xem chi tiết xe với API
-                  setSelectedVehicle(xe);
-                  setPopupType("xemChiTiet");
-                }}
-                style={{ marginTop: '10px', width: '100%' }}
-              >
-                Xem chi tiết
-              </button>
+              </div>
             </div>
           ))}
         </div>
@@ -468,13 +451,6 @@ const getCarImage = (brand, color, seatCount) => {
         <PopupDaXacThuc
           xe={selectedVehicle}
           onClose={() => setPopupType(null)}
-        />
-      )}
-      {popupType === "nhanChecking" && (
-        <PopupNhanChecking
-          xe={selectedVehicle}
-          onClose={() => setPopupType(null)}
-          onReload={fetchData} // ✅ callback reload
         />
       )}
       {popupType === "xemChiTiet" && selectedVehicle && (

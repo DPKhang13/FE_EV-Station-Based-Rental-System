@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { orderService, vehicleService, notificationService } from '../services';
+import { orderService, notificationService } from '../services';
 import './MyBookingsPage.css';
 
 const MyBookingsPage = () => {
@@ -96,14 +96,6 @@ const MyBookingsPage = () => {
     }
 
     let finalOrders = [...orders];
-
-    try {
-      console.log("🚗 [MyBookings] Fetching vehicle details...");
-      
-      
-    } catch (vehicleErr) {
-      console.warn("⚠️ Vehicle API failed:", vehicleErr);
-    }
 
     // Sort theo thời gian tạo
     finalOrders.sort(
@@ -291,16 +283,24 @@ const MyBookingsPage = () => {
     };
 
     const confirmCancelOrder = async () => {
-        if (!cancelReason.trim()) {
-            alert('Vui lòng nhập lý do hủy đơn!');
+        if (!cancelOrderId) {
+            alert('Không tìm thấy mã đơn hàng!');
             return;
         }
 
         try {
-            console.log(' Cancelling order:', cancelOrderId);
+            // Giới hạn độ dài lý do hủy để tránh lỗi backend
+            let trimmedReason = cancelReason.trim() || "";
+            if (trimmedReason.length > 500) {
+                trimmedReason = trimmedReason.substring(0, 500);
+                console.warn('⚠️ [MyBookings] Cancellation reason truncated to 500 characters');
+            }
+            console.log('🚀 [MyBookings] Cancelling order:', cancelOrderId);
+            console.log('📝 [MyBookings] Cancellation reason:', trimmedReason || '(Không có)');
 
-            // 1. Gọi API xóa đơn hàng
-            await orderService.delete(cancelOrderId);
+            // 1. Gọi API hủy đơn hàng (có thể không có lý do)
+            const result = await orderService.cancel(cancelOrderId, trimmedReason);
+            console.log('✅ [MyBookings] Cancel result:', result);
 
             // 2. Lấy userId từ localStorage
             const userStr = localStorage.getItem('user');
@@ -334,8 +334,11 @@ const MyBookingsPage = () => {
             setCancelReason('');
             loadMyBookings();
         } catch (err) {
-            console.error('Error cancelling order:', err);
-            alert('Không thể hủy đơn hàng: ' + (err.message || 'Unknown error'));
+            console.error('❌ Error cancelling order:', err);
+            const errorMessage = err?.response?.data?.message || 
+                                err?.message || 
+                                'Không thể hủy đơn hàng. Vui lòng thử lại sau.';
+            alert(`Không thể hủy đơn hàng:\n${errorMessage}`);
         }
     };
 
@@ -387,19 +390,21 @@ const MyBookingsPage = () => {
 
       {/* Search Box */}
       <div className="search-container">
-        <div className="search-box">
+        <div className="search-box-wrapper">
           <input
             type="text"
             className="search-input"
             placeholder="Tìm kiếm theo mã đơn hàng..."
             value={searchOrderId}
             onChange={(e) => setSearchOrderId(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && setSearchOrderId(searchOrderId)}
           />
-          {searchOrderId && (
-            <button className="clear-search" onClick={() => setSearchOrderId("")}>
-              ✕
-            </button>
-          )}
+          <button
+            className="btn-search"
+            onClick={() => setSearchOrderId(searchOrderId)}
+          >
+            TÌM KIẾM
+          </button>
         </div>
       </div>
 
@@ -480,7 +485,7 @@ const MyBookingsPage = () => {
                 <div className="detail-box">
                   <div className="detail-label">Hãng Xe</div>
                   <div className="detail-value">
-                    {booking.vehicleName || "Đang cập nhật"}
+                    {booking.brand || "Đang cập nhật"}
                   </div>
                 </div>
 
@@ -535,16 +540,14 @@ const MyBookingsPage = () => {
 
               {/* Footer */}
               <div className="booking-footer">
-                <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                  <button
-                    onClick={() => handleViewDetails(booking)}
-                    className="view-details-btn"
-                  >
-                    Xem chi tiết
-                  </button>
-
-                  {/* Hiển thị trạng thái phù hợp */}
-                  {["PENDING", "PENDING_DEPOSIT"].includes(booking.status) && (
+                {["DEPOSITED", "CONFIRMED", "PAID"].includes(booking.status) ? (
+                  <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                    <button
+                      onClick={() => handleViewDetails(booking)}
+                      className="view-details-btn"
+                    >
+                      Xem chi tiết
+                    </button>
                     <button
                       onClick={() => handleCancelOrder(booking.orderId)}
                       className="btn-cancel"
@@ -561,9 +564,6 @@ const MyBookingsPage = () => {
                     >
                       Hủy đơn hàng
                     </button>
-                  )}
-
-                  {["DEPOSITED", "CONFIRMED", "PAID"].includes(booking.status) && (
                     <span
                       style={{
                         color: "#10b981",
@@ -574,48 +574,166 @@ const MyBookingsPage = () => {
                         fontSize: "14px",
                       }}
                     >
-                      Đã đặt cọc - Chờ nhận xe
+                      Chờ nhận xe
                     </span>
-                  )}
-
-                  {booking.status === "COMPLETED" && (
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
                     <button
-                      onClick={() => handleFeedback(booking.orderId)}
-                      style={{
-                        background:
-                          "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
-                        color: "white",
-                        border: "none",
-                        padding: "10px 20px",
-                        borderRadius: "8px",
-                        fontSize: "14px",
-                        fontWeight: "600",
-                        cursor: "pointer",
-                      }}
+                      onClick={() => handleViewDetails(booking)}
+                      className="view-details-btn"
                     >
-                      Đánh giá
+                      Xem chi tiết
                     </button>
-                  )}
-                </div>
 
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "flex-end",
-                    gap: "4px",
-                  }}
-                >
-                  {booking.createdAt && (
-                    <span className="created-time">
-                      Tạo lúc:{" "}
-                      {new Date(booking.createdAt).toLocaleString("vi-VN")}
-                    </span>
-                  )}
-                </div>
+                    {/* Hiển thị trạng thái phù hợp */}
+                    {["PENDING", "PENDING_DEPOSIT", "PENDING_FULL_PAYMENT"].includes(booking.status) && (
+                      <button
+                        onClick={() => handleCancelOrder(booking.orderId)}
+                        className="btn-cancel"
+                        style={{
+                          background: "#ef4444",
+                          color: "white",
+                          border: "none",
+                          padding: "10px 20px",
+                          borderRadius: "8px",
+                          fontSize: "14px",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Hủy đơn hàng
+                      </button>
+                    )}
+
+                    {booking.status === "COMPLETED" && (
+                      <button
+                        onClick={() => handleFeedback(booking.orderId)}
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
+                          color: "white",
+                          border: "none",
+                          padding: "10px 20px",
+                          borderRadius: "8px",
+                          fontSize: "14px",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Đánh giá
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-end",
+                  gap: "4px",
+                }}
+              >
+                {booking.createdAt && (
+                  <span className="created-time">
+                    Tạo lúc:{" "}
+                    {new Date(booking.createdAt).toLocaleString("vi-VN")}
+                  </span>
+                )}
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Modal hủy đơn hàng */}
+      {showCancelModal && (
+        <div 
+          className="modal-overlay" 
+          onClick={() => setShowCancelModal(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+          }}
+        >
+          <div 
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'white',
+              padding: '24px',
+              borderRadius: '8px',
+              maxWidth: '500px',
+              width: '90%',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+            }}
+          >
+            <h2 style={{ marginTop: 0, marginBottom: '16px' }}>Hủy đơn hàng</h2>
+            <p style={{ marginBottom: '16px', color: '#666' }}>
+              Lý do hủy đơn hàng (tùy chọn):
+            </p>
+            <textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="Nhập lý do hủy đơn hàng..."
+              style={{
+                width: '100%',
+                minHeight: '100px',
+                padding: '12px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                fontSize: '14px',
+                marginBottom: '20px',
+                fontFamily: 'inherit'
+              }}
+            />
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowCancelModal(false);
+                  setCancelReason('');
+                  setCancelOrderId(null);
+                }}
+                style={{
+                  padding: '10px 20px',
+                  background: '#f3f4f6',
+                  color: '#333',
+                  border: '1px solid #ddd',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                Hủy
+              </button>
+              <button
+                onClick={confirmCancelOrder}
+                style={{
+                  padding: '10px 20px',
+                  background: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                Xác nhận hủy
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

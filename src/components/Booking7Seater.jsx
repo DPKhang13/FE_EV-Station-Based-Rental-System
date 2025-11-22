@@ -57,6 +57,7 @@ const Booking7Seater = () => {
     endTime: "",
     couponCode: "",
   });
+  const [selectedCoupon, setSelectedCoupon] = useState(""); // Coupon đã chọn (chỉ 1)
 
   const getCarImageByColor = (color) => {
     if (!color) return car7SeatSilver;
@@ -273,6 +274,70 @@ const Booking7Seater = () => {
     return bookedSlots.some((slot) => date >= slot.start && date <= slot.end);
   }
 
+  // 🎫 Tính số ngày đặt xe
+  const calculateDays = (startTime, endTime) => {
+    if (!startTime || !endTime) return 0;
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  // 🎫 Lấy danh sách coupon có thể áp dụng dựa trên số ngày
+  const getAvailableCoupons = () => {
+    if (!formData.startTime || !formData.endTime) return [];
+    const days = calculateDays(formData.startTime, formData.endTime);
+    const available = [];
+    
+    if (days > 5) {
+      available.push({ code: "EV20", discount: 20, description: "Giảm 20% (đặt trên 5 ngày)" });
+      available.push({ code: "EV10", discount: 10, description: "Giảm 10% (đặt trên 3 ngày)" });
+    } else if (days > 3) {
+      available.push({ code: "EV10", discount: 10, description: "Giảm 10% (đặt trên 3 ngày)" });
+    }
+    
+    return available;
+  };
+
+  // 🎫 Xử lý chọn/bỏ chọn coupon (chỉ 1)
+  const handleCouponSelect = (couponCode) => {
+    if (selectedCoupon === couponCode) {
+      // Bỏ chọn nếu đã chọn rồi
+      setSelectedCoupon("");
+      setFormData(prev => ({
+        ...prev,
+        couponCode: ""
+      }));
+    } else {
+      // Chọn coupon mới
+      setSelectedCoupon(couponCode);
+      setFormData(prev => ({
+        ...prev,
+        couponCode: couponCode
+      }));
+    }
+  };
+
+  // 🎫 Reset selectedCoupon khi thời gian thay đổi
+  useEffect(() => {
+    if (formData.startTime && formData.endTime) {
+      const available = getAvailableCoupons();
+      const availableCodes = available.map(c => c.code);
+      // Xóa coupon nếu không còn phù hợp
+      if (selectedCoupon && !availableCodes.includes(selectedCoupon)) {
+        setSelectedCoupon("");
+        setFormData(prev => ({
+          ...prev,
+          couponCode: ""
+        }));
+      }
+    } else {
+      setSelectedCoupon("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.startTime, formData.endTime]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -330,6 +395,9 @@ const Booking7Seater = () => {
     const startTimeFormatted = formatDateTimeForBackend(formData.startTime, true);
     const endTimeFormatted = formatDateTimeForBackend(formData.endTime, false);
 
+    // Lấy coupon code đã chọn hoặc từ input thủ công
+    const finalCouponCode = selectedCoupon || (formData.couponCode?.trim() || null);
+
     const bookingData = {
       car: selectedCar,
       orderData: {
@@ -337,7 +405,7 @@ const Booking7Seater = () => {
           selectedCar.vehicleId ?? selectedCar.id ?? selectedCar.vehicle_id,
         startTime: startTimeFormatted,
         endTime: endTimeFormatted,
-        couponCode: formData.couponCode || null,
+        couponCode: finalCouponCode,
         holiday: false,
       },
       startTime: startTimeFormatted,
@@ -535,14 +603,94 @@ const Booking7Seater = () => {
             {/* ✅ Mã giảm giá */}
             <div className="form-group">
               <label htmlFor="couponCode">Mã Giảm Giá (Không bắt buộc)</label>
+              
+              {/* Input để nhập mã thủ công (nếu muốn) */}
               <input
                 type="text"
                 id="couponCode"
                 name="couponCode"
                 value={formData.couponCode}
                 onChange={handleChange}
-                placeholder="Nhập mã giảm giá nếu có"
+                placeholder="Nhập mã giảm giá hoặc chọn bên dưới"
+                style={{ marginBottom: '12px' }}
               />
+              
+              {/* Khung hiển thị danh sách coupon có thể chọn */}
+              {formData.startTime && formData.endTime && getAvailableCoupons().length > 0 && (
+                <div style={{
+                  border: '1px solid #ddd',
+                  borderRadius: '8px',
+                  padding: '12px',
+                  backgroundColor: '#f9f9f9',
+                  marginTop: '8px'
+                }}>
+                  <label style={{ 
+                    display: 'block', 
+                    fontWeight: '600', 
+                    marginBottom: '10px',
+                    color: '#333'
+                  }}>
+                    Mã giảm giá khuyến mãi (chọn 1):
+                  </label>
+                  {getAvailableCoupons().map((coupon) => (
+                    <div 
+                      key={coupon.code}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: '10px',
+                        marginBottom: '8px',
+                        backgroundColor: selectedCoupon === coupon.code ? '#e8f5e9' : '#fff',
+                        border: selectedCoupon === coupon.code ? '2px solid #4caf50' : '1px solid #ddd',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                      onClick={() => handleCouponSelect(coupon.code)}
+                    >
+                      <input
+                        type="radio"
+                        name="couponSelection"
+                        checked={selectedCoupon === coupon.code}
+                        onChange={() => handleCouponSelect(coupon.code)}
+                        style={{
+                          marginRight: '10px',
+                          width: '18px',
+                          height: '18px',
+                          cursor: 'pointer'
+                        }}
+                      />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ 
+                          fontWeight: '600', 
+                          color: '#1976d2',
+                          marginBottom: '4px'
+                        }}>
+                          {coupon.code}
+                        </div>
+                        <div style={{ 
+                          fontSize: '13px', 
+                          color: '#666'
+                        }}>
+                          {coupon.description}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {selectedCoupon && (
+                    <div style={{
+                      marginTop: '10px',
+                      padding: '8px',
+                      backgroundColor: '#e3f2fd',
+                      borderRadius: '4px',
+                      fontSize: '13px',
+                      color: '#1976d2'
+                    }}>
+                      Đã chọn: {selectedCoupon}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <button type="submit" className="submit-button">

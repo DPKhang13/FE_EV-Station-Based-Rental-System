@@ -89,16 +89,24 @@
     display: grid;
     grid-template-columns: 1.5fr 1fr;
     gap: 32px;
-    align-items: start;
+    align-items: stretch;
     padding: 20px;
     background: #FFFFFF;
     border-radius: 0;
     border: 2px solid #000000;
 }
 
+.vehicle-info-box {
+    margin-top: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
 .car-image {
     width: 100%;
-    height: 380px;
+    height: 100%;
+    min-height: 380px;
     object-fit: cover;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     border: 2px solid #000000;
@@ -123,6 +131,76 @@
     width: 120px;
     height: 2px;
     background: linear-gradient(90deg, #DC0000, transparent);
+}
+
+/* Khung thông tin xe đẹp giống Booking4Seater */
+.vehicle-info-box {
+    background: #FFFFFF;
+    border: 2px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.vehicle-info-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1F2937;
+    margin: 0 0 20px 0;
+    text-align: left;
+}
+
+.vehicle-info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    flex: 1;
+}
+
+.vehicle-info-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #F9FAFB;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.vehicle-info-item:hover {
+    background: #F3F4F6;
+    transform: translateY(-1px);
+}
+
+.vehicle-info-item-full {
+    grid-column: 1 / -1;
+}
+
+.vehicle-info-icon {
+    width: 24px;
+    height: 24px;
+    stroke: #374151;
+    stroke-width: 2;
+    flex-shrink: 0;
+}
+
+.vehicle-info-text {
+    font-size: 14px;
+    color: #000000;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.vehicle-color-swatch {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    margin-left: 6px;
+    vertical-align: middle;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .info-row {
@@ -155,6 +233,85 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 20px;
+}
+
+.booking-info-box {
+    background: #FFFFFF;
+    border: 2px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.booking-info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.booking-info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    background: #F9FAFB;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.booking-info-item:hover {
+    background: #F3F4F6;
+    transform: translateY(-1px);
+}
+
+.booking-info-icon {
+    width: 24px;
+    height: 24px;
+    stroke: #374151;
+    stroke-width: 2;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.booking-info-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.booking-info-label {
+    font-size: 12px;
+    color: #6B7280;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.booking-info-value {
+    font-size: 15px;
+    color: #000000;
+    font-weight: 600;
+    word-break: break-word;
+}
+
+.booking-coupon-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: #FEF3C7;
+    border-radius: 8px;
+    border: 2px solid #FCD34D;
+}
+
+.booking-coupon-code {
+    color: #DC2626;
+    font-weight: 700;
+    font-family: monospace;
+    font-size: 16px;
+    letter-spacing: 1px;
 }
 
 .detail-item {
@@ -294,7 +451,7 @@
 .confirm-actions {
     display: flex;
     gap: 16px;
-    justify-content: flex-start;
+    justify-content: center;
     align-items: center;
     margin-top: 40px;
     flex-wrap: wrap;
@@ -317,10 +474,31 @@
 }
 
 .btn-back {
-    padding: 16px 32px;
+    padding: 16px 48px;
     background: #000000;
     color: #FFFFFF;
     border: 2px solid #000000;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 700;
+    white-space: nowrap;
+    margin-left: 0;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.btn-back .back-arrow-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+.back-arrow-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
 }
 
 .btn-back::before {
@@ -398,5 +576,59 @@
     .btn-back,
     .btn-confirm {
         width: 100%;
+    }
+
+    .vehicle-info-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .vehicle-info-title {
+        font-size: 20px;
+    }
+
+    .vehicle-info-item {
+        padding: 10px;
+    }
+
+    .vehicle-info-icon {
+        width: 20px;
+        height: 20px;
+    }
+
+    .vehicle-info-text {
+        font-size: 13px;
+    }
+
+    .booking-info-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .booking-info-item {
+        padding: 12px;
+    }
+
+    .booking-info-icon {
+        width: 20px;
+        height: 20px;
+    }
+
+    .booking-info-label {
+        font-size: 11px;
+    }
+
+    .booking-info-value {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .vehicle-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .booking-info-grid {
+        grid-template-columns: 1fr;
     }
 }

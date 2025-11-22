@@ -27,48 +27,47 @@ export default function PopupXacThucHoSoCaNhan({
         {loading && <p>Đang tải hồ sơ khách…</p>}
         {error && <p className="error">{error}</p>}
 
-        {!loading && !error && (
-          profile ? (
-            <>
-              <div className="section">
-                <h3>Thông tin hồ sơ</h3>
-                <div className="info-grid">
-                  <div className="info-item"><strong>Họ tên:</strong> {profile.fullName || "—"}</div>
-                  <div className="info-item"><strong>SĐT:</strong> {profile.phone || "—"}</div>
-                  <div className="info-item"><strong>Email:</strong> {profile.email || "—"}</div>
-                  <div className="info-item">
-                    <strong>Trạng thái:</strong> {profile.status || "—"}
-                  </div>
-                </div>
+        {!loading && !error && profile && (
+          <div className="section">
+            <h3>Thông tin hồ sơ</h3>
+            <div className="info-grid">
+              <div className="info-item"><strong>Họ tên:</strong> {profile.fullName || "—"}</div>
+              <div className="info-item"><strong>SĐT:</strong> {profile.phone || "—"}</div>
+              <div className="info-item"><strong>Email:</strong> {profile.email || "—"}</div>
+              <div className="info-item">
+                <strong>Trạng thái:</strong> {profile.status || "—"}
               </div>
-
-              <div className="section">
-                <h3>Giấy tờ xác thực</h3>
-                <div className="doc-grid">
-                  <div className="doc-card">
-                    <strong>CMND/CCCD</strong><br />
-                    {profile?.idCardUrl ? (
-                      <a href={profile.idCardUrl} target="_blank" rel="noreferrer">
-                        <img src={profile.idCardUrl} alt="Ảnh CMND/CCCD" className="doc-img" loading="lazy" />
-                      </a>
-                    ) : "Chưa cung cấp"}
-                  </div>
-
-                  <div className="doc-card">
-                    <strong>Giấy phép lái xe</strong><br />
-                    {profile?.driverLicenseUrl ? (
-                      <a href={profile.driverLicenseUrl} target="_blank" rel="noreferrer">
-                        <img src={profile.driverLicenseUrl} alt="Ảnh Giấy phép lái xe" className="doc-img" loading="lazy" />
-                      </a>
-                    ) : "Chưa cung cấp"}
-                  </div>
-                </div>
-              </div>
-            </>
-          ) : (
-            <p>Không tìm thấy hồ sơ chờ xác thực cho khách hàng này.</p>
-          )
+            </div>
+          </div>
         )}
+
+        {!profile && !loading && !error && (
+          <p>Không tìm thấy hồ sơ chờ xác thực cho khách hàng này.</p>
+        )}
+
+        {/* Giấy tờ xác thực - Luôn hiển thị */}
+        <div className="section">
+          <h3>Giấy tờ xác thực</h3>
+          <div className="doc-grid">
+            <div className="doc-card">
+              <strong>CMND/CCCD</strong><br />
+              {profile?.idCardUrl ? (
+                <a href={profile.idCardUrl} target="_blank" rel="noreferrer">
+                  <img src={profile.idCardUrl} alt="Ảnh CMND/CCCD" className="doc-img" loading="lazy" />
+                </a>
+              ) : "Chưa cung cấp"}
+            </div>
+
+            <div className="doc-card">
+              <strong>Giấy phép lái xe</strong><br />
+              {profile?.driverLicenseUrl ? (
+                <a href={profile.driverLicenseUrl} target="_blank" rel="noreferrer">
+                  <img src={profile.driverLicenseUrl} alt="Ảnh Giấy phép lái xe" className="doc-img" loading="lazy" />
+                </a>
+              ) : "Chưa cung cấp"}
+            </div>
+          </div>
+        </div>
 
         <div className="button-group">
           <button className="btn btn-cancel" onClick={onClose}>Hủy</button>
