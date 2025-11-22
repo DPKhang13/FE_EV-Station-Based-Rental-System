@@ -98,7 +98,7 @@ export default function OrderDetailPage() {
       console.log("✅ [Price List] Loaded:", priceListData);
       // Không cần setPriceList vì fetchServiceListByType sẽ fetch lại khi cần
     } catch (err) {
-      console.error("❌ Lỗi khi tải price list:", err);
+      console.error(" Lỗi khi tải price list:", err);
     }
   }, []);
 
