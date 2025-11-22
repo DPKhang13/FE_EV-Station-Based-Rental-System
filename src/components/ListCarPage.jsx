@@ -145,13 +145,28 @@ const ListCarPage = () => {
             try {
                 setLoadingVehicles(true);
                 const response = await fetch(`http://localhost:8080/api/vehicles/station/${selectedBranch}`);
-                if (!response.ok) throw new Error('Failed to fetch vehicles');
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`❌ API Error [${response.status}]:`, {
+                        status: response.status,
+                        statusText: response.statusText,
+                        url: response.url,
+                        error: errorText
+                    });
+                    throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                }
+                
                 const data = await response.json();
                 const vehicleList = Array.isArray(data) ? data : (data.data || []);
                 setVehicles(vehicleList);
                 console.log(`✅ Loaded ${vehicleList.length} vehicles for station ${selectedBranch}`);
             } catch (error) {
-                console.error(`❌ Error loading vehicles:`, error);
+                console.error(`❌ Error loading vehicles for station ${selectedBranch}:`, error);
+                // ⭐⭐ Hiển thị thông báo lỗi chi tiết hơn ⭐⭐
+                if (error.message.includes('500')) {
+                    console.error('⚠️ Backend server error (500). Please check backend logs.');
+                }
                 setVehicles([]);
             } finally {
                 setLoadingVehicles(false);

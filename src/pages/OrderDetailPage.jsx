@@ -214,17 +214,12 @@ export default function OrderDetailPage() {
 
       showToast("success", "🚗 Đã trả xe thành công!");
       setShowReturnModal(false);
-<<<<<<< HEAD
       setReturnTime(""); // Reset returnTime sau khi submit
       // ✅ Gọi các API song song để tăng tốc độ
       await Promise.all([
         refetchDetails(),
         fetchOrderStatus()
       ]);
-=======
-      await refetchDetails(); // Refresh order status để ẩn nút bàn giao 
-      await fetchOrderStatus(); //  Đảm bảo order status được cập nhật 
->>>>>>> bae100bf06495a1bb91fdb32b56c299523b195e0
     } catch (err) {
       console.error(err);
       showToast("error", "Trả xe thất bại!");
@@ -338,19 +333,11 @@ export default function OrderDetailPage() {
         );
         setCustomer(foundCustomer || null);
 
-<<<<<<< HEAD
         // Xử lý order details
         const details = resDetails || [];
-        setOrderDetails(details);
-=======
-        const res = await fetch(
-          `http://localhost:8080/api/order-details/order/${orderId}`
-        );
-        const details = await res.json();
         const detailsArray = Array.isArray(details) ? details : (details?.data || []);
         setOrderDetails(detailsArray);
         console.log("📋 [Order Details] Loaded:", detailsArray);
->>>>>>> bae100bf06495a1bb91fdb32b56c299523b195e0
 
         const first = detailsArray[0];
         // ✅ Dùng thông tin từ order details thay vì gọi API vehicles/get
@@ -427,7 +414,6 @@ export default function OrderDetailPage() {
     try {
       setProcessing(true);
       await api.put(`/payment/cash/approve/order/${orderId}`);
-<<<<<<< HEAD
       showToast("success", "✅ Đã xác nhận thanh toán thành công!");
       // ✅ Gọi các API song song để tăng tốc độ
       await Promise.all([
@@ -435,12 +421,6 @@ export default function OrderDetailPage() {
         refetchDetails(),
         fetchOrderStatus()
       ]);
-=======
-      showToast("success", " Đã xác nhận thanh toán thành công!");
-      await fetchPayments();
-      await refetchDetails();
-      await fetchOrderStatus(); //Đảm bảo order status được cập nhật ⭐⭐
->>>>>>> bae100bf06495a1bb91fdb32b56c299523b195e0
     } catch (err) {
       console.error("Lỗi xác nhận thanh toán:", err);
       const errorMsg = 
@@ -1890,11 +1870,7 @@ export default function OrderDetailPage() {
                   <button
                     className="btn-receive-car"
                     onClick={handlePreviewReturn}
-<<<<<<< HEAD
-                    disabled={false}
-=======
                     disabled={hasPendingOrderDetail || handoverLoading || loading}
->>>>>>> bae100bf06495a1bb91fdb32b56c299523b195e0
                   >
                     <svg style={{ width: "18px", height: "18px", marginRight: "8px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1"></path>
@@ -1911,7 +1887,6 @@ export default function OrderDetailPage() {
             const vehicleReady =
               backendVehicleStatusForHandover === "BOOKED" ||
               backendVehicleStatusForHandover === "AVAILABLE";
-<<<<<<< HEAD
             
             if (canHandOver && vehicleReady && !isWaiting) {
               return (
@@ -1958,66 +1933,6 @@ export default function OrderDetailPage() {
                   </p>
                 )}
               </div>
-=======
-                // KHÔNG cho phép vehicle.status === "RENTAL" vì đó là xe đang được khách khác thuê
-                
-                // Cho phép bàn giao khi đã đặt cọc hoặc thanh toán full và xe BOOKED/AVAILABLE
-                if (canHandOver && vehicleReady && !isWaiting) {
-                  return (
-                    <>
-                      <button
-                        className="btn btn-confirm-handover"
-                        onClick={handleConfirmHandover}
-                        disabled={handoverLoading || loading}
-                      >
-                        <svg style={{ width: "18px", height: "18px", marginRight: "8px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                        {handoverLoading || loading ? "Đang xử lý..." : "XÁC NHẬN BÀN GIAO"}
-                      </button>
-
-                      <button
-                        className="btn btn-cancel-handover"
-                        onClick={handleCancelHandover}
-                        disabled={pickupOK || fullOK || handoverLoading || loading}
-                      >
-                        <svg style={{ width: "18px", height: "18px", marginRight: "8px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                          <line x1="18" y1="6" x2="6" y2="18"></line>
-                          <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                        {handoverLoading || loading ? "Đang xử lý..." : "HỦY BÀN GIAO"}
-                      </button>
-                    </>
-                  );
-                }
-                
-                // Hiển thị lý do không thể bàn giao
-                return (
-                  <div style={{ color: "#666", fontSize: "14px" }}>
-                    {!canHandOver && (
-                      <p style={{ margin: "4px 0", fontStyle: "italic" }}>
-                        ❌ Chưa đủ điều kiện bàn giao. 
-                        {!depositedOK && " Thiếu đặt cọc."}
-                        {!fullOK && " Thiếu thanh toán toàn bộ."}
-                      </p>
-                    )}
-                    {canHandOver && !vehicleReady && (
-                      <p style={{ margin: "4px 0", fontStyle: "italic" }}>
-                        {vehicle?.status === "RENTAL" 
-                          ? "⚠️ Xe đang được khách hàng khác thuê. Vui lòng đợi xe được trả về."
-                          : `⚠️ Xe chưa sẵn sàng: ${getVehicleStatusText(backendVehicleStatusForHandover || vehicle?.status || "N/A")}`}
-                      </p>
-                    )}
-                    {canHandOver && vehicleReady && (
-                      <p style={{ margin: "4px 0", fontStyle: "italic" }}>
-                        Trạng thái chi tiết: {detailStatus || "N/A"}. Chờ điều kiện bàn giao.
-                      </p>
-                    )}
-                  </div>
-                );
-              })()}
-            </>
->>>>>>> bae100bf06495a1bb91fdb32b56c299523b195e0
             );
           })()}
         </div>
@@ -2071,17 +1986,11 @@ export default function OrderDetailPage() {
                 {returnLoading ? "Đang xử lý..." : "XÁC NHẬN TRẢ XE"}
               </button>
               <button
-<<<<<<< HEAD
                 className="btn btn-danger"
                 onClick={() => {
                   setShowReturnModal(false);
                   setReturnTime(""); // Reset returnTime khi đóng modal
                 }}
-=======
-                className="btn btn-close-modal"
-                onClick={() => setShowReturnModal(false)}
-                disabled={returnLoading}
->>>>>>> bae100bf06495a1bb91fdb32b56c299523b195e0
               >
                 <svg style={{ width: "18px", height: "18px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"></line>

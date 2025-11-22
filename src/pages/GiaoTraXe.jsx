@@ -401,11 +401,7 @@ const getCarImage = (brand, color, seatCount) => {
       <div className="search-bar">
         <input
           type="text"
-<<<<<<< HEAD
           placeholder="Tìm theo biển số hoặc loại xe..."
-=======
-          placeholder="Tìm theo biển số..."
->>>>>>> bae100bf06495a1bb91fdb32b56c299523b195e0
           className="search-input"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
