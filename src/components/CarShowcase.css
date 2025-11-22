@@ -125,17 +125,27 @@
     text-transform: uppercase;
     color: #FFFFFF;
     font-family: 'Helvetica Neue', Arial, sans-serif;
+    position: relative;
+    text-decoration: none;
+    border-bottom: none;
+}
+
+.showcase-model::after,
+.showcase-model::before {
+    display: none !important;
+    content: none !important;
 }
 
 .showcase-title {
-    font-size: 56px;
+    font-size: 48px;
     font-weight: 200;
-    letter-spacing: 2px;
+    letter-spacing: 1.5px;
     line-height: 1.2;
     margin-bottom: 25px;
     text-transform: uppercase;
     color: #FFFFFF;
     font-family: 'Helvetica Neue', Arial, sans-serif;
+    white-space: nowrap;
 }
 
 .showcase-description {

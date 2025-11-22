@@ -604,19 +604,21 @@ const MyBookingsPage = () => {
 
       {/* Search Box */}
       <div className="search-container">
-        <div className="search-box">
+        <div className="search-box-wrapper">
           <input
             type="text"
             className="search-input"
             placeholder="Tìm kiếm theo mã đơn hàng..."
             value={searchOrderId}
             onChange={(e) => setSearchOrderId(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && setSearchOrderId(searchOrderId)}
           />
-          {searchOrderId && (
-            <button className="clear-search" onClick={() => setSearchOrderId("")}>
-              ✕
-            </button>
-          )}
+          <button
+            className="btn-search"
+            onClick={() => setSearchOrderId(searchOrderId)}
+          >
+            TÌM KIẾM
+          </button>
         </div>
       </div>
 

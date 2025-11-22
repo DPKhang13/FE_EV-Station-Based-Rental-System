@@ -68,7 +68,7 @@ const QuanLiXeTaiTram = () => {
               className="btn-station-detail"
               onClick={() => handleViewDetail(st.stationid)}
             >
-              Xem chi tiết
+              <span>Xem chi tiết</span>
             </button>
           </div>
         ))}

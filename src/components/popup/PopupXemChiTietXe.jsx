@@ -162,8 +162,8 @@ const PopupXemChiTietXe = ({ vehicleId, onClose, onReload }) => {
               </div>
             </div>
 
-            {/* Thông tin đặt xe (nếu có) */}
-            {vehicleDetail.hasBooking && (
+            {/* Thông tin đặt xe (nếu có) - Chỉ hiển thị khi trạng thái xe không phải "Có sẵn" */}
+            {vehicleDetail.hasBooking && vehicleDetail.status?.toUpperCase() !== "AVAILABLE" && (
               <div className="info-section booking-section">
                 <h3 className="section-title">📅 Thông tin đặt xe hiện tại</h3>
                 <div className="info-grid">
@@ -203,8 +203,8 @@ const PopupXemChiTietXe = ({ vehicleId, onClose, onReload }) => {
               </div>
             )}
 
-            {/* Ghi chú */}
-            {vehicleDetail.bookingNote && (
+            {/* Ghi chú - Chỉ hiển thị khi trạng thái xe không phải "Có sẵn" */}
+            {vehicleDetail.bookingNote && vehicleDetail.status?.toUpperCase() !== "AVAILABLE" && (
               <div className="info-section">
                 <h3 className="section-title">📝 Ghi chú</h3>
                 <div className="note-box">

@@ -7,6 +7,7 @@
     padding: 30px;
     background: #FFFFFF;
     min-height: 100vh;
+    font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 .customer-loading {
@@ -26,17 +27,29 @@
 }
 
 .customer-header h1 {
-    font-size: 28px;
+    font-size: 36px;
     color: #000000;
-    margin: 0 auto;
+    margin: 0 auto 30px auto;
     font-weight: 300;
-    letter-spacing: 2px;
+    letter-spacing: 6px;
     text-transform: uppercase;
-    padding-bottom: 15px;
-    border-bottom: 3px solid #DC0000;
-    display: inline-block;
-    width: auto;
-    max-width: fit-content;
+    padding-bottom: 30px;
+    position: relative;
+    display: block;
+    width: 100%;
+}
+
+.customer-header h1::after {
+    content: '';
+    display: block;
+    width: 120px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent 0%, #DC0000 50%, transparent 100%);
+    margin: 20px auto 0;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 0;
 }
 
 .customer-subtitle {
@@ -45,6 +58,72 @@
     margin-top: 15px;
     letter-spacing: 1px;
     font-weight: 400;
+}
+
+/* Search Section - Sát bên phải */
+.customer-search-section {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-end;
+    margin: 0 0 30px 0;
+    flex-wrap: wrap;
+}
+
+.customer-search-input {
+    padding: 8px 12px;
+    border: 2px solid #000000;
+    border-radius: 0;
+    font-size: 13px;
+    width: 280px;
+    max-width: 100%;
+    background: #FFFFFF;
+    color: #000000;
+    letter-spacing: 0.5px;
+    transition: all 0.3s;
+    box-sizing: border-box;
+    height: 36px;
+    font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.customer-search-input:focus {
+    outline: none;
+    border-color: #DC0000;
+    background: #F9FAFB;
+}
+
+.customer-search-input::placeholder {
+    color: #9CA3AF;
+    letter-spacing: 0.5px;
+    font-size: 12px;
+}
+
+.btn-search {
+    padding: 8px 16px;
+    border: 2px solid #000000;
+    border-radius: 0;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: #000000;
+    color: #FFFFFF;
+    height: 36px;
+    min-width: 100px;
+    font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.btn-search:hover {
+    background: #DC0000;
+    border-color: #DC0000;
+    color: #FFFFFF;
+}
+
+.btn-search:active {
+    background: #B80000;
+    border-color: #B80000;
 }
 
 /* Stats Cards - Mercedes Style */

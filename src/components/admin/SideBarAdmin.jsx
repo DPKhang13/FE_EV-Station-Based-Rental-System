@@ -12,10 +12,6 @@ export default function SideBarAdmin() {
   if (!user) return <p>Đang tải dữ liệu người dùng...</p>;
 
   const name = user.name || "Admin";
-  const handleNavigateToVehicles = () => {
-    console.log('🚗 Navigating to Vehicle Management');
-    navigate('/admin/vehicles');
-  };
 
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
@@ -29,9 +25,7 @@ export default function SideBarAdmin() {
 
         <nav className="sidebar__nav">
           {/* --- Nhóm a. Quản lý đội xe & điểm thuê --- */}
-          <p className="sidebar__section-title">🚗 Đội xe & Điểm thuê</p>
-         
-          
+          <p className="sidebar__section-title">Đội xe & Điểm thuê</p>
           <NavLink to="/admin/quanlyxetaitram" className="sidebar__btn">
             <FaCar />
             <span>Quản lý xe tại trạm</span>
@@ -48,7 +42,7 @@ export default function SideBarAdmin() {
           </NavLink>
 
           {/* --- Nhóm b. Quản lý khách hàng --- */}
-          <p className="sidebar__section-title">👥 Khách hàng</p>
+          <p className="sidebar__section-title"> Khách hàng</p>
           <NavLink to="/admin/customers" className="sidebar__btn">
             <FaUsers />
             <span>Danh sách khách hàng</span>
@@ -56,7 +50,7 @@ export default function SideBarAdmin() {
 
 
           {/* --- Nhóm c. Quản lý nhân viên --- */}
-          <p className="sidebar__section-title">🧑‍💼 Nhân viên</p>
+          <p className="sidebar__section-title"> Nhân viên</p>
           <NavLink to="/admin/employees" className="sidebar__btn">
             <FaUserTie />
             <span>Danh sách nhân viên</span>
@@ -64,13 +58,18 @@ export default function SideBarAdmin() {
 
 
           {/* --- Nhóm d. Báo cáo & phân tích --- */}
-          <p className="sidebar__section-title">📊 Báo cáo & Phân tích</p>
+          <p className="sidebar__section-title"> Báo cáo & Phân tích</p>
           <NavLink to="/admin/dashboard" className="sidebar__btn">
             <FaChartPie />
             <span>Thống kê tổng quan</span>
           </NavLink>
 
-          
+          {/* --- Nhóm e. Bảng giá --- */}
+          <p className="sidebar__section-title"> Bảng giá</p>
+          <NavLink to="/admin/banggia" className="sidebar__btn">
+            <FaClipboardList />
+            <span>Bảng giá</span>
+          </NavLink>
 
         </nav>
       </div>

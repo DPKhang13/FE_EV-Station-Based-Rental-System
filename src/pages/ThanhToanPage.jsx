@@ -16,23 +16,51 @@ const translateStatus = (status = "") => {
     SUCCESS: "Thành công",
     FAILED: "Thất bại",
     PENDING: "Đang xử lý",
+    FULL_PAYMENT: "Đã thanh toán toàn bộ",
+    DEPOSIT: "Đã đặt cọc",
+    PICKUP: "Đã trả phần còn lại",  
+    CANCELLED: "Đã hủy",
+    REFUND: "Đã hoàn tiền",
+    SERVICE: "Đã thanh toán dịch vụ",
+    SERVICE_SERVICE: "Đã thanh toán dịch vụ phát sinh",
+    FULL_PAYMENT_PENDING: "Đã thanh toán toàn bộ bằng tiền mặt",
+    DEPOSIT_PENDING: "Đã đặt cọc bằng tiền mặt",
+    PICKUP_PENDING: "Đã trả phần còn lại bằng tiền mặt",
+    
+   
   };
   return map[status.toUpperCase()] || "Không xác định";
 };
 
 // 🔤 Dịch loại giao dịch sang tiếng Việt
 const translateType = (type = "") => {
+  const typeUpper = type.toUpperCase();
+  
+  // Xử lý các loại _PENDING trước
+  if (typeUpper.includes("_PENDING")) {
+    const baseType = typeUpper.replace("_PENDING", "");
+    const pendingMap = {
+      "FULL_PAYMENT": "Thanh toán toàn bộ (tiền mặt)",
+      "DEPOSIT": "Đặt cọc (tiền mặt)",
+      "PICKUP": "Trả phần còn lại (tiền mặt)",
+    };
+    return pendingMap[baseType] || `${baseType} (tiền mặt)`;
+  }
+  
   const map = {
     DEPOSITED: "Đã cọc tiền",
     FINAL: "Đã thanh toán hết",
     FULL_PAYMENT: "Đã thanh toán toàn bộ",
-    DEPOSIT: "Đã cọc tiền",
+    DEPOSIT: "Đã đặt cọc",
     WITHDRAW: "Rút tiền",
     RENTAL_PAYMENT: "Thanh toán thuê xe",
     REFUND: "Hoàn tiền",
     TOP_UP: "Nạp tài khoản",
+    PICKUP: "Trả phần còn lại",
+    SERVICE: "Dịch vụ",
+    SERVICE_SERVICE: "Dịch vụ phát sinh",
   };
-  return map[type.toUpperCase()] || "Khác";
+  return map[typeUpper] || type || "Khác";
 };
 
 const ThanhToanPage = () => {

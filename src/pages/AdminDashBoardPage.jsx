@@ -101,24 +101,24 @@ const AdminDashBoardPage = () => {
       <h1>Báo cáo & Phân tích hệ thống</h1>
       <p className="subtitle">Tổng quan hoạt động và hiệu suất các trạm EV</p>
 
-      {/* SUMMARY */}
-      <div className="summary">
-        <div className="card blue">
+      {/* SUMMARY CARDS - 4 ô riêng biệt trên cùng 1 hàng */}
+      <div className="summary-cards-row">
+        <div className="summary-card blue">
           <h2>Tổng doanh thu</h2>
           <p className="value">{summary.revenue}</p>
           <span>Trong kỳ</span>
         </div>
-        <div className="card green">
+        <div className="summary-card green">
           <h2>Tổng số xe</h2>
           <p className="value">{summary.totalCars}</p>
           <span>Trên toàn hệ thống</span>
         </div>
-        <div className="card purple">
+        <div className="summary-card purple">
           <h2>Tỷ lệ sử dụng</h2>
           <p className="value">{summary.usageRate}</p>
           <span>Xe đang thuê</span>
         </div>
-        <div className="card orange">
+        <div className="summary-card orange">
           <h2>Xe đang thuê</h2>
           <p className="value">{summary.activeCars}</p>
           <span>Đang hoạt động</span>
@@ -128,40 +128,42 @@ const AdminDashBoardPage = () => {
       {/* REVENUE ANALYSIS */}
       <div className="section">
         <h2>💰 Phân tích doanh thu theo trạm</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Trạm</th>
-              <th>Hôm nay</th>
-              <th>Tăng trưởng ngày</th>
-              <th>Tuần này</th>
-              <th>Tăng trưởng tuần</th>
-              <th>Tháng này</th>
-              <th>Tăng trưởng tháng</th>
-            </tr>
-          </thead>
-          <tbody>
-            {branches.map((b, i) => (
-              <tr key={i}>
-                <td>{b.name}</td>
-                <td>{b.today}</td>
-                <td className={b.growthDay >= 0 ? "up" : "down"}>
-                  {b.growthDay >= 0 ? `+${b.growthDay}%` : `${b.growthDay}%`}
-                </td>
-                <td>{b.week}</td>
-                <td className={b.growthWeek >= 0 ? "up" : "down"}>
-                  {b.growthWeek >= 0 ? `+${b.growthWeek}%` : `${b.growthWeek}%`}
-                </td>
-                <td>{b.month}</td>
-                <td className={b.growthMonth >= 0 ? "up" : "down"}>
-                  {b.growthMonth >= 0
-                    ? `+${b.growthMonth}%`
-                    : `${b.growthMonth}%`}
-                </td>
+        <div style={{ overflowX: 'auto', marginTop: '20px' }}>
+          <table>
+            <thead>
+              <tr>
+                <th>Trạm</th>
+                <th>Hôm nay</th>
+                <th>Tăng trưởng ngày</th>
+                <th>Tuần này</th>
+                <th>Tăng trưởng tuần</th>
+                <th>Tháng này</th>
+                <th>Tăng trưởng tháng</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {branches.map((b, i) => (
+                <tr key={i}>
+                  <td>{b.name}</td>
+                  <td>{b.today}</td>
+                  <td className={b.growthDay >= 0 ? "up" : "down"}>
+                    {b.growthDay >= 0 ? `+${b.growthDay}%` : `${b.growthDay}%`}
+                  </td>
+                  <td>{b.week}</td>
+                  <td className={b.growthWeek >= 0 ? "up" : "down"}>
+                    {b.growthWeek >= 0 ? `+${b.growthWeek}%` : `${b.growthWeek}%`}
+                  </td>
+                  <td>{b.month}</td>
+                  <td className={b.growthMonth >= 0 ? "up" : "down"}>
+                    {b.growthMonth >= 0
+                      ? `+${b.growthMonth}%`
+                      : `${b.growthMonth}%`}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* USAGE + TRENDS */}
@@ -201,11 +203,11 @@ const AdminDashBoardPage = () => {
 
       {/* INCIDENTS */}
       <div className="section incident">
-        <h2>⚠️ Báo cáo sự cố</h2>
+        <h2>TỶ LỆ SỬ DỤNG DỊCH VỤ</h2>
 
         <div className="incident-summary">
           <div className="card red">
-            <h3>Tổng sự cố</h3>
+            <h3>Tổng dịch vụ</h3>
             <p>{incidentStats.totalIncidentsInRange}</p>
           </div>
           <div className="card orange">
@@ -213,7 +215,7 @@ const AdminDashBoardPage = () => {
             <p>{incidentStats.openIncidents}</p>
           </div>
           <div className="card yellow">
-            <h3>Chi phí thiệt hại</h3>
+            <h3>Chi phí dịch vụ</h3>
             <p>
               {(incidentStats.incidentCostInRange || 0).toLocaleString(
                 "vi-VN"
@@ -223,37 +225,39 @@ const AdminDashBoardPage = () => {
           </div>
         </div>
 
-        <h3>🔍 Chi tiết sự cố gần đây</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Mã</th>
-              <th>Xe</th>
-              <th>Mô tả</th>
-              <th>Mức độ</th>
-              <th>Ngày</th>
-              <th>Chi phí</th>
-            </tr>
-          </thead>
-          <tbody>
-            {incidents.length === 0 && (
+        <h3>Chi tiết dịch vụ gần đây</h3>
+        <div style={{ overflowX: 'auto', marginTop: '20px' }}>
+          <table>
+            <thead>
               <tr>
-                <td colSpan="6">Không có sự cố</td>
+                <th>Mã</th>
+                <th>Xe</th>
+                <th>Mô tả</th>
+                <th>Mức độ</th>
+                <th>Ngày</th>
+                <th>Chi phí</th>
               </tr>
-            )}
+            </thead>
+            <tbody>
+              {incidents.length === 0 && (
+                <tr>
+                  <td colSpan="6">Không có dịch vụ</td>
+                </tr>
+              )}
 
-            {incidents.slice(0, 5).map((i) => (
-              <tr key={i.incidentId}>
-                <td>#{i.incidentId}</td>
-                <td>{i.vehicleName}</td>
-                <td>{i.description}</td>
-                <td>{i.severity}</td>
-                <td>{i.occurredOn}</td>
-                <td>{(i.cost || 0).toLocaleString("vi-VN")} đ</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+              {incidents.slice(0, 5).map((i) => (
+                <tr key={i.incidentId}>
+                  <td>#{i.incidentId}</td>
+                  <td>{i.vehicleName}</td>
+                  <td>{i.description}</td>
+                  <td>{i.severity}</td>
+                  <td>{i.occurredOn}</td>
+                  <td>{(i.cost || 0).toLocaleString("vi-VN")} đ</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* PEAK HOURS */}

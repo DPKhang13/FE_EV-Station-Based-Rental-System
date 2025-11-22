@@ -10,8 +10,6 @@ const StationManagement = () => {
     const [error, setError] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [editingStation, setEditingStation] = useState(null);
-    const [selectedStation, setSelectedStation] = useState(null);
-    const [showDetailModal, setShowDetailModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [showAddVehicleModal, setShowAddVehicleModal] = useState(false);
     const [selectedStationForVehicle, setSelectedStationForVehicle] = useState(null);
@@ -23,8 +21,6 @@ const StationManagement = () => {
         variant: '',
         imageUrl: ''
     });
-    const [stationVehicles, setStationVehicles] = useState([]);
-    const [loadingVehicles, setLoadingVehicles] = useState(false);
     const [showEditVehicleModal, setShowEditVehicleModal] = useState(false);
     const [editingVehicle, setEditingVehicle] = useState(null);
     const [showOrderHistoryModal, setShowOrderHistoryModal] = useState(false);
@@ -262,30 +258,6 @@ const StationManagement = () => {
         }
     };
 
-    const handleViewDetails = async (station) => {
-        setSelectedStation(station);
-        setShowDetailModal(true);
-        setLoadingVehicles(true);
-
-        try {
-            const stationId = station.stationid || station.id;
-            console.log('🔍 Fetching vehicles for station ID:', stationId);
-
-            // Lấy xe từ API theo stationId
-            const vehicles = await vehicleService.getVehiclesByStation(stationId);
-            console.log('✅ Xe trong trạm:', vehicles.length, 'xe');
-            console.log('📋 Vehicle list:', vehicles);
-
-            setStationVehicles(vehicles);
-        } catch (err) {
-            console.error('❌ Error fetching vehicles:', err);
-            setStationVehicles([]);
-            alert('❌ Không thể tải danh sách xe. Vui lòng thử lại.');
-        } finally {
-            setLoadingVehicles(false);
-        }
-    };
-
     const handleCloseModal = () => {
         setShowModal(false);
         setEditingStation(null);
@@ -450,8 +422,8 @@ const StationManagement = () => {
             // Refresh station list to show updated vehicle counts
             await fetchStations();
         } catch (err) {
-            console.error('❌ Error adding vehicle:', err);
-            alert('❌ Có lỗi xảy ra khi thêm xe. Vui lòng thử lại.');
+            console.error(' Error adding vehicle:', err);
+            alert(' Có lỗi xảy ra khi thêm xe. Vui lòng thử lại.');
         }
     };
 
@@ -512,11 +484,8 @@ const StationManagement = () => {
     alert("✅ Cập nhật xe thành công!");
     handleCloseEditVehicleModal();
 
-    if (selectedStation) {
-      const id = selectedStation.stationid || selectedStation.id;
-      const vehicles = await vehicleService.getVehiclesByStation(id);
-      setStationVehicles(vehicles);
-    }
+    // Refresh danh sách trạm sau khi cập nhật
+    fetchStations();
   } catch (err) {
     console.error("❌ Lỗi cập nhật xe:", err);
     alert("❌ Cập nhật thất bại, vui lòng thử lại.");
@@ -541,19 +510,10 @@ const StationManagement = () => {
             await vehicleService.deleteVehicle(vehicleId);
             console.log('✅ Vehicle deleted successfully');
 
-            // Refresh danh sách xe
-            if (selectedStation) {
-                const stationId = selectedStation.stationid || selectedStation.id;
-                console.log('🔄 Refreshing vehicle list for station:', stationId);
-                const vehicles = await vehicleService.getVehiclesByStation(stationId);
-                console.log('✅ Refreshed:', vehicles.length, 'xe');
-                setStationVehicles(vehicles);
-            }
-
-            alert(`✅ Đã xóa xe ${vehicle.plateNumber} thành công!`);
+            alert(` Đã xóa xe ${vehicle.plateNumber} thành công!`);
         } catch (err) {
-            console.error('❌ Error deleting vehicle:', err);
-            alert('❌ Có lỗi xảy ra khi xóa xe. Vui lòng thử lại.');
+            console.error(' Error deleting vehicle:', err);
+            alert(' Có lỗi xảy ra khi xóa xe. Vui lòng thử lại.');
         }
     };
 
@@ -627,22 +587,6 @@ const StationManagement = () => {
                     <h1>QUẢN LÝ ĐIỂM THUÊ</h1>
                     <p className="station-subtitle">Quản lý các điểm cho thuê xe điện</p>
                 </div>
-                <div>
-                    <input
-                        type="text"
-                        className="station-search-input"
-                        placeholder="Tìm kiếm điểm thuê..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                    />
-                    <button
-                        className="btn-add-station"
-                        onClick={handleSearch}
-                    >
-                        Tìm kiếm
-                    </button>
-                </div>
             </div>            {error && (
                 <div className="error-message">
                     <div>
@@ -669,6 +613,23 @@ const StationManagement = () => {
                         <div className="stat-label">Tổng điểm thuê</div>
                     </div>
                 </div>
+            </div>
+
+            <div className="station-search-section">
+                <input
+                    type="text"
+                    className="station-search-input"
+                    placeholder="Tìm kiếm điểm thuê..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                />
+                <button
+                    className="btn-search"
+                    onClick={handleSearch}
+                >
+                    TÌM KIẾM
+                </button>
             </div>
 
             <div className="station-table-container">
@@ -716,13 +677,6 @@ const StationManagement = () => {
                                                 title="Thêm xe"
                                             >
                                                 Thêm xe
-                                            </button>
-                                            <button
-                                                className="btn-view"
-                                                onClick={() => handleViewDetails(station)}
-                                                title="Quản lý xe"
-                                            >
-                                                Quản lý
                                             </button>
                                             <button
                                                 className="btn-edit"
@@ -828,172 +782,6 @@ const StationManagement = () => {
                                 </button>
                             </div>
                         </form>
-                    </div>
-                </div>
-            )}
-
-            {/* Vehicle Management Modal */}
-            {showDetailModal && selectedStation && (
-                <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
-                    <div className="modal-content detail-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '1200px' }}>
-                        <div className="modal-header">
-                            <div>
-                                <h2> Quản lý xe - {selectedStation.name}</h2>
-                                <p style={{ fontSize: '14px', color: '#666', marginTop: '4px' }}>
-                                    {[selectedStation.street, selectedStation.ward, selectedStation.district, selectedStation.city]
-                                        .filter(Boolean)
-                                        .join(', ')}
-                                </p>
-                            </div>
-                            <button className="modal-close" onClick={() => setShowDetailModal(false)}>✕</button>
-                        </div>
-
-                        <div className="detail-content">
-                            {loadingVehicles ? (
-                                <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-                                    ⏳ Đang tải danh sách xe...
-                                </div>
-                            ) : (
-                                <div className="station-table-container">
-                                    <table className="station-table">
-                                        <thead>
-                                            <tr>
-                                                <th>ID</th>
-                                                <th>HÌNH ẢNH</th>
-                                                <th>BIỂN SỐ</th>
-                                                <th>TÊN XE</th>
-                                                <th>MÀU SẮC</th>
-                                                <th>SỐ CHỖ</th>
-                                                <th>Loại xe</th>
-                                                <th>TRẠNG THÁI</th>
-                                                <th>THAO TÁC</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {stationVehicles.length === 0 ? (
-                                                <tr>
-                                                    <td colSpan="8" className="no-data">
-                                                        Chưa có xe nào trong trạm này
-                                                    </td>
-                                                </tr>
-                                            ) : (
-                                                stationVehicles.map((vehicle, index) => (
-                                                    <tr key={vehicle.id || index}>
-                                                        <td>{vehicle.id}</td>
-                                                        <td>
-                                                            <img
-                                                                src={getCarImageUrl(vehicle)}
-                                                                alt={vehicle.vehicleName || vehicle.plateNumber}
-                                                                style={{ width: 84, height: 50, objectFit: 'cover', borderRadius: 4 }}
-                                                                onError={(e) => { e.target.src = 'https://via.placeholder.com/100x60?text=No+Image'; }}
-                                                            />
-                                                        </td>
-                                                        <td style={{ fontWeight: 'bold', color: '#1f2937' }}>{vehicle.plateNumber}</td>
-                                                        <td>{vehicle.vehicleName}</td>
-                                                        <td>
-                                                            <span style={{
-                                                                display: 'inline-flex',
-                                                                alignItems: 'center',
-                                                                gap: '6px'
-                                                            }}>
-                                                                {vehicle.color}
-                                                                <span style={{
-                                                                    width: '16px',
-                                                                    height: '16px',
-                                                                    borderRadius: '4px',
-                                                                    border: '2px solid #ddd',
-                                                                    backgroundColor: vehicle.color.toLowerCase()
-                                                                }}></span>
-                                                            </span>
-                                                        </td>
-                                                        <td>{vehicle.seatCount} chỗ</td>
-                                                        <td>{formatVariant(vehicle.variant)}</td>
-                                                        <td>
-                                                            <span className={`status-badge ${vehicle.status === 'AVAILABLE' ? 'status-active' :
-                                                                vehicle.status === 'RENTED' ? 'status-inactive' :
-                                                                    'status-maintenance'
-                                                                }`}>
-                                                                {vehicle.status === 'AVAILABLE' ? 'Sẵn sàng' :
-                                                                    vehicle.status === 'RENTED' ? 'Đang thuê' :
-                                                                        vehicle.status}
-                                                            </span>
-                                                        </td>
-                                                        <td>
-                                                            <div className="action-buttons">
-                                                                <button
-                                                                    className="btn-view"
-                                                                    onClick={() => handleShowVehicleDetails(vehicle)}
-                                                                    title="Xem chi tiết xe"
-                                                                    style={{
-                                                                        background: '#dbeafe',
-                                                                        color: '#1e40af',
-                                                                        padding: '8px 12px',
-                                                                        border: 'none',
-                                                                        borderRadius: '6px',
-                                                                        cursor: 'pointer',
-                                                                        fontSize: '14px',
-                                                                        fontWeight: '600'
-                                                                    }}
-                                                                >
-                                                                    Xem chi tiết
-                                                                </button>
-                                                                <button
-                                                                    className="btn-view"
-                                                                    onClick={() => handleViewOrderHistory(vehicle)}
-                                                                    title="Lịch sử đơn hàng"
-                                                                    style={{
-                                                                        background: '#fef3c7',
-                                                                        color: '#92400e',
-                                                                        padding: '8px 12px',
-                                                                        border: 'none',
-                                                                        borderRadius: '6px',
-                                                                        cursor: 'pointer',
-                                                                        fontSize: '14px',
-                                                                        fontWeight: '600'
-                                                                    }}
-                                                                >
-                                                                    Lịch sử
-                                                                </button>
-                                                                <button
-                                                                    className="btn-edit"
-                                                                    onClick={() => handleEditVehicle(vehicle)}
-                                                                    title="Chỉnh sửa"
-                                                                >
-                                                                    Chỉnh sửa
-                                                                </button>
-                                                                <button
-                                                                    className="btn-delete"
-                                                                    onClick={() => handleDeleteVehicle(vehicle)}
-                                                                    title="Xóa"
-                                                                >
-                                                                    Xóa
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                ))
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="detail-actions">
-                            <button
-                                className="btn-submit"
-                                onClick={() => {
-                                    setShowDetailModal(false);
-                                    handleOpenAddVehicle(selectedStation);
-                                }}
-                                style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
-                            >
-                                Thêm xe mới
-                            </button>
-                            <button className="btn-cancel" onClick={() => setShowDetailModal(false)}>
-                                Đóng
-                            </button>
-                        </div>
                     </div>
                 </div>
             )}

@@ -90,13 +90,88 @@ const TrangHienThiXeTheoTram = () => {
   const [allStations, setAllStations] = useState([]);
   const [formData, setFormData] = useState({
     plateNumber: "",
-    status: "Available",
+    status: "AVAILABLE",
     vehicleName: "",
     brand: "VinFast",
     color: "White",
     variant: "air",
-    seatCount: 4
+    seatCount: 4,
+    description: "",
+    transmission: "Auto",
+    year: new Date().getFullYear(),
+    batteryStatus: "100",
+    batteryCapacity: "100",
+    rangeKm: 350
   });
+
+  // State cho modal thêm xe mới với model selection
+  const [selectedModel, setSelectedModel] = useState(null);
+  const [uploadedImages, setUploadedImages] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Danh sách models - Dựa trên database backend
+  // B-SUV: 4 chỗ, variant Air/Plus/Pro
+  // C-SUV: 4 chỗ, variant Plus
+  // D-SUV: 4 chỗ, variant Pro
+  // E-SUV: 7 chỗ, variant Air
+  // F-SUV: 7 chỗ, variant Plus
+  // G-SUV: 7 chỗ, variant Pro
+  const vehicleModels = [
+    {
+      id: "B-SUV",
+      name: "B-SUV",
+      description: "Xe SUV cỡ nhỏ - 4 chỗ",
+      seatCount: 4,
+      variant: "air", // Mặc định Air, có thể chọn Plus/Pro
+      variants: ["air", "plus", "pro"],
+      carmodel: "B-SUV"
+    },
+    {
+      id: "C-SUV",
+      name: "C-SUV",
+      description: "Xe SUV cỡ trung - 4 chỗ",
+      seatCount: 4,
+      variant: "plus",
+      variants: ["plus"],
+      carmodel: "C-SUV"
+    },
+    {
+      id: "D-SUV",
+      name: "D-SUV",
+      description: "Xe SUV cỡ lớn - 4 chỗ",
+      seatCount: 4,
+      variant: "pro",
+      variants: ["pro"],
+      carmodel: "D-SUV"
+    },
+    {
+      id: "E-SUV",
+      name: "E-SUV",
+      description: "Xe SUV cỡ nhỏ - 7 chỗ",
+      seatCount: 7,
+      variant: "air",
+      variants: ["air"],
+      carmodel: "E-SUV"
+    },
+    {
+      id: "F-SUV",
+      name: "F-SUV",
+      description: "Xe SUV cỡ trung - 7 chỗ",
+      seatCount: 7,
+      variant: "plus",
+      variants: ["plus"],
+      carmodel: "F-SUV"
+    },
+    {
+      id: "G-SUV",
+      name: "G-SUV",
+      description: "Xe SUV cỡ lớn - 7 chỗ",
+      seatCount: 7,
+      variant: "pro",
+      variants: ["pro"],
+      carmodel: "G-SUV"
+    }
+  ];
 
   const [editFormData, setEditFormData] = useState({
     status: "Available",
@@ -110,6 +185,14 @@ const TrangHienThiXeTheoTram = () => {
     show: false,
     message: "",
     type: "success"
+  });
+
+  // Filter state
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    colors: [],
+    seatCounts: [],
+    statuses: []
   });
 
   // Toast
@@ -225,18 +308,76 @@ const TrangHienThiXeTheoTram = () => {
   const handleOpenAddModal = () => {
     setFormData({
       plateNumber: "",
-      status: "Available",
+      status: "AVAILABLE",
       vehicleName: "",
       brand: "VinFast",
       color: "White",
       variant: "air",
-      seatCount: 4
+      seatCount: 4,
+      description: "",
+      transmission: "Automatic",
+      year: new Date().getFullYear(),
+      batteryStatus: "100%",
+      batteryCapacity: "100 kWh",
+      rangeKm: 350
     });
+    setSelectedModel(null);
+    setUploadedImages([]);
     setShowAddModal(true);
   };
 
   const handleCloseModal = () => {
     setShowAddModal(false);
+    setSelectedModel(null);
+    setUploadedImages([]);
+    setFormData({
+      plateNumber: "",
+      status: "AVAILABLE",
+      vehicleName: "",
+      brand: "VinFast",
+      color: "White",
+      variant: "air",
+      seatCount: 4,
+      description: "",
+      transmission: "Automatic",
+      year: new Date().getFullYear(),
+      batteryStatus: "100%",
+      batteryCapacity: "100 kWh",
+      rangeKm: 350
+    });
+  };
+
+  // Xử lý chọn model - Tự động generate tên xe, hãng xe và năm sản xuất
+  const handleSelectModel = (model) => {
+    setSelectedModel(model);
+    
+    // Tự động generate hãng xe (random giữa VinFast, BMW, Tesla)
+    const brands = ["VinFast", "BMW", "Tesla"];
+    const randomBrand = brands[Math.floor(Math.random() * brands.length)];
+    
+    // Tự động generate năm sản xuất (random từ 2022 đến năm hiện tại)
+    const currentYear = new Date().getFullYear();
+    const randomYear = Math.floor(Math.random() * (currentYear - 2021 + 1)) + 2022;
+    
+    // Tự động generate tên xe: "Brand 4S/7S Variant" (ví dụ: "VinFast 4S Air", "BMW 7S Plus")
+    const seatLabel = model.seatCount === 4 ? "4S" : "7S";
+    const variantLabel = model.variant.charAt(0).toUpperCase() + model.variant.slice(1);
+    const generatedVehicleName = `${randomBrand} ${seatLabel} ${variantLabel}`;
+    
+    setFormData(prev => ({
+      ...prev,
+      seatCount: model.seatCount,
+      variant: model.variant,
+      brand: randomBrand, // Tự động generate hãng xe
+      vehicleName: generatedVehicleName, // Tự động generate tên xe
+      year: randomYear // Tự động generate năm sản xuất
+    }));
+  };
+
+  // Xử lý upload ảnh
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    setUploadedImages(files);
   };
 
   const handleInputChange = (e) => {
@@ -247,44 +388,190 @@ const TrangHienThiXeTheoTram = () => {
     }));
   };
 
-  // ==== Thêm xe ====
+  // ==== Thêm xe với multipart/form-data ====
   const handleSubmitAddVehicle = async (e) => {
     e.preventDefault();
+    
+    if (!selectedModel) {
+      showNotification("Vui lòng chọn model xe!", "error");
+      return;
+    }
+
+    // Validate biển số xe
+    if (!formData.plateNumber || formData.plateNumber.trim() === "") {
+      showNotification("Vui lòng nhập biển số xe!", "error");
+      return;
+    }
+
     try {
+      setIsSubmitting(true);
       const token = localStorage.getItem("accessToken");
 
-      const newVehicle = {
-        plateNumber: formData.plateNumber,
-        status: formData.status,
+      // Tạo FormData cho multipart/form-data
+      const formDataToSend = new FormData();
+
+      // Validate required fields
+      if (!formData.plateNumber || formData.plateNumber.trim() === "") {
+        showNotification("Vui lòng nhập biển số xe!", "error");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!formData.vehicleName || formData.vehicleName.trim() === "") {
+        showNotification("Vui lòng nhập tên xe!", "error");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Backend DTO: VehicleCreateRequest với field plateNumber (camelCase)
+      const vehicleData = {
+        plateNumber: formData.plateNumber.trim(), // ✅ Đúng tên field: plateNumber (không phải plate_number)
+        status: formData.status || "AVAILABLE",
         stationId: Number(station),
-        vehicleName: formData.vehicleName,
-        description: "",
-        brand: formData.brand,
-        color: formData.color,
-        transmission: "Auto",
-        seatCount: formData.seatCount,
-        year: new Date().getFullYear(),
-        variant: formData.variant,
-        batteryStatus: "100",
-        batteryCapacity: "100",
-        rangeKm: 350
+        vehicleName: formData.vehicleName.trim(),
+        description: formData.description || "",
+        brand: formData.brand || "VinFast",
+        color: formData.color || "White",
+        transmission: formData.transmission || "Automatic",
+        seatCount: Number(formData.seatCount),
+        year: Number(formData.year || new Date().getFullYear()),
+        variant: formData.variant || "air",
+        batteryStatus: formData.batteryStatus || "100%",
+        batteryCapacity: formData.batteryCapacity || "100 kWh",
+        rangeKm: Number(formData.rangeKm || 350),
+        carmodel: selectedModel.carmodel
       };
 
-      await axios.post(
+      // Validate plateNumber trước khi gửi
+      if (!vehicleData.plateNumber || vehicleData.plateNumber.length === 0) {
+        showNotification("Biển số xe không được để trống!", "error");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Tạo JSON string - Đảm bảo plateNumber có trong JSON
+      const vehicleJsonString = JSON.stringify(vehicleData);
+      console.log("[Create Vehicle] JSON String:", vehicleJsonString);
+      console.log("[Create Vehicle] JSON String length:", vehicleJsonString.length);
+      console.log("[Create Vehicle] JSON includes 'plateNumber':", vehicleJsonString.includes('"plateNumber"'));
+      console.log("[Create Vehicle] JSON includes plateNumber value:", vehicleJsonString.includes(vehicleData.plateNumber));
+      
+      // Parse lại để verify
+      try {
+        const parsed = JSON.parse(vehicleJsonString);
+        console.log(" [Create Vehicle] Parsed JSON.plateNumber:", parsed.plateNumber);
+        console.log(" [Create Vehicle] Parsed JSON.plateNumber type:", typeof parsed.plateNumber);
+        if (!parsed.plateNumber) {
+          console.error(" [Create Vehicle] ERROR: plateNumber is missing after parsing!");
+        }
+      } catch (e) {
+        console.error(" [Create Vehicle] ERROR parsing JSON:", e);
+      }
+
+      // Backend Spring Boot @RequestPart("vehicle") yêu cầu Blob với Content-Type header
+      // Tạo Blob với Content-Type application/json để backend parse đúng
+      console.log("[Create Vehicle] Using Blob with Content-Type application/json");
+      const vehicleBlob = new Blob([vehicleJsonString], { 
+        type: 'application/json' 
+      });
+      
+      // Thêm Blob vào FormData với tên "vehicle" và filename
+      // Spring Boot cần Content-Type trong multipart để parse JSON
+      formDataToSend.append("vehicle", vehicleBlob, "vehicle.json");
+      
+      // Debug: Kiểm tra FormData
+      const formDataVehicle = formDataToSend.get("vehicle");
+      console.log("[Create Vehicle] FormData.get('vehicle') type:", typeof formDataVehicle);
+      console.log("[Create Vehicle] FormData.get('vehicle') is Blob:", formDataVehicle instanceof Blob);
+      
+      // Đọc nội dung Blob để verify
+      if (formDataVehicle instanceof Blob) {
+        formDataVehicle.text().then(text => {
+          console.log("[Create Vehicle] FormData Blob content:", text);
+          console.log("[Create Vehicle] FormData Blob includes 'plateNumber':", text.includes('"plateNumber"'));
+          try {
+            const parsed = JSON.parse(text);
+            console.log("[Create Vehicle] FormData Blob parsed.plateNumber:", parsed.plateNumber);
+          } catch (e) {
+            console.error("[Create Vehicle] ERROR parsing FormData Blob:", e);
+          }
+        });
+      }
+      
+      console.log(" [Create Vehicle] ============================");
+
+      // Thêm images vào FormData (nếu có)
+      if (uploadedImages && uploadedImages.length > 0) {
+        uploadedImages.forEach((image) => {
+          formDataToSend.append("images", image);
+        });
+      }
+
+      // Gọi API với multipart/form-data
+      // Lưu ý: Không set Content-Type header, để axios tự động set với boundary
+      console.log("[Create Vehicle] ========== SENDING REQUEST ==========");
+      console.log("[Create Vehicle] URL: http://localhost:8080/api/vehicles/create");
+      console.log("[Create Vehicle] Method: POST");
+      console.log("[Create Vehicle] Has token:", !!token);
+      
+      // Log FormData entries để debug
+      console.log("[Create Vehicle] FormData entries:");
+      for (const [key, value] of formDataToSend.entries()) {
+        if (value instanceof File || value instanceof Blob) {
+          console.log(`  - ${key}: [Blob/File] size=${value.size}, type=${value.type}`);
+          if (key === 'vehicle') {
+            value.text().then(text => {
+              console.log(`  - ${key} content:`, text);
+            });
+          }
+        } else {
+          console.log(`  - ${key}:`, value);
+        }
+      }
+      
+      const response = await axios.post(
         "http://localhost:8080/api/vehicles/create",
-        newVehicle,
+        formDataToSend,
         {
-          headers: token ? { Authorization: `Bearer ${token}` } : {}
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+            // Không set Content-Type, axios sẽ tự động set với boundary cho multipart/form-data
+          }
         }
       );
+      
+      console.log("[Create Vehicle] ========== RESPONSE RECEIVED ==========");
+      console.log("[Create Vehicle] Response status:", response.status);
+      console.log("[Create Vehicle] Response data:", response.data);
 
       showNotification("Thêm xe thành công!");
-      setShowAddModal(false);
+      handleCloseModal();
       fetchVehicles();
     } catch (err) {
-      const errorMsg =
-        err.response?.data?.message || err.message || "Có lỗi xảy ra";
+      console.error("Lỗi thêm xe:", err);
+      console.error("Error response:", err.response?.data);
+      console.error("Error status:", err.response?.status);
+      console.error("Error headers:", err.response?.headers);
+      
+      // Lấy thông báo lỗi chi tiết từ backend
+      let errorMsg = "Có lỗi xảy ra";
+      if (err.response?.data) {
+        if (typeof err.response.data === 'string') {
+          errorMsg = err.response.data;
+        } else if (err.response.data.message) {
+          errorMsg = err.response.data.message;
+        } else if (err.response.data.error) {
+          errorMsg = err.response.data.error;
+        } else {
+          errorMsg = JSON.stringify(err.response.data);
+        }
+      } else if (err.message) {
+        errorMsg = err.message;
+      }
+      
       showNotification("Lỗi thêm xe: " + translateError(errorMsg), "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -743,6 +1030,52 @@ batteryCapacity: String(vehicle.batteryCapacity ?? vehicle.battery_capacity ?? "
     return map[s] || { text: status, class: "AVAILABLE", display: status };
   };
 
+  // Filter functions
+  const getUniqueColors = () => [...new Set(vehicles.map(v => v.color).filter(Boolean))];
+  const getUniqueSeatCounts = () => [...new Set(vehicles.map(v => v.seatCount || v.seat_count).filter(Boolean))].sort((a, b) => a - b);
+  const getAllStatuses = () => {
+    const allStatuses = new Set();
+    vehicles.forEach(v => {
+      if (v.status) allStatuses.add(v.status);
+    });
+    return Array.from(allStatuses);
+  };
+
+  // Toggle filter
+  const toggleFilter = (filterType, value) => {
+    setFilters(prev => {
+      const current = prev[filterType];
+      const updated = current.includes(value)
+        ? current.filter(item => item !== value)
+        : [...current, value];
+      return { ...prev, [filterType]: updated };
+    });
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setFilters({
+      colors: [],
+      seatCounts: [],
+      statuses: []
+    });
+  };
+
+  // Filter vehicles
+  const filteredVehicles = vehicles.filter(vehicle => {
+    // Filter by color
+    const matchesColor = filters.colors.length === 0 || filters.colors.includes(vehicle.color);
+    
+    // Filter by seat count
+    const seatCount = vehicle.seatCount || vehicle.seat_count;
+    const matchesSeatCount = filters.seatCounts.length === 0 || filters.seatCounts.includes(seatCount);
+    
+    // Filter by status
+    const matchesStatus = filters.statuses.length === 0 || filters.statuses.includes(vehicle.status);
+    
+    return matchesColor && matchesSeatCount && matchesStatus;
+  });
+
   // Đóng menu khi click ra ngoài
   useEffect(() => {
     const close = (e) => {
@@ -795,10 +1128,86 @@ batteryCapacity: String(vehicle.batteryCapacity ?? vehicle.battery_capacity ?? "
         </button>
       </div>
 
-      {vehicles.length === 0 ? (
+      {/* Filters Section */}
+      <div
+        className={`filters-section ${showFilters ? 'open' : ''}`}
+        onMouseEnter={() => setShowFilters(true)}
+        onMouseLeave={() => setShowFilters(false)}
+      >
+        <div className="filter-header">
+          <h3>BỘ LỌC {!showFilters && '(Di chuột vào để mở)'}</h3>
+          {(filters.colors.length > 0 || filters.seatCounts.length > 0 || filters.statuses.length > 0) && (
+            <button className="btn-clear-filters" onClick={clearFilters}>
+              Xóa bộ lọc
+            </button>
+          )}
+        </div>
+
+        <div className="filters-grid">
+          {/* Color Filter */}
+          <div className="filter-group">
+            <h4>🎨 MÀU SẮC</h4>
+            <div className="filter-options">
+              {getUniqueColors().map(color => (
+                <label key={color} className="filter-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={filters.colors.includes(color)}
+                    onChange={() => toggleFilter('colors', color)}
+                  />
+                  <span>{color}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Seat Count Filter */}
+          <div className="filter-group">
+            <h4>💺 SỐ GHẾ</h4>
+            <div className="filter-options">
+              {getUniqueSeatCounts().map(count => (
+                <label key={count} className="filter-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={filters.seatCounts.includes(count)}
+                    onChange={() => toggleFilter('seatCounts', count)}
+                  />
+                  <span>{count} CHỖ</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Status Filter */}
+          <div className="filter-group">
+            <h4>📊 TRẠNG THÁI</h4>
+            <div className="filter-options">
+              {getAllStatuses().map(status => {
+                const statusInfo = getStatusInfo(status);
+                return (
+                  <label key={status} className="filter-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={filters.statuses.includes(status)}
+                      onChange={() => toggleFilter('statuses', status)}
+                    />
+                    <span>{statusInfo.display || status}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {filteredVehicles.length === 0 ? (
         <div className="empty-state">
           <div style={{ fontSize: 48 }}>📭</div>
-          <p>Không có xe nào tại trạm này</p>
+          <p>
+            {vehicles.length === 0 
+              ? "Không có xe nào tại trạm này"
+              : "Không tìm thấy xe nào phù hợp với bộ lọc"}
+          </p>
         </div>
       ) : (
         <div className="table-container">
@@ -822,7 +1231,7 @@ batteryCapacity: String(vehicle.batteryCapacity ?? vehicle.battery_capacity ?? "
             </thead>
 
             <tbody>
-              {vehicles.map((v, index) => {
+              {filteredVehicles.map((v, index) => {
                 const info = getStatusInfo(v.status);
               const rawBattery = v.batteryStatus || v.battery_status || "0";
 const battery = Number(String(rawBattery).replace("%", "").trim());
@@ -890,8 +1299,8 @@ const battery = Number(String(rawBattery).replace("%", "").trim());
                                 : v.vehicleId || v.id
                             )
                           }
+                          aria-label="Hành động"
                         >
-                          ⋮
                         </button>
 
                         {openMenuId === (v.vehicleId || v.id) && (
@@ -937,6 +1346,9 @@ const battery = Number(String(rawBattery).replace("%", "").trim());
           <div className="table-footer">
             <div className="stats">
               <span><strong>Tổng xe:</strong> {vehicles.length}</span>
+              {filteredVehicles.length !== vehicles.length && (
+                <span><strong>Hiển thị:</strong> {filteredVehicles.length}</span>
+              )}
               <span>
                 <strong>Sẵn sàng:</strong>{" "}
                 {vehicles.filter((v) =>
@@ -976,9 +1388,245 @@ const battery = Number(String(rawBattery).replace("%", "").trim());
         </div>
       )}
 
-      {/* ========== MODAL CÁC LOẠI ========== */}
-      {/* (Toàn bộ phần modal thêm xe, sửa xe, thêm đơn hàng, sửa đơn hàng, xem lịch sử, xem chi tiết...) */}
-      {/* Bạn giữ nguyên như phần trước, vì nội dung đó không liên quan API thay đổi */}
+      {/* ========== MODAL THÊM XE MỚI ========== */}
+      {showAddModal && (
+        <div className="modal-overlay" onClick={handleCloseModal}>
+          <div className="modal-content modal-add-vehicle" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Thêm xe mới</h2>
+              <button className="modal-close-btn" onClick={handleCloseModal}>×</button>
+            </div>
+
+            <form onSubmit={handleSubmitAddVehicle}>
+              {/* Bước 1: Chọn Model */}
+              <div className="modal-section">
+                <h3 className="section-title">1. Chọn Model Xe</h3>
+                <div className="model-grid">
+                  {vehicleModels.map((model) => (
+                    <div
+                      key={model.id}
+                      className={`model-card ${selectedModel?.id === model.id ? 'selected' : ''}`}
+                      onClick={() => handleSelectModel(model)}
+                    >
+                      <div className="model-info">
+                        <h4>{model.name}</h4>
+                        <p>{model.description}</p>
+                        <span className="model-seats">{model.seatCount} chỗ</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Bước 2: Thông tin xe */}
+              {selectedModel && (
+                <div className="modal-section">
+                  <h3 className="section-title">2. Thông tin xe</h3>
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label>Biển số xe <span className="required">*</span></label>
+                      <input
+                        type="text"
+                        name="plateNumber"
+                        value={formData.plateNumber}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="VD: 30A-12345"
+                      />
+                    </div>
+
+                    {/* Tên xe và hãng xe tự động generate - Có thể chỉnh sửa */}
+                    <div className="form-group">
+                      <label>Hãng xe</label>
+                      <select
+                        name="brand"
+                        value={formData.brand}
+                        onChange={(e) => {
+                          handleInputChange(e);
+                          // Khi đổi hãng, tự động update lại tên xe
+                          if (selectedModel) {
+                            const seatLabel = selectedModel.seatCount === 4 ? "4S" : "7S";
+                            const variantLabel = formData.variant.charAt(0).toUpperCase() + formData.variant.slice(1);
+                            setFormData(prev => ({
+                              ...prev,
+                              brand: e.target.value,
+                              vehicleName: `${e.target.value} ${seatLabel} ${variantLabel}`
+                            }));
+                          }
+                        }}
+                      >
+                        <option value="VinFast">VinFast</option>
+                        <option value="BMW">BMW</option>
+                        <option value="Tesla">Tesla</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Tên xe</label>
+                      <input
+                        type="text"
+                        name="vehicleName"
+                        value={formData.vehicleName || ""}
+                        onChange={handleInputChange}
+                        placeholder="VD: VinFast 4S Air"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>Màu sắc</label>
+                      <select
+                        name="color"
+                        value={formData.color}
+                        onChange={handleInputChange}
+                      >
+                        <option value="White">Trắng</option>
+                        <option value="Black">Đen</option>
+                        <option value="Red">Đỏ</option>
+                        <option value="Blue">Xanh dương</option>
+                        <option value="Silver">Bạc</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Variant</label>
+                      <select
+                        name="variant"
+                        value={formData.variant}
+                        onChange={(e) => {
+                          handleInputChange(e);
+                          // Khi đổi variant, tự động update lại tên xe
+                          if (selectedModel) {
+                            const seatLabel = selectedModel.seatCount === 4 ? "4S" : "7S";
+                            const variantLabel = e.target.value.charAt(0).toUpperCase() + e.target.value.slice(1);
+                            setFormData(prev => ({
+                              ...prev,
+                              variant: e.target.value,
+                              vehicleName: `${prev.brand} ${seatLabel} ${variantLabel}`
+                            }));
+                          }
+                        }}
+                      >
+                        {selectedModel?.variants?.map((v) => (
+                          <option key={v} value={v}>
+                            {v.charAt(0).toUpperCase() + v.slice(1)}
+                          </option>
+                        )) || (
+                          formData.seatCount === 4 ? (
+                            <>
+                              <option value="air">Air</option>
+                              <option value="plus">Plus</option>
+                              <option value="pro">Pro</option>
+                            </>
+                          ) : (
+                            <>
+                              <option value="air">Air</option>
+                              <option value="plus">Plus</option>
+                              <option value="pro">Pro</option>
+                            </>
+                          )
+                        )}
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Năm sản xuất</label>
+                      <input
+                        type="number"
+                        name="year"
+                        value={formData.year || new Date().getFullYear()}
+                        onChange={handleInputChange}
+                        min="2020"
+                        max={new Date().getFullYear() + 1}
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>Pin hiện tại (%)</label>
+                      <input
+                        type="text"
+                        name="batteryStatus"
+                        value={formData.batteryStatus || "100%"}
+                        onChange={handleInputChange}
+                        placeholder="VD: 100%"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>Phạm vi (km)</label>
+                      <input
+                        type="number"
+                        name="rangeKm"
+                        value={formData.rangeKm || 350}
+                        onChange={handleInputChange}
+                        placeholder="VD: 350"
+                      />
+                    </div>
+
+                    <div className="form-group full-width">
+                      <label>Mô tả</label>
+                      <textarea
+                        name="description"
+                        value={formData.description || ""}
+                        onChange={handleInputChange}
+                        rows="3"
+                        placeholder="Mô tả về xe..."
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Bước 3: Upload ảnh */}
+              {selectedModel && (
+                <div className="modal-section">
+                  <h3 className="section-title">3. Upload ảnh xe (tùy chọn)</h3>
+                  <div className="form-group">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImageUpload}
+                      className="file-input"
+                    />
+                    {uploadedImages.length > 0 && (
+                      <div className="uploaded-images">
+                        <p>Đã chọn {uploadedImages.length} ảnh:</p>
+                        <ul>
+                          {uploadedImages.map((img, idx) => (
+                            <li key={idx}>{img.name}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Nút submit */}
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="btn-cancel"
+                  onClick={handleCloseModal}
+                  disabled={isSubmitting}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="btn-submit"
+                  disabled={!selectedModel || isSubmitting}
+                >
+                  {isSubmitting ? "Đang thêm..." : "Thêm xe"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========== MODAL CÁC LOẠI KHÁC ========== */}
+      {/* (Toàn bộ phần modal sửa xe, thêm đơn hàng, sửa đơn hàng, xem lịch sử, xem chi tiết...) */}
 
       {/* ----- Notification ----- */}
       {notification.show && (

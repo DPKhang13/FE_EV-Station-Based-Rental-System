@@ -47,12 +47,12 @@ import VinFast7_Silver from "../assets/Vin7/silver.jpg";
 import DefaultCar from "../assets/4standard.jpg";
 
 // Popups
-import PopupDatTruoc from "../components/staff/PopupDatTruoc";
-import PopupNhanXe from "../components/staff/PopUpNhanXe";
-import PopupXacThuc from "../components/staff/PopUpXacThuc";
-import PopupDaXacThuc from "../components/staff/PopUpDaXacThuc";
-import PopupNhanChecking from "../components/staff/PopupNhanChecking";
-import PopupXemChiTietXe from "../components/staff/PopupXemChiTietXe";
+import PopupDatTruoc from "../components/popup/PopupDatTruoc";
+import PopupNhanXe from "../components/popup/PopUpNhanXe";
+import PopupXacThuc from "../components/popup/PopUpXacThuc";
+import PopupDaXacThuc from "../components/popup/PopUpDaXacThuc";
+import PopupNhanChecking from "../components/popup/PopupNhanChecking";
+import PopupXemChiTietXe from "../components/popup/PopupXemChiTietXe";
 
 const GiaoTraXe = () => {
   const { user } = useContext(AuthContext);
@@ -178,11 +178,22 @@ const formatStatus = (status) => {
         console.log("🔄 Fetching orders on-demand...");
         const ordersRes = await orderService.getAll();
         const ordersList = Array.isArray(ordersRes?.data) ? ordersRes.data : (Array.isArray(ordersRes) ? ordersRes : []);
-        setOrders(ordersList);
-        console.log("✅ Orders loaded:", ordersList.length);
-        return ordersList;
+        
+        // Filter theo stationId nếu user có stationId
+        const stationId = user?.stationId;
+        const filteredOrders = stationId 
+          ? ordersList.filter(o => Number(o.stationId) === Number(stationId))
+          : ordersList;
+        
+        console.log("✅ Orders loaded (all):", ordersList.length);
+        console.log("✅ Orders filtered by stationId:", filteredOrders.length);
+        console.log("✅ Filtered orders:", filteredOrders);
+        
+        setOrders(filteredOrders);
+        return filteredOrders;
       } catch (err) {
         console.error("❌ Lỗi khi fetch orders:", err);
+        alert("⚠️ Không thể tải danh sách đơn hàng. Vui lòng thử lại sau.");
         return [];
       }
     }
@@ -207,21 +218,61 @@ const formatStatus = (status) => {
       case "Đang cho thuê": {
         // ✅ Fetch orders nếu chưa có
         const currentOrders = await fetchOrdersIfNeeded();
+        
+        console.log('🔍 [handleVehicleAction] Tìm kiếm order cho xe:', {
+          vehicleId: xe.id,
+          plateNumber: xe.bienSo,
+          status: xe.trangThai
+        });
+        console.log('🔍 [handleVehicleAction] Tổng số orders:', currentOrders.length);
+        console.log('🔍 [handleVehicleAction] Orders:', currentOrders);
+        
+        // Tìm order theo vehicleId hoặc plateNumber
         const rentalOrder = currentOrders.find(
-          (o) =>
-            Number(o.vehicleId) === Number(xe.id) &&
-            ["RENTAL", "Rented", "ON_RENT", "IN_USE"].includes(o.status)
+          (o) => {
+            const vehicleIdMatch = Number(o.vehicleId) === Number(xe.id);
+            const plateNumberMatch = o.plateNumber === xe.bienSo;
+            const statusMatch = ["RENTAL", "Rented", "ON_RENT", "IN_USE", "PENDING_FINAL", "COMPLETED"].includes(o.status?.toUpperCase());
+            
+            const match = (vehicleIdMatch || plateNumberMatch) && statusMatch;
+            
+            if (vehicleIdMatch || plateNumberMatch) {
+              console.log('🔍 [handleVehicleAction] Order found:', {
+                orderId: o.orderId,
+                vehicleId: o.vehicleId,
+                plateNumber: o.plateNumber,
+                status: o.status,
+                vehicleIdMatch,
+                plateNumberMatch,
+                statusMatch,
+                match
+              });
+            }
+            
+            return match;
+          }
         );
+        
         if (rentalOrder) {
-          // ✅ Điều hướng tới trang xác thực khách hàng và tự động mở chi tiết
+          console.log('✅ [handleVehicleAction] Tìm thấy order:', rentalOrder.orderId);
+          // ✅ Điều hướng tới trang xác thực khách hàng và tự động mở chi tiết (chỉ truyền orderId)
           navigate("/staff/xacthuc", {
             state: {
               autoOpenOrderDetail: rentalOrder.orderId,
-              userId: rentalOrder.userId,
               fromGiaoTraXe: true
             }
           });
         } else {
+          console.error('❌ [handleVehicleAction] Không tìm thấy order cho xe:', {
+            vehicleId: xe.id,
+            plateNumber: xe.bienSo,
+            availableOrders: currentOrders.map(o => ({
+              orderId: o.orderId,
+              vehicleId: o.vehicleId,
+              plateNumber: o.plateNumber,
+              status: o.status
+            }))
+          });
           alert("⚠️ Không tìm thấy đơn thuê xe tương ứng!");
         }
         break;
@@ -232,20 +283,6 @@ const formatStatus = (status) => {
         setPopupType("daXacThuc");
         break;
 
-      case "Đang kiểm tra": {
-        // ✅ Fetch orders nếu chưa có
-        const currentOrders = await fetchOrdersIfNeeded();
-        const relatedOrder = currentOrders.find(
-          (o) => Number(o.vehicleId) === Number(xe.id)
-        );
-        if (!relatedOrder) {
-          alert("⚠️ Không tìm thấy đơn hàng liên quan đến xe này!");
-          return;
-        }
-        setSelectedVehicle({ ...xe, order: relatedOrder });
-        setPopupType("nhanChecking");
-        break;
-      }
 
       default:
         break;
@@ -256,7 +293,7 @@ const formatStatus = (status) => {
    * 🔍 Lọc xe theo tab + tìm kiếm
    * ================================ */
   const stationId = user?.stationId || 1;
-  const stationName = user?.stationName || vehicleList[0]?.tram || `Trạm ${stationId}`;
+  const stationName = user?.stationName || vehicleList[0]?.tram || `Trạm...`;
   
   const filteredVehicles = vehicleList.filter((xe) => {
     // ✅ Tìm kiếm theo biển số hoặc carmodel (partial match)
@@ -364,11 +401,22 @@ const getCarImage = (brand, color, seatCount) => {
       <div className="search-bar">
         <input
           type="text"
+<<<<<<< HEAD
           placeholder="Tìm theo biển số hoặc loại xe..."
+=======
+          placeholder="Tìm theo biển số..."
+>>>>>>> bae100bf06495a1bb91fdb32b56c299523b195e0
           className="search-input"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && setSearchTerm(e.target.value)}
         />
+        <button
+          className="btn-search"
+          onClick={() => setSearchTerm(searchTerm)}
+        >
+          TÌM KIẾM
+        </button>
       </div>
 
       {/* Tabs */}
@@ -420,39 +468,30 @@ const getCarImage = (brand, color, seatCount) => {
               <p><strong>Trạng thái:</strong> <span className={`xe-status status-${getStatusColor(xe.trangThai)}`}>{xe.trangThai}</span></p>
               <p><strong>Màu sắc:</strong> {xe.mau}</p>
 
-              {/* Nút hành động */}
-              {xe.trangThai === "Đang cho thuê" && (
-                <button
-                  className="btn-action"
-                  onClick={() => handleVehicleAction(xe)}
-                  style={{ marginTop: '10px' }}
-                >
-                  Nhận xe trả
-                </button>
-              )}
+              {/* Wrapper cho các nút để căn chỉnh đều */}
+              <div className="btn-wrapper">
+                {/* Nút hành động */}
+                {xe.trangThai === "Đang cho thuê" && (
+                  <button
+                    className="btn-action"
+                    onClick={() => handleVehicleAction(xe)}
+                  >
+                    Nhận xe trả
+                  </button>
+                )}
 
-              {xe.trangThai === "Đang kiểm tra" && (
+                {/* Nút Xem chi tiết - Hiển thị cho TẤT CẢ các xe */}
                 <button
-                  className="btn-action checking"
-                  onClick={() => handleVehicleAction(xe)}
-                  style={{ marginTop: '10px' }}
+                  className="btn-action-compact btn-secondary"
+                  onClick={() => {
+                    // Mở popup xem chi tiết xe với API
+                    setSelectedVehicle(xe);
+                    setPopupType("xemChiTiet");
+                  }}
                 >
-                  Nhận Checking
+                  XEM CHI TIẾT
                 </button>
-              )}
-
-              {/* Nút Xem chi tiết - Hiển thị cho TẤT CẢ các xe */}
-              <button
-                className="btn-action-compact btn-secondary"
-                onClick={() => {
-                  // Mở popup xem chi tiết xe với API
-                  setSelectedVehicle(xe);
-                  setPopupType("xemChiTiet");
-                }}
-                style={{ marginTop: '10px', width: '100%' }}
-              >
-                Xem chi tiết
-              </button>
+              </div>
             </div>
           ))}
         </div>
@@ -473,13 +512,6 @@ const getCarImage = (brand, color, seatCount) => {
         <PopupDaXacThuc
           xe={selectedVehicle}
           onClose={() => setPopupType(null)}
-        />
-      )}
-      {popupType === "nhanChecking" && (
-        <PopupNhanChecking
-          xe={selectedVehicle}
-          onClose={() => setPopupType(null)}
-          onReload={fetchData} // ✅ callback reload
         />
       )}
       {popupType === "xemChiTiet" && selectedVehicle && (

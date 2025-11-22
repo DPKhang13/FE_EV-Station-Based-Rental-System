@@ -73,7 +73,8 @@ const [deleteEmail, setDeleteEmail] = useState("");
     if (!email.endsWith("@gmail.com")) newErrors.email = "Email phải có dạng @gmail.com";
     if (!/^0[0-9]{9}$/.test(phone))
       newErrors.phone = "Số điện thoại không hợp lệ (phải là đầu số Việt Nam 10 chữ số)";
-    if (!stationId) newErrors.stationId = "Vui lòng nhập mã trạm";
+    if (!stationId || !["1", "2", "3"].includes(String(stationId))) 
+      newErrors.stationId = "Vui lòng chọn mã trạm (1, 2 hoặc 3)";
     if (password.length < 6) newErrors.password = "Mật khẩu phải có ít nhất 6 ký tự";
 
     setErrors(newErrors);
@@ -187,12 +188,14 @@ const [deleteEmail, setDeleteEmail] = useState("");
 
   // ✅ Kiểm tra hợp lệ form cập nhật
   const validateUpdateForm = () => {
-    const { email, phone } = updateStaff;
+    const { email, phone, stationId } = updateStaff;
     let newErrors = {};
 
     if (!email.endsWith("@gmail.com")) newErrors.email = "Email phải có dạng @gmail.com";
     if (phone && !/^0[0-9]{9}$/.test(phone))
       newErrors.phone = "Số điện thoại không hợp lệ (10 chữ số)";
+    if (stationId && !["1", "2", "3"].includes(String(stationId)))
+      newErrors.stationId = "Mã trạm phải là 1, 2 hoặc 3";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -253,15 +256,14 @@ const [deleteEmail, setDeleteEmail] = useState("");
 
       {/* 🔘 Nút thao tác */}
       <div className="actions">
-        <button className="add-btn" onClick={handleAddEmployee}>➕ Thêm nhân viên</button>
-        <button className="update-btn" onClick={handleUpdateEmployee}>🧾 Cập nhật thông tin</button>
+        <button className="add-btn" onClick={handleAddEmployee}>THÊM NHÂN VIÊN</button>
+        <button className="update-btn" onClick={handleUpdateEmployee}>Cập nhật thông tin</button>
         <button
-  className="delete-all-btn"
-  onClick={() => setShowDeleteModal(true)}
->
-  ❌ Xóa tài khoản vĩnh viễn
-</button>
-
+          className="delete-all-btn"
+          onClick={() => setShowDeleteModal(true)}
+        >
+          Xóa tài khoản vĩnh viễn
+        </button>
       </div>
 
       {/* 📊 Thống kê tổng quan */}
@@ -370,9 +372,9 @@ const [deleteEmail, setDeleteEmail] = useState("");
       {showAddModal && (
         <div className="modal-overlay">
           <div className="modal">
-            <h2>➕ Tạo tài khoản nhân viên</h2>
+            <h2>TẠO TÀI KHOẢN NHÂN VIÊN</h2>
 
-            <label>Họ tên</label>
+            <label>HỌ TÊN</label>
             <input
               type="text"
               name="fullName"
@@ -383,7 +385,7 @@ const [deleteEmail, setDeleteEmail] = useState("");
             />
             {errors.fullName && <p className="error-text">{errors.fullName}</p>}
 
-            <label>Email</label>
+            <label>EMAIL</label>
             <input
               type="email"
               name="email"
@@ -394,7 +396,7 @@ const [deleteEmail, setDeleteEmail] = useState("");
             />
             {errors.email && <p className="error-text">{errors.email}</p>}
 
-            <label>Số điện thoại</label>
+            <label>SỐ ĐIỆN THOẠI</label>
             <input
               type="text"
               name="phone"
@@ -405,18 +407,21 @@ const [deleteEmail, setDeleteEmail] = useState("");
             />
             {errors.phone && <p className="error-text">{errors.phone}</p>}
 
-            <label>Mã trạm (Station ID)</label>
-            <input
-              type="number"
+            <label>MÃ TRẠM (STATION ID)</label>
+            <select
               name="stationId"
               value={newStaff.stationId}
               onChange={handleChange}
-              placeholder="VD: 1"
               className={errors.stationId ? "input-error" : ""}
-            />
+            >
+              <option value="">-- Chọn trạm --</option>
+              <option value="1">Trạm 1</option>
+              <option value="2">Trạm 2</option>
+              <option value="3">Trạm 3</option>
+            </select>
             {errors.stationId && <p className="error-text">{errors.stationId}</p>}
 
-            <label>Mật khẩu</label>
+            <label>MẬT KHẨU</label>
             <input
               type="password"
               name="password"
@@ -428,8 +433,8 @@ const [deleteEmail, setDeleteEmail] = useState("");
             {errors.password && <p className="error-text">{errors.password}</p>}
 
             <div className="modal-actions">
-              <button className="btn btn-primary" onClick={handleCreateStaff}>✅ Đồng ý tạo</button>
-              <button className="btn btn-danger" onClick={() => setShowAddModal(false)}>✖ Hủy</button>
+              <button className="btn btn-primary" onClick={handleCreateStaff}>ĐỒNG Ý TẠO</button>
+              <button className="btn btn-danger" onClick={() => setShowAddModal(false)}>HỦY</button>
             </div>
           </div>
         </div>
@@ -439,9 +444,9 @@ const [deleteEmail, setDeleteEmail] = useState("");
       {showUpdateModal && (
         <div className="modal-overlay">
           <div className="modal">
-            <h2>🧾 Cập nhật thông tin nhân viên</h2>
+            <h2>CẬP NHẬT THÔNG TIN NHÂN VIÊN</h2>
 
-            <label>Email nhân viên</label>
+            <label>EMAIL NHÂN VIÊN</label>
             <input
               type="email"
               name="email"
@@ -452,7 +457,7 @@ const [deleteEmail, setDeleteEmail] = useState("");
             />
             {errors.email && <p className="error-text">{errors.email}</p>}
 
-            <label>Họ tên</label>
+            <label>HỌ TÊN</label>
             <input
               type="text"
               name="fullName"
@@ -461,7 +466,7 @@ const [deleteEmail, setDeleteEmail] = useState("");
               placeholder="VD: Nguyễn Văn B"
             />
 
-            <label>Số điện thoại</label>
+            <label>SỐ ĐIỆN THOẠI</label>
             <input
               type="text"
               name="phone"
@@ -470,7 +475,7 @@ const [deleteEmail, setDeleteEmail] = useState("");
               placeholder="VD: 0987654321"
             />
 
-            <label>Mật khẩu (nếu muốn đổi)</label>
+            <label>MẬT KHẨU (NẾU MUỐN ĐỔI)</label>
             <input
               type="password"
               name="password"
@@ -479,18 +484,23 @@ const [deleteEmail, setDeleteEmail] = useState("");
               placeholder="Để trống nếu không đổi"
             />
 
-            <label>Mã trạm (Station ID)</label>
-            <input
-              type="number"
+            <label>MÃ TRẠM (STATION ID)</label>
+            <select
               name="stationId"
               value={updateStaff.stationId}
               onChange={handleUpdateChange}
-              placeholder="VD: 1"
-            />
+              className={errors.stationId ? "input-error" : ""}
+            >
+              <option value="">-- Giữ nguyên --</option>
+              <option value="1">Trạm 1</option>
+              <option value="2">Trạm 2</option>
+              <option value="3">Trạm 3</option>
+            </select>
+            {errors.stationId && <p className="error-text">{errors.stationId}</p>}
 
             <div className="modal-actions">
-              <button className="btn btn-primary" onClick={handleUpdateStaff}>✅ Xác nhận cập nhật</button>
-              <button className="btn btn-danger" onClick={() => setShowUpdateModal(false)}>✖ Hủy</button>
+              <button className="btn btn-primary" onClick={handleUpdateStaff}>XÁC NHẬN CẬP NHẬT</button>
+              <button className="btn btn-danger" onClick={() => setShowUpdateModal(false)}>HỦY</button>
             </div>
           </div>
         </div>
@@ -498,9 +508,9 @@ const [deleteEmail, setDeleteEmail] = useState("");
       {showDeleteModal && (
   <div className="modal-overlay">
     <div className="modal">
-      <h2>🗑️ Xóa tài khoản nhân viên</h2>
+      <h2>XÓA TÀI KHOẢN NHÂN VIÊN</h2>
 
-      <label>Email nhân viên</label>
+      <label>EMAIL NHÂN VIÊN</label>
       <input
         type="email"
         placeholder="Nhập email cần xóa"
@@ -510,10 +520,10 @@ const [deleteEmail, setDeleteEmail] = useState("");
 
       <div className="modal-actions">
         <button className="btn btn-danger" onClick={handleDeleteAccount}>
-          ❌ Chấp nhận xóa
+          CHẤP NHẬN XÓA
         </button>
         <button className="btn btn-secondary" onClick={() => setShowDeleteModal(false)}>
-          ✖ Hủy
+          HỦY
         </button>
       </div>
     </div>

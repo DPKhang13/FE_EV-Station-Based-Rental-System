@@ -23,7 +23,6 @@ import VerifyOtpPage from './pages/VerifyOtpPage.jsx';
 import AdminDashBoardPage from './pages/AdminDashBoardPage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
 import EmployeesPage from './pages/EmployeesPage.jsx';
-import VehicleManagement from './components/admin/VehicleManagement.jsx';
 import StationManagement from './components/admin/StationManagement.jsx';
 import CustomerManagement from './components/admin/CustomerManagement.jsx';
 import ConfirmBookingPage from './pages/ConfirmBookingPage.jsx';
@@ -37,6 +36,7 @@ import PaymentFailedPage from './pages/PaymentFailedPage.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import FeedbackPage from './pages/FeedbackPage.jsx';
 import BangGiaPage from './pages/BangGiaPage.jsx';
+import AdminBangGiaPage from './components/admin/AdminBangGiaPage.jsx';
 import DichVuPage from './pages/DichVuPage.jsx';
 import OrderDetailPage from './pages/OrderDetailPage.jsx'; 
 import  ForgotPage from './pages/ForgotPage.jsx'
@@ -190,7 +190,10 @@ function App() {
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="dashboard" element={<AdminDashBoardPage />} />
               <Route path="employees" element={<EmployeesPage />} />
+
+
               
+
               <Route path="quanlyxetaitram" element={<QuanLiXeTaiTram />} />
               <Route path="locations" element={<StationManagement />} />
               <Route path="customers" element={<CustomerManagement />} />
@@ -199,6 +202,7 @@ function App() {
               <Route path="chitiet/:id" element={<ChiTietKhachHang/>}/>
               <Route path="lichsu-thue/:userId" element={<LichSuThue/>}/>
               <Route path="order-detail/:orderId" element={<ChiTietDonTrongAdmin/>}/>
+              <Route path="banggia" element={<AdminBangGiaPage/>}/>
             </Route>
           </Routes >
         </LayoutWrapper >

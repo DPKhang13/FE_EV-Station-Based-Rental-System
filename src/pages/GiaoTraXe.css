@@ -34,8 +34,11 @@
 /* 🔍 Search bar */
 .search-bar {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0;
   margin-bottom: 40px;
+<<<<<<< HEAD
   max-width: 1400px;
   margin-left: auto;
   margin-right: auto;
@@ -45,70 +48,139 @@
   width: 100%;
   padding: 16px 24px;
   border: 2px solid #E0E0E0;
+=======
+  margin-right: 0;
+}
+
+.search-input {
+  padding: 8px 12px;
+  border: 2px solid #000000;
+  border-right: none;
+>>>>>>> bae100bf06495a1bb91fdb32b56c299523b195e0
   border-radius: 0;
-  font-size: 15px;
-  font-weight: 300;
-  letter-spacing: 0.5px;
-  transition: all 0.3s ease;
+  font-size: 13px;
+  width: 280px;
+  max-width: 100%;
   background: #FFFFFF;
+<<<<<<< HEAD
   box-shadow: 0 0 0 1px #E0E0E0;
+=======
+  color: #000000;
+  letter-spacing: 0.5px;
+  transition: all 0.3s;
+  box-sizing: border-box;
+  height: 36px;
+>>>>>>> bae100bf06495a1bb91fdb32b56c299523b195e0
 }
 
 .search-input:focus {
-  border-color: #000000;
   outline: none;
-  box-shadow: none;
+  border-color: #DC0000;
+  background: #F9FAFB;
+}
+
+.search-input:focus + .btn-search {
+  border-color: #DC0000;
 }
 
 .search-input::placeholder {
-  color: #999999;
+  color: #9CA3AF;
+  letter-spacing: 0.5px;
+  font-size: 12px;
   font-weight: 300;
+}
+
+.btn-search {
+  padding: 8px 16px;
+  border: 2px solid #000000;
+  border-left: none;
+  border-radius: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s;
+  background: #000000;
+  color: #FFFFFF;
+  height: 36px;
+  white-space: nowrap;
+  margin-left: 0;
+}
+
+.btn-search:hover {
+  background: #333333;
+  border-color: #333333;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-search:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* 🧭 Tabs */
-.tabs {
+.giaoTraXe-container .tabs {
   display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
+  justify-content: stretch;
+  flex-wrap: nowrap;
   margin-bottom: 50px;
   gap: 0;
-  border-bottom: 1px solid #E0E0E0;
+  border-bottom: none;
+  background: transparent;
+  padding: 0;
+  width: 100%;
 }
 
-.tabs button {
-  padding: 16px 32px;
-  border: none;
-  border-bottom: 3px solid transparent;
-  background-color: transparent;
+.giaoTraXe-container .tabs button {
+  padding: 16px 20px;
+  border: 2px solid #000000 !important;
+  background-color: #000000 !important;
   cursor: pointer;
-  font-weight: 300;
-  font-size: 14px;
+  font-weight: 600;
+  font-size: 13px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: #666666;
+  color: #FFFFFF !important;
   transition: all 0.3s ease;
   position: relative;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  box-sizing: border-box;
+  border-radius: 0 !important;
+  margin: 0;
+  flex: 1 1 0;
+  min-width: 0;
+  width: 100%;
 }
 
-.tabs button.active {
-  background-color: transparent;
-  color: #000000;
-  border-bottom-color: #DC0000;
-  font-weight: 400;
+.giaoTraXe-container .tabs button:not(:last-child) {
+  border-right: 1px solid #FFFFFF !important;
 }
 
-.tabs button:hover:not(.active) {
-  color: #000000;
-  background-color: #F5F5F5;
+.giaoTraXe-container .tabs button.active {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+  border-color: #000000 !important;
+  font-weight: 700;
+}
+
+.giaoTraXe-container .tabs button:hover {
+  background-color: #DC0000 !important;
+  border-color: #DC0000 !important;
+  color: #FFFFFF !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 0, 0, 0.3);
 }
 
 /* 🚗 Grid xe */
 .xe-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 30px;
   max-width: 1400px;
   margin: 0 auto;
+  align-items: stretch;
 }
 
 .xe-card {
@@ -120,6 +192,9 @@
   text-align: center;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .xe-card:hover {
@@ -136,12 +211,12 @@
 
 .xe-img {
   width: 100%;
-  height: 220px;
+  height: 180px;
   object-fit: cover;
   border-radius: 0;
   margin-bottom: 0;
   transition: transform 0.3s ease;
-  border-bottom: 3px solid #E0E0E0;
+  border-bottom: 2px solid #E0E0E0;
   display: block;
 }
 
@@ -175,34 +250,51 @@
 }
 
 .xe-card h3 {
-  margin: 20px 0 12px;
+  margin: 12px 0 8px;
   padding: 0 20px;
-  font-size: 20px;
+  font-size: 18px;
   color: #000000;
   font-weight: 400;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .xe-card p {
-  font-size: 14px;
-  margin: 8px 0;
+  font-size: 13px;
+  margin: 4px 0;
   padding: 0 20px;
   color: #666666;
   font-weight: 300;
   letter-spacing: 0.5px;
+  min-height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.xe-card p strong {
+  font-weight: 500;
 }
 
 /* 🌈 Trạng thái */
 .xe-status {
   font-weight: 400;
-  margin: 15px 20px 20px;
-  padding: 10px 16px;
+  margin: 8px 20px;
+  padding: 6px 12px;
   border-radius: 0;
-  display: inline-block;
-  font-size: 13px;
-  letter-spacing: 1px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
+  min-height: 32px;
 }
 
 .status-green {
@@ -236,21 +328,30 @@
 }
 
 /* ⚙️ Button hành động */
+.btn-wrapper {
+  margin-top: auto;
+  padding: 0 20px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .btn-action {
-  margin: 0 20px 20px;
+  margin: 0;
   background: #000000;
   color: #FFFFFF;
   border: 2px solid #000000;
-  padding: 14px 32px;
+  padding: 10px 24px;
   border-radius: 0;
   font-weight: 400;
-  font-size: 13px;
-  letter-spacing: 2px;
+  font-size: 12px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  width: 100%;
 }
 
 .btn-action::before {
@@ -330,8 +431,8 @@
   color: #FFFFFF;
   border: 2px solid #000000;
   border-radius: 0;
-  padding: 12px 24px;
-  font-size: 13px;
+  padding: 10px 24px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
@@ -345,6 +446,8 @@
   justify-content: center;
   gap: 0;
   white-space: nowrap;
+  width: 100%;
+  margin: 0;
 }
 
 .btn-action-compact.btn-secondary::before {
@@ -514,9 +617,34 @@
     padding: 14px 20px;
   }
 
+  .tabs {
+    gap: 0;
+    flex-wrap: wrap;
+  }
+
   .tabs button {
-    padding: 12px 20px;
-    font-size: 12px;
+    padding: 12px 16px;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    min-width: auto;
+    flex: 1 1 calc(50% - 2px);
+    border: 2px solid #000000;
+  }
+
+  .tabs button:nth-child(2n) {
+    border-left: none;
+  }
+
+  .tabs button:nth-child(2n+1) {
+    border-right: 2px solid #000000;
+  }
+
+  .tabs button:first-child {
+    border-left: 2px solid #000000;
+  }
+
+  .tabs button:last-child {
+    border-right: 2px solid #000000;
   }
 
   .xe-grid {
