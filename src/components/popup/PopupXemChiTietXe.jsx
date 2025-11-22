@@ -93,11 +93,11 @@ const PopupXemChiTietXe = ({ vehicleId, onClose, onReload }) => {
           <div className="popup-body">
             {/* Thông tin cơ bản */}
             <div className="info-section">
-              <h3 className="section-title">🚗 Thông tin cơ bản</h3>
+              <h3 className="section-title">Thông tin cơ bản</h3>
               <div className="info-grid">
                 <div className="info-item">
-                  <span className="info-label">Tên xe:</span>
-                  <span className="info-value">{vehicleDetail.vehicleName || "N/A"}</span>
+                  <span className="info-label">Carmodel:</span>
+                  <span className="info-value">{vehicleDetail.carmodel || vehicleDetail.carModel || vehicleDetail.car_model || "N/A"}</span>
                 </div>
                 <div className="info-item">
                   <span className="info-label">Biển số:</span>
@@ -132,40 +132,28 @@ const PopupXemChiTietXe = ({ vehicleId, onClose, onReload }) => {
 
             {/* Trạng thái */}
             <div className="info-section">
-              <h3 className="section-title">📊 Trạng thái</h3>
+              <h3 className="section-title">Trạng thái</h3>
               <div className="info-grid">
-                <div className="info-item full-width">
-                  <span className="info-label">Trạng thái xe:</span>
-                  <span className={`status-badge status-${vehicleDetail.status?.toLowerCase()}`}>
-                    {mapStatusToVietnamese(vehicleDetail.status)}
-                  </span>
+                <div className="info-item">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span className="info-label">Trạng thái xe:</span>
+                    <span className={`status-badge status-${vehicleDetail.status?.toLowerCase()}`}>
+                      {mapStatusToVietnamese(vehicleDetail.status)}
+                    </span>
+                  </div>
                 </div>
                 <div className="info-item">
                   <span className="info-label">Pin:</span>
                   <span className="info-value battery">{vehicleDetail.batteryStatus || "N/A"}</span>
                 </div>
-                </div>
-            </div>
-
-            {/* Trạm & vị trí */}
-            <div className="info-section">
-              <h3 className="section-title">📍 Trạm & Vị trí</h3>
-              <div className="info-grid">
-                <div className="info-item">
-                  <span className="info-label">ID Trạm:</span>
-                  <span className="info-value">{vehicleDetail.stationId || "N/A"}</span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">Tên trạm:</span>
-                  <span className="info-value">{vehicleDetail.stationName || "N/A"}</span>
-                </div>
               </div>
             </div>
+
 
             {/* Thông tin đặt xe (nếu có) - Chỉ hiển thị khi trạng thái xe không phải "Có sẵn" */}
             {vehicleDetail.hasBooking && vehicleDetail.status?.toUpperCase() !== "AVAILABLE" && (
               <div className="info-section booking-section">
-                <h3 className="section-title">📅 Thông tin đặt xe hiện tại</h3>
+                <h3 className="section-title">Thông tin đặt xe hiện tại</h3>
                 <div className="info-grid">
                   <div className="info-item">
                     <span className="info-label">Khách hàng:</span>
@@ -180,10 +168,22 @@ const PopupXemChiTietXe = ({ vehicleId, onClose, onReload }) => {
                     <span className="info-value">{vehicleDetail.customerEmail || "N/A"}</span>
                   </div>
                   <div className="info-item">
+                    <span className="info-label">Tên trạm:</span>
+                    <span className="info-value">{vehicleDetail.stationName || "N/A"}</span>
+                  </div>
+                  <div className="info-item">
                     <span className="info-label">Ngày nhận:</span>
                     <span className="info-value">
                       {vehicleDetail.rentalStartDate 
-                        ? new Date(vehicleDetail.rentalStartDate).toLocaleString("vi-VN")
+                        ? (() => {
+                            const date = new Date(vehicleDetail.rentalStartDate);
+                            const day = String(date.getDate()).padStart(2, "0");
+                            const month = String(date.getMonth() + 1).padStart(2, "0");
+                            const year = date.getFullYear();
+                            const hours = String(date.getHours()).padStart(2, "0");
+                            const minutes = String(date.getMinutes()).padStart(2, "0");
+                            return `${day}/${month}/${year} ${hours}:${minutes}`;
+                          })()
                         : "N/A"}
                     </span>
                   </div>
@@ -191,13 +191,17 @@ const PopupXemChiTietXe = ({ vehicleId, onClose, onReload }) => {
                     <span className="info-label">Ngày trả:</span>
                     <span className="info-value">
                       {vehicleDetail.rentalEndDate 
-                        ? new Date(vehicleDetail.rentalEndDate).toLocaleString("vi-VN")
+                        ? (() => {
+                            const date = new Date(vehicleDetail.rentalEndDate);
+                            const day = String(date.getDate()).padStart(2, "0");
+                            const month = String(date.getMonth() + 1).padStart(2, "0");
+                            const year = date.getFullYear();
+                            const hours = String(date.getHours()).padStart(2, "0");
+                            const minutes = String(date.getMinutes()).padStart(2, "0");
+                            return `${day}/${month}/${year} ${hours}:${minutes}`;
+                          })()
                         : "N/A"}
                     </span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Trạng thái đơn:</span>
-                    <span className="info-value">{vehicleDetail.rentalOrderStatus || "N/A"}</span>
                   </div>
                 </div>
               </div>
@@ -206,19 +210,19 @@ const PopupXemChiTietXe = ({ vehicleId, onClose, onReload }) => {
             {/* Ghi chú - Chỉ hiển thị khi trạng thái xe không phải "Có sẵn" */}
             {vehicleDetail.bookingNote && vehicleDetail.status?.toUpperCase() !== "AVAILABLE" && (
               <div className="info-section">
-                <h3 className="section-title">📝 Ghi chú</h3>
+                <h3 className="section-title">Ghi chú</h3>
                 <div className="note-box">
-                  {vehicleDetail.bookingNote}
-                </div>
-              </div>
-            )}
-
-            {/* Mô tả */}
-            {vehicleDetail.description && (
-              <div className="info-section">
-                <h3 className="section-title">📄 Mô tả</h3>
-                <div className="note-box">
-                  {vehicleDetail.description}
+                  {(() => {
+                    // Format lại ngày trong ghi chú nếu có
+                    let note = vehicleDetail.bookingNote;
+                    
+                    // Tìm và thay thế các pattern ngày ISO (2025-11-26T00:00 hoặc 2025-11-26T00:00:00)
+                    note = note.replace(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::\d{2})?/g, (match, year, month, day, hour, minute) => {
+                      return `${day}/${month}/${year} ${hour}:${minute}`;
+                    });
+                    
+                    return note;
+                  })()}
                 </div>
               </div>
             )}
@@ -235,7 +239,7 @@ const PopupXemChiTietXe = ({ vehicleId, onClose, onReload }) => {
             className="btn-primary"
             style={{ marginRight: 'auto' }}
           >
-            Cập nhật trạng thái hoặc pin
+            Cập nhật
           </button>
           <button onClick={onClose} className="btn-secondary">
             Đóng
@@ -250,6 +254,8 @@ const PopupXemChiTietXe = ({ vehicleId, onClose, onReload }) => {
             id: vehicleDetail.vehicleId,
             ten: vehicleDetail.vehicleName,
             bienSo: vehicleDetail.plateNumber,
+            carmodel: vehicleDetail.carmodel || vehicleDetail.carModel || vehicleDetail.car_model || "N/A",
+            color: vehicleDetail.color || "N/A",
             pin: parseInt(vehicleDetail.batteryStatus?.replace("%", "") || "100"),
             status: vehicleDetail.status,
             trangThai: mapStatusToVietnamese(vehicleDetail.status),

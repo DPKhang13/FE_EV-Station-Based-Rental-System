@@ -174,26 +174,54 @@ export const apiFetch = async (endpoint, options = {}) => {
         // ✅ Nếu là lỗi authentication, tự động refresh token
         if (isAuthError && endpoint !== '/auth/refresh' && endpoint !== '/auth/login') {
             console.log('⚠️ Token expired or invalid, attempting refresh...');
+            
+            // ✅ Kiểm tra refreshToken có tồn tại không
+            const refreshTokenFromStorage = localStorage.getItem('refreshToken');
+            const refreshTokenFromCookie = document.cookie.split(';').find(c => c.trim().startsWith('RefreshToken='));
+            console.log('🔍 [Refresh] Checking refreshToken:');
+            console.log('  - In localStorage:', !!refreshTokenFromStorage);
+            console.log('  - In cookie:', !!refreshTokenFromCookie);
+            if (refreshTokenFromCookie) {
+                console.log('  - Cookie value:', refreshTokenFromCookie.split('=')[1].substring(0, 20) + '...');
+            }
 
             // ✅ Tránh multiple refresh cùng lúc
             if (!refreshTokenPromise) {
+                // ✅ Tạo request body với refreshToken nếu có (một số backend yêu cầu)
+                const refreshBody = refreshTokenFromStorage ? { refreshToken: refreshTokenFromStorage } : {};
+                
                 refreshTokenPromise = fetch(`${API_BASE_URL}/auth/refresh`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include'
+                    body: Object.keys(refreshBody).length > 0 ? JSON.stringify(refreshBody) : undefined,
+                    credentials: 'include' // ✅ Quan trọng: Gửi cookie (RefreshToken) cùng request
                 }).then(async (refreshResponse) => {
                     if (refreshResponse.ok) {
                         let newToken = null;
                         
                         // ✅ 1. Thử lấy token từ response body
+                        let refreshData = null;
                         try {
-                            const refreshData = await refreshResponse.json();
+                            refreshData = await refreshResponse.json();
                             newToken = refreshData.accessToken || refreshData.jwtToken || refreshData.token;
                             if (newToken) {
                                 console.log('✅ Token found in response body');
                             }
+                            
+                            // ✅ Cập nhật refreshToken mới nếu có trong response
+                            if (refreshData.refreshToken || refreshData.refresh_token) {
+                                const newRefreshToken = refreshData.refreshToken || refreshData.refresh_token;
+                                localStorage.setItem('refreshToken', newRefreshToken);
+                                // Cập nhật refreshToken cookie
+                                const expiryDate = new Date();
+                                expiryDate.setTime(expiryDate.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 ngày
+                                const isLocal = window.location.hostname === "localhost";
+                                document.cookie = `RefreshToken=${newRefreshToken}; path=/; expires=${expiryDate.toUTCString()}; SameSite=Lax${isLocal ? "" : "; Secure"}`;
+                                console.log('✅ RefreshToken updated in localStorage and cookie');
+                            }
                         } catch (e) {
                             // Không phải JSON, bỏ qua
+                            console.log('⚠️ Refresh response is not JSON, trying other methods...');
                         }
                         
                         // ✅ 2. Nếu không có trong body, thử lấy từ Set-Cookie header
@@ -228,11 +256,23 @@ export const apiFetch = async (endpoint, options = {}) => {
                             return { success: false };
                         }
                     } else {
-                        console.error('❌ Refresh token failed, redirecting to login...');
-                        localStorage.clear();
-                        document.cookie = 'AccessToken=; path=/; max-age=0';
-                        document.cookie = 'RefreshToken=; path=/; max-age=0';
-                        return { success: false };
+                        // ✅ Kiểm tra status code để xác định lý do thất bại
+                        const statusCode = refreshResponse.status;
+                        console.error(`❌ Refresh token failed with status ${statusCode}`);
+                        
+                        // ✅ Chỉ logout khi refreshToken thực sự hết hạn (401/403)
+                        // Nếu là lỗi khác (500, 400), có thể là lỗi server, không nên logout
+                        if (statusCode === 401 || statusCode === 403) {
+                            console.error('❌ RefreshToken expired or invalid, clearing session...');
+                            localStorage.clear();
+                            document.cookie = 'AccessToken=; path=/; max-age=0';
+                            document.cookie = 'RefreshToken=; path=/; max-age=0';
+                            return { success: false, shouldLogout: true };
+                        } else {
+                            // ✅ Lỗi server (500, 400), không logout, chỉ return false
+                            console.warn('⚠️ Refresh token failed due to server error, not logging out');
+                            return { success: false, shouldLogout: false };
+                        }
                     }
                 }).finally(() => {
                     refreshTokenPromise = null;
@@ -255,10 +295,21 @@ export const apiFetch = async (endpoint, options = {}) => {
                     credentials: 'include'
                 };
                 response = await fetch(url, retryConfig);
-            } else {
-                // Refresh failed, redirect to login
+            } else if (refreshResult && refreshResult.shouldLogout) {
+                // ✅ Chỉ logout khi refreshToken thực sự hết hạn
+                console.error('❌ RefreshToken expired, redirecting to login...');
+                // Clear tất cả session data
+                localStorage.clear();
+                document.cookie = 'AccessToken=; path=/; max-age=0';
+                document.cookie = 'RefreshToken=; path=/; max-age=0';
+                // Redirect to login
                 window.location.href = '/login';
                 throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+            } else {
+                // ✅ Refresh failed nhưng không phải do token hết hạn (có thể là lỗi server)
+                // Không logout, chỉ throw error để component xử lý
+                console.warn('⚠️ Refresh token failed but not logging out (possible server error)');
+                throw new Error('Không thể làm mới token. Vui lòng thử lại sau.');
             }
         }
 

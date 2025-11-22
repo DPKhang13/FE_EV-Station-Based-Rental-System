@@ -1216,7 +1216,7 @@ export default function OrderDetailPage() {
                               e.target.style.background = "transparent";
                             }}
                           >
-                            ✏️ Sửa
+                             Sửa
                           </button>
                           <button
                             onClick={() => {
@@ -1243,7 +1243,7 @@ export default function OrderDetailPage() {
                               e.target.style.background = "transparent";
                             }}
                           >
-                            🗑️ Xóa
+                             Xóa
                           </button>
                         </div>
                       )}
@@ -1286,7 +1286,7 @@ export default function OrderDetailPage() {
                         }
                       }}
                     >
-                      {processing ? "Đang xử lý..." : "✅ Xác nhận đã thanh toán"}
+                      {processing ? "Đang xử lý..." : "Xác nhận đã thanh toán"}
                     </button>
                   )}
                 </div>
@@ -1324,24 +1324,6 @@ export default function OrderDetailPage() {
         })()}
       </div>
 
-      {/* ⭐⭐ TEST BANNER - Luôn hiển thị để test ⭐⭐ */}
-      {orderDetails.some(d => {
-        const type = String(d.type || "").toUpperCase();
-        return type === "SERVICE" || type === "SERVICE_SERVICE";
-      }) && (
-        <div className="info-card" style={{
-          backgroundColor: "#FF0000",
-          border: "2px solid #FF0000",
-          borderRadius: "8px",
-          padding: "20px",
-          marginBottom: "20px",
-          marginTop: "20px"
-        }}>
-          <p style={{ color: "#FFFFFF", fontSize: "16px", fontWeight: "bold", margin: 0 }}>
-            🚨 TEST BANNER - Có SERVICE trong orderDetails
-          </p>
-        </div>
-      )}
 
       {/* ⭐⭐ BANNER THANH TOÁN DỊCH VỤ - Hiển thị tổng tiền dịch vụ chưa thanh toán và nút xác nhận ⭐⭐ */}
       {(() => {
@@ -1386,7 +1368,6 @@ export default function OrderDetailPage() {
                   alignItems: "center",
                   gap: "12px"
                 }}>
-                  <span style={{ fontSize: "24px" }}>💰</span>
                   <div style={{ flex: 1 }}>
                     <h3 style={{ margin: 0, color: "#856404", fontSize: "18px", fontWeight: "bold" }}>
                       Chưa thanh toán số tiền dịch vụ
@@ -1516,56 +1497,6 @@ export default function OrderDetailPage() {
         ) : null;
       })()}
 
-      {/* ⭐⭐ BANNER THÔNG BÁO AWAITING - Chờ nhận xe ⭐⭐ */}
-      {(() => {
-        const orderStatusUpper = String(orderStatus || "").toUpperCase();
-        const isAwaiting = orderStatusUpper === "AWAITING";
-        
-        // Debug log
-        console.log("🔍 [AWAITING Banner Check]:", {
-          orderStatus,
-          orderStatusUpper,
-          isAwaiting,
-          willShowBanner: isAwaiting
-        });
-        
-        return isAwaiting ? (
-          <div className="info-card" style={{
-            backgroundColor: "#FFF3CD",
-            border: "2px solid #FFC107",
-            borderRadius: "8px",
-            padding: "20px",
-            marginBottom: "20px"
-          }}>
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px"
-            }}>
-              <span style={{ fontSize: "24px" }}>⏳</span>
-              <div>
-                <h3 style={{ margin: 0, color: "#856404", fontSize: "18px", fontWeight: "bold" }}>
-                  Chờ nhận xe
-                </h3>
-                <p style={{ 
-                  margin: "8px 0 0 0", 
-                  color: "#856404", 
-                  fontWeight: "500",
-                  padding: "10px 16px",
-                  background: "#FFF3CD",
-                  border: "1px solid #FFC107",
-                  borderRadius: "8px",
-                  fontSize: "13px",
-                  flex: "1 1 0%",
-                  maxWidth: "100%"
-                }}>
-                  ⚠️ Vui lòng nếu đến nhận xe thì phải thanh toán số tiền còn lại
-                </p>
-              </div>
-            </div>
-          </div>
-        ) : null;
-      })()}
 
       {/* ⭐⭐ BANNER THÔNG BÁO CONFIRMED - Xe đã có sẵn ⭐⭐ */}
       {orderDetails.some(d => String(d.status || "").toUpperCase() === "CONFIRMED") && 
@@ -1782,19 +1713,25 @@ export default function OrderDetailPage() {
                 return (
                   <>
                     <button
-                      className="btn-receive"
+                      className="btn-receive-car"
                       onClick={handlePreviewReturn}
-                      disabled={false}
+                      disabled={handoverLoading || loading}
                     >
-                      🚗 Nhận xe
+                      <svg style={{ width: "18px", height: "18px", marginRight: "8px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1"></path>
+                        <polygon points="12 15 17 21 7 21 12 15"></polygon>
+                      </svg>
+                      {handoverLoading || loading ? "Đang xử lý..." : "NHẬN XE"}
                     </button>
                   </>
                 );
               }
               
               // ⭐⭐ BƯỚC 1: Nếu chưa bàn giao (vehicle status chưa RENTAL) → hiển thị nút "Bàn giao xe" ⭐⭐
-              // Kiểm tra điều kiện bàn giao
-              const canHandOver = fullOK || depositedOK;
+              // Kiểm tra điều kiện bàn giao:
+              // 1. Thanh toán toàn bộ (FULL_PAYMENT) có status SUCCESS
+              // 2. Hoặc thanh toán từng đợt: cả DEPOSIT và PICKUP đều có status SUCCESS
+              const canHandOver = fullOK || (depositedOK && pickupOK);
               const vehicleReady =
                 vehicleStatus === "BOOKED" ||
                 vehicleStatus === "AVAILABLE";
@@ -1821,21 +1758,33 @@ export default function OrderDetailPage() {
                 );
               }
               
-              // Nếu chưa đủ điều kiện bàn giao
+              // Nếu chưa đủ điều kiện bàn giao - hiển thị banner
+              // Kiểm tra xem có dịch vụ chưa thanh toán không
+              const unpaidServices = orderDetails.filter(d => {
+                const type = String(d.type || "").toUpperCase();
+                const status = String(d.status || "").toUpperCase();
+                const isServiceType = type === "SERVICE" || type === "SERVICE_SERVICE";
+                const isUnpaid = status === "PENDING";
+                return isServiceType && isUnpaid;
+              });
+              
+              const hasUnpaidServices = unpaidServices.length > 0;
+              
               return (
-                <div style={{ color: "#666", fontSize: "14px" }}>
-                  {!canHandOver && (
-                    <p style={{ margin: "4px 0", fontStyle: "italic" }}>
-                      ❌ Chưa đủ điều kiện bàn giao. 
-                      {!depositedOK && " Thiếu đặt cọc."}
-                      {!fullOK && " Thiếu thanh toán toàn bộ."}
-                    </p>
-                  )}
-                  {canHandOver && !vehicleReady && (
-                    <p style={{ margin: "4px 0", fontStyle: "italic" }}>
-                      ⚠️ Xe chưa sẵn sàng: {getVehicleStatusText(vehicleStatus || "N/A")}
-                    </p>
-                  )}
+                <div style={{
+                  padding: "12px 16px",
+                  backgroundColor: "#fee2e2",
+                  border: "1px solid #fca5a5",
+                  borderRadius: "8px",
+                  color: "#dc2626",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  marginTop: "12px"
+                }}>
+                  {hasUnpaidServices 
+                    ? "⚠️ Vui lòng chờ khách hàng trả phí dịch vụ và phát sinh"
+                    : "⚠️ Vui lòng chờ khách hàng thanh toán toàn bộ để tiến hành bàn giao"
+                  }
                 </div>
               );
             }
@@ -1850,7 +1799,7 @@ export default function OrderDetailPage() {
                   backgroundColor: "#FFF3CD", 
                   borderRadius: "6px" 
                 }}>
-                  💰 Đơn hàng đang chờ thanh toán dịch vụ cuối cùng.
+                  Đơn hàng đang chờ thanh toán dịch vụ cuối cùng.
                 </p>
               );
             }
@@ -1938,7 +1887,7 @@ export default function OrderDetailPage() {
                   <p style={{ margin: "4px 0", fontStyle: "italic" }}>
                     {vehicle?.status === "RENTAL" 
                       ? "⚠️ Xe đang được khách hàng khác thuê. Vui lòng đợi xe được trả về."
-                      : `⚠️ Xe chưa sẵn sàng: ${getVehicleStatusText(backendVehicleStatusForHandover || vehicle?.status || "N/A")}`}
+                      : "⚠️ Vui lòng chờ khách hàng thanh toán đầy đủ để bàn giao xe."}
                   </p>
                 )}
                 {canHandOver && vehicleReady && (
