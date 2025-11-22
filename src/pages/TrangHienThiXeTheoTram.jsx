@@ -627,9 +627,23 @@ const TrangHienThiXeTheoTram = () => {
       if (!vehicle)
         return showNotification("Không tìm thấy xe!", "error");
 
-      // Kiểm tra nếu xe đang ở trạng thái RENTED, không cho phép thay đổi trạng thái
+      // Kiểm tra nếu xe đang ở trạng thái RENTED hoặc BOOKED, không cho phép thay đổi trạng thái và trạm
       const currentStatus = (vehicle.status || "").toUpperCase();
       const newStatus = (editFormData.status || "").toUpperCase();
+      
+      // Nếu xe đang ở trạng thái RENTED hoặc BOOKED, không cho phép thay đổi trạm
+      if (currentStatus === "RENTED" || currentStatus === "RENTAL" || currentStatus === "BOOKED") {
+        const currentStationId = String(vehicle.stationId || vehicle.station_id || "");
+        const newStationId = String(editFormData.stationId || "");
+        
+        // Kiểm tra nếu cố gắng thay đổi trạm
+        if (newStationId && newStationId !== currentStationId) {
+          const statusMessage = (currentStatus === "BOOKED") 
+            ? "Không thể chuyển trạm khi xe đang ở trạng thái 'Đã đặt trước'. Vui lòng hủy đặt trước hoặc đợi khách hàng hoàn tất giao dịch trước khi chuyển trạm."
+            : "Không thể chuyển trạm khi xe đang ở trạng thái 'Đang thuê'. Vui lòng đợi khách hàng trả xe trước khi chuyển trạm.";
+          return showNotification(statusMessage, "error");
+        }
+      }
       
       // Nếu xe đang ở trạng thái RENTED, giữ nguyên trạng thái
       let finalStatus = editFormData.status;
@@ -641,9 +655,26 @@ const TrangHienThiXeTheoTram = () => {
         return showNotification("Không thể chuyển sang trạng thái 'Đang thuê'. Trạng thái này chỉ được thay đổi tự động khi khách hàng cọc và bàn giao xe.", "error");
       }
 
+      // Chuyển đổi status sang lowercase để khớp với backend (available|rented|maintenance)
+      const statusMap = {
+        "AVAILABLE": "available",
+        "RENTED": "rented",
+        "RENTAL": "rented",
+        "MAINTENANCE": "maintenance",
+        "BOOKED": "booked",
+        "CHECKING": "checking"
+      };
+      const normalizedStatus = statusMap[finalStatus?.toUpperCase()] || finalStatus?.toLowerCase() || "available";
+
+      // Nếu xe đang ở trạng thái RENTED hoặc BOOKED, giữ nguyên trạm
+      let finalStationId = Number(editFormData.stationId || vehicle.stationId || vehicle.station_id);
+      if (currentStatus === "RENTED" || currentStatus === "RENTAL" || currentStatus === "BOOKED") {
+        finalStationId = Number(vehicle.stationId || vehicle.station_id);
+      }
+
       const updateData = {
-        status: finalStatus,
-        stationId: Number(editFormData.stationId || vehicle.stationId || vehicle.station_id),
+        status: normalizedStatus,
+        stationId: finalStationId,
         brand: editFormData.brand,
         color: editFormData.color,
         seatCount: editFormData.seatCount,
@@ -1684,19 +1715,61 @@ const battery = Number(String(rawBattery).replace("%", "").trim());
 
               <div className="form-group">
                 <label>Trạm <span className="required">*</span></label>
-                <select
-                  name="stationId"
-                  value={editFormData.stationId}
-                  onChange={handleEditInputChange}
-                  required
-                >
-                  <option value="">-- Chọn trạm --</option>
-                  {allStations.map((st) => (
-                    <option key={st.stationId || st.stationid || st.id} value={String(st.stationId || st.stationid || st.id)}>
-                      {st.name} - {st.city}
-                    </option>
-                  ))}
-                </select>
+                {((editFormData.status || "").toUpperCase() === "RENTED" || 
+                  (editFormData.status || "").toUpperCase() === "RENTAL" ||
+                  (editFormData.status || "").toUpperCase() === "BOOKED") ? (
+                  <div>
+                    <select
+                      name="stationId"
+                      value={editFormData.stationId}
+                      disabled
+                      style={{ 
+                        opacity: 0.6, 
+                        cursor: "not-allowed",
+                        background: "#f5f5f5"
+                      }}
+                    >
+                      <option value={editFormData.stationId}>
+                        {allStations.find(st => 
+                          String(st.stationId || st.stationid || st.id) === String(editFormData.stationId)
+                        )?.name || "Đang tải..."} - {
+                          allStations.find(st => 
+                            String(st.stationId || st.stationid || st.id) === String(editFormData.stationId)
+                          )?.city || ""
+                        }
+                      </option>
+                    </select>
+                    <div style={{ 
+                      marginTop: "8px",
+                      padding: "8px", 
+                      background: "#FFF3CD", 
+                      border: "1px solid #FFC107",
+                      borderRadius: "4px",
+                      color: "#856404",
+                      fontSize: "12px"
+                    }}>
+                      {((editFormData.status || "").toUpperCase() === "RENTED" || 
+                        (editFormData.status || "").toUpperCase() === "RENTAL") 
+                        ? "Không thể chuyển trạm khi xe đang ở trạng thái 'Đang thuê'"
+                        : "Không thể chuyển trạm khi xe đang ở trạng thái 'Đã đặt trước'"
+                      }
+                    </div>
+                  </div>
+                ) : (
+                  <select
+                    name="stationId"
+                    value={editFormData.stationId}
+                    onChange={handleEditInputChange}
+                    required
+                  >
+                    <option value="">-- Chọn trạm --</option>
+                    {allStations.map((st) => (
+                      <option key={st.stationId || st.stationid || st.id} value={String(st.stationId || st.stationid || st.id)}>
+                        {st.name} - {st.city}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <div className="modal-actions">
