@@ -47,6 +47,7 @@ import TrangHienThiXeTheoTram from './pages/TrangHienThiXeTheoTram.jsx';
 import ChiTietKhachHang from './pages/ChiTietKhachHang.jsx';
 import LichSuThue from './pages/LichSuThue.jsx';
 import ChiTietDonTrongAdmin from './pages/ChiTietDonTrongAdmin.jsx';
+import VehicleHistoryPage from './pages/VehicleHistoryPage.jsx';
 
 const HomePage = () => (
   <ScrollToSectionWrapper>
@@ -190,10 +191,7 @@ function App() {
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="dashboard" element={<AdminDashBoardPage />} />
               <Route path="employees" element={<EmployeesPage />} />
-
-
-              
-
+             
               <Route path="quanlyxetaitram" element={<QuanLiXeTaiTram />} />
               <Route path="locations" element={<StationManagement />} />
               <Route path="customers" element={<CustomerManagement />} />
@@ -203,6 +201,7 @@ function App() {
               <Route path="lichsu-thue/:userId" element={<LichSuThue/>}/>
               <Route path="order-detail/:orderId" element={<ChiTietDonTrongAdmin/>}/>
               <Route path="banggia" element={<AdminBangGiaPage/>}/>
+              <Route path="vehicle-history/:vehicleId" element={<VehicleHistoryPage/>}/>
             </Route>
           </Routes >
         </LayoutWrapper >

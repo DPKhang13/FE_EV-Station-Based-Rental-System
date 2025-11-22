@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./EmployeesPage.css";
 import { adminService } from "../services/adminService";
+import api from "../services/api";
 
 const EmployeesPage = () => {
   const [employees, setEmployees] = useState([]);
@@ -86,23 +87,13 @@ const [deleteEmail, setDeleteEmail] = useState("");
     if (!validateForm()) return;
 
     try {
-      const res = await fetch("http://localhost:8080/api/staffschedule/createStaff", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullName: newStaff.fullName,
-          email: newStaff.email,
-          phone: newStaff.phone,
-          stationId: Number(newStaff.stationId),
-          password: newStaff.password
-        }),
+      await api.post('/staffschedule/createStaff', {
+        fullName: newStaff.fullName,
+        email: newStaff.email,
+        phone: newStaff.phone,
+        stationId: Number(newStaff.stationId),
+        password: newStaff.password
       });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => null);
-        console.error("📩 Backend trả lỗi:", errData);
-        throw new Error(errData?.message || "Tạo tài khoản thất bại");
-      }
 
       alert("✅ Tạo tài khoản nhân viên thành công!");
       setShowAddModal(false);
@@ -111,7 +102,8 @@ const [deleteEmail, setDeleteEmail] = useState("");
       getEmployees();
     } catch (err) {
       console.error("❌ Lỗi tạo tài khoản:", err);
-      alert(`Không thể tạo tài khoản: ${err.message}`);
+      const errorMessage = err?.response?.data?.message || err?.message || "Lỗi không xác định";
+      alert(`Không thể tạo tài khoản: ${errorMessage}`);
     }
   };
 

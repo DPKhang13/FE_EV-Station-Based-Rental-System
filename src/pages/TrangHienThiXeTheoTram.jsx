@@ -175,6 +175,7 @@ const TrangHienThiXeTheoTram = () => {
 
   const [editFormData, setEditFormData] = useState({
     status: "Available",
+    stationId: "",
     brand: "VinFast",
     color: "White",
     variant: "air",
@@ -576,12 +577,17 @@ const TrangHienThiXeTheoTram = () => {
   };
 
   // ==== Mở modal sửa xe ====
-  const handleOpenEditModal = (vehicleId) => {
+  const handleOpenEditModal = async (vehicleId) => {
     const vehicle = vehicles.find(
       (v) => (v.vehicleId || v.id) === vehicleId
     );
 
     if (!vehicle) return showNotification("Không tìm thấy xe!", "error");
+
+    // Load danh sách trạm nếu chưa có
+    if (allStations.length === 0) {
+      await fetchAllStations();
+    }
 
     let seatCount = Number(vehicle.seatCount || vehicle.seat_count || 4);
     let variant = vehicle.variant || "air";
@@ -589,7 +595,8 @@ const TrangHienThiXeTheoTram = () => {
       variant = "air";
 
     setEditFormData({
-      status: vehicle.status || "Available",
+      status: vehicle.status || "AVAILABLE",
+      stationId: String(vehicle.stationId || vehicle.station_id || station || ""),
       brand: vehicle.brand || "VinFast",
       color: vehicle.color || "White",
       variant,
@@ -622,14 +629,13 @@ const TrangHienThiXeTheoTram = () => {
 
       const updateData = {
         status: editFormData.status,
-        stationId: Number(vehicle.stationId || vehicle.station_id),
+        stationId: Number(editFormData.stationId || vehicle.stationId || vehicle.station_id),
         brand: editFormData.brand,
         color: editFormData.color,
         seatCount: editFormData.seatCount,
         variant: editFormData.variant,
         batteryStatus: String(vehicle.batteryStatus ?? vehicle.battery_status ?? "100"),
-batteryCapacity: String(vehicle.batteryCapacity ?? vehicle.battery_capacity ?? "100"),
-
+        batteryCapacity: String(vehicle.batteryCapacity ?? vehicle.battery_capacity ?? "100"),
         rangeKm: Number(
           vehicle.rangeKm || vehicle.range_km || 350
         )
@@ -1306,7 +1312,7 @@ const battery = Number(String(rawBattery).replace("%", "").trim());
                             <button
                               className="menu-item"
                               onClick={() => {
-                                handleViewRentalHistory(v.vehicleId);
+                                navigate(`/admin/vehicle-history/${v.vehicleId || v.id}`);
                                 setOpenMenuId(null);
                               }}
                             >
@@ -1315,7 +1321,7 @@ const battery = Number(String(rawBattery).replace("%", "").trim());
                             <button
                               className="menu-item"
                               onClick={() => {
-                                handleOpenEditModal(v.vehicleId);
+                                handleOpenEditModal(v.vehicleId || v.id);
                                 setOpenMenuId(null);
                               }}
                             >
@@ -1324,7 +1330,7 @@ const battery = Number(String(rawBattery).replace("%", "").trim());
                             <button
                               className="menu-item danger"
                               onClick={() => {
-                                handleDeleteVehicle(v.vehicleId);
+                                handleDeleteVehicle(v.vehicleId || v.id);
                                 setOpenMenuId(null);
                               }}
                             >
@@ -1623,8 +1629,71 @@ const battery = Number(String(rawBattery).replace("%", "").trim());
         </div>
       )}
 
+      {/* ========== MODAL SỬA XE ========== */}
+      {showEditModal && (
+        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Chỉnh sửa thông tin xe</h2>
+              <button className="modal-close-btn" onClick={() => setShowEditModal(false)}>×</button>
+            </div>
+
+            <form onSubmit={handleSubmitEditVehicle}>
+              <div className="form-group">
+                <label>Trạng thái <span className="required">*</span></label>
+                <select
+                  name="status"
+                  value={editFormData.status}
+                  onChange={handleEditInputChange}
+                  required
+                >
+                  <option value="AVAILABLE">Sẵn sàng</option>
+                  <option value="RENTED">Đang thuê</option>
+                  <option value="MAINTENANCE">Bảo trì</option>
+                  <option value="BOOKED">Đã đặt trước</option>
+                  <option value="CHECKING">Đang kiểm tra</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Trạm <span className="required">*</span></label>
+                <select
+                  name="stationId"
+                  value={editFormData.stationId}
+                  onChange={handleEditInputChange}
+                  required
+                >
+                  <option value="">-- Chọn trạm --</option>
+                  {allStations.map((st) => (
+                    <option key={st.stationId || st.stationid || st.id} value={String(st.stationId || st.stationid || st.id)}>
+                      {st.name} - {st.city}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="btn-cancel"
+                  onClick={() => setShowEditModal(false)}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="btn-submit"
+                >
+                  Lưu thay đổi
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* ========== MODAL CÁC LOẠI KHÁC ========== */}
-      {/* (Toàn bộ phần modal sửa xe, thêm đơn hàng, sửa đơn hàng, xem lịch sử, xem chi tiết...) */}
+      {/* (Toàn bộ phần modal thêm đơn hàng, sửa đơn hàng, xem lịch sử, xem chi tiết...) */}
 
       {/* ----- Notification ----- */}
       {notification.show && (

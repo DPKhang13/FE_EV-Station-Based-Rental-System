@@ -1,0 +1,144 @@
+.vh-container {
+  padding: 40px 60px;
+  max-width: 1400px;
+  margin: 0 auto;
+  background: #FFFFFF;
+  min-height: 100vh;
+  font-family: "Poppins", -apple-system, sans-serif;
+}
+
+.vh-header {
+  margin-bottom: 40px;
+}
+
+.vh-back-btn {
+  background: #000000;
+  color: #FFFFFF;
+  border: 2px solid #000000;
+  padding: 10px 20px;
+  border-radius: 0;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+.vh-back-btn:hover {
+  background: #DC0000;
+  border-color: #DC0000;
+}
+
+.vh-title {
+  font-size: 32px;
+  font-weight: 300;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  margin-bottom: 20px;
+}
+
+.vh-vehicle-info {
+  background: #F5F5F5;
+  padding: 20px;
+  border-left: 4px solid #DC0000;
+  margin-top: 20px;
+}
+
+.vh-vehicle-info p {
+  margin: 5px 0;
+  font-size: 14px;
+  color: #333333;
+}
+
+.vh-loading {
+  padding: 80px 40px;
+  text-align: center;
+  color: #666666;
+  font-size: 16px;
+}
+
+.vh-empty {
+  text-align: center;
+  padding: 80px 40px;
+  color: #666666;
+}
+
+.vh-content {
+  margin-top: 30px;
+}
+
+.vh-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #FFFFFF;
+  border: 2px solid #E0E0E0;
+  border-top: 3px solid #DC0000;
+}
+
+.vh-table th {
+  background: #000000;
+  color: #FFFFFF;
+  text-align: left;
+  padding: 18px 20px;
+  font-weight: 400;
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-bottom: 2px solid #DC0000;
+}
+
+.vh-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid #E0E0E0;
+  font-size: 14px;
+  font-weight: 300;
+  color: #333333;
+}
+
+.vh-table tr:hover {
+  background-color: #F5F5F5;
+}
+
+.vh-table tr:last-child td {
+  border-bottom: none;
+}
+
+.vh-status {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 0;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.vh-status-pending,
+.vh-status-confirmed {
+  background: #FFF3CD;
+  color: #856404;
+  border: 1px solid #FFC107;
+}
+
+.vh-status-completed {
+  background: #D4EDDA;
+  color: #155724;
+  border: 1px solid #28A745;
+}
+
+.vh-status-cancelled {
+  background: #F8D7DA;
+  color: #721C24;
+  border: 1px solid #DC3545;
+}
+
+.vh-status-active,
+.vh-status-in_progress {
+  background: #D1ECF1;
+  color: #0C5460;
+  border: 1px solid #17A2B8;
+}
+
