@@ -1310,14 +1310,14 @@
     border-bottom: none;
   }
   
-  .detail-label {
+  .order-detail-container .detail-label {
     font-weight: 600;
     color: #666;
     min-width: 180px;
     font-size: 14px;
   }
   
-  .detail-value {
+  .order-detail-container .detail-value {
     color: #1a1a1a;
     text-align: right;
     flex: 1;
@@ -1341,11 +1341,11 @@
       gap: 4px;
     }
   
-    .detail-label {
+    .order-detail-container .detail-label {
       min-width: auto;
     }
   
-    .detail-value {
+    .order-detail-container .detail-value {
       text-align: left;
     }
   }

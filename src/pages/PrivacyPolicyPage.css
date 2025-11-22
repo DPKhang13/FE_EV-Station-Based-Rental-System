@@ -17,13 +17,27 @@
     border-bottom: 3px solid #000000;
 }
 
-.hero-content h1 {
+.privacy-hero-content {
+    position: relative;
+    z-index: 1;
+}
+
+.privacy-hero-content h1 {
     font-size: 48px;
     font-weight: 700;
     letter-spacing: 4px;
     text-transform: uppercase;
     margin: 0 0 20px 0;
     color: #FFFFFF;
+    text-decoration: none;
+    border-bottom: none;
+    position: relative;
+}
+
+.privacy-hero-content h1::after,
+.privacy-hero-content h1::before {
+    display: none !important;
+    content: none !important;
 }
 
 .hero-subtitle {
@@ -51,25 +65,36 @@
     border-left: 4px solid #DC0000;
 }
 
-.section-header {
+/* Privacy Section Header - Tách riêng, căn giữa */
+.privacy-section-header {
+    text-align: center;
     margin-bottom: 30px;
     position: relative;
 }
 
-.red-line {
-    width: 60px;
-    height: 3px;
-    background: linear-gradient(90deg, #DC0000, #B80000);
-    margin-bottom: 15px;
-}
-
-.section-header h2 {
+.privacy-section-header h2 {
     font-size: 24px;
     font-weight: 700;
     letter-spacing: 2px;
     text-transform: uppercase;
     color: #000000;
-    margin: 0;
+    margin: 0 0 20px 0;
+    text-align: center;
+}
+
+.privacy-red-line {
+    width: 150px;
+    height: 3px;
+    margin: 0 auto;
+    background: linear-gradient(to right, 
+        rgba(220, 0, 0, 0) 0%,
+        rgba(220, 0, 0, 0.5) 30%,
+        rgba(220, 0, 0, 1) 50%,
+        rgba(220, 0, 0, 0.5) 70%,
+        rgba(220, 0, 0, 0) 100%
+    );
+    filter: blur(1.5px);
+    border-radius: 2px;
 }
 
 /* Content */

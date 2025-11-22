@@ -105,40 +105,56 @@
 }
 
 /* 🧭 Tabs */
-.tabs {
+.giaoTraXe-container .tabs {
   display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
+  justify-content: stretch;
+  flex-wrap: nowrap;
   margin-bottom: 50px;
   gap: 0;
-  border-bottom: 1px solid #E0E0E0;
+  border-bottom: none;
+  background: transparent;
+  padding: 0;
+  width: 100%;
 }
 
-.tabs button {
-  padding: 16px 32px;
-  border: none;
-  border-bottom: 3px solid transparent;
-  background-color: transparent;
+.giaoTraXe-container .tabs button {
+  padding: 16px 20px;
+  border: 2px solid #000000 !important;
+  background-color: #000000 !important;
   cursor: pointer;
-  font-weight: 300;
-  font-size: 14px;
+  font-weight: 600;
+  font-size: 13px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: #666666;
+  color: #FFFFFF !important;
   transition: all 0.3s ease;
   position: relative;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  box-sizing: border-box;
+  border-radius: 0 !important;
+  margin: 0;
+  flex: 1 1 0;
+  min-width: 0;
+  width: 100%;
 }
 
-.tabs button.active {
-  background-color: transparent;
-  color: #000000;
-  border-bottom-color: #DC0000;
-  font-weight: 400;
+.giaoTraXe-container .tabs button:not(:last-child) {
+  border-right: 1px solid #FFFFFF !important;
 }
 
-.tabs button:hover:not(.active) {
-  color: #000000;
-  background-color: #F5F5F5;
+.giaoTraXe-container .tabs button.active {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+  border-color: #000000 !important;
+  font-weight: 700;
+}
+
+.giaoTraXe-container .tabs button:hover {
+  background-color: #DC0000 !important;
+  border-color: #DC0000 !important;
+  color: #FFFFFF !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 0, 0, 0.3);
 }
 
 /* 🚗 Grid xe */
@@ -585,9 +601,34 @@
     padding: 14px 20px;
   }
 
+  .tabs {
+    gap: 0;
+    flex-wrap: wrap;
+  }
+
   .tabs button {
-    padding: 12px 20px;
-    font-size: 12px;
+    padding: 12px 16px;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    min-width: auto;
+    flex: 1 1 calc(50% - 2px);
+    border: 2px solid #000000;
+  }
+
+  .tabs button:nth-child(2n) {
+    border-left: none;
+  }
+
+  .tabs button:nth-child(2n+1) {
+    border-right: 2px solid #000000;
+  }
+
+  .tabs button:first-child {
+    border-left: 2px solid #000000;
+  }
+
+  .tabs button:last-child {
+    border-right: 2px solid #000000;
   }
 
   .xe-grid {

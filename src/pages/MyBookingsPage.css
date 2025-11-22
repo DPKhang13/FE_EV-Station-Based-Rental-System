@@ -131,7 +131,7 @@
 }
 
 .search-input {
-    padding: 8px 12px;
+    padding: 0 12px;
     border: 2px solid #000000;
     border-right: none;
     border-radius: 0;
@@ -144,7 +144,10 @@
     transition: all 0.3s;
     box-sizing: border-box;
     height: 36px;
+    line-height: 36px;
     outline: none;
+    margin: 0;
+    vertical-align: top;
 }
 
 .search-input:focus {
@@ -160,7 +163,7 @@
 }
 
 .btn-search {
-    padding: 8px 16px;
+    padding: 0 16px;
     border: 2px solid #000000;
     border-left: none;
     border-radius: 0;
@@ -173,8 +176,13 @@
     background: #000000;
     color: #FFFFFF;
     height: 36px;
+    line-height: 36px;
     white-space: nowrap;
-    margin-left: 0;
+    margin: 0;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .btn-search:hover {
@@ -1021,6 +1029,10 @@
     border: 1px solid #E5E5E5;
     text-align: center;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .detail-box:hover {
@@ -1029,7 +1041,7 @@
     transform: translateY(-2px);
 }
 
-.detail-label {
+.order-details-grid .detail-label {
     font-size: 11px;
     color: #999999;
     font-weight: 400;
@@ -1037,21 +1049,26 @@
     letter-spacing: 2px;
     margin-bottom: 10px;
     font-family: 'Helvetica Neue', Arial, sans-serif;
+    text-align: center;
+    width: 100%;
 }
 
-.detail-value {
+.order-details-grid .detail-value {
     font-size: 18px;
     color: #000000;
     font-weight: 300;
     font-family: 'Helvetica Neue', Arial, sans-serif;
     letter-spacing: 1px;
+    text-align: center;
+    width: 100%;
 }
 
-.detail-value.plate-number {
+.order-details-grid .detail-value.plate-number {
     font-family: 'Courier New', monospace;
     color: #dc2626;
     font-size: 18px;
     font-weight: 800;
+    text-align: center;
 }
 
 /* Highlight box for Tổng Tiền */
