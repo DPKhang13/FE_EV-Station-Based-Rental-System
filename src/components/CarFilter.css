@@ -19,6 +19,37 @@
     padding-top: 0;
 }
 
+/* Nút toggle filter panel - trong khung lọc */
+.filter-toggle-btn {
+    width: auto;
+    height: auto;
+    background: transparent;
+    color: #DC0000;
+    border: none;
+    padding: 0;
+    font-size: 24px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0;
+}
+
+.filter-toggle-btn:hover {
+    color: #000000;
+}
+
+/* Nút hiện bộ lọc khi đang ẩn */
+.filter-toggle-btn-show {
+    position: sticky;
+    top: 20px;
+    z-index: 10;
+    margin-bottom: 0;
+}
+
 /* Left Filter Panel */
 .filter-panel {
     width: 350px;
@@ -33,6 +64,7 @@
     overflow-y: auto;
     overflow-x: hidden;
     align-self: flex-start;
+    transition: all 0.3s ease;
 }
 
 /* Filter Section */
@@ -86,6 +118,39 @@
     grid-template-columns: repeat(8, 1fr);
     gap: 8px;
     padding: 8px 0;
+}
+
+/* Brand Grid */
+.brand-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 8px 0;
+}
+
+.brand-option {
+    background: #FFFFFF;
+    color: #000000;
+    border: 2px solid #E5E5E5;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.brand-option:hover {
+    border-color: #DC0000;
+    color: #DC0000;
+}
+
+.brand-option.selected {
+    background: #DC0000;
+    color: #FFFFFF;
+    border-color: #DC0000;
 }
 
 .color-option {
@@ -699,6 +764,16 @@
     font-size: 64px;
     margin-bottom: 24px;
     opacity: 0.3;
+}
+
+.empty-branch-name {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: #DC0000;
+    margin: 0 0 20px 0;
+    text-transform: uppercase;
 }
 
 .empty-title {

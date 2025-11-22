@@ -94,6 +94,7 @@ const GiaoTraXe = () => {
           id: v.id || v.vehicleId,
           ten: v.vehicle_name || v.vehicleName || v.name || "Xe điện",
           bienSo: v.plate_number || v.plateNumber || "N/A",
+          carmodel: v.carmodel || v.carModel || v.car_model || "N/A", // ✅ Thêm carmodel
           pin: parseInt(v.battery_status?.replace("%", "") || v.batteryStatus?.replace("%", "") || "100"),
           trangThai: formatStatus(v.status),
           mau: v.color || "White",
@@ -258,9 +259,12 @@ const formatStatus = (status) => {
   const stationName = user?.stationName || vehicleList[0]?.tram || `Trạm ${stationId}`;
   
   const filteredVehicles = vehicleList.filter((xe) => {
-    const matchSearch = xe.bienSo
-      ?.toLowerCase()
-      .includes(searchTerm.toLowerCase());
+    // ✅ Tìm kiếm theo biển số hoặc carmodel (partial match)
+    const searchLower = searchTerm.toLowerCase().trim();
+    const matchSearch = !searchLower || (
+      (xe.bienSo?.toLowerCase().includes(searchLower)) ||
+      (xe.carmodel?.toLowerCase().includes(searchLower))
+    );
 
     const matchTab =
       currentTab === "tatca" ||
@@ -360,7 +364,7 @@ const getCarImage = (brand, color, seatCount) => {
       <div className="search-bar">
         <input
           type="text"
-          placeholder="🔍 Tìm theo biển số..."
+          placeholder="Tìm theo biển số hoặc loại xe..."
           className="search-input"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -412,6 +416,7 @@ const getCarImage = (brand, color, seatCount) => {
 
               <h3>{xe.ten}</h3>
               <p><strong>Biển số:</strong> {xe.bienSo}</p>
+              <p><strong>Loại xe:</strong> {xe.carmodel || "N/A"}</p>
               <p><strong>Trạng thái:</strong> <span className={`xe-status status-${getStatusColor(xe.trangThai)}`}>{xe.trangThai}</span></p>
               <p><strong>Màu sắc:</strong> {xe.mau}</p>
 

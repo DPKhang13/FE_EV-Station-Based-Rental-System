@@ -8,8 +8,18 @@
   background-color: #FFFFFF;
 }
 
+/* Vùng hover để hiện sidebar */
+.sidebar-hover-area {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 60px;
+  height: 100vh;
+  z-index: 100;
+}
+
 /* Sidebar cố định */
-.staff-wrap > .sidebar {
+.staff-wrap .sidebar {
   position: fixed;
   top: 0;
   left: 0;
@@ -21,17 +31,32 @@
   flex-direction: column;
   justify-content: space-between;
   border-right: 3px solid #DC0000;
-  z-index: 100;
+  z-index: 101;
+  transition: transform 0.3s ease-in-out;
+  transform: translateX(-100%);
+}
+
+/* Sidebar hiện khi hover vào vùng hover hoặc chính sidebar */
+.sidebar-hover-area:hover .sidebar,
+.sidebar:hover {
+  transform: translateX(0);
 }
 
 /* Main content */
 .staff-main {
   flex: 1;
-  margin-left: 260px;
+  margin-left: 0;
   padding: 40px;
   overflow-y: auto;
   background-color: #FFFFFF;
   min-height: 100vh;
+  transition: margin-left 0.3s ease-in-out;
+}
+
+/* Main content khi sidebar hiện */
+.sidebar-hover-area:hover ~ .staff-main,
+.sidebar:hover ~ .staff-main {
+  margin-left: 260px;
 }
 
 /* Responsive */

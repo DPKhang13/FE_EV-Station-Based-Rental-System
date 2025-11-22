@@ -810,6 +810,7 @@ batteryCapacity: String(vehicle.batteryCapacity ?? vehicle.battery_capacity ?? "
                 <th>TÊN XE</th>
                 <th>BIỂN SỐ</th>
                 <th>HÃNG</th>
+                <th>LOẠI XE</th>
                 <th>MÀU</th>
                 <th>SỐ GHẾ</th>
                 <th>NĂM SX</th>
@@ -849,6 +850,7 @@ const battery = Number(String(rawBattery).replace("%", "").trim());
                     <td><strong>{v.vehicleName}</strong></td>
                     <td>{v.plateNumber}</td>
                     <td>{v.brand}</td>
+                    <td>{v.carmodel || v.carModel || "N/A"}</td>
 
                     <td>
                       <span

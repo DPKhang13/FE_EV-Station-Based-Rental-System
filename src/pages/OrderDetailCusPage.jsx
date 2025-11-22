@@ -21,16 +21,29 @@ const OrderDetailCusPage = () => {
   const [selectedPaymentType, setSelectedPaymentType] = useState(null);
   const [selectedAmount, setSelectedAmount] = useState(null); // 1: đặt cọc, 2: phần còn lại, 3: toàn bộ
   const [selectedMethod, setSelectedMethod] = useState(null); // 'CASH' hoặc 'captureWallet'
+  const [isServicePayment, setIsServicePayment] = useState(false); // Đánh dấu thanh toán dịch vụ
   
   const remainingAmountFromDetails = useMemo(() => {
     if (!Array.isArray(orderDetails)) return 0;
+    // Backend đã tính sẵn remainingAmount (không cộng SERVICE PENDING vì đã có trong remainingAmount của payment)
+    // Backend logic:
+    // - DEPOSIT: remainingAmount = total - deposit (cộng thêm dịch vụ khi thêm)
+    // - FULL_PAYMENT: remainingAmount = 0 ban đầu (cộng thêm dịch vụ khi thêm)
+    // - Phí trễ: Cộng vào remainingAmount của DEPOSIT/FULL_PAYMENT
+    // - Không cộng SERVICE PENDING (đã có trong remainingAmount)
+    // Frontend chỉ cần lấy remainingAmount từ API, không tự tính thêm
+    let maxRemainingAmount = 0;
     for (const detail of orderDetails) {
-      const amount = Number(detail?.remainingAmount);
-      if (!Number.isNaN(amount) && amount > 0) {
-        return amount;
+      const remainingAmount = detail?.remainingAmount !== null && detail?.remainingAmount !== undefined 
+        ? Number(detail.remainingAmount) 
+        : null;
+      
+      // Lấy giá trị remainingAmount lớn nhất từ API (backend đã tính đúng)
+      if (remainingAmount !== null && remainingAmount > 0) {
+        maxRemainingAmount = Math.max(maxRemainingAmount, remainingAmount);
       }
     }
-    return 0;
+    return maxRemainingAmount;
   }, [orderDetails]);
   
   const isStaff = user?.role === "staff" || user?.role === "admin";
@@ -124,9 +137,12 @@ const OrderDetailCusPage = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      await fetchOrderDetails();
-      await fetchPayments();
-      await fetchOrderStatus();
+      // ✅ Gọi các API song song thay vì tuần tự để tăng tốc độ load
+      await Promise.all([
+        fetchOrderDetails(),
+        fetchPayments(),
+        fetchOrderStatus()
+      ]);
     };
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -139,12 +155,46 @@ const OrderDetailCusPage = () => {
     try {
       setProcessing(true);
 
+      // Xác định paymentType dựa trên loại thanh toán
+      let finalPaymentType = paymentType;
+      
+      // Logic thanh toán (theo backend mới):
+      // 1. Đặt cọc (type 1): vẫn như cũ, số tiền còn lại dựa vào remainingAmount của đơn đặt cọc
+      // 2. Thanh toán toàn bộ (type 3): backend sẽ set remainingAmount = 0
+      // 3. Thanh toán phần còn lại (type 2): dựa vào remainingAmount của DEPOSIT/FULL_PAYMENT
+      //    - Backend sẽ trừ amount đã thanh toán khỏi remainingAmount
+      //    - Nếu remainingAmount = 0 → chuyển order status thành PAID và mark service details as SUCCESS
+      //    - Nếu còn remainingAmount > 0 → giữ hoặc chuyển order status thành PENDING_FINAL_PAYMENT
+      // 4. Dịch vụ: luôn dùng type 2, backend sẽ tự động:
+      //    - Nếu có đơn pickup → thêm vào remainingAmount của đơn pickup
+      //    - Nếu là full payment → thêm vào full payment
+      //    - Thanh toán bằng type 2 (dựa vào remainingAmount của DEPOSIT/FULL_PAYMENT)
+      // 5. Thanh toán tiền mặt Type 2: Dựa vào remainingAmount của DEPOSIT/FULL_PAYMENT (giống logic online)
+      
+      if (isServicePayment) {
+        // Thanh toán dịch vụ: luôn dùng type 2
+        // Backend sẽ tự động thêm dịch vụ vào remainingAmount của pickup/full_payment
+        finalPaymentType = 2;
+      } else if (paymentType === 1) {
+        // Đặt cọc: type 1 (số tiền còn lại dựa vào remainingAmount của đơn đặt cọc)
+        finalPaymentType = 1;
+      } else if (paymentType === 3) {
+        // Thanh toán toàn bộ: type 3 (backend sẽ set remainingAmount = 0)
+        finalPaymentType = 3;
+      } else if (paymentType === 2) {
+        // Thanh toán phần còn lại: type 2 (dựa vào remainingAmount của đơn đặt cọc)
+        finalPaymentType = 2;
+      }
+
       const payload = {
         orderId,
         method: method,
-        paymentType,
+        paymentType: finalPaymentType,
       };
 
+      // Xử lý thanh toán tiền mặt và MoMo giống nhau (cùng logic, cùng paymentType)
+      // Thanh toán tiền mặt: tạo payment với status PENDING, chờ staff xác nhận
+      // Thanh toán MoMo: redirect đến payment URL
       if (method === "CASH") {
         // Gọi API tạo payment tiền mặt với status PENDING (chờ staff xác nhận)
         console.log("[CASH] Creating cash payment request:", payload);
@@ -161,11 +211,13 @@ const OrderDetailCusPage = () => {
         // Payment được tạo với status PENDING - chờ staff xác nhận
         console.log("[CASH] Payment request created (PENDING):", responseData);
         
-        // Refresh order details và payments để hiển thị payment mới
-        await fetchOrderDetails();
-        await fetchPayments();
+        // ✅ Refresh order details và payments song song để tăng tốc độ
+        await Promise.all([
+          fetchOrderDetails(),
+          fetchPayments()
+        ]);
         
-        // Hiển thị thông báo đã gửi yêu cầu (không phải thành công)
+        // Hiển thị thông báo đã gửi yêu cầu
         alert(
           `📋 Yêu cầu thanh toán tiền mặt đã được gửi!\n\n` +
           `Số tiền: ${responseData.amount?.toLocaleString("vi-VN") || "N/A"} VND\n` +
@@ -178,11 +230,12 @@ const OrderDetailCusPage = () => {
         setShowPaymentModal(false);
         setSelectedAmount(null);
         setSelectedMethod(null);
+        setIsServicePayment(false);
         setProcessing(false);
         return;
       }
 
-      // Xử lý MoMo payment (giữ nguyên logic cũ)
+      // Xử lý MoMo payment (giống CASH nhưng redirect đến payment URL)
       const res = await api.post("/payment/url", payload);
 
       const paymentUrl = res?.paymentUrl || res?.data?.paymentUrl || "";
@@ -206,6 +259,7 @@ const OrderDetailCusPage = () => {
         setShowPaymentModal(false);
         setSelectedAmount(null);
         setSelectedMethod(null);
+        setIsServicePayment(false);
       }
     }
   };
@@ -245,19 +299,25 @@ const OrderDetailCusPage = () => {
       setSelectedPaymentType("RENTAL");
       setSelectedAmount(null);
       setSelectedMethod(null);
+      setIsServicePayment(false);
       setShowPaymentModal(true);
     } else if (type === "PICKUP") {
       // Thanh toán pickup (type 2)
       setSelectedPaymentType("PICKUP");
       setSelectedAmount(2);
       setSelectedMethod(null);
+      setIsServicePayment(false);
       setShowPaymentModal(true);
     } else if (type.startsWith("SERVICE")) {
-      // Thanh toán dịch vụ được xem như thanh toán phần còn lại (type 2)
-      setSelectedPaymentType("PICKUP");
-      setSelectedAmount(2);
+      // Thanh toán dịch vụ: luôn dùng type 2 (thanh toán phần còn lại)
+      // Backend sẽ tự động thêm dịch vụ vào remainingAmount của pickup hoặc full_payment
+      setSelectedPaymentType("SERVICE");
+      setSelectedAmount(2); // Type 2: thanh toán phần còn lại
       setSelectedMethod(null);
+      setIsServicePayment(true); // Đánh dấu là thanh toán dịch vụ
       setShowPaymentModal(true);
+    } else {
+      setIsServicePayment(false);
     }
   };
 
@@ -292,10 +352,12 @@ const OrderDetailCusPage = () => {
       
       alert("✅ Đã xác nhận thanh toán thành công!");
       
-      // Refresh payments, order details và order status để hiển thị status mới
-      await fetchPayments();
-      await fetchOrderDetails();
-      await fetchOrderStatus();
+      // ✅ Refresh tất cả dữ liệu song song để tăng tốc độ
+      await Promise.all([
+        fetchPayments(),
+        fetchOrderDetails(),
+        fetchOrderStatus()
+      ]);
     } catch (err) {
       console.error("Lỗi xác nhận thanh toán:", err);
       const errorMsg = 
@@ -333,16 +395,45 @@ const OrderDetailCusPage = () => {
   // ============================
   // MAIN UI
   // ============================
-  // Format datetime helper
-  const fmtVN = (d) =>
-    d ? new Date(d).toLocaleString("vi-VN") : "N/A";
+  // Format datetime: ngày trước, giờ sau (dd/MM/yyyy HH:mm)
+  const fmtDateTimeVN = (d) => {
+    if (!d) return "N/A";
+    const date = new Date(d);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  };
+
+  // Chuyển đổi tên màu sang mã màu hex
+  const getColorHex = (colorName) => {
+    if (!colorName) return "#CCCCCC";
+    const colorMap = {
+      "RED": "#FF0000",
+      "BLUE": "#0000FF",
+      "GREEN": "#008000",
+      "YELLOW": "#FFFF00",
+      "BLACK": "#000000",
+      "WHITE": "#FFFFFF",
+      "SILVER": "#C0C0C0",
+      "GRAY": "#808080",
+      "GREY": "#808080",
+      "ORANGE": "#FFA500",
+      "PURPLE": "#800080",
+      "PINK": "#FFC0CB",
+      "BROWN": "#A52A2A"
+    };
+    return colorMap[String(colorName).toUpperCase()] || "#CCCCCC";
+  };
 
   // Chuyển đổi order status sang tiếng Việt
   const getOrderStatusText = (status) => {
     if (!status) return "N/A";
     const statusUpper = String(status).toUpperCase();
     const statusMap = {
-      "PENDING": "Chờ xử lý",
+      "PENDING": "Chưa thanh toán",
       "DEPOSITED": "Đã đặt cọc",
       "BOOKED": "Đã đặt",
       "RENTAL": "Đang thuê",
@@ -350,11 +441,13 @@ const OrderDetailCusPage = () => {
       "WAITING": "Chờ xe",
       "CONFIRMED": "Đã xác nhận",
       "COMPLETED": "Đã hoàn thành",
-      "PENDING_FINAL_PAYMENT": "Chờ thanh toán cuối",
+      "PENDING_FINAL_PAYMENT": "Chờ thanh toán ",
       "CHECKING": "Đang kiểm tra",
       "CANCELLED": "Đã hủy",
       "FAILED": "Đã hủy",
-      "PAYMENT_FAILED": "Thanh toán thất bại"
+      "PAYMENT_FAILED": "Thanh toán thất bại",
+      "PAID": "Đã thanh toán",
+      "SUCCESS": "Thành công"
     };
     return statusMap[statusUpper] || status;
   };
@@ -380,42 +473,55 @@ const OrderDetailCusPage = () => {
 
       {/* CUSTOMER - Lấy từ orderDetails */}
       {orderDetails.length > 0 && orderDetails[0] && (
-        <div style={{
-          background: "#FFFFFF",
-          border: "1px solid #E0E0E0",
-          borderRadius: "8px",
-          padding: "20px",
-          marginBottom: "20px",
-          marginTop: "20px"
-        }}>
-          <h2 style={{ 
-            fontSize: "18px", 
-            fontWeight: "600", 
-            marginBottom: "16px",
-            color: "#000000",
-            borderBottom: "2px solid #DC0000",
-            paddingBottom: "10px"
-          }}>
-            Thông tin khách hàng
-          </h2>
+        <div className="order-info-card">
+          <div className="order-info-card-header">
+            <h2 className="order-info-title">Thông tin khách hàng</h2>
+          </div>
 
-          <div style={{ 
-            display: "grid", 
-            gridTemplateColumns: "1fr 1fr", 
-            gap: "12px 24px" 
-          }}>
-            <p style={{ margin: 0 }}>
-              <span style={{ fontWeight: "600", color: "#666" }}>Họ tên:</span>{" "}
-              <strong>{orderDetails[0].customerName || "N/A"}</strong>
-            </p>
-            <p style={{ margin: 0 }}>
-              <span style={{ fontWeight: "600", color: "#666" }}>Email:</span>{" "}
-              <strong>{orderDetails[0].email || "N/A"}</strong>
-            </p>
-            <p style={{ margin: 0 }}>
-              <span style={{ fontWeight: "600", color: "#666" }}>Số điện thoại:</span>{" "}
-              <strong>{orderDetails[0].phone || "N/A"}</strong>
-            </p>
+          <div className="order-info-grid">
+            <div className="order-info-item">
+              <div className="order-info-icon-circle">
+                <svg style={{ width: "16px", height: "16px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </div>
+              <div className="order-info-text">
+                <span className="order-info-label">Họ tên</span>
+                <span className="order-info-value">
+                  {orderDetails[0].customerName || "N/A"}
+                </span>
+              </div>
+            </div>
+
+            <div className="order-info-item">
+              <div className="order-info-icon-circle">
+                <svg style={{ width: "16px", height: "16px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                  <polyline points="22,6 12,13 2,6" />
+                </svg>
+              </div>
+              <div className="order-info-text">
+                <span className="order-info-label">Email</span>
+                <span className="order-info-value">
+                  {orderDetails[0].email || "N/A"}
+                </span>
+              </div>
+            </div>
+
+            <div className="order-info-item">
+              <div className="order-info-icon-circle">
+                <svg style={{ width: "16px", height: "16px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                </svg>
+              </div>
+              <div className="order-info-text">
+                <span className="order-info-label">Số điện thoại</span>
+                <span className="order-info-value">
+                  {orderDetails[0].phone || "N/A"}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -427,67 +533,110 @@ const OrderDetailCusPage = () => {
         const endTime = firstDetail?.endTime;
         
         return (
-          <div style={{
-            background: "#FFFFFF",
-            border: "1px solid #E0E0E0",
-            borderRadius: "8px",
-            padding: "20px",
-            marginBottom: "20px"
-          }}>
-            <h2 style={{ 
-              fontSize: "18px", 
-              fontWeight: "600", 
-              marginBottom: "16px",
-              color: "#000000",
-              borderBottom: "2px solid #DC0000",
-              paddingBottom: "10px"
-            }}>
-              Thông tin xe
-            </h2>
+          <div className="vehicle-info-card">
+            <div className="vehicle-info-header">
+              <h2 className="vehicle-name">
+                {firstDetail.vehicleName || "Thông tin xe"}
+              </h2>
+            </div>
 
-            <div style={{ 
-              display: "grid", 
-              gridTemplateColumns: "1fr 1fr", 
-              gap: "12px 24px" 
-            }}>
-              <p style={{ margin: 0 }}>
-                <span style={{ fontWeight: "600", color: "#666" }}>Tên xe:</span>{" "}
-                <strong>{firstDetail.vehicleName || "N/A"}</strong>
-              </p>
+            <div className="vehicle-meta-grid">
+              <div className="vehicle-meta-item">
+                <div className="vehicle-meta-icon-box">
+                  <svg style={{ width: "16px", height: "16px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1" />
+                    <polygon points="12 15 17 21 7 21 12 15" />
+                  </svg>
+                </div>
+                <div className="vehicle-meta-text">
+                  <span className="vehicle-meta-label">Biển số</span>
+                  <span className="vehicle-meta-value">
+                    {firstDetail.plateNumber || "N/A"}
+                  </span>
+                </div>
+              </div>
 
-              <p style={{ margin: 0 }}>
-                <span style={{ fontWeight: "600", color: "#666" }}>Biển số:</span>{" "}
-                <strong>{firstDetail.plateNumber || "N/A"}</strong>
-              </p>
+              <div className="vehicle-meta-item">
+                <div className="vehicle-meta-icon-box">
+                  <svg style={{ width: "16px", height: "16px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <line x1="3" y1="9" x2="21" y2="9" />
+                    <line x1="9" y1="21" x2="9" y2="9" />
+                  </svg>
+                </div>
+                <div className="vehicle-meta-text">
+                  <span className="vehicle-meta-label">Loại xe</span>
+                  <span className="vehicle-meta-value">
+                    {firstDetail.carmodel || "N/A"}
+                  </span>
+                </div>
+              </div>
 
-              <p style={{ margin: 0 }}>
-                <span style={{ fontWeight: "600", color: "#666" }}>Loại xe:</span>{" "}
-                <strong>{firstDetail.carmodel || "N/A"}</strong>
-              </p>
+              <div className="vehicle-meta-item">
+                <div className="vehicle-meta-icon-box">
+                  <svg style={{ width: "16px", height: "16px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+                    <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+                    <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
+                    <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+                    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" />
+                  </svg>
+                </div>
+                <div className="vehicle-meta-text">
+                  <span className="vehicle-meta-label">Màu sắc</span>
+                  <span className="vehicle-meta-value" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    {firstDetail.color || "N/A"}
+                    {firstDetail.color && (
+                      <span
+                        style={{
+                          width: "16px",
+                          height: "16px",
+                          backgroundColor: getColorHex(firstDetail.color),
+                          border: "1px solid #E5E5E5",
+                          borderRadius: "3px",
+                          display: "inline-block",
+                          flexShrink: 0
+                        }}
+                      />
+                    )}
+                  </span>
+                </div>
+              </div>
 
-              <p style={{ margin: 0 }}>
-                <span style={{ fontWeight: "600", color: "#666" }}>Màu sắc:</span>{" "}
-                <strong>{firstDetail.color || "N/A"}</strong>
-              </p>
+              <div className="vehicle-meta-item">
+                <div className="vehicle-meta-icon-box">
+                  <svg style={{ width: "16px", height: "16px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                </div>
+                <div className="vehicle-meta-text">
+                  <span className="vehicle-meta-label">Trạm hiện tại</span>
+                  <span className="vehicle-meta-value">
+                    {firstDetail.stationName || "N/A"}
+                  </span>
+                </div>
+              </div>
+            </div>
 
+            <div className="vehicle-time-grid">
               {startTime && (
-                <p style={{ margin: 0 }}>
-                  <span style={{ fontWeight: "600", color: "#666" }}>Ngày nhận xe:</span>{" "}
-                  <strong>{fmtVN(startTime)}</strong>
-                </p>
+                <div className="vehicle-time-item">
+                  <span className="vehicle-time-label">Ngày nhận xe</span>
+                  <span className="vehicle-time-value">
+                    {fmtDateTimeVN(startTime)}
+                  </span>
+                </div>
               )}
 
               {endTime && (
-                <p style={{ margin: 0 }}>
-                  <span style={{ fontWeight: "600", color: "#666" }}>Ngày trả xe:</span>{" "}
-                  <strong>{fmtVN(endTime)}</strong>
-                </p>
+                <div className="vehicle-time-item">
+                  <span className="vehicle-time-label">Ngày trả xe</span>
+                  <span className="vehicle-time-value">
+                    {fmtDateTimeVN(endTime)}
+                  </span>
+                </div>
               )}
-
-              <p style={{ margin: 0 }}>
-                <span style={{ fontWeight: "600", color: "#666" }}>Trạm hiện tại:</span>{" "}
-                <strong>{firstDetail.stationName || "N/A"}</strong>
-              </p>
             </div>
           </div>
         );
@@ -560,7 +709,6 @@ const OrderDetailCusPage = () => {
             <thead>
               <tr>
                 <th>Mã chi tiết</th>
-                <th>Xe</th>
                 <th>Loại</th>
                 <th>Thời gian thuê</th>
                 <th>Giá</th>
@@ -570,7 +718,7 @@ const OrderDetailCusPage = () => {
               </tr>
             </thead>
             <tbody>
-              {orderDetails.map((d) => {
+              {orderDetails.map((d, index) => {
                 const type = String(d.type).toUpperCase();
                 const status = String(d.status).toUpperCase();
                 const methodPayment = String(d.methodPayment || "").toUpperCase();
@@ -619,19 +767,20 @@ const OrderDetailCusPage = () => {
                 
                 const isPaymentSuccess = relatedPayment && String(relatedPayment.status || "").toUpperCase() === "SUCCESS";
                 
-                // Tìm payment method từ payments array hoặc order detail
-                // Ưu tiên: tìm payment có cùng paymentType, nếu không có thì tìm bất kỳ payment nào
-                const foundPayment = paymentType
-                  ? payments.find((p) => p.paymentType === paymentType)
-                  : payments.find((p) => p); // Tìm payment đầu tiên nếu không có paymentType
-                
-                // Lấy payment method từ payment hoặc order detail
-                // Chỉ lấy methodPayment từ order detail nếu thực sự có giá trị
+                // Tìm payment method từ order detail hoặc payments array (BACKUP)
+                // Ưu tiên tuyệt đối: methodPayment từ detail (backend đã trả về chính xác)
                 let paymentMethod = "";
-                if (foundPayment && foundPayment.method) {
-                  paymentMethod = String(foundPayment.method).toUpperCase();
-                } else if (methodPayment && methodPayment.trim() !== "") {
+                if (methodPayment && methodPayment.trim() !== "") {
                   paymentMethod = String(methodPayment).toUpperCase();
+                } else {
+                  // Nếu detail chưa có methodPayment, mới fallback sang payments
+                  const foundPayment = paymentType
+                    ? payments.find((p) => p.paymentType === paymentType)
+                    : payments.find((p) => p); // Tìm payment đầu tiên nếu không có paymentType
+
+                  if (foundPayment && foundPayment.method) {
+                    paymentMethod = String(foundPayment.method).toUpperCase();
+                  }
                 }
                 
                 // Chuyển đổi payment method sang tiếng Việt
@@ -647,9 +796,9 @@ const OrderDetailCusPage = () => {
                 const getTypeLabel = (detailType) => {
                   const typeUpper = String(detailType).toUpperCase();
                   if (typeUpper === "DEPOSIT") return "Đặt xe";
-                  if (typeUpper === "PICKUP") return "Nhận xe";
-                  if (typeUpper === "FULL_PAYMENT") return "Nhận xe";
-                  if (typeUpper === "RENTAL") return "Thuê Xe";
+                  if (typeUpper === "PICKUP") return "Thuê xe";
+                  if (typeUpper === "FULL_PAYMENT") return "Thuê xe";
+                  if (typeUpper === "RENTAL") return "Thuê xe";
                   if (typeUpper === "SERVICE" || typeUpper === "SERVICE_SERVICE") return "Dịch vụ";
                   if (typeUpper === "REFUND") return "Hoàn tiền";
                   return detailType;
@@ -658,20 +807,18 @@ const OrderDetailCusPage = () => {
                 const paymentMethodText = getPaymentMethodText(paymentMethod);
                 const typeLabel = getTypeLabel(type);
                 
-                // Kiểm tra xem có payment PENDING với method CASH không
-                // Nếu có payment CASH PENDING, thì order detail phải hiển thị PENDING
-                const hasPendingCashPayment = payments.some(
-                  (p) => 
-                    String(p.status || "").toUpperCase() === "PENDING" &&
-                    String(p.method || "").toUpperCase() === "CASH"
-                );
+                // Kiểm tra xem detail hiện tại có payment CASH PENDING tương ứng không
+                const hasPendingCashPayment = !!pendingCashPayment;
                 
-                // Nếu có payment CASH PENDING, hiển thị PENDING
-                // Nếu không, dùng status từ order detail
+                // Nếu detail này có payment CASH PENDING → hiển thị PENDING
+                // Nếu không → dùng status từ order detail (SUCCESS / ... do backend trả về)
                 const displayStatus = hasPendingCashPayment ? "PENDING" : status;
                 const isPaid = displayStatus === "SUCCESS" && !hasPendingCashPayment;
                 const isPending = displayStatus === "PENDING" || hasPendingCashPayment;
                 const isFailed = displayStatus === "FAILED" || displayStatus === "CANCELLED" || displayStatus === "PAYMENT_FAILED";
+                
+                // Lấy text trạng thái bằng tiếng Việt
+                const statusText = getOrderStatusText(displayStatus);
                 
                 // ⭐⭐ HIỂN THỊ NÚT KHI: STAFF + CASH + CÓ PENDING + CHƯA SUCCESS ⭐⭐
                 // ⭐⭐ ẨN NÚT KHI: KHÔNG STAFF HOẶC KHÔNG CASH HOẶC KHÔNG CÓ PENDING HOẶC ĐÃ SUCCESS ⭐⭐
@@ -692,13 +839,14 @@ const OrderDetailCusPage = () => {
                 });
 
                 return (
-                  <tr key={d.detailId}>
-                    <td>{d.detailId}</td>
-                    <td>{d.vehicleId}</td>
+                  <tr key={d.detailId || d.id || d.orderDetailId || index}>
+                    <td>{index + 1}</td>
                     <td>{typeLabel}</td>
-                    <td>
-                      {new Date(d.startTime).toLocaleString("vi-VN")} -{" "}
-                      {new Date(d.endTime).toLocaleString("vi-VN")}
+                    <td style={{ whiteSpace: "nowrap" }}>
+                      <div style={{ display: "flex", flexDirection: "column", lineHeight: "1.5" }}>
+                        <span>{fmtDateTimeVN(d.startTime)}</span>
+                        <span>{fmtDateTimeVN(d.endTime)}</span>
+                      </div>
                     </td>
                     <td>{d.price?.toLocaleString("vi-VN")} VND</td>
                     <td>
@@ -712,7 +860,7 @@ const OrderDetailCusPage = () => {
                             fontWeight: "600",
                           }}
                         >
-                          Đã thanh toán
+                          {statusText}
                         </span>
                       ) : isFailed ? (
                         <span
@@ -724,7 +872,7 @@ const OrderDetailCusPage = () => {
                             fontWeight: "600",
                           }}
                         >
-                          Đã hủy
+                          {statusText}
                         </span>
                       ) : isPending ? (
                         <span
@@ -736,7 +884,7 @@ const OrderDetailCusPage = () => {
                             fontWeight: "600",
                           }}
                         >
-                          Chờ xử lý
+                          {statusText}
                         </span>
                       ) : (
                         <span
@@ -748,7 +896,7 @@ const OrderDetailCusPage = () => {
                             fontWeight: "600",
                           }}
                         >
-                          Chờ thanh toán
+                          {statusText}
                         </span>
                       )}
                     </td>
@@ -871,16 +1019,27 @@ const OrderDetailCusPage = () => {
                                      orderDetails[0].remainingAmount > 0;
               
               if (remainingAmount) {
-                // Mở modal với 2 lựa chọn: Đặt cọc hoặc Thanh toán toàn bộ
-                setSelectedPaymentType("RENTAL");
-                // Nếu đã có DEPOSIT, tự động set thanh toán phần còn lại (type 2)
-                if (hasDepositPayment()) {
-                  setSelectedAmount(2); // Thanh toán phần còn lại (paymentType 2)
+                // Kiểm tra xem có detail nào là SERVICE không
+                const serviceDetail = orderDetails.find(
+                  (d) => String(d.type || "").toUpperCase().startsWith("SERVICE")
+                );
+                
+                if (serviceDetail) {
+                  // Nếu có dịch vụ, mở modal như thanh toán dịch vụ
+                  handleShowPaymentModal(serviceDetail);
                 } else {
-                  setSelectedAmount(null); // Để người dùng chọn
+                  // Mở modal với 2 lựa chọn: Đặt cọc hoặc Thanh toán toàn bộ
+                  setSelectedPaymentType("RENTAL");
+                  // Nếu đã có DEPOSIT, tự động set thanh toán phần còn lại (type 2)
+                  if (hasDepositPayment()) {
+                    setSelectedAmount(2); // Thanh toán phần còn lại (paymentType 2)
+                  } else {
+                    setSelectedAmount(null); // Để người dùng chọn
+                  }
+                  setSelectedMethod(null);
+                  setIsServicePayment(false);
+                  setShowPaymentModal(true);
                 }
-                setSelectedMethod(null);
-                setShowPaymentModal(true);
               } else {
                 // Tìm detail có status PENDING
                 const pendingDetail = orderDetails.find(
@@ -907,106 +1066,149 @@ const OrderDetailCusPage = () => {
       {showPaymentModal && (
         <div className="modal-overlay" onClick={() => setShowPaymentModal(false)}>
           <div className="payment-modal" onClick={(e) => e.stopPropagation()}>
-            <h2>Chọn hình thức thanh toán</h2>
+            {/* Close button */}
+            <button 
+              className="modal-close-btn"
+              onClick={() => {
+                setShowPaymentModal(false);
+                setSelectedAmount(null);
+                setSelectedMethod(null);
+                setIsServicePayment(false);
+              }}
+            >
+              ×
+            </button>
             
-            {/* Chọn số tiền (hiện với RENTAL và chưa có DEPOSIT) */}
-            {selectedPaymentType === "RENTAL" && !hasDepositPayment() && (
+            <h2>Thanh toán đơn hàng</h2>
+            
+            {/* Progress indicator */}
+            <div className="payment-progress">
+              <div className="progress-step active">
+                <div className="step-number">1</div>
+                <div className="step-label">Thông tin thanh toán</div>
+              </div>
+              <div className="progress-line"></div>
+              <div className="progress-step">
+                <div className="step-number">2</div>
+                <div className="step-label">Xác nhận</div>
+              </div>
+            </div>
+
+            {/* Order details summary */}
+            <div className="payment-summary-section">
+              <div className="summary-row">
+                <span className="summary-label">Số tiền chưa thanh toán:</span>
+                <span className="summary-value">
+                  {remainingAmountFromDetails > 0 
+                    ? remainingAmountFromDetails.toLocaleString("vi-VN")
+                    : "0"} VND
+                </span>
+              </div>
+              {selectedAmount === 1 && (
+                <div className="summary-row">
+                  <span className="summary-label">Số tiền đặt cọc:</span>
+                  <span className="summary-value">
+                    {Math.round(remainingAmountFromDetails / 2).toLocaleString("vi-VN")} VND
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Chọn số tiền (hiện với RENTAL và chưa có DEPOSIT, ẩn khi thanh toán dịch vụ) */}
+            {selectedPaymentType === "RENTAL" && !hasDepositPayment() && !isServicePayment && (
               <div className="payment-options">
-                <h3>Hình thức</h3>
-                {orderDetails[0]?.remainingAmount && orderDetails[0].remainingAmount > 0 && (
-                  <div style={{
-                    padding: "12px",
-                    background: "#fef3c7",
-                    borderRadius: "8px",
-                    marginBottom: "16px",
-                    fontSize: "14px",
-                    color: "#92400e"
-                  }}>
-                    Số tiền còn lại: <strong>{orderDetails[0].remainingAmount.toLocaleString("vi-VN")} VND</strong>
-                  </div>
-                )}
-                <div className="option-buttons">
-                  <button
-                    className={selectedAmount === 3 ? "option-btn active" : "option-btn"}
+                <h3>Hình thức thanh toán</h3>
+                <div className="payment-form-list">
+                  <div
+                    className={`payment-form-item ${selectedAmount === 3 ? "selected" : ""}`}
                     onClick={() => setSelectedAmount(3)}
                   >
-                    <div className="option-icon">💰</div>
-                    <div className="option-label">Nhận xe</div>
-                  </button>
-                  <button
-                    className={selectedAmount === 1 ? "option-btn active" : "option-btn"}
+                    <div className="payment-form-content">
+                      <div className="payment-form-title">Toàn bộ</div>
+                    </div>
+                    <div className="payment-form-radio">
+                      {selectedAmount === 3 && <div className="radio-dot"></div>}
+                    </div>
+                  </div>
+                  
+                  <div
+                    className={`payment-form-item ${selectedAmount === 1 ? "selected" : ""}`}
                     onClick={() => setSelectedAmount(1)}
                   >
-                    <div className="option-icon">💳</div>
-                    <div className="option-label">Đặt cọc</div>
-                  </button>
+                    <div className="payment-form-content">
+                      <div className="payment-form-title">Đặt cọc</div>
+                    </div>
+                    <div className="payment-form-radio">
+                      {selectedAmount === 1 && <div className="radio-dot"></div>}
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
             
-            {/* Hiển thị thông tin số tiền còn lại khi đã có DEPOSIT */}
-            {selectedPaymentType === "RENTAL" && hasDepositPayment() && (
-              <div className="payment-options">
-                <h3>Số tiền cần thanh toán</h3>
-                <div style={{
-                  padding: "16px",
-                  background: "#f3f4f6",
-                  borderRadius: "8px",
-                  textAlign: "center"
-                }}>
-                  <div style={{
-                    fontSize: "24px",
-                    fontWeight: "700",
-                    color: "#DC0000"
-                  }}>
-                    {orderDetails[0]?.remainingAmount?.toLocaleString("vi-VN") || 0} VND
-                  </div>
-                  <div style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    marginTop: "8px"
-                  }}>
-                    Số tiền còn lại cần thanh toán
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Ẩn hình thức thanh toán khi đã có DEPOSIT (thanh toán phần còn lại) */}
 
             {/* Chọn phương thức thanh toán */}
             <div className="payment-options">
               <h3>Phương thức thanh toán</h3>
-              <div className="option-buttons">
-                <button
-                  className={selectedMethod === "CASH" ? "option-btn active" : "option-btn"}
-                  onClick={() => setSelectedMethod("CASH")}
+              <div className="payment-method-slider">
+                <div 
+                  className="payment-method-track"
+                  onClick={() => {
+                    if (selectedMethod === "CASH") {
+                      setSelectedMethod("captureWallet");
+                    } else {
+                      setSelectedMethod("CASH");
+                    }
+                  }}
                 >
-                  <div className="option-icon">💵</div>
-                  <div className="option-label">Tiền mặt</div>
-                </button>
-                <button
-                  className={selectedMethod === "captureWallet" ? "option-btn active" : "option-btn"}
-                  onClick={() => setSelectedMethod("captureWallet")}
-                >
-                  <div className="option-icon">📱</div>
-                  <div className="option-label">MoMo</div>
-                </button>
+                  <div 
+                    className={`payment-method-slider-indicator ${selectedMethod === "CASH" ? "slide-left" : "slide-right"}`}
+                  ></div>
+                  <div className="payment-method-option">
+                    <span className={selectedMethod === "CASH" ? "active-text" : ""}>Tiền mặt</span>
+                  </div>
+                  <div className="payment-method-option">
+                    <span className={selectedMethod === "captureWallet" ? "active-text" : ""}>MoMo</span>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Action buttons */}
-            <div className="modal-actions">
+            {/* Pricing summary */}
+            <div className="pricing-summary">
+              <div className="pricing-row">
+                <span className="pricing-label">Số tiền:</span>
+                <span className="pricing-value">
+                  {(() => {
+                    const amount = selectedAmount === 1 
+                      ? Math.round(remainingAmountFromDetails / 2)
+                      : remainingAmountFromDetails;
+                    return amount.toLocaleString("vi-VN") + " VND";
+                  })()}
+                </span>
+              </div>
+              <div className="pricing-row">
+                <span className="pricing-label">Thuế:</span>
+                <span className="pricing-value">0 VND</span>
+              </div>
+              <div className="pricing-row total">
+                <span className="pricing-label">Tổng thanh toán:</span>
+                <span className="pricing-value total-amount">
+                  {(() => {
+                    const amount = selectedAmount === 1 
+                      ? Math.round(remainingAmountFromDetails / 2)
+                      : remainingAmountFromDetails;
+                    return amount.toLocaleString("vi-VN") + " VND";
+                  })()}
+                </span>
+              </div>
+            </div>
+
+            {/* Action button */}
+            <div className="modal-actions-single">
               <button
-                className="btn-cancel"
-                onClick={() => {
-                  setShowPaymentModal(false);
-                  setSelectedAmount(null);
-                  setSelectedMethod(null);
-                }}
-              >
-                Hủy
-              </button>
-              <button
-                className="btn-confirm"
+                className="btn-confirm-large"
                 onClick={handleConfirmPayment}
                 disabled={processing || !selectedMethod || (selectedPaymentType === "RENTAL" && !selectedAmount && !hasDepositPayment())}
               >

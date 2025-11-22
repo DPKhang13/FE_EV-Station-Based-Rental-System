@@ -4,30 +4,31 @@ import axios from "axios";
 
 export default function BangGiaPage() {
   const [carPricing, setCarPricing] = useState([]);
+  const [servicePricing, setServicePricing] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editingItem, setEditingItem] = useState(null);
-const [formData, setFormData] = useState({
-  dailyPrice: 0,
-  lateFeePerDay: 0,
-  holidayPrice: 0
-});
-const [showAddModal, setShowAddModal] = useState(false);
-const [newPricing, setNewPricing] = useState({
-  seatCount: 0,
-  variant: "",
-  dailyPrice: 0,
-  lateFreePerDayPrice: 0, // ✅ đổi key này
-  holidayPrice: 0
-});
+  const [serviceLoading, setServiceLoading] = useState(true);
 
-
-
+  // ✅ Hàm sắp xếp từ B xuống (B, C, D, E, F, G)
+  const sortPricingData = (data) => {
+    return [...data].sort((a, b) => {
+      const getOrder = (carmodel) => {
+        const firstChar = carmodel?.charAt(0)?.toUpperCase() || '';
+        const orderMap = { 'B': 1, 'C': 2, 'D': 3, 'E': 4, 'F': 5, 'G': 6 };
+        return orderMap[firstChar] || 999; // Nếu không phải B-G, đặt cuối
+      };
+      return getOrder(a.carmodel) - getOrder(b.carmodel);
+    });
+  };
 
   useEffect(() => {
     const fetchPricing = async () => {
       try {
         const res = await axios.get("http://localhost:8080/api/pricing-rules");
-        setCarPricing(res.data);
+        // ✅ API trả về format mới với carmodel
+        const data = res.data || [];
+        
+        // ✅ Sắp xếp từ B xuống (B, C, D, E, F, G)
+        setCarPricing(sortPricingData(data));
       } catch (error) {
         console.error("Lỗi khi tải bảng giá:", error);
       } finally {
@@ -38,78 +39,47 @@ const [newPricing, setNewPricing] = useState({
     fetchPricing();
   }, []);
 
-  const handleAdd = () => {
-  setShowAddModal(true);
-  setNewPricing({
-    seatCount: 0,
-    variant: "",
-    dailyPrice: 0,
-    lateFeePerDay: 0,
-    holidayPrice: 0
-  });
-};
+  // ✅ Fetch bảng giá dịch vụ
+  useEffect(() => {
+    const fetchServicePricing = async () => {
+      try {
+        const res = await axios.get("http://localhost:8080/api/order-services/price-list");
+        const data = res.data || [];
+        
+        // ✅ Sắp xếp theo serviceType và cost
+        const sortedData = [...data].sort((a, b) => {
+          const typeOrder = ['TRAFFIC_FEE', 'CLEANING', 'MAINTENANCE', 'REPAIR', 'OTHER'];
+          const aTypeIndex = typeOrder.indexOf(a.serviceType) !== -1 ? typeOrder.indexOf(a.serviceType) : 999;
+          const bTypeIndex = typeOrder.indexOf(b.serviceType) !== -1 ? typeOrder.indexOf(b.serviceType) : 999;
+          
+          if (aTypeIndex !== bTypeIndex) {
+            return aTypeIndex - bTypeIndex;
+          }
+          return (a.cost || 0) - (b.cost || 0);
+        });
+        
+        setServicePricing(sortedData);
+      } catch (error) {
+        console.error("Lỗi khi tải bảng giá dịch vụ:", error);
+      } finally {
+        setServiceLoading(false);
+      }
+    };
 
- const handleEdit = (item) => {
-  setEditingItem(item);
-  setFormData({
-    dailyPrice: item.dailyPrice,
-    lateFeePerDay: item.lateFeePerDay,
-    holidayPrice: item.holidayPrice
-  });
-};
-const handleUpdate = async () => {
-  try {
-    const res = await axios.put(
-      `http://localhost:8080/api/pricing-rules/${editingItem.seatCount}/${editingItem.variant}`,
-      formData
-    );
+    fetchServicePricing();
+  }, []);
 
-    alert("✅ Cập nhật bảng giá thành công!");
-    setEditingItem(null);
-
-    // Reload lại bảng
-    const refreshed = await axios.get("http://localhost:8080/api/pricing-rules");
-    setCarPricing(refreshed.data);
-  } catch (error) {
-    console.error("❌ Lỗi khi cập nhật:", error);
-    alert("Cập nhật thất bại!");
-  }
-};
-
-
-
-  const handleDelete = async (item) => {
-  const ok = window.confirm(
-    `Bạn có chắc chắn muốn xóa bảng giá cho xe ${item.variant} (${item.seatCount} chỗ)?`
-  );
-  if (!ok) return;
-
-  try {
-    await axios.delete(`http://localhost:8080/api/pricing-rules/delete/${item.pricingRuleId}`);
-    alert("🗑️ Đã xóa bảng giá thành công!");
-
-    // Cập nhật lại danh sách
-    const refreshed = await axios.get("http://localhost:8080/api/pricing-rules");
-    setCarPricing(refreshed.data);
-  } catch (err) {
-    console.error("❌ Lỗi khi xóa:", err);
-    alert("Không thể xóa bảng giá. Vui lòng thử lại!");
-  }
-};
-const handleCreatePricing = async () => {
-  try {
-    await axios.post("http://localhost:8080/api/pricing-rules/create", newPricing);
-    alert("✅ Thêm bảng giá mới thành công!");
-    setShowAddModal(false);
-
-    // Reload lại dữ liệu
-    const refreshed = await axios.get("http://localhost:8080/api/pricing-rules");
-    setCarPricing(refreshed.data);
-  } catch (error) {
-    console.error("❌ Lỗi khi thêm bảng giá:", error);
-    alert("Không thể thêm bảng giá. Vui lòng thử lại!");
-  }
-};
+  // ✅ Chuyển đổi serviceType sang tiếng Việt
+  const getServiceTypeText = (type) => {
+    const typeMap = {
+      'TRAFFIC_FEE': 'Phí giao thông',
+      'CLEANING': 'Vệ sinh',
+      'MAINTENANCE': 'Bảo trì',
+      'REPAIR': 'Sửa chữa',
+      'OTHER': 'Khác'
+    };
+    return typeMap[type] || type;
+  };
 
 
   const formatMoney = (number) =>
@@ -117,172 +87,104 @@ const handleCreatePricing = async () => {
 
   return (
     <div className="banggia-container">
+      {/* Bảng giá thuê xe - Chỉ xem */}
       <div className="table-header">
         <h1 className="page-title">Bảng giá thuê xe</h1>
-        <button className="btn add" onClick={handleAdd}>+ Thêm mới</button>
       </div>
 
       {loading ? (
         <p>Đang tải...</p>
       ) : (
         <table className="pricing-table">
-          <thead>
-            <tr>
-              <th>Số ghế</th>
-              <th>Biến thể</th>
-              <th>Giá / ngày</th>
-              <th>Phụ phí trễ / ngày</th>
-              <th>Giá ngày lễ</th>
-              <th>Hành động</th>
-            </tr>
-          </thead>
+            <thead>
+              <tr>
+                <th>Loại xe</th>
+                <th>Giá / ngày</th>
+                <th>Phụ phí trễ / ngày</th>
+                <th>Giá ngày lễ</th>
+              </tr>
+            </thead>
 
           <tbody>
             {carPricing.map((item) => (
               <tr key={item.pricingRuleId}>
-                <td>{item.seatCount}</td>
-                <td>{item.variant}</td>
+                <td>{item.carmodel}</td>
                 <td>{formatMoney(item.dailyPrice)}</td>
                 <td>{formatMoney(item.lateFeePerDay)}</td>
                 <td>{formatMoney(item.holidayPrice)}</td>
-                <td>
-                  <button className="btn edit" onClick={() => handleEdit(item)}>Sửa</button>
-                  <button className="btn delete" onClick={() => handleDelete(item)}>Xóa</button>
-                </td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
-      {editingItem && (
-  <div className="modal-overlay">
-    <div className="modal">
-      <h2>✏️ Cập nhật giá thuê xe</h2>
-      <p>
-        <strong>{editingItem.variant}</strong> - {editingItem.seatCount} chỗ
-      </p>
 
-      <label>Giá / ngày</label>
-      <input
-        type="number"
-        value={formData.dailyPrice}
-        onChange={(e) =>
-          setFormData({ ...formData, dailyPrice: Number(e.target.value) })
-        }
-      />
-
-      <label>Phụ phí trễ / ngày</label>
-      <input
-        type="number"
-        value={formData.lateFeePerDay}
-        onChange={(e) =>
-          setFormData({ ...formData, lateFeePerDay: Number(e.target.value) })
-        }
-      />
-
-      <label>Giá ngày lễ</label>
-      <input
-        type="number"
-        value={formData.holidayPrice}
-        onChange={(e) =>
-          setFormData({ ...formData, holidayPrice: Number(e.target.value) })
-        }
-      />
-
-      <div className="modal-actions">
-        <button className="btn btn-primary" onClick={handleUpdate}>
-          💾 Lưu thay đổi
-        </button>
-        <button className="btn btn-danger" onClick={() => setEditingItem(null)}>
-          ✖ Hủy
-        </button>
+      {/* Bảng giá dịch vụ - Chỉ xem */}
+      <div className="table-header" style={{ marginTop: "60px" }}>
+        <h1 className="page-title">Bảng giá dịch vụ</h1>
       </div>
-    </div>
-  </div>
-)}
+
+      {serviceLoading ? (
+        <p>Đang tải...</p>
+      ) : (() => {
+        // ✅ Lọc bỏ các dịch vụ có serviceType là "OTHER"
+        const filteredServices = servicePricing.filter(item => 
+          item.serviceType && item.serviceType.toUpperCase() !== "OTHER"
+        );
+        
+        // ✅ Nhóm các dịch vụ theo serviceType
+        const groupedServices = filteredServices.reduce((acc, item) => {
+          const type = item.serviceType;
+          if (!acc[type]) {
+            acc[type] = [];
+          }
+          acc[type].push(item);
+          return acc;
+        }, {});
+
+        // ✅ Chuyển đổi thành mảng để render
+        const serviceGroups = Object.entries(groupedServices);
+
+        return (
+          <table className="pricing-table">
+            <thead>
+              <tr>
+                <th>Loại dịch vụ</th>
+                <th>Mô tả</th>
+                <th>Giá</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {serviceGroups.map(([serviceType, services], groupIndex) => (
+                <React.Fragment key={serviceType}>
+                  {services.map((item, itemIndex) => (
+                    <tr key={item.serviceId}>
+                      {/* ✅ Chỉ hiển thị serviceType ở dòng đầu tiên của mỗi nhóm với rowspan */}
+                      {itemIndex === 0 && (
+                        <td 
+                          rowSpan={services.length}
+                          style={{
+                            verticalAlign: "top",
+                            fontWeight: "600",
+                            backgroundColor: "#f9fafb",
+                            borderRight: "2px solid #e0e0e0"
+                          }}
+                        >
+                          {getServiceTypeText(serviceType)}
+                        </td>
+                      )}
+                      <td>{item.description || "N/A"}</td>
+                      <td>{formatMoney(item.cost || 0)}</td>
+                    </tr>
+                  ))}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
+        );
+      })()}
 
 
-{showAddModal && (
-  <div className="modal-overlay">
-    <div className="modal">
-      <h2>➕ Thêm mới bảng giá thuê xe</h2>
-<input
-  type="number"
-  placeholder="Nhập số ghế..."
-  value={newPricing.seatCount === 0 ? "" : newPricing.seatCount}
-  onChange={(e) => {
-    const val = e.target.value;
-    setNewPricing({
-      ...newPricing,
-      seatCount: val === "" ? 0 : Number(val)
-    });
-  }}
-/>
-
-<input
-  type="text"
-  placeholder="Nhập biến thể..."
-  value={newPricing.variant}
-  onChange={(e) =>
-    setNewPricing({ ...newPricing, variant: e.target.value })
-  }
-/>
-
-<input
-  type="number"
-  placeholder="Giá / ngày..."
-  value={newPricing.dailyPrice === 0 ? "" : newPricing.dailyPrice}
-  onChange={(e) => {
-    const val = e.target.value;
-    setNewPricing({
-      ...newPricing,
-      dailyPrice: val === "" ? 0 : Number(val)
-    });
-  }}
-/>
-
-<input
-  type="number"
-  placeholder="Phụ phí trễ / ngày..."
-  value={
-    newPricing.lateFreePerDayPrice === 0
-      ? ""
-      : newPricing.lateFreePerDayPrice
-  }
-  onChange={(e) => {
-    const val = e.target.value;
-    setNewPricing({
-      ...newPricing,
-      lateFreePerDayPrice: val === "" ? 0 : Number(val)
-    });
-  }}
-/>
-
-<input
-  type="number"
-  placeholder="Giá ngày lễ..."
-  value={newPricing.holidayPrice === 0 ? "" : newPricing.holidayPrice}
-  onChange={(e) => {
-    const val = e.target.value;
-    setNewPricing({
-      ...newPricing,
-      holidayPrice: val === "" ? 0 : Number(val)
-    });
-  }}
-/>
-
-
-      <div className="modal-actions">
-        <button className="btn btn-primary" onClick={handleCreatePricing}>
-          ✅ Đồng ý thêm
-        </button>
-        <button className="btn btn-danger" onClick={() => setShowAddModal(false)}>
-          ✖ Đóng
-        </button>
-      </div>
-    </div>
-  </div>
-)}
 
     </div>
   );

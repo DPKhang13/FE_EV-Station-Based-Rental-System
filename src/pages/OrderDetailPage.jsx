@@ -34,6 +34,13 @@ export default function OrderDetailPage() {
   const [processing, setProcessing] = useState(false);
   const [otherOrders, setOtherOrders] = useState([]); // Các order khác cùng vehicleId
   const [orderStatus, setOrderStatus] = useState(""); // Order status để kiểm tra đơn đã hoàn thành chưa
+  const [openMenuDetailId, setOpenMenuDetailId] = useState(null); // ID của detail đang mở menu
+  const [showEditServiceModal, setShowEditServiceModal] = useState(false); // Hiển thị modal sửa dịch vụ
+  const [editingService, setEditingService] = useState(null); // Dịch vụ đang được sửa
+  const [editServiceData, setEditServiceData] = useState({
+    price: 0,
+    description: ""
+  });
   
   const showToast = useCallback((type, text, ms = 4000) => {
     setToast({ type, text });
@@ -167,6 +174,7 @@ export default function OrderDetailPage() {
       const data = await res.json();
 
       setReturnPreview(data);
+      setReturnTime(""); // Reset returnTime khi mở modal
       setShowReturnModal(true);
     } catch (err) {
       console.error(err);
@@ -175,10 +183,23 @@ export default function OrderDetailPage() {
   };
 
   const handleConfirmReturn = async () => {
-    const time =
-      returnTime.trim() !== ""
-        ? returnTime
-        : new Date().toISOString().slice(0, 19).replace("T", " ");
+    let time;
+    if (returnTime.trim() !== "") {
+      // Convert từ datetime-local format (YYYY-MM-DDTHH:mm) sang backend format (YYYY-MM-DD HH:mm:ss)
+      // datetime-local trả về format: "YYYY-MM-DDTHH:mm"
+      // Cần convert thành: "YYYY-MM-DD HH:mm:ss"
+      const dateTime = new Date(returnTime);
+      const year = dateTime.getFullYear();
+      const month = String(dateTime.getMonth() + 1).padStart(2, "0");
+      const day = String(dateTime.getDate()).padStart(2, "0");
+      const hours = String(dateTime.getHours()).padStart(2, "0");
+      const minutes = String(dateTime.getMinutes()).padStart(2, "0");
+      const seconds = String(dateTime.getSeconds()).padStart(2, "0");
+      time = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    } else {
+      // Nếu không chọn, dùng thời gian hiện tại
+      time = new Date().toISOString().slice(0, 19).replace("T", " ");
+    }
 
     try {
       await fetch(`http://localhost:8080/api/order/${orderId}/return`, {
@@ -189,8 +210,12 @@ export default function OrderDetailPage() {
 
       showToast("success", "🚗 Đã trả xe thành công!");
       setShowReturnModal(false);
-      await refetchDetails(); // ⭐⭐ Refresh order status để ẩn nút bàn giao ⭐⭐
-      await fetchOrderStatus(); // ⭐⭐ Đảm bảo order status được cập nhật ⭐⭐
+      setReturnTime(""); // Reset returnTime sau khi submit
+      // ✅ Gọi các API song song để tăng tốc độ
+      await Promise.all([
+        refetchDetails(),
+        fetchOrderStatus()
+      ]);
     } catch (err) {
       console.error(err);
       showToast("error", "Trả xe thất bại!");
@@ -275,7 +300,20 @@ export default function OrderDetailPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const resCus = await authService.getAllCustomer();
+        // ✅ Gọi các API song song để tăng tốc độ load (trừ fetchPriceList vì nó chỉ set state)
+        const [resCus, resDetails] = await Promise.all([
+          authService.getAllCustomer(),
+          fetch(`http://localhost:8080/api/order-details/order/${orderId}`).then(r => r.json())
+        ]);
+        
+        // Gọi các API khác song song
+        await Promise.all([
+          fetchPayments(),
+          fetchOrderStatus(),
+          fetchPriceList()
+        ]);
+
+        // Xử lý customer
         const customers = resCus.data || resCus || [];
         const foundCustomer = customers.find(
           (c) =>
@@ -283,10 +321,8 @@ export default function OrderDetailPage() {
         );
         setCustomer(foundCustomer || null);
 
-        const res = await fetch(
-          `http://localhost:8080/api/order-details/order/${orderId}`
-        );
-        const details = await res.json();
+        // Xử lý order details
+        const details = resDetails || [];
         setOrderDetails(details);
 
         const first = details[0];
@@ -305,45 +341,31 @@ export default function OrderDetailPage() {
           };
           setVehicle(vehicleData);
           
-          // ⭐⭐ KIỂM TRA: Nếu xe đang RENTAL, kiểm tra xem có order khác đang thuê không ⭐⭐
-          // Lưu ý: Order details không có status của vehicle, cần kiểm tra từ order status hoặc bỏ qua check này
-          // Nếu cần check status, có thể gọi API vehicle detail hoặc dùng order status
-          try {
-            // Lấy tất cả orders để tìm order khác cùng vehicleId đang RENTAL
-            const allOrders = await orderService.getAll();
-            const ordersData = Array.isArray(allOrders) ? allOrders : (allOrders?.data || []);
-            
-            // Tìm order khác cùng vehicleId có status RENTAL (không phải order hiện tại)
-            const otherRentalOrders = ordersData.filter(order => {
-              const orderVehicleId = order.vehicleId || order.vehicle_id;
-              const orderStatus = String(order.status || "").toUpperCase();
-              const isSameVehicle = orderVehicleId && Number(orderVehicleId) === Number(first.vehicleId);
-              const isRental = orderStatus === "RENTAL";
-              const isNotCurrentOrder = String(order.orderId || order.order_id) !== String(orderId);
-              
-              return isSameVehicle && isRental && isNotCurrentOrder;
-            });
-            
-            setOtherOrders(otherRentalOrders);
-            console.log("🔍 [Other Orders Check]:", {
-              vehicleId: first.vehicleId,
-              otherRentalOrdersCount: otherRentalOrders.length,
-              otherRentalOrders: otherRentalOrders.map(o => ({ orderId: o.orderId || o.order_id, status: o.status }))
-            });
-          } catch (err) {
-            console.warn("⚠️ Cannot fetch other orders:", err);
-            setOtherOrders([]);
-          }
+          // ⭐⭐ TỐI ƯU: Chỉ check other orders khi thực sự cần (lazy load) ⭐⭐
+          // Thay vì gọi getAll() ngay, chỉ check khi order status là RENTAL hoặc có dấu hiệu cần check
+          // Hoặc có thể bỏ qua check này nếu không quan trọng
+          // Nếu cần check, có thể tạo API endpoint mới chỉ lấy orders của vehicleId cụ thể
+          setOtherOrders([]); // Tạm thời bỏ qua để tăng tốc độ load
+          
+          // ⚠️ Nếu thực sự cần check other orders, có thể gọi sau khi page đã load xong:
+          // setTimeout(async () => {
+          //   try {
+          //     const allOrders = await orderService.getAll();
+          //     const ordersData = Array.isArray(allOrders) ? allOrders : (allOrders?.data || []);
+          //     const otherRentalOrders = ordersData.filter(order => {
+          //       const orderVehicleId = order.vehicleId || order.vehicle_id;
+          //       const orderStatus = String(order.status || "").toUpperCase();
+          //       const isSameVehicle = orderVehicleId && Number(orderVehicleId) === Number(first.vehicleId);
+          //       const isRental = orderStatus === "RENTAL";
+          //       const isNotCurrentOrder = String(order.orderId || order.order_id) !== String(orderId);
+          //       return isSameVehicle && isRental && isNotCurrentOrder;
+          //     });
+          //     setOtherOrders(otherRentalOrders);
+          //   } catch (err) {
+          //     console.warn("⚠️ Cannot fetch other orders:", err);
+          //   }
+          // }, 1000);
         }
-        
-        // Fetch payments
-        await fetchPayments();
-        
-        // Fetch order status (optional, for logging)
-        await fetchOrderStatus();
-        
-        // Fetch price list
-        await fetchPriceList();
       } catch (err) {
         console.error(err);
         setError("Không thể tải dữ liệu!");
@@ -355,6 +377,20 @@ export default function OrderDetailPage() {
     fetchData();
   }, [orderId, userId, fetchOrderStatus, fetchPayments]);
 
+  // Đóng menu khi click ra ngoài
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openMenuDetailId && !event.target.closest('[data-menu-container]')) {
+        setOpenMenuDetailId(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openMenuDetailId]);
+
   // Handle confirm payment
   const handleStaffConfirmPayment = useCallback(async () => {
     if (!window.confirm("Xác nhận thanh toán này đã được khách hàng thanh toán bằng tiền mặt?")) {
@@ -365,9 +401,12 @@ export default function OrderDetailPage() {
       setProcessing(true);
       await api.put(`/payment/cash/approve/order/${orderId}`);
       showToast("success", "✅ Đã xác nhận thanh toán thành công!");
-      await fetchPayments();
-      await refetchDetails();
-      await fetchOrderStatus(); // ⭐⭐ Đảm bảo order status được cập nhật ⭐⭐
+      // ✅ Gọi các API song song để tăng tốc độ
+      await Promise.all([
+        fetchPayments(),
+        refetchDetails(),
+        fetchOrderStatus()
+      ]);
     } catch (err) {
       console.error("Lỗi xác nhận thanh toán:", err);
       const errorMsg = 
@@ -380,6 +419,99 @@ export default function OrderDetailPage() {
       setProcessing(false);
     }
   }, [orderId, fetchPayments, fetchOrderStatus, showToast, refetchDetails]);
+
+  // Handle edit service - Mở modal sửa dịch vụ
+  const handleEditService = useCallback((detail) => {
+    setEditingService(detail);
+    setEditServiceData({
+      price: detail.price || 0,
+      description: detail.description || ""
+    });
+    setShowEditServiceModal(true);
+    setOpenMenuDetailId(null); // Đóng menu
+  }, []);
+
+  // Handle update service - Gọi API PUT để cập nhật
+  const handleUpdateService = useCallback(async () => {
+    if (!editingService) return;
+
+    if (!editServiceData.description || !editServiceData.description.trim()) {
+      showToast("error", "Vui lòng nhập mô tả dịch vụ!");
+      return;
+    }
+
+    if (!editServiceData.price || editServiceData.price <= 0) {
+      showToast("error", "Vui lòng nhập giá dịch vụ hợp lệ!");
+      return;
+    }
+
+    try {
+      setProcessing(true);
+      const payload = {
+        orderId: editingService.orderId,
+        vehicleId: editingService.vehicleId,
+        type: editingService.type, // Lấy từ detail gốc, không cho sửa
+        startTime: editingService.startTime, // Giữ nguyên
+        endTime: editingService.endTime, // Giữ nguyên
+        price: Number(editServiceData.price),
+        description: editServiceData.description.trim()
+      };
+
+      await api.put(`/order-details/${editingService.detailId}`, payload);
+      showToast("success", "✅ Đã cập nhật dịch vụ thành công!");
+      
+      // ✅ Refresh dữ liệu sau khi cập nhật
+      await Promise.all([
+        refetchDetails(),
+        fetchOrderStatus(),
+        fetchPayments()
+      ]);
+
+      // Đóng modal
+      setShowEditServiceModal(false);
+      setEditingService(null);
+      setEditServiceData({ price: 0, description: "" });
+    } catch (err) {
+      console.error("Lỗi cập nhật dịch vụ:", err);
+      const errorMsg = 
+        err?.response?.data?.message || 
+        err?.response?.data?.error ||
+        err?.message || 
+        "Không thể cập nhật dịch vụ. Vui lòng thử lại sau.";
+      showToast("error", errorMsg);
+    } finally {
+      setProcessing(false);
+    }
+  }, [editingService, editServiceData, refetchDetails, fetchOrderStatus, fetchPayments, showToast]);
+
+  // Handle delete service
+  const handleDeleteService = useCallback(async (detailId) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa dịch vụ này?")) {
+      return;
+    }
+
+    try {
+      setProcessing(true);
+      await api.delete(`/order-details/${detailId}`);
+      showToast("success", "✅ Đã xóa dịch vụ thành công!");
+      // ✅ Refresh dữ liệu sau khi xóa
+      await Promise.all([
+        refetchDetails(),
+        fetchOrderStatus(),
+        fetchPayments()
+      ]);
+    } catch (err) {
+      console.error("Lỗi xóa dịch vụ:", err);
+      const errorMsg = 
+        err?.response?.data?.message || 
+        err?.response?.data?.error ||
+        err?.message || 
+        "Không thể xóa dịch vụ. Vui lòng thử lại sau.";
+      showToast("error", errorMsg);
+    } finally {
+      setProcessing(false);
+    }
+  }, [refetchDetails, fetchOrderStatus, fetchPayments, showToast]);
 
   const fmtVN = (d) =>
     d ? new Date(d).toLocaleString("vi-VN") : "N/A";
@@ -417,7 +549,7 @@ export default function OrderDetailPage() {
       "RENTAL": "Đang thuê",
       "MAINTENANCE": "Bảo trì",
       "CHECKING": "Đang kiểm tra",
-      "WAITING": "Đang chờ",
+      "WAITING": "Đang chờ xe",
       "UNAVAILABLE": "Không có sẵn"
     };
     return statusMap[statusUpper] || status;
@@ -752,19 +884,21 @@ export default function OrderDetailPage() {
               </div>
             </div>
             
-            {/* Trạng thái */}
-            <div style={{ marginTop: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
-              <svg style={{ width: "18px", height: "18px", flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </svg>
-              <p style={{ margin: 0 }}>
-                <span style={{ fontWeight: "600", color: "#666" }}>Trạng thái:&nbsp;</span>
-                <span className={`pill pill-${(displayStatus || "AVAILABLE").toLowerCase()}`}>
-                  {displayStatusText || "Available"}
-                </span>
-              </p>
-            </div>
+            {/* Trạng thái - Ẩn khi đơn hàng đã hoàn thành */}
+            {orderStatus !== "COMPLETED" && (
+              <div style={{ marginTop: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+                <svg style={{ width: "18px", height: "18px", flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                <p style={{ margin: 0 }}>
+                  <span style={{ fontWeight: "600", color: "#666" }}>Trạng thái:&nbsp;</span>
+                  <span className={`pill pill-${(displayStatus || "AVAILABLE").toLowerCase()}`}>
+                    {displayStatusText || "Available"}
+                  </span>
+                </p>
+              </div>
+            )}
           </div>
         );
       })()}
@@ -890,6 +1024,9 @@ export default function OrderDetailPage() {
             return type || "N/A";
           };
 
+          // Kiểm tra xem có phải dịch vụ không
+          const isService = detailType === "SERVICE" || detailType === "SERVICE_SERVICE";
+
           // Xác định text tình trạng thanh toán
           const getStatusText = () => {
             if (status === "SUCCESS") return "Thành công";
@@ -900,6 +1037,15 @@ export default function OrderDetailPage() {
             if (status === "CHECKING") return "Đang kiểm tra";
             if (status === "RENTAL") return "Đang thuê";
             return detail.status || "N/A";
+          };
+
+          // Xác định text phương thức thanh toán
+          const getMethodPaymentText = (method) => {
+            if (!method) return "N/A";
+            const methodUpper = String(method).toUpperCase();
+            if (methodUpper === "CASH") return "Tiền mặt";
+            if (methodUpper === "CAPTUREWALLET" || methodUpper === "MOMO") return "MoMo";
+            return method;
           };
 
           return (
@@ -915,52 +1061,188 @@ export default function OrderDetailPage() {
                   {getTypeLabel(detail.type)}
                 </span>
                 
-                {/* Nút Xác nhận đã thanh toán - Góc trên bên phải */}
-                {showConfirmButton && (
-                  <button
-                    onClick={() => {
-                      // Gọi API với orderId (không cần paymentId nữa)
-                      handleStaffConfirmPayment();
-                    }}
-                    disabled={processing}
-                    style={{
-                      padding: "8px 20px",
-                      background: "#000000",
-                      color: "#FFFFFF",
-                      border: "2px solid #000000",
-                      borderRadius: "0",
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      cursor: processing ? "not-allowed" : "pointer",
-                      letterSpacing: "0.5px",
-                      textTransform: "uppercase",
-                      transition: "all 0.3s ease",
-                      whiteSpace: "nowrap"
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!processing) {
-                        e.target.style.background = "#DC0000";
-                        e.target.style.borderColor = "#DC0000";
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!processing) {
-                        e.target.style.background = "#000000";
-                        e.target.style.borderColor = "#000000";
-                      }
-                    }}
-                  >
-                    {processing ? "Đang xử lý..." : "✅ Xác nhận đã thanh toán"}
-                  </button>
-                )}
+                {/* Nút Xác nhận đã thanh toán hoặc Menu 3 chấm - Góc trên bên phải */}
+                <div style={{ display: "flex", gap: "8px", alignItems: "center", position: "relative" }}>
+                  {/* Menu 3 chấm - Chỉ hiển thị cho SERVICE */}
+                  {isService && (
+                    <div style={{ position: "relative" }} data-menu-container>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuDetailId(openMenuDetailId === detail.detailId ? null : detail.detailId);
+                        }}
+                        disabled={processing}
+                        style={{
+                          padding: "8px 12px",
+                          background: "transparent",
+                          color: "#666666",
+                          border: "1px solid #E5E5E5",
+                          borderRadius: "4px",
+                          fontSize: "18px",
+                          fontWeight: "600",
+                          cursor: processing ? "not-allowed" : "pointer",
+                          transition: "all 0.3s ease",
+                          lineHeight: "1",
+                          opacity: processing ? 0.6 : 1,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          minWidth: "32px",
+                          height: "32px"
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!processing) {
+                            e.target.style.background = "#F3F4F6";
+                            e.target.style.borderColor = "#D1D5DB";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!processing) {
+                            e.target.style.background = "transparent";
+                            e.target.style.borderColor = "#E5E5E5";
+                          }
+                        }}
+                      >
+                        ⋯
+                      </button>
+                      
+                      {/* Dropdown menu */}
+                      {openMenuDetailId === detail.detailId && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: "100%",
+                            right: "0",
+                            marginTop: "4px",
+                            background: "#FFFFFF",
+                            border: "1px solid #E5E5E5",
+                            borderRadius: "4px",
+                            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                            zIndex: 1000,
+                            minWidth: "120px"
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            onClick={() => {
+                              handleEditService(detail);
+                            }}
+                            style={{
+                              width: "100%",
+                              padding: "10px 16px",
+                              background: "transparent",
+                              color: "#333333",
+                              border: "none",
+                              borderBottom: "1px solid #E5E5E5",
+                              borderRadius: "4px 4px 0 0",
+                              fontSize: "14px",
+                              fontWeight: "400",
+                              cursor: "pointer",
+                              textAlign: "left",
+                              transition: "all 0.2s ease"
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.background = "#F3F4F6";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.background = "transparent";
+                            }}
+                          >
+                            ✏️ Sửa
+                          </button>
+                          <button
+                            onClick={() => {
+                              handleDeleteService(detail.detailId);
+                              setOpenMenuDetailId(null);
+                            }}
+                            style={{
+                              width: "100%",
+                              padding: "10px 16px",
+                              background: "transparent",
+                              color: "#ef4444",
+                              border: "none",
+                              borderRadius: "0 0 4px 4px",
+                              fontSize: "14px",
+                              fontWeight: "400",
+                              cursor: "pointer",
+                              textAlign: "left",
+                              transition: "all 0.2s ease"
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.background = "#FEF2F2";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.background = "transparent";
+                            }}
+                          >
+                            🗑️ Xóa
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Nút Xác nhận đã thanh toán */}
+                  {showConfirmButton && (
+                    <button
+                      onClick={() => {
+                        // Gọi API với orderId (không cần paymentId nữa)
+                        handleStaffConfirmPayment();
+                      }}
+                      disabled={processing}
+                      style={{
+                        padding: "8px 20px",
+                        background: "#000000",
+                        color: "#FFFFFF",
+                        border: "2px solid #000000",
+                        borderRadius: "0",
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        cursor: processing ? "not-allowed" : "pointer",
+                        letterSpacing: "0.5px",
+                        textTransform: "uppercase",
+                        transition: "all 0.3s ease",
+                        whiteSpace: "nowrap"
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!processing) {
+                          e.target.style.background = "#DC0000";
+                          e.target.style.borderColor = "#DC0000";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!processing) {
+                          e.target.style.background = "#000000";
+                          e.target.style.borderColor = "#000000";
+                        }
+                      }}
+                    >
+                      {processing ? "Đang xử lý..." : "✅ Xác nhận đã thanh toán"}
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="detail-grid">
-                <p><span>Thời gian bắt đầu:</span> {fmtVN(detail.startTime)}</p>
-                <p><span>Thời gian kết thúc:</span> {fmtVN(detail.endTime)}</p>
-                <p><span>Số tiền:</span> {Number(detail.price).toLocaleString("vi-VN")} VND</p>
-                <p><span>Tình trạng thanh toán:</span> <span style={{ textDecoration: "underline" }}>{getStatusText()}</span></p>
-                {detail.description && <p><span>Mô tả:</span> {detail.description}</p>}
+                {/* Cột 1: Thời gian nhận xe và Thời gian trả xe */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <p><span>Thời gian nhận xe:</span> {fmtVN(detail.startTime)}</p>
+                  <p><span>Thời gian trả xe:</span> {fmtVN(detail.endTime)}</p>
+                </div>
+                
+                {/* Cột 2: Số tiền và Tình trạng thanh toán */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <p><span>Số tiền:</span> {Number(detail.price).toLocaleString("vi-VN")} VND</p>
+                  <p><span>Tình trạng thanh toán:</span> <span style={{ textDecoration: "underline" }}>{getStatusText()}</span></p>
+                </div>
+                
+                {/* Cột 3: Phương thức thanh toán và Mô tả */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {detail.methodPayment && (
+                    <p><span>Phương thức thanh toán:</span> {getMethodPaymentText(detail.methodPayment)}</p>
+                  )}
+                  {detail.description && <p><span>Mô tả:</span> {detail.description}</p>}
+                </div>
               </div>
             </div>
           );
@@ -1104,20 +1386,10 @@ export default function OrderDetailPage() {
                   <button
                     className="btn-receive"
                     onClick={handlePreviewReturn}
-                    disabled={hasPendingOrderDetail}
-                    style={{
-                      opacity: hasPendingOrderDetail ? 0.5 : 1,
-                      cursor: hasPendingOrderDetail ? "not-allowed" : "pointer"
-                    }}
+                    disabled={false}
                   >
                     🚗 Nhận xe
                   </button>
-
-                  {hasPendingOrderDetail && (
-                    <p style={{ color: "red", marginTop: 8, fontWeight: "600" }}>
-                      ⚠ Vui lòng chờ khách hàng thanh toán các giao dịch đang chờ xử lý!
-                    </p>
-                  )}
                 </>
               );
             }
@@ -1236,11 +1508,26 @@ export default function OrderDetailPage() {
 
             <label>Thời gian trả thực tế:</label>
             <input
-              type="text"
-              placeholder="YYYY-MM-DD HH:mm:ss (bỏ trống = hiện tại)"
+              type="datetime-local"
               value={returnTime}
               onChange={(e) => setReturnTime(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "10px",
+                fontSize: "16px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                marginTop: "8px"
+              }}
             />
+            <p style={{ 
+              fontSize: "12px", 
+              color: "#666", 
+              marginTop: "4px",
+              fontStyle: "italic"
+            }}>
+              (Bỏ trống = thời gian hiện tại)
+            </p>
 
             <div className="modal-actions">
               <button className="btn btn-primary" onClick={handleConfirmReturn}>
@@ -1248,7 +1535,10 @@ export default function OrderDetailPage() {
               </button>
               <button
                 className="btn btn-danger"
-                onClick={() => setShowReturnModal(false)}
+                onClick={() => {
+                  setShowReturnModal(false);
+                  setReturnTime(""); // Reset returnTime khi đóng modal
+                }}
               >
                 ✖ Đóng
               </button>
@@ -1445,6 +1735,126 @@ export default function OrderDetailPage() {
                   setService({ serviceType: "", cost: 0, description: "" });
                   setSelectedServiceList([]);
                 }}
+              >
+                ✖ Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Service Modal */}
+      {showEditServiceModal && editingService && (
+        <div className="modal-overlay" onClick={() => {
+          setShowEditServiceModal(false);
+          setEditingService(null);
+          setEditServiceData({ price: 0, description: "" });
+        }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "600px", width: "90%" }}>
+            <h2>Sửa dịch vụ</h2>
+            
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", marginBottom: "8px", fontWeight: "600" }}>
+                Loại dịch vụ
+              </label>
+              <input
+                type="text"
+                value={(() => {
+                  const type = String(editingService.type || "").toUpperCase();
+                  // Check các loại dịch vụ cụ thể
+                  if (type.includes("TRAFFIC_FEE")) return "Phí giao thông";
+                  if (type.includes("CLEANING")) return "Vệ sinh";
+                  if (type.includes("MAINTENANCE")) return "Bảo trì";
+                  if (type.includes("REPAIR")) return "Sửa chữa";
+                  if (type.includes("OTHER")) return "Khác";
+                  // Nếu chỉ là "SERVICE" hoặc "SERVICE_SERVICE", có thể check description hoặc field khác
+                  // Hoặc trả về "Dịch vụ" nếu không xác định được loại cụ thể
+                  if (type === "SERVICE" || type === "SERVICE_SERVICE") {
+                    // Có thể check description hoặc serviceType nếu có
+                    const description = String(editingService.description || "").toUpperCase();
+                    if (description.includes("GIAO THÔNG") || description.includes("TRAFFIC")) return "Phí giao thông";
+                    if (description.includes("VỆ SINH") || description.includes("CLEANING")) return "Vệ sinh";
+                    if (description.includes("BẢO TRÌ") || description.includes("MAINTENANCE")) return "Bảo trì";
+                    if (description.includes("SỬA CHỮA") || description.includes("REPAIR")) return "Sửa chữa";
+                    return "Dịch vụ";
+                  }
+                  return editingService.type || "N/A";
+                })()}
+                readOnly
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  fontSize: "14px",
+                  border: "1px solid #ddd",
+                  borderRadius: "4px",
+                  backgroundColor: "#f5f5f5",
+                  color: "#666",
+                  cursor: "not-allowed"
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", marginBottom: "8px", fontWeight: "600" }}>
+                Giá dịch vụ (VND) <span style={{ color: "#ef4444" }}>*</span>
+              </label>
+              <input
+                type="number"
+                value={editServiceData.price}
+                onChange={(e) => setEditServiceData({ ...editServiceData, price: e.target.value })}
+                min="0"
+                step="1000"
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  fontSize: "14px",
+                  border: "1px solid #ddd",
+                  borderRadius: "4px"
+                }}
+                disabled={processing}
+                placeholder="Nhập giá dịch vụ"
+              />
+            </div>
+
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", marginBottom: "8px", fontWeight: "600" }}>
+                Mô tả <span style={{ color: "#ef4444" }}>*</span>
+              </label>
+              <textarea
+                value={editServiceData.description}
+                onChange={(e) => setEditServiceData({ ...editServiceData, description: e.target.value })}
+                rows="4"
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  fontSize: "14px",
+                  border: "1px solid #ddd",
+                  borderRadius: "4px",
+                  resize: "vertical",
+                  fontFamily: "inherit"
+                }}
+                disabled={processing}
+                placeholder="Nhập mô tả dịch vụ"
+              />
+            </div>
+
+            <div className="modal-actions">
+              <button 
+                className="btn btn-primary" 
+                onClick={handleUpdateService}
+                disabled={processing}
+                style={{ marginRight: "10px" }}
+              >
+                {processing ? "Đang xử lý..." : "💾 Lưu thay đổi"}
+              </button>
+              <button
+                className="btn btn-danger"
+                onClick={() => {
+                  setShowEditServiceModal(false);
+                  setEditingService(null);
+                  setEditServiceData({ price: 0, description: "" });
+                }}
+                disabled={processing}
               >
                 ✖ Đóng
               </button>
