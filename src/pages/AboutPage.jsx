@@ -23,9 +23,9 @@ const AboutPage = () => {
             <div className="about-container">
                 {/* Our Story */}
                 <section className="about-section story-section">
-                    <div className="section-header">
-                        <div className="red-line"></div>
+                    <div className="story-header">
                         <h2>CÂU CHUYỆN CỦA CHÚNG TÔI</h2>
+                        <div className="story-red-line"></div>
                     </div>
                     <div className="story-content">
                         <p className="story-text">
@@ -105,8 +105,8 @@ const AboutPage = () => {
                 {/* Future Expansion */}
                 <section className="about-section expansion-section">
                     <div className="section-header">
-                        <div className="red-line"></div>
                         <h2>MỞ RỘNG TƯƠNG LAI</h2>
+                        <div className="red-line"></div>
                     </div>
                     <div className="expansion-grid-about">
                         <div className="expansion-item-about">
@@ -134,9 +134,9 @@ const AboutPage = () => {
 
                 {/* Target Audience */}
                 <section className="about-section target-section-about">
-                    <div className="section-header">
-                        <div className="red-line"></div>
+                    <div className="target-header">
                         <h2>ĐỐI TƯỢNG KHÁCH HÀNG</h2>
+                        <div className="target-red-line"></div>
                     </div>
                     <div className="target-tags-about">
                         <span className="tag-about">Gia Đình</span>
@@ -150,7 +150,7 @@ const AboutPage = () => {
 
                 {/* Call to Action */}
                 <section className="about-cta">
-                    <h2>Sẵn sàng trải nghiệm tương lai của giao thông vận tải?</h2>
+                    <h2>SẴN SÀNG TRẢI NGHIỆM TƯƠNG LAI?</h2>
                     <p>Đặt xe điện của bạn ngay hôm nay và tham gia cuộc cách mạng xanh!</p>
                     <div className="cta-buttons">
                         <button onClick={() => navigate('/location-select')} className="btn-book">

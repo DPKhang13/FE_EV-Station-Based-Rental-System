@@ -10,7 +10,7 @@ const PrivacyPolicyPage = () => {
         <div className="privacy-page">
             {/* Red Hero Section */}
             <div className="privacy-hero">
-                <div className="hero-content">
+                <div className="privacy-hero-content">
                     <h1>CHÍNH SÁCH THUÊ HÀNG</h1>
                     <p className="hero-subtitle">Quy định và điều khoản cho thuê xe điện</p>
                 </div>
@@ -19,9 +19,9 @@ const PrivacyPolicyPage = () => {
             {/* White Content Section */}
             <div className="privacy-container">
                 <section className="privacy-section">
-                    <div className="section-header">
-                        <div className="red-line"></div>
+                    <div className="privacy-section-header">
                         <h2>1. ĐIỀU KIỆN THUÊ XE</h2>
+                        <div className="privacy-red-line"></div>
                     </div>
                     <div className="privacy-content">
                         <p className="privacy-text">
@@ -38,9 +38,9 @@ const PrivacyPolicyPage = () => {
                 </section>
 
                 <section className="privacy-section">
-                    <div className="section-header">
-                        <div className="red-line"></div>
+                    <div className="privacy-section-header">
                         <h2>2. QUY TRÌNH THUÊ XE</h2>
+                        <div className="privacy-red-line"></div>
                     </div>
                     <div className="privacy-content">
                         <p className="privacy-text">
@@ -59,9 +59,9 @@ const PrivacyPolicyPage = () => {
                 </section>
 
                 <section className="privacy-section">
-                    <div className="section-header">
-                        <div className="red-line"></div>
+                    <div className="privacy-section-header">
                         <h2>3. TRÁCH NHIỆM CỦA KHÁCH HÀNG</h2>
+                        <div className="privacy-red-line"></div>
                     </div>
                     <div className="privacy-content">
                         <p className="privacy-text">
@@ -80,9 +80,9 @@ const PrivacyPolicyPage = () => {
                 </section>
 
                 <section className="privacy-section">
-                    <div className="section-header">
-                        <div className="red-line"></div>
+                    <div className="privacy-section-header">
                         <h2>4. PHÍ VÀ THANH TOÁN</h2>
+                        <div className="privacy-red-line"></div>
                     </div>
                     <div className="privacy-content">
                         <p className="privacy-text">
@@ -100,9 +100,9 @@ const PrivacyPolicyPage = () => {
                 </section>
 
                 <section className="privacy-section">
-                    <div className="section-header">
-                        <div className="red-line"></div>
+                    <div className="privacy-section-header">
                         <h2>5. BẢO HIỂM VÀ TRÁCH NHIỆM</h2>
+                        <div className="privacy-red-line"></div>
                     </div>
                     <div className="privacy-content">
                         <p className="privacy-text">
@@ -120,9 +120,9 @@ const PrivacyPolicyPage = () => {
                 </section>
 
                 <section className="privacy-section">
-                    <div className="section-header">
-                        <div className="red-line"></div>
+                    <div className="privacy-section-header">
                         <h2>6. ĐIỀU KIỆN HỦY VÀ HOÀN TIỀN</h2>
+                        <div className="privacy-red-line"></div>
                     </div>
                     <div className="privacy-content">
                         <p className="privacy-text">
@@ -139,9 +139,9 @@ const PrivacyPolicyPage = () => {
                 </section>
 
                 <section className="privacy-section">
-                    <div className="section-header">
-                        <div className="red-line"></div>
+                    <div className="privacy-section-header">
                         <h2>7. QUY ĐỊNH SỬ DỤNG XE</h2>
+                        <div className="privacy-red-line"></div>
                     </div>
                     <div className="privacy-content">
                         <p className="privacy-text">
@@ -159,9 +159,9 @@ const PrivacyPolicyPage = () => {
                 </section>
 
                 <section className="privacy-section">
-                    <div className="section-header">
-                        <div className="red-line"></div>
+                    <div className="privacy-section-header">
                         <h2>8. LIÊN HỆ VÀ HỖ TRỢ</h2>
+                        <div className="privacy-red-line"></div>
                     </div>
                     <div className="privacy-content">
                         <p className="privacy-text">
