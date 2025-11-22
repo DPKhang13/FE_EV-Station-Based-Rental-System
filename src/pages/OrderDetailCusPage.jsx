@@ -165,16 +165,17 @@ const OrderDetailCusPage = () => {
       //    - Backend sẽ trừ amount đã thanh toán khỏi remainingAmount
       //    - Nếu remainingAmount = 0 → chuyển order status thành PAID và mark service details as SUCCESS
       //    - Nếu còn remainingAmount > 0 → giữ hoặc chuyển order status thành PENDING_FINAL_PAYMENT
-      // 4. Dịch vụ: luôn dùng type 2, backend sẽ tự động:
-      //    - Nếu có đơn pickup → thêm vào remainingAmount của đơn pickup
-      //    - Nếu là full payment → thêm vào full payment
-      //    - Thanh toán bằng type 2 (dựa vào remainingAmount của DEPOSIT/FULL_PAYMENT)
-      // 5. Thanh toán tiền mặt Type 2: Dựa vào remainingAmount của DEPOSIT/FULL_PAYMENT (giống logic online)
+      // 4. Thanh toán tiền mặt Type 2: Dựa vào remainingAmount của DEPOSIT/FULL_PAYMENT (giống logic online)
+      // 5. Thanh toán dịch vụ (type 5): 
+      //    - Lấy remainingAmount từ FULL_PAYMENT (type 3) hoặc DEPOSIT (type 1)
+      //    - Ưu tiên FULL_PAYMENT trước, sau đó mới đến DEPOSIT
+      //    - Khi thanh toán thành công → cập nhật remainingAmount và mark service details as SUCCESS
       
-      if (isServicePayment) {
-        // Thanh toán dịch vụ: luôn dùng type 2
-        // Backend sẽ tự động thêm dịch vụ vào remainingAmount của pickup/full_payment
-        finalPaymentType = 2;
+      if (isServicePayment || paymentType === 5) {
+        // Thanh toán dịch vụ: dùng type 5 (SERVICE)
+        // Backend sẽ lấy remainingAmount từ FULL_PAYMENT (type 3) hoặc DEPOSIT (type 1)
+        // Ưu tiên FULL_PAYMENT trước, sau đó mới đến DEPOSIT
+        finalPaymentType = 5;
       } else if (paymentType === 1) {
         // Đặt cọc: type 1 (số tiền còn lại dựa vào remainingAmount của đơn đặt cọc)
         finalPaymentType = 1;
@@ -309,10 +310,12 @@ const OrderDetailCusPage = () => {
       setIsServicePayment(false);
       setShowPaymentModal(true);
     } else if (type.startsWith("SERVICE")) {
-      // Thanh toán dịch vụ: luôn dùng type 2 (thanh toán phần còn lại)
-      // Backend sẽ tự động thêm dịch vụ vào remainingAmount của pickup hoặc full_payment
+      // Thanh toán dịch vụ: dùng type 5 (SERVICE)
+      // Backend sẽ lấy remainingAmount từ FULL_PAYMENT (type 3) hoặc DEPOSIT (type 1)
+      // Ưu tiên FULL_PAYMENT trước, sau đó mới đến DEPOSIT
+      // Nếu không có khoản dịch vụ nào → throw exception
       setSelectedPaymentType("SERVICE");
-      setSelectedAmount(2); // Type 2: thanh toán phần còn lại
+      setSelectedAmount(5); // Type 5: thanh toán dịch vụ
       setSelectedMethod(null);
       setIsServicePayment(true); // Đánh dấu là thanh toán dịch vụ
       setShowPaymentModal(true);
@@ -718,7 +721,31 @@ const OrderDetailCusPage = () => {
               </tr>
             </thead>
             <tbody>
-              {orderDetails.map((d, index) => {
+              {(() => {
+                // ⭐⭐ SẮP XẾP: SERVICE hiển thị trước, sau đó mới đến các loại khác ⭐⭐
+                // Trong cùng loại, cái nào tạo trước (detailId nhỏ hơn) lên đầu
+                const sortedDetails = [...orderDetails].sort((a, b) => {
+                  const typeA = String(a.type || "").toUpperCase();
+                  const typeB = String(b.type || "").toUpperCase();
+                  const isServiceA = typeA === "SERVICE" || typeA === "SERVICE_SERVICE";
+                  const isServiceB = typeB === "SERVICE" || typeB === "SERVICE_SERVICE";
+                  
+                  // SERVICE luôn hiển thị trước
+                  if (isServiceA && !isServiceB) return -1;
+                  if (!isServiceA && isServiceB) return 1;
+                  
+                  // Nếu cùng loại, sắp xếp theo detailId (cái nào tạo trước lên đầu)
+                  if (isServiceA === isServiceB) {
+                    const idA = a.detailId || a.id || a.orderDetailId || 0;
+                    const idB = b.detailId || b.id || b.orderDetailId || 0;
+                    return idA - idB;
+                  }
+                  
+                  // Nếu không cùng loại và không phải SERVICE, giữ nguyên thứ tự
+                  return 0;
+                });
+                
+                return sortedDetails.map((d, index) => {
                 const type = String(d.type).toUpperCase();
                 const status = String(d.status).toUpperCase();
                 const methodPayment = String(d.methodPayment || "").toUpperCase();
@@ -730,8 +757,8 @@ const OrderDetailCusPage = () => {
                     "PICKUP": 2,
                     "FULL_PAYMENT": 3,
                     "RENTAL": 3, // RENTAL có thể là full payment hoặc deposit
-                    "SERVICE": 2,
-                    "SERVICE_SERVICE": 2
+                    "SERVICE": 5, // SERVICE dùng paymentType = 5 (mới)
+                    "SERVICE_SERVICE": 5 // SERVICE dùng paymentType = 5 (mới)
                   };
                   return typeMap[detailType] || null;
                 };
@@ -768,18 +795,49 @@ const OrderDetailCusPage = () => {
                 const isPaymentSuccess = relatedPayment && String(relatedPayment.status || "").toUpperCase() === "SUCCESS";
                 
                 // Tìm payment method từ order detail hoặc payments array (BACKUP)
-                // Ưu tiên tuyệt đối: methodPayment từ detail (backend đã trả về chính xác)
+                // ⭐⭐ ƯU TIÊN: Payment PENDING (vừa tạo) > methodPayment từ detail > Payment SUCCESS > Payment khác ⭐⭐
+                const isService = type === "SERVICE" || type === "SERVICE_SERVICE";
                 let paymentMethod = "";
-                if (methodPayment && methodPayment.trim() !== "") {
+                
+                // ⭐⭐ BƯỚC 1: Tìm payment PENDING trước (payment vừa tạo, chưa được xác nhận) ⭐⭐
+                // Điều này đảm bảo sau khi bấm chọn phương thức thanh toán, hiển thị ngay lập tức
+                let foundPendingPayment = null;
+                if (paymentType) {
+                  foundPendingPayment = payments.find(p => 
+                    p.paymentType === paymentType && 
+                    String(p.status || "").toUpperCase() === "PENDING"
+                  );
+                }
+                
+                if (foundPendingPayment && foundPendingPayment.method) {
+                  // Có payment PENDING → dùng method từ payment vừa tạo
+                  paymentMethod = String(foundPendingPayment.method).toUpperCase();
+                } else if (methodPayment && methodPayment.trim() !== "") {
+                  // Không có payment PENDING → dùng methodPayment từ detail (backend đã cập nhật)
                   paymentMethod = String(methodPayment).toUpperCase();
                 } else {
-                  // Nếu detail chưa có methodPayment, mới fallback sang payments
-                  const foundPayment = paymentType
-                    ? payments.find((p) => p.paymentType === paymentType)
-                    : payments.find((p) => p); // Tìm payment đầu tiên nếu không có paymentType
+                  // ⭐⭐ ĐỐI VỚI SERVICE: Nếu chưa có payment và status = PENDING → hiển thị "Chưa có" ⭐⭐
+                  if (isService && status === "PENDING") {
+                    // Kiểm tra lại xem có payment nào không (kể cả SUCCESS)
+                    const anyServicePayment = paymentType
+                      ? payments.find((p) => p.paymentType === paymentType)
+                      : null;
+                    
+                    if (!anyServicePayment) {
+                      paymentMethod = ""; // Để hiển thị "Chưa có"
+                    } else {
+                      // Có payment nhưng không phải PENDING → dùng method từ payment đó
+                      paymentMethod = String(anyServicePayment.method || "").toUpperCase();
+                    }
+                  } else {
+                    // Nếu detail chưa có methodPayment, mới fallback sang payments
+                    const foundPayment = paymentType
+                      ? payments.find((p) => p.paymentType === paymentType)
+                      : payments.find((p) => p); // Tìm payment đầu tiên nếu không có paymentType
 
-                  if (foundPayment && foundPayment.method) {
-                    paymentMethod = String(foundPayment.method).toUpperCase();
+                    if (foundPayment && foundPayment.method) {
+                      paymentMethod = String(foundPayment.method).toUpperCase();
+                    }
                   }
                 }
                 
@@ -963,7 +1021,8 @@ const OrderDetailCusPage = () => {
                     )}
                   </tr>
                 );
-              })}
+                });
+              })()}
             </tbody>
           </table>
         </>
@@ -1019,13 +1078,19 @@ const OrderDetailCusPage = () => {
                                      orderDetails[0].remainingAmount > 0;
               
               if (remainingAmount) {
-                // Kiểm tra xem có detail nào là SERVICE không
-                const serviceDetail = orderDetails.find(
-                  (d) => String(d.type || "").toUpperCase().startsWith("SERVICE")
+                // Kiểm tra xem có detail nào là SERVICE chưa thanh toán không
+                const unpaidServiceDetails = orderDetails.filter(
+                  (d) => {
+                    const type = String(d.type || "").toUpperCase();
+                    const status = String(d.status || "").toUpperCase();
+                    return type.startsWith("SERVICE") && status === "PENDING";
+                  }
                 );
                 
-                if (serviceDetail) {
-                  // Nếu có dịch vụ, mở modal như thanh toán dịch vụ
+                if (unpaidServiceDetails.length > 0) {
+                  // Nếu có dịch vụ chưa thanh toán, dùng type 5 (SERVICE)
+                  // Lấy service detail đầu tiên để mở modal
+                  const serviceDetail = unpaidServiceDetails[0];
                   handleShowPaymentModal(serviceDetail);
                 } else {
                   // Mở modal với 2 lựa chọn: Đặt cọc hoặc Thanh toán toàn bộ
@@ -1046,7 +1111,14 @@ const OrderDetailCusPage = () => {
                   (d) => String(d.status).toUpperCase() === "PENDING"
                 );
                 if (pendingDetail) {
-                  handleShowPaymentModal(pendingDetail);
+                  // Kiểm tra xem pendingDetail có phải là SERVICE không
+                  const isServicePending = String(pendingDetail.type || "").toUpperCase().startsWith("SERVICE");
+                  if (isServicePending) {
+                    // Nếu là SERVICE PENDING, đảm bảo dùng type 5
+                    handleShowPaymentModal(pendingDetail);
+                  } else {
+                    handleShowPaymentModal(pendingDetail);
+                  }
                 }
               }
             }}
