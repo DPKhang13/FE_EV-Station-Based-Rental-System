@@ -48,6 +48,7 @@ import ChiTietKhachHang from './pages/ChiTietKhachHang.jsx';
 import LichSuThue from './pages/LichSuThue.jsx';
 import ChiTietDonTrongAdmin from './pages/ChiTietDonTrongAdmin.jsx';
 import VehicleHistoryPage from './pages/VehicleHistoryPage.jsx';
+import IncidentReportPage from './pages/IncidentReportPage.jsx';
 
 const HomePage = () => (
   <ScrollToSectionWrapper>
@@ -202,6 +203,7 @@ function App() {
               <Route path="order-detail/:orderId" element={<ChiTietDonTrongAdmin/>}/>
               <Route path="banggia" element={<AdminBangGiaPage/>}/>
               <Route path="vehicle-history/:vehicleId" element={<VehicleHistoryPage/>}/>
+              <Route path="incident-reports" element={<IncidentReportPage/>}/>
             </Route>
           </Routes >
         </LayoutWrapper >

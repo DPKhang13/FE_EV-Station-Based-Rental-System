@@ -645,6 +645,16 @@ const TrangHienThiXeTheoTram = () => {
         }
       }
       
+      // Kiểm tra pin trước khi cho phép chuyển sang trạng thái Sẵn sàng
+      if (newStatus === "AVAILABLE") {
+        const batteryStatus = vehicle.batteryStatus || vehicle.battery_status || "0";
+        const batteryPercent = Number(String(batteryStatus).replace("%", "").trim());
+        
+        if (batteryPercent <= 60) {
+          return showNotification("Không thể chuyển sang trạng thái 'Sẵn sàng'. Pin phải trên 60%. Pin hiện tại: " + batteryPercent + "%.", "error");
+        }
+      }
+
       // Nếu xe đang ở trạng thái RENTED, giữ nguyên trạng thái
       let finalStatus = editFormData.status;
       if (currentStatus === "RENTED" || currentStatus === "RENTAL") {
@@ -1688,31 +1698,77 @@ const battery = Number(String(rawBattery).replace("%", "").trim());
             <form onSubmit={handleSubmitEditVehicle}>
               <div className="form-group">
                 <label>Trạng thái <span className="required">*</span></label>
-                {((editFormData.status || "").toUpperCase() === "RENTED" || 
-                  (editFormData.status || "").toUpperCase() === "RENTAL") ? (
-                  <div style={{ 
-                    padding: "12px", 
-                    background: "#FFF3CD", 
-                    border: "1px solid #FFC107",
-                    borderRadius: "4px",
-                    color: "#856404",
-                    fontSize: "14px"
-                  }}>
-                    <strong>Đang thuê</strong> - Trạng thái này chỉ được thay đổi tự động khi khách hàng cọc và bàn giao xe. Admin không thể chỉnh sửa.
+                {(() => {
+                  const vehicle = vehicles.find(v => (v.vehicleId || v.id) === editingVehicleId);
+                  const batteryStatus = vehicle?.batteryStatus || vehicle?.battery_status || "0";
+                  const batteryPercent = Number(String(batteryStatus).replace("%", "").trim());
+                  const isBatteryLow = batteryPercent <= 60;
+                  
+                  return ((editFormData.status || "").toUpperCase() === "RENTED" || 
+                    (editFormData.status || "").toUpperCase() === "RENTAL") ? (
+                    <div style={{ 
+                      padding: "12px", 
+                      background: "#FFF3CD", 
+                      border: "1px solid #FFC107",
+                      borderRadius: "4px",
+                      color: "#856404",
+                      fontSize: "14px"
+                    }}>
+                      <strong>Đang thuê</strong> - Trạng thái này chỉ được thay đổi tự động khi khách hàng cọc và bàn giao xe. Admin không thể chỉnh sửa.
+                    </div>
+                  ) : (
+                    <div className="status-buttons-container">
+                      <button
+                        type="button"
+                        className={`status-button ${(editFormData.status || "").toUpperCase() === "AVAILABLE" ? "active" : ""} ${isBatteryLow ? "disabled" : ""}`}
+                        onClick={() => {
+                          if (isBatteryLow) {
+                            showNotification("Không thể chuyển sang trạng thái 'Sẵn sàng'. Pin phải trên 60%. Pin hiện tại: " + batteryPercent + "%.", "error");
+                            return;
+                          }
+                          handleEditInputChange({ target: { name: "status", value: "AVAILABLE" } });
+                        }}
+                        disabled={isBatteryLow}
+                        title={isBatteryLow ? `Pin hiện tại: ${batteryPercent}%. Cần trên 60% để chuyển sang trạng thái 'Sẵn sàng'.` : ""}
+                      >
+                        <span className="status-button-label">Có sẵn</span>
+                        <span className="status-button-switch">
+                          <span className="status-button-handle"></span>
+                        </span>
+                      </button>
+                    <button
+                      type="button"
+                      className={`status-button ${(editFormData.status || "").toUpperCase() === "BOOKED" ? "active" : ""}`}
+                      onClick={() => handleEditInputChange({ target: { name: "status", value: "BOOKED" } })}
+                    >
+                      <span className="status-button-label">Đã đặt trước</span>
+                      <span className="status-button-switch">
+                        <span className="status-button-handle"></span>
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`status-button ${(editFormData.status || "").toUpperCase() === "CHECKING" ? "active" : ""}`}
+                      onClick={() => handleEditInputChange({ target: { name: "status", value: "CHECKING" } })}
+                    >
+                      <span className="status-button-label">Đang kiểm tra</span>
+                      <span className="status-button-switch">
+                        <span className="status-button-handle"></span>
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`status-button ${(editFormData.status || "").toUpperCase() === "MAINTENANCE" ? "active" : ""}`}
+                      onClick={() => handleEditInputChange({ target: { name: "status", value: "MAINTENANCE" } })}
+                    >
+                      <span className="status-button-label">Bảo trì</span>
+                      <span className="status-button-switch">
+                        <span className="status-button-handle"></span>
+                      </span>
+                    </button>
                   </div>
-                ) : (
-                  <select
-                    name="status"
-                    value={editFormData.status}
-                    onChange={handleEditInputChange}
-                    required
-                  >
-                    <option value="AVAILABLE">Sẵn sàng</option>
-                    <option value="MAINTENANCE">Bảo trì</option>
-                    <option value="BOOKED">Đã đặt trước</option>
-                    <option value="CHECKING">Đang kiểm tra</option>
-                  </select>
-                )}
+                  );
+                })()}
               </div>
 
               <div className="form-group">
