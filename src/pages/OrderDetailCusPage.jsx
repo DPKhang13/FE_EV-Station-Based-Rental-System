@@ -116,6 +116,22 @@ const OrderDetailCusPage = () => {
       
       console.log("💰 PAYMENTS:", paymentList);
       console.log("💰 PAYMENTS COUNT:", paymentList.length);
+      
+      // ⭐⭐ DEBUG: Kiểm tra payment type 2 ⭐⭐
+      const type2Payments = paymentList.filter(p => p.paymentType === 2);
+      console.log("🔍 [Payment Check] Type 2 payments:", type2Payments);
+      if (type2Payments.length > 0) {
+        console.log("✅ [Payment Check] Found payment type 2:", type2Payments.map(p => ({
+          paymentId: p.paymentId,
+          status: p.status,
+          method: p.method,
+          paymentType: p.paymentType,
+          amount: p.amount
+        })));
+      } else {
+        console.log("⚠️ [Payment Check] No payment type 2 found!");
+      }
+      
       paymentList.forEach((p, idx) => {
         console.log(`💰 Payment ${idx + 1}:`, {
           paymentId: p.paymentId,
@@ -183,22 +199,53 @@ const OrderDetailCusPage = () => {
         // Thanh toán toàn bộ: type 3 (backend sẽ set remainingAmount = 0)
         finalPaymentType = 3;
       } else if (paymentType === 2) {
-        // Thanh toán phần còn lại: type 2 (dựa vào remainingAmount của đơn đặt cọc)
+        // ⭐⭐ THANH TOÁN PHẦN CÒN LẠI: type 2 (dựa vào remainingAmount của DEPOSIT/FULL_PAYMENT) ⭐⭐
+        // Backend sẽ:
+        // - Tìm DEPOSIT (type 1) SUCCESS hoặc FULL_PAYMENT (type 3) SUCCESS
+        // - Lấy remainingAmount từ payment đó
+        // - Trừ amount đã thanh toán khỏi remainingAmount
+        // - Nếu remainingAmount = 0 → chuyển order status thành PAID/AWAITING và mark service details as SUCCESS
         finalPaymentType = 2;
+      }
+      
+      // ⭐⭐ DEBUG LOG: Đảm bảo paymentType = 2 được truyền đúng ⭐⭐
+      if (finalPaymentType === 2) {
+        console.log("✅ [handlePayment] Payment Type 2 confirmed:", {
+          originalPaymentType: paymentType,
+          finalPaymentType: 2,
+          method: method,
+          hasDeposit: hasDepositPayment(),
+          orderId
+        });
       }
 
       const payload = {
         orderId,
         method: method,
-        paymentType: finalPaymentType,
+        paymentType: finalPaymentType, // ⭐⭐ ĐẢM BẢO TRUYỀN finalPaymentType (có thể là 2) ⭐⭐
       };
+      
+      // ⭐⭐ DEBUG LOG: Kiểm tra payload trước khi gửi ⭐⭐
+      console.log("📤 [handlePayment] Sending payload to backend:", {
+        orderId,
+        method,
+        paymentType: finalPaymentType,
+        originalPaymentType: paymentType,
+        payload
+      });
 
       // Xử lý thanh toán tiền mặt và MoMo giống nhau (cùng logic, cùng paymentType)
       // Thanh toán tiền mặt: tạo payment với status PENDING, chờ staff xác nhận
       // Thanh toán MoMo: redirect đến payment URL
       if (method === "CASH") {
         // Gọi API tạo payment tiền mặt với status PENDING (chờ staff xác nhận)
-        console.log("[CASH] Creating cash payment request:", payload);
+        console.log("💰 [CASH] Creating cash payment request:", {
+          orderId,
+          method: "CASH",
+          paymentType: finalPaymentType,
+          originalPaymentType: paymentType,
+          payload
+        });
         
         const res = await api.post("/payment/cash", payload);
         
@@ -212,11 +259,25 @@ const OrderDetailCusPage = () => {
         // Payment được tạo với status PENDING - chờ staff xác nhận
         console.log("[CASH] Payment request created (PENDING):", responseData);
         
-        // ✅ Refresh order details và payments song song để tăng tốc độ
-        await Promise.all([
-          fetchOrderDetails(),
-          fetchPayments()
-        ]);
+        // ⭐⭐ DEBUG: Kiểm tra payment type 2 đã được tạo chưa ⭐⭐
+        if (finalPaymentType === 2) {
+          console.log("✅ [CASH Type 2] Payment type 2 created successfully:", {
+            paymentId: responseData.paymentId,
+            paymentType: responseData.paymentType,
+            status: responseData.status,
+            amount: responseData.amount,
+            method: responseData.method
+          });
+          console.log("ℹ️ [CASH Type 2] PICKUP detail will be created when staff approves this payment.");
+        }
+        
+        // ⭐⭐ LƯU Ý: PICKUP detail KHÔNG được tạo khi tạo payment request ⭐⭐
+        // PICKUP detail chỉ được tạo khi staff approve payment (trong approveCashPaymentByOrder -> finalSuccess)
+        // Vì vậy, customer không cần refresh order details ở đây
+        // Customer sẽ thấy PICKUP detail sau khi staff approve payment
+        
+        // ✅ Refresh payments để hiển thị payment mới (PENDING)
+        await fetchPayments();
         
         // Hiển thị thông báo đã gửi yêu cầu
         alert(
@@ -294,11 +355,18 @@ const OrderDetailCusPage = () => {
   // ============================
   const handleShowPaymentModal = (detail) => {
     const type = String(detail.type).toUpperCase();
+    const hasDeposit = hasDepositPayment();
     
     if (type === "RENTAL") {
       // Show modal chọn toàn bộ hoặc đặt cọc
       setSelectedPaymentType("RENTAL");
-      setSelectedAmount(null);
+      // ⭐⭐ NẾU ĐÃ CÓ DEPOSIT, TỰ ĐỘNG SET THANH TOÁN PHẦN CÒN LẠI (TYPE 2) ⭐⭐
+      if (hasDeposit) {
+        setSelectedAmount(2); // Thanh toán phần còn lại (paymentType 2)
+        console.log("💰 [handleShowPaymentModal] Đã có DEPOSIT, set selectedAmount = 2");
+      } else {
+        setSelectedAmount(null); // Để người dùng chọn
+      }
       setSelectedMethod(null);
       setIsServicePayment(false);
       setShowPaymentModal(true);
@@ -320,7 +388,18 @@ const OrderDetailCusPage = () => {
       setIsServicePayment(true); // Đánh dấu là thanh toán dịch vụ
       setShowPaymentModal(true);
     } else {
+      // ⭐⭐ ĐỐI VỚI CÁC TYPE KHÁC (DEPOSIT, FULL_PAYMENT, etc.): Nếu đã có deposit → force type 2 ⭐⭐
+      if (hasDeposit && type !== "SERVICE") {
+        setSelectedPaymentType("RENTAL");
+        setSelectedAmount(2); // Force type 2 khi đã có deposit
+        console.log("💰 [handleShowPaymentModal] Type khác nhưng đã có DEPOSIT, force selectedAmount = 2");
+      } else {
+        setSelectedPaymentType("RENTAL");
+        setSelectedAmount(null);
+      }
+      setSelectedMethod(null);
       setIsServicePayment(false);
+      setShowPaymentModal(true);
     }
   };
 
@@ -332,11 +411,44 @@ const OrderDetailCusPage = () => {
       alert("Vui lòng chọn phương thức thanh toán!");
       return;
     }
-    if (selectedPaymentType === "RENTAL" && !selectedAmount) {
+    
+    // ⭐⭐ XỬ LÝ TRƯỜNG HỢP ĐÃ CÓ DEPOSIT (THANH TOÁN PHẦN CÒN LẠI - TYPE 2) ⭐⭐
+    // Nếu đã có DEPOSIT và đang thanh toán RENTAL → LUÔN dùng type 2 (thanh toán phần còn lại)
+    let finalPaymentType = selectedAmount;
+    
+    // ⭐⭐ KIỂM TRA: Nếu đã có deposit và đang thanh toán RENTAL → LUÔN force type 2 ⭐⭐
+    const hasDeposit = hasDepositPayment();
+    if (hasDeposit && (selectedPaymentType === "RENTAL" || !selectedPaymentType)) {
+      // Đã có deposit → LUÔN thanh toán phần còn lại (type 2)
+      finalPaymentType = 2;
+      console.log("💰 [Confirm Payment] Đã có DEPOSIT, FORCE paymentType = 2", {
+        originalSelectedAmount: selectedAmount,
+        finalPaymentType: 2,
+        hasDeposit: hasDeposit,
+        selectedPaymentType
+      });
+    } else if (selectedPaymentType === "RENTAL" && !selectedAmount && !hasDeposit) {
+      // Chưa có deposit và chưa chọn hình thức thanh toán
       alert("Vui lòng chọn hình thức thanh toán!");
       return;
     }
-    handlePayment(selectedAmount, selectedMethod);
+    
+    // ⭐⭐ ĐẢM BẢO finalPaymentType KHÔNG NULL/UNDEFINED ⭐⭐
+    if (!finalPaymentType && !hasDeposit) {
+      alert("Vui lòng chọn hình thức thanh toán!");
+      return;
+    }
+    
+    console.log("💰 [Confirm Payment] Calling handlePayment:", {
+      selectedAmount,
+      finalPaymentType,
+      selectedMethod,
+      hasDeposit: hasDeposit,
+      selectedPaymentType
+    });
+    
+    // ⭐⭐ TRUYỀN finalPaymentType VÀO handlePayment (đảm bảo type 2 khi đã có deposit) ⭐⭐
+    handlePayment(finalPaymentType, selectedMethod);
   };
 
   // ============================
@@ -1095,9 +1207,13 @@ const OrderDetailCusPage = () => {
                 } else {
                   // Mở modal với 2 lựa chọn: Đặt cọc hoặc Thanh toán toàn bộ
                   setSelectedPaymentType("RENTAL");
-                  // Nếu đã có DEPOSIT, tự động set thanh toán phần còn lại (type 2)
-                  if (hasDepositPayment()) {
+                  // ⭐⭐ NẾU ĐÃ CÓ DEPOSIT, TỰ ĐỘNG SET THANH TOÁN PHẦN CÒN LẠI (TYPE 2) ⭐⭐
+                  const hasDeposit = hasDepositPayment();
+                  console.log("💰 [Open Payment Modal] hasDepositPayment:", hasDeposit, "payments:", payments);
+                  
+                  if (hasDeposit) {
                     setSelectedAmount(2); // Thanh toán phần còn lại (paymentType 2)
+                    console.log("💰 [Open Payment Modal] Đã có DEPOSIT, set selectedAmount = 2");
                   } else {
                     setSelectedAmount(null); // Để người dùng chọn
                   }
@@ -1117,7 +1233,18 @@ const OrderDetailCusPage = () => {
                     // Nếu là SERVICE PENDING, đảm bảo dùng type 5
                     handleShowPaymentModal(pendingDetail);
                   } else {
-                    handleShowPaymentModal(pendingDetail);
+                    // ⭐⭐ NẾU ĐÃ CÓ DEPOSIT VÀ KHÔNG PHẢI SERVICE → LUÔN SET TYPE 2 ⭐⭐
+                    const hasDeposit = hasDepositPayment();
+                    if (hasDeposit) {
+                      setSelectedPaymentType("RENTAL");
+                      setSelectedAmount(2); // Force type 2
+                      setSelectedMethod(null);
+                      setIsServicePayment(false);
+                      setShowPaymentModal(true);
+                      console.log("💰 [Open Payment Modal from PENDING] Đã có DEPOSIT, force selectedAmount = 2");
+                    } else {
+                      handleShowPaymentModal(pendingDetail);
+                    }
                   }
                 }
               }
@@ -1218,7 +1345,27 @@ const OrderDetailCusPage = () => {
               </div>
             )}
             
-            {/* Ẩn hình thức thanh toán khi đã có DEPOSIT (thanh toán phần còn lại) */}
+            {/* ⭐⭐ HIỂN THỊ THÔNG BÁO KHI ĐÃ CÓ DEPOSIT (THANH TOÁN PHẦN CÒN LẠI) ⭐⭐ */}
+            {selectedPaymentType === "RENTAL" && hasDepositPayment() && (
+              <div className="payment-options" style={{ marginBottom: '20px' }}>
+                <div style={{
+                  padding: '12px 16px',
+                  background: '#FFF3CD',
+                  border: '1px solid #FFC107',
+                  borderRadius: '8px',
+                  color: '#856404',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}>
+                  💰 Thanh toán phần còn lại (Type 2)
+                  {selectedAmount !== 2 && (
+                    <span style={{ marginLeft: '8px', fontSize: '12px', fontStyle: 'italic' }}>
+                      (Đang tự động set paymentType = 2...)
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Chọn phương thức thanh toán */}
             <div className="payment-options">
@@ -1268,9 +1415,21 @@ const OrderDetailCusPage = () => {
                 <span className="pricing-label">Tổng thanh toán:</span>
                 <span className="pricing-value total-amount">
                   {(() => {
-                    const amount = selectedAmount === 1 
-                      ? Math.round(remainingAmountFromDetails / 2)
-                      : remainingAmountFromDetails;
+                    // ⭐⭐ XỬ LÝ TÍNH TOÁN SỐ TIỀN THEO PAYMENT TYPE ⭐⭐
+                    // Type 1 (Đặt cọc): 50% remainingAmount
+                    // Type 2 (Thanh toán phần còn lại): 100% remainingAmount
+                    // Type 3 (Thanh toán toàn bộ): 100% remainingAmount
+                    // Type 5 (Thanh toán dịch vụ): 100% remainingAmount (hoặc số tiền dịch vụ cụ thể)
+                    let amount = remainingAmountFromDetails;
+                    
+                    if (selectedAmount === 1) {
+                      // Đặt cọc: 50%
+                      amount = Math.round(remainingAmountFromDetails / 2);
+                    } else if (selectedAmount === 2 || selectedAmount === 3 || selectedAmount === 5) {
+                      // Thanh toán phần còn lại / toàn bộ / dịch vụ: 100%
+                      amount = remainingAmountFromDetails;
+                    }
+                    
                     return amount.toLocaleString("vi-VN") + " VND";
                   })()}
                 </span>

@@ -415,12 +415,26 @@ export default function OrderDetailPage() {
       setProcessing(true);
       await api.put(`/payment/cash/approve/order/${orderId}`);
       showToast("success", "✅ Đã xác nhận thanh toán thành công!");
+      
+      // ⭐⭐ KHI APPROVE PAYMENT TYPE 2: Backend sẽ tạo PICKUP detail trong finalSuccess() ⭐⭐
+      // Cần refresh order details để hiển thị PICKUP detail mới
+      console.log("🔄 [Approve Payment] Backend đã tạo PICKUP detail. Refreshing order details...");
+      
       // ✅ Gọi các API song song để tăng tốc độ
       await Promise.all([
         fetchPayments(),
         refetchDetails(),
         fetchOrderStatus()
       ]);
+      
+      // ⭐⭐ ĐỢI MỘT CHÚT RỒI REFRESH LẠI ĐỂ ĐẢM BẢO PICKUP DETAIL ĐƯỢC HIỂN THỊ ⭐⭐
+      console.log("⏳ [Approve Payment] Waiting 500ms then refreshing again to ensure PICKUP detail is visible...");
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Refresh lại một lần nữa để đảm bảo PICKUP detail được hiển thị
+      await refetchDetails();
+      console.log("✅ [Approve Payment] Second refresh completed. PICKUP detail should now be visible in the table.");
+      
     } catch (err) {
       console.error("Lỗi xác nhận thanh toán:", err);
       const errorMsg = 
