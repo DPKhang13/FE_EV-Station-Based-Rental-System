@@ -627,8 +627,22 @@ const TrangHienThiXeTheoTram = () => {
       if (!vehicle)
         return showNotification("Không tìm thấy xe!", "error");
 
+      // Kiểm tra nếu xe đang ở trạng thái RENTED, không cho phép thay đổi trạng thái
+      const currentStatus = (vehicle.status || "").toUpperCase();
+      const newStatus = (editFormData.status || "").toUpperCase();
+      
+      // Nếu xe đang ở trạng thái RENTED, giữ nguyên trạng thái
+      let finalStatus = editFormData.status;
+      if (currentStatus === "RENTED" || currentStatus === "RENTAL") {
+        // Giữ nguyên trạng thái RENTED, không cho phép thay đổi
+        finalStatus = vehicle.status;
+      } else if (newStatus === "RENTED" || newStatus === "RENTAL") {
+        // Nếu cố gắng chuyển sang trạng thái RENTED, từ chối
+        return showNotification("Không thể chuyển sang trạng thái 'Đang thuê'. Trạng thái này chỉ được thay đổi tự động khi khách hàng cọc và bàn giao xe.", "error");
+      }
+
       const updateData = {
-        status: editFormData.status,
+        status: finalStatus,
         stationId: Number(editFormData.stationId || vehicle.stationId || vehicle.station_id),
         brand: editFormData.brand,
         color: editFormData.color,
@@ -1641,18 +1655,31 @@ const battery = Number(String(rawBattery).replace("%", "").trim());
             <form onSubmit={handleSubmitEditVehicle}>
               <div className="form-group">
                 <label>Trạng thái <span className="required">*</span></label>
-                <select
-                  name="status"
-                  value={editFormData.status}
-                  onChange={handleEditInputChange}
-                  required
-                >
-                  <option value="AVAILABLE">Sẵn sàng</option>
-                  <option value="RENTED">Đang thuê</option>
-                  <option value="MAINTENANCE">Bảo trì</option>
-                  <option value="BOOKED">Đã đặt trước</option>
-                  <option value="CHECKING">Đang kiểm tra</option>
-                </select>
+                {((editFormData.status || "").toUpperCase() === "RENTED" || 
+                  (editFormData.status || "").toUpperCase() === "RENTAL") ? (
+                  <div style={{ 
+                    padding: "12px", 
+                    background: "#FFF3CD", 
+                    border: "1px solid #FFC107",
+                    borderRadius: "4px",
+                    color: "#856404",
+                    fontSize: "14px"
+                  }}>
+                    <strong>Đang thuê</strong> - Trạng thái này chỉ được thay đổi tự động khi khách hàng cọc và bàn giao xe. Admin không thể chỉnh sửa.
+                  </div>
+                ) : (
+                  <select
+                    name="status"
+                    value={editFormData.status}
+                    onChange={handleEditInputChange}
+                    required
+                  >
+                    <option value="AVAILABLE">Sẵn sàng</option>
+                    <option value="MAINTENANCE">Bảo trì</option>
+                    <option value="BOOKED">Đã đặt trước</option>
+                    <option value="CHECKING">Đang kiểm tra</option>
+                  </select>
+                )}
               </div>
 
               <div className="form-group">
