@@ -162,8 +162,18 @@ const PopupXemChiTietXe = ({ vehicleId, onClose, onReload }) => {
               </div>
             </div>
 
-            {/* Thông tin đặt xe (nếu có) - Chỉ hiển thị khi trạng thái xe không phải "Có sẵn" */}
-            {vehicleDetail.hasBooking && vehicleDetail.status?.toUpperCase() !== "AVAILABLE" && (
+            {/* Thông tin đặt xe (nếu có) - Chỉ hiển thị khi trạng thái xe không phải "Có sẵn" hoặc "Bảo trì" */}
+            {(() => {
+              const status = vehicleDetail.status?.toUpperCase() || "";
+              const shouldHide = status === "AVAILABLE" || status === "MAINTENANCE";
+              console.log('🔍 [PopupXemChiTietXe] Thông tin đặt xe - Status check:', { 
+                originalStatus: vehicleDetail.status,
+                upperCaseStatus: status, 
+                shouldHide, 
+                hasBooking: vehicleDetail.hasBooking 
+              });
+              return vehicleDetail.hasBooking && !shouldHide;
+            })() && (
               <div className="info-section booking-section">
                 <h3 className="section-title">📅 Thông tin đặt xe hiện tại</h3>
                 <div className="info-grid">
@@ -203,8 +213,18 @@ const PopupXemChiTietXe = ({ vehicleId, onClose, onReload }) => {
               </div>
             )}
 
-            {/* Ghi chú - Chỉ hiển thị khi trạng thái xe không phải "Có sẵn" */}
-            {vehicleDetail.bookingNote && vehicleDetail.status?.toUpperCase() !== "AVAILABLE" && (
+            {/* Ghi chú - Chỉ hiển thị khi trạng thái xe không phải "Có sẵn" hoặc "Bảo trì" */}
+            {(() => {
+              const status = vehicleDetail.status?.toUpperCase() || "";
+              const shouldHide = status === "AVAILABLE" || status === "MAINTENANCE";
+              console.log('🔍 [PopupXemChiTietXe] Ghi chú - Status check:', { 
+                originalStatus: vehicleDetail.status,
+                upperCaseStatus: status, 
+                shouldHide, 
+                hasBookingNote: !!vehicleDetail.bookingNote 
+              });
+              return vehicleDetail.bookingNote && !shouldHide;
+            })() && (
               <div className="info-section">
                 <h3 className="section-title">📝 Ghi chú</h3>
                 <div className="note-box">

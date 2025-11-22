@@ -32,6 +32,11 @@ const translateType = (type = "") => {
     REFUND: "Hoàn tiền",
     TOP_UP: "Nạp tài khoản",
     PICKUP: "Tiền còn lại sau cọc",
+    PICKUP_PENDING : "Trả phần còn lại bằng tiền mặt",
+    DEPOSIT_PENDING : "Cọc bằng tiền mặt",
+    FULL_PAYMENT_PENDING : "Thanh toán toàn bộ bằng tiền mặt",
+    SERVICE : "Thanh toán dịch vụ",
+    SERVICE_SERVICE : "Thanh toán dịch vụ phát sinh",
   };
   return map[type.toUpperCase()] || "Khác";
 };

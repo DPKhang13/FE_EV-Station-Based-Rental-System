@@ -1171,18 +1171,75 @@ export default function OrderDetailPage() {
                 }
                 
                 // Điều kiện bàn giao: 
-                // 1. Đã thanh toán đầy đủ (FULL_PAYMENT hoặc DEPOSIT + PICKUP)
-                // 2. Xe sẵn sàng (chỉ AVAILABLE hoặc BOOKED, KHÔNG phải RENTAL - vì RENTAL là xe đang được khách khác thuê)
-                // 3. Detail status không phải WAITING (đã check ở trên)
-            const canHandOver = fullOK || depositedOK;
+                // 1. Đã thanh toán đầy đủ: 
+                //    - Toàn bộ (FULL_PAYMENT) đã thanh toán thành công, HOẶC
+                //    - Đã đặt cọc (DEPOSIT) thành công VÀ đã trả phần còn lại (PICKUP) thành công
+                //    - KHÔNG cho phép chỉ có đặt cọc (DEPOSIT) mà không có PICKUP
+                // 2. TẤT CẢ các giao dịch trong đơn hàng phải có status là "SUCCESS"
+                // 3. Xe sẵn sàng (chỉ AVAILABLE hoặc BOOKED, KHÔNG phải RENTAL - vì RENTAL là xe đang được khách khác thuê)
+                // 4. Detail status không phải WAITING (đã check ở trên)
+            const canHandOver = fullOK || (depositedOK && pickupOK);
+            
+            // ⭐⭐ KIỂM TRA: Tất cả các giao dịch phải có status là "SUCCESS" ⭐⭐
+            const allTransactionsSuccess = orderDetails.every(
+              (d) => String(d.status || "").toUpperCase() === "SUCCESS"
+            );
+            
+            console.log("🔍 [Handover Check] All transactions status:", {
+              orderDetailsCount: orderDetails.length,
+              allTransactionsSuccess,
+              orderDetailsStatus: orderDetails.map(d => ({ 
+                type: d.type, 
+                status: d.status 
+              }))
+            });
+            
             // ⭐⭐ QUAN TRỌNG: Nếu xe đang RENTAL → xe đang được khách khác thuê → KHÔNG được bàn giao ⭐⭐
             const vehicleReady =
               backendVehicleStatusForHandover === "BOOKED" ||
               backendVehicleStatusForHandover === "AVAILABLE";
                 // KHÔNG cho phép vehicle.status === "RENTAL" vì đó là xe đang được khách khác thuê
                 
-                // Cho phép bàn giao khi đã đặt cọc hoặc thanh toán full và xe BOOKED/AVAILABLE
+                // Cho phép bàn giao khi: đã thanh toán đầy đủ + TẤT CẢ giao dịch đã thành công + xe BOOKED/AVAILABLE
                 if (canHandOver && vehicleReady && !isWaiting) {
+                  // Nếu chưa đủ điều kiện (chưa tất cả giao dịch thành công), hiển thị thông báo
+                  if (!allTransactionsSuccess) {
+                    const pendingTransactions = orderDetails.filter(
+                      (d) => String(d.status || "").toUpperCase() !== "SUCCESS"
+                    );
+                    return (
+                      <div>
+                        <button
+                          className="btn btn-confirm-handover"
+                          disabled={true}
+                          style={{ opacity: 0.5, cursor: "not-allowed" }}
+                        >
+                          <svg style={{ width: "18px", height: "18px", marginRight: "8px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                          XÁC NHẬN BÀN GIAO
+                        </button>
+                        <p style={{ 
+                          color: "#DC0000", 
+                          fontSize: "14px", 
+                          fontWeight: "600", 
+                          marginTop: "12px",
+                          padding: "12px",
+                          backgroundColor: "#FEE",
+                          borderRadius: "6px",
+                          border: "1px solid #FCC"
+                        }}>
+                          ⚠️ Vui lòng chờ tất cả các giao dịch thanh toán thành công trước khi bàn giao xe.
+                          {pendingTransactions.length > 0 && (
+                            <span style={{ display: "block", marginTop: "8px", fontSize: "12px", fontWeight: "normal" }}>
+                              Các giao dịch chưa thành công: {pendingTransactions.map(d => getTypeLabel(d.type)).join(", ")}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    );
+                  }
+                  
                   return (
                     <>
                       <button
@@ -1217,8 +1274,9 @@ export default function OrderDetailPage() {
                     {!canHandOver && (
                       <p style={{ margin: "4px 0", fontStyle: "italic" }}>
                         ❌ Chưa đủ điều kiện bàn giao. 
-                        {!depositedOK && " Thiếu đặt cọc."}
-                        {!fullOK && " Thiếu thanh toán toàn bộ."}
+                        {!fullOK && !depositedOK && " Thiếu thanh toán toàn bộ hoặc đặt cọc."}
+                        {depositedOK && !pickupOK && " Đã đặt cọc nhưng chưa thanh toán phần còn lại."}
+                        {!depositedOK && !fullOK && " Chưa có thanh toán nào."}
                       </p>
                     )}
                     {canHandOver && !vehicleReady && (
