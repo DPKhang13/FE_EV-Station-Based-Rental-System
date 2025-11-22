@@ -177,11 +177,22 @@ const formatStatus = (status) => {
         console.log("🔄 Fetching orders on-demand...");
         const ordersRes = await orderService.getAll();
         const ordersList = Array.isArray(ordersRes?.data) ? ordersRes.data : (Array.isArray(ordersRes) ? ordersRes : []);
-        setOrders(ordersList);
-        console.log("✅ Orders loaded:", ordersList.length);
-        return ordersList;
+        
+        // Filter theo stationId nếu user có stationId
+        const stationId = user?.stationId;
+        const filteredOrders = stationId 
+          ? ordersList.filter(o => Number(o.stationId) === Number(stationId))
+          : ordersList;
+        
+        console.log("✅ Orders loaded (all):", ordersList.length);
+        console.log("✅ Orders filtered by stationId:", filteredOrders.length);
+        console.log("✅ Filtered orders:", filteredOrders);
+        
+        setOrders(filteredOrders);
+        return filteredOrders;
       } catch (err) {
         console.error("❌ Lỗi khi fetch orders:", err);
+        alert("⚠️ Không thể tải danh sách đơn hàng. Vui lòng thử lại sau.");
         return [];
       }
     }
@@ -206,12 +217,43 @@ const formatStatus = (status) => {
       case "Đang cho thuê": {
         // ✅ Fetch orders nếu chưa có
         const currentOrders = await fetchOrdersIfNeeded();
+        
+        console.log('🔍 [handleVehicleAction] Tìm kiếm order cho xe:', {
+          vehicleId: xe.id,
+          plateNumber: xe.bienSo,
+          status: xe.trangThai
+        });
+        console.log('🔍 [handleVehicleAction] Tổng số orders:', currentOrders.length);
+        console.log('🔍 [handleVehicleAction] Orders:', currentOrders);
+        
+        // Tìm order theo vehicleId hoặc plateNumber
         const rentalOrder = currentOrders.find(
-          (o) =>
-            Number(o.vehicleId) === Number(xe.id) &&
-            ["RENTAL", "Rented", "ON_RENT", "IN_USE"].includes(o.status)
+          (o) => {
+            const vehicleIdMatch = Number(o.vehicleId) === Number(xe.id);
+            const plateNumberMatch = o.plateNumber === xe.bienSo;
+            const statusMatch = ["RENTAL", "Rented", "ON_RENT", "IN_USE", "PENDING_FINAL", "COMPLETED"].includes(o.status?.toUpperCase());
+            
+            const match = (vehicleIdMatch || plateNumberMatch) && statusMatch;
+            
+            if (vehicleIdMatch || plateNumberMatch) {
+              console.log('🔍 [handleVehicleAction] Order found:', {
+                orderId: o.orderId,
+                vehicleId: o.vehicleId,
+                plateNumber: o.plateNumber,
+                status: o.status,
+                vehicleIdMatch,
+                plateNumberMatch,
+                statusMatch,
+                match
+              });
+            }
+            
+            return match;
+          }
         );
+        
         if (rentalOrder) {
+          console.log('✅ [handleVehicleAction] Tìm thấy order:', rentalOrder.orderId);
           // ✅ Điều hướng tới trang xác thực khách hàng và tự động mở chi tiết (chỉ truyền orderId)
           navigate("/staff/xacthuc", {
             state: {
@@ -220,6 +262,16 @@ const formatStatus = (status) => {
             }
           });
         } else {
+          console.error('❌ [handleVehicleAction] Không tìm thấy order cho xe:', {
+            vehicleId: xe.id,
+            plateNumber: xe.bienSo,
+            availableOrders: currentOrders.map(o => ({
+              orderId: o.orderId,
+              vehicleId: o.vehicleId,
+              plateNumber: o.plateNumber,
+              status: o.status
+            }))
+          });
           alert("⚠️ Không tìm thấy đơn thuê xe tương ứng!");
         }
         break;
