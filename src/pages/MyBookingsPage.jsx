@@ -557,8 +557,17 @@ const MyBookingsPage = () => {
     };
 
     const filteredBookings = bookings.filter(booking => {
-        // Filter by statusAQ
-        const matchesStatus = filter === 'all' || booking.status?.toUpperCase() === filter.toUpperCase();
+        // Filter by status
+        let matchesStatus = false;
+        if (filter === 'all') {
+            matchesStatus = true;
+        } else if (filter === 'pending') {
+            matchesStatus = ["PENDING", "PENDING_DEPOSIT"].includes(booking.status?.toUpperCase());
+        } else if (filter === 'cancelled') {
+            matchesStatus = ["CANCELLED", "FAILED"].includes(booking.status?.toUpperCase());
+        } else {
+            matchesStatus = booking.status?.toUpperCase() === filter.toUpperCase();
+        }
 
         // Filter by search order ID
         const matchesSearch = searchOrderId.trim() === '' ||
@@ -658,6 +667,14 @@ const MyBookingsPage = () => {
           {bookings.filter((b) => b.status?.toUpperCase() === "COMPLETED").length}
           )
         </button>
+        <button
+          className={filter === "cancelled" ? "tab active" : "tab"}
+          onClick={() => setFilter("cancelled")}
+        >
+          Đã Hủy (
+          {bookings.filter((b) => ["CANCELLED", "FAILED"].includes(b.status?.toUpperCase())).length}
+          )
+        </button>
       </div>
 
       {/* Bookings List */}
@@ -720,26 +737,30 @@ const MyBookingsPage = () => {
                 <div className="detail-box">
                   <div className="detail-label">Ngày Nhận Xe</div>
                   <div className="detail-value">
-                    {new Date(booking.startTime).toLocaleString("vi-VN", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                    })}
+                    {(() => {
+                      const date = new Date(booking.startTime);
+                      const day = String(date.getDate()).padStart(2, "0");
+                      const month = String(date.getMonth() + 1).padStart(2, "0");
+                      const year = date.getFullYear();
+                      const hours = String(date.getHours()).padStart(2, "0");
+                      const minutes = String(date.getMinutes()).padStart(2, "0");
+                      return `${day}/${month}/${year} ${hours}:${minutes}`;
+                    })()}
                   </div>
                 </div>
 
                 <div className="detail-box">
                   <div className="detail-label">Ngày Trả Xe</div>
                   <div className="detail-value">
-                    {new Date(booking.endTime).toLocaleString("vi-VN", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                    })}
+                    {(() => {
+                      const date = new Date(booking.endTime);
+                      const day = String(date.getDate()).padStart(2, "0");
+                      const month = String(date.getMonth() + 1).padStart(2, "0");
+                      const year = date.getFullYear();
+                      const hours = String(date.getHours()).padStart(2, "0");
+                      const minutes = String(date.getMinutes()).padStart(2, "0");
+                      return `${day}/${month}/${year} ${hours}:${minutes}`;
+                    })()}
                   </div>
                 </div>
 
@@ -762,6 +783,38 @@ const MyBookingsPage = () => {
                     >
                       Xem chi tiết
                     </button>
+                    {String(booking.status || "").toUpperCase() === "PENDING_FINAL_PAYMENT" && (
+                      <span
+                        style={{
+                          color: "#856404",
+                          fontWeight: "500",
+                          padding: "10px 16px",
+                          background: "#FFF3CD",
+                          border: "1px solid #FFC107",
+                          borderRadius: "8px",
+                          fontSize: "13px",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        Vui lòng thanh toán phí dịch vụ và phát sinh
+                      </span>
+                    )}
+                    {String(booking.status || "").toUpperCase() === "RENTAL" && (
+                      <span
+                        style={{
+                          color: "#065F46",
+                          fontWeight: "500",
+                          padding: "10px 16px",
+                          background: "#D1FAE5",
+                          border: "1px solid #10B981",
+                          borderRadius: "8px",
+                          fontSize: "13px",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        Bạn đang thuê xe
+                      </span>
+                    )}
                     <button
                       onClick={() => handleCancelOrder(booking.orderId)}
                       className="btn-cancel"
@@ -795,32 +848,80 @@ const MyBookingsPage = () => {
                     </span>
                   </div>
                 ) : (
-                  <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
                     <button
                       onClick={() => handleViewDetails(booking)}
                       className="view-details-btn"
                     >
                       Xem chi tiết
                     </button>
+                    {String(booking.status || "").toUpperCase() === "PENDING_FINAL_PAYMENT" && (
+                      <span
+                        style={{
+                          color: "#856404",
+                          fontWeight: "500",
+                          padding: "10px 16px",
+                          background: "#FFF3CD",
+                          border: "1px solid #FFC107",
+                          borderRadius: "8px",
+                          fontSize: "13px",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        Vui lòng thanh toán phí dịch vụ và phát sinh
+                      </span>
+                    )}
+                    {String(booking.status || "").toUpperCase() === "RENTAL" && (
+                      <span
+                        style={{
+                          color: "#065F46",
+                          fontWeight: "500",
+                          padding: "10px 16px",
+                          background: "#D1FAE5",
+                          border: "1px solid #10B981",
+                          borderRadius: "8px",
+                          fontSize: "13px",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        Bạn đang thuê xe
+                      </span>
+                    )}
 
                     {/* Hiển thị trạng thái phù hợp */}
                     {["PENDING", "PENDING_DEPOSIT", "PENDING_FULL_PAYMENT"].includes(booking.status) && (
-                      <button
-                        onClick={() => handleCancelOrder(booking.orderId)}
-                        className="btn-cancel"
-                        style={{
-                          background: "#ef4444",
-                          color: "white",
-                          border: "none",
-                          padding: "10px 20px",
-                          borderRadius: "8px",
-                          fontSize: "14px",
-                          fontWeight: "600",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Hủy đơn hàng
-                      </button>
+                      <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+                        <button
+                          onClick={() => handleCancelOrder(booking.orderId)}
+                          className="btn-cancel"
+                          style={{
+                            background: "#ef4444",
+                            color: "white",
+                            border: "none",
+                            padding: "10px 20px",
+                            borderRadius: "8px",
+                            fontSize: "14px",
+                            fontWeight: "600",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Hủy đơn hàng
+                        </button>
+                        <span
+                          style={{
+                            color: "#dc2626",
+                            fontWeight: "500",
+                            padding: "10px 16px",
+                            background: "#fee2e2",
+                            border: "1px solid #fca5a5",
+                            borderRadius: "8px",
+                            fontSize: "13px",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          ⚠️ Vui lòng thanh toán để giữ xe
+                        </span>
+                      </div>
                     )}
 
                     {booking.status === "COMPLETED" && (
@@ -903,7 +1004,16 @@ const MyBookingsPage = () => {
                 {booking.createdAt && (
                   <span className="created-time">
                     Tạo lúc:{" "}
-                    {new Date(booking.createdAt).toLocaleString("vi-VN")}
+                    {(() => {
+                      const date = new Date(booking.createdAt);
+                      const day = String(date.getDate()).padStart(2, "0");
+                      const month = String(date.getMonth() + 1).padStart(2, "0");
+                      const year = date.getFullYear();
+                      const hours = String(date.getHours()).padStart(2, "0");
+                      const minutes = String(date.getMinutes()).padStart(2, "0");
+                      const seconds = String(date.getSeconds()).padStart(2, "0");
+                      return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+                    })()}
                   </span>
                 )}
               </div>

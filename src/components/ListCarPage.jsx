@@ -7,27 +7,37 @@ import 'react-datepicker/dist/react-datepicker.css';
 import './ListCarPage.css';
 
 // Custom TimePicker Component với 2 cột riêng biệt
-const CustomTimePicker = ({ value, onChange, placeholder = "Chọn giờ" }) => {
+const CustomTimePicker = ({ value, onChange, placeholder = "Chọn giờ", minHour = 0, maxHour = 23 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [selectedHour, setSelectedHour] = useState(value ? parseInt(value.split(':')[0]) : null);
     const [selectedMinute, setSelectedMinute] = useState(value ? parseInt(value.split(':')[1]) : null);
     const timePickerRef = useRef(null);
 
-    // Tạo danh sách giờ (0-23)
-    const hours = Array.from({ length: 24 }, (_, i) => i);
-    // Tạo danh sách phút (0, 5, 10, ..., 55)
-    const minutes = Array.from({ length: 12 }, (_, i) => i * 5);
+    // Tạo danh sách giờ với ràng buộc minHour và maxHour
+    const hours = Array.from({ length: maxHour - minHour + 1 }, (_, i) => i + minHour);
+    // Tạo danh sách phút đầy đủ từ 0 đến 59
+    const minutes = Array.from({ length: 60 }, (_, i) => i);
 
     useEffect(() => {
         if (value) {
             const [h, m] = value.split(':');
-            setSelectedHour(parseInt(h));
-            setSelectedMinute(parseInt(m));
+            const hour = parseInt(h);
+            const minute = parseInt(m);
+            // Validate giờ trong khoảng cho phép
+            if (hour >= minHour && hour <= maxHour) {
+                setSelectedHour(hour);
+                setSelectedMinute(minute);
+            } else {
+                // Nếu giờ nằm ngoài khoảng, reset về null
+                setSelectedHour(null);
+                setSelectedMinute(null);
+                onChange(''); // Reset value
+            }
         } else {
             setSelectedHour(null);
             setSelectedMinute(null);
         }
-    }, [value]);
+    }, [value, minHour, maxHour, onChange]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -46,14 +56,22 @@ const CustomTimePicker = ({ value, onChange, placeholder = "Chọn giờ" }) => 
     }, [isOpen]);
 
     const handleHourSelect = (hour) => {
+        // Validate giờ trong khoảng cho phép
+        if (hour < minHour || hour > maxHour) {
+            return;
+        }
         setSelectedHour(hour);
         const minute = selectedMinute !== null ? selectedMinute : 0;
         onChange(`${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`);
     };
 
     const handleMinuteSelect = (minute) => {
+        const hour = selectedHour !== null ? selectedHour : minHour;
+        // Validate giờ trong khoảng cho phép
+        if (hour < minHour || hour > maxHour) {
+            return;
+        }
         setSelectedMinute(minute);
-        const hour = selectedHour !== null ? selectedHour : 0;
         onChange(`${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`);
     };
 
@@ -316,6 +334,8 @@ const ListCarPage = () => {
                                 value={startTime}
                                 onChange={setStartTime}
                                 placeholder="Chọn giờ"
+                                minHour={8}
+                                maxHour={23}
                             />
                         </div>
                     </div>
@@ -336,6 +356,8 @@ const ListCarPage = () => {
                                 value={endTime}
                                 onChange={setEndTime}
                                 placeholder="Chọn giờ"
+                                minHour={8}
+                                maxHour={23}
                             />
                         </div>
                     </div>

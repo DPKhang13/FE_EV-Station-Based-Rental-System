@@ -469,6 +469,20 @@ const Booking7Seater = () => {
                 onChange={(date) => {
                   if (!date) return;
                   if (isBooked(date)) return alert("Thời gian đã bị đặt.");
+                  
+                  // Ràng buộc giờ từ 8:00 đến 23:59
+                  const hour = date.getHours();
+                  const minute = date.getMinutes();
+                  
+                  // Nếu giờ < 8, set về 8:00
+                  if (hour < 8) {
+                    date.setHours(8, 0, 0, 0);
+                  }
+                  // Nếu giờ > 23 hoặc (giờ = 23 và phút > 59), set về 23:59
+                  if (hour > 23 || (hour === 23 && minute > 59)) {
+                    date.setHours(23, 59, 0, 0);
+                  }
+                  
                   setFormData({
                     ...formData,
                     startTime: date.toISOString(),
@@ -476,7 +490,29 @@ const Booking7Seater = () => {
                 }}
                 showTimeSelect
                 dateFormat="yyyy-MM-dd HH:mm"
+                timeIntervals={30}
                 minDate={new Date()}
+                minTime={(() => {
+                  const min = new Date();
+                  min.setHours(8, 0, 0, 0);
+                  return min;
+                })()}
+                maxTime={(() => {
+                  const max = new Date();
+                  max.setHours(23, 30, 0, 0);
+                  return max;
+                })()}
+                filterTime={(time) => {
+                  const hour = time.getHours();
+                  const minute = time.getMinutes();
+                  // Chỉ cho phép từ 8:00 đến 23:30 - return false để ẩn hoàn toàn
+                  if (hour < 8) return false;
+                  if (hour > 23) return false;
+                  if (hour === 23 && minute > 30) return false;
+                  // Chỉ cho phép phút là 0 hoặc 30
+                  if (minute !== 0 && minute !== 30) return false;
+                  return true;
+                }}
                 dayClassName={(date) =>
                   isBooked(date) ? "booked-day" : undefined
                 }
@@ -492,6 +528,28 @@ const Booking7Seater = () => {
                 onChange={(date) => {
                   if (!date) return;
                   if (isBooked(date)) return alert("Thời gian đã bị đặt.");
+                  
+                  // Ràng buộc giờ từ 8:00 đến 23:30
+                  const hour = date.getHours();
+                  const minute = date.getMinutes();
+                  
+                  // Nếu giờ < 8, set về 8:00
+                  if (hour < 8) {
+                    date.setHours(8, 0, 0, 0);
+                  }
+                  // Nếu giờ > 23 hoặc (giờ = 23 và phút > 30), set về 23:30
+                  if (hour > 23 || (hour === 23 && minute > 30)) {
+                    date.setHours(23, 30, 0, 0);
+                  }
+                  // Nếu phút không phải 0 hoặc 30, làm tròn về 0 hoặc 30
+                  if (minute !== 0 && minute !== 30) {
+                    if (minute < 30) {
+                      date.setMinutes(0, 0, 0);
+                    } else {
+                      date.setMinutes(30, 0, 0);
+                    }
+                  }
+                  
                   setFormData({
                     ...formData,
                     endTime: date.toISOString(),
@@ -499,9 +557,31 @@ const Booking7Seater = () => {
                 }}
                 showTimeSelect
                 dateFormat="yyyy-MM-dd HH:mm"
+                timeIntervals={30}
                 minDate={
                   formData.startTime ? new Date(formData.startTime) : new Date()
                 }
+                minTime={(() => {
+                  const min = new Date();
+                  min.setHours(8, 0, 0, 0);
+                  return min;
+                })()}
+                maxTime={(() => {
+                  const max = new Date();
+                  max.setHours(23, 30, 0, 0);
+                  return max;
+                })()}
+                filterTime={(time) => {
+                  const hour = time.getHours();
+                  const minute = time.getMinutes();
+                  // Chỉ cho phép từ 8:00 đến 23:30 - return false để ẩn hoàn toàn
+                  if (hour < 8) return false;
+                  if (hour > 23) return false;
+                  if (hour === 23 && minute > 30) return false;
+                  // Chỉ cho phép phút là 0 hoặc 30
+                  if (minute !== 0 && minute !== 30) return false;
+                  return true;
+                }}
                 dayClassName={(date) =>
                   isBooked(date) ? "booked-day" : undefined
                 }
@@ -709,7 +789,7 @@ const Booking7Seater = () => {
               <div className="rental-condition-subsection">
                 <h4 className="rental-condition-subtitle">Chính sách đặt cọc (thế chân)</h4>
                 <ul className="rental-condition-list">
-                  <li>Khách hàng phải thanh toán số tiền cọc là 5.000.000₫</li>
+                  <li>Khách hàng phải thanh toán số tiền cọc bằng một nửa giá thuê xe</li>
                 </ul>
               </div>
             </div>

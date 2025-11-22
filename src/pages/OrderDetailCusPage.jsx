@@ -276,8 +276,11 @@ const OrderDetailCusPage = () => {
         // Vì vậy, customer không cần refresh order details ở đây
         // Customer sẽ thấy PICKUP detail sau khi staff approve payment
         
-        // ✅ Refresh payments để hiển thị payment mới (PENDING)
-        await fetchPayments();
+        // ✅ Refresh payments và order details để hiển thị dữ liệu mới
+        await Promise.all([
+          fetchPayments(),
+          fetchOrderDetails()
+        ]);
         
         // Hiển thị thông báo đã gửi yêu cầu
         alert(
@@ -1357,7 +1360,7 @@ const OrderDetailCusPage = () => {
                   fontSize: '14px',
                   fontWeight: '500'
                 }}>
-                  💰 Thanh toán phần còn lại (Type 2)
+                 Thanh toán phần còn lại 
                   {selectedAmount !== 2 && (
                     <span style={{ marginLeft: '8px', fontSize: '12px', fontStyle: 'italic' }}>
                       (Đang tự động set paymentType = 2...)
