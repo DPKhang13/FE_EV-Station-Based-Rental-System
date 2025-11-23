@@ -1,11 +1,10 @@
 // pages/IncidentReportPage.jsx
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { maintenanceService } from "../services/maintenanceService";
+import { incidentReportService } from "../services/incidentReportService";
+import api from "../services/api";
 import "./IncidentReportPage.css";
 
 const IncidentReportPage = () => {
-  const navigate = useNavigate();
   const [incidents, setIncidents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedIncident, setSelectedIncident] = useState(null);
@@ -22,11 +21,73 @@ const IncidentReportPage = () => {
   const fetchIncidents = async () => {
     try {
       setLoading(true);
-      const data = await maintenanceService.getAllIncidents();
+      const data = await incidentReportService.getAll();
+      console.log("📊 Raw data from API:", data);
+      
       const incidentsList = Array.isArray(data) ? data : (data?.data || []);
-      setIncidents(incidentsList);
+      console.log("📋 Processed incidents list:", incidentsList);
+      
+      // Map dữ liệu và fetch thông tin vehicle nếu cần
+      const mappedIncidents = await Promise.all(
+        incidentsList.map(async (incident) => {
+          const vehicleId = incident.vehicleId;
+          let vehicleInfo = null;
+          
+          // Nếu có vehicle object trong response thì dùng
+          if (incident.vehicle && typeof incident.vehicle === 'object') {
+            vehicleInfo = incident.vehicle;
+          } else if (vehicleId) {
+            // Nếu chỉ có vehicleId, fetch thông tin vehicle từ API
+            try {
+              const vehicleData = await api.get(`/vehicles/get/${vehicleId}`);
+              vehicleInfo = vehicleData;
+            } catch (error) {
+              console.warn(`⚠️ Không thể lấy thông tin vehicle ${vehicleId}:`, error);
+              vehicleInfo = null;
+            }
+          }
+          
+          return {
+            ...incident,
+            incidentId: incident.incidentId || incident.id || incident.incidentReportId,
+            id: incident.incidentId || incident.id || incident.incidentReportId,
+            vehicleId: vehicleId,
+            vehicle: vehicleInfo ? {
+              vehicleName: vehicleInfo.vehicleName || vehicleInfo.name || vehicleInfo.vehicle_name,
+              plateNumber: vehicleInfo.plateNumber || vehicleInfo.plate_number,
+              carmodel: vehicleInfo.carmodel || vehicleInfo.carModel || vehicleInfo.car_model,
+              brand: vehicleInfo.brand,
+              vehicleId: vehicleInfo.vehicleId || vehicleInfo.vehicle_id || vehicleId
+            } : {
+              vehicleId: vehicleId,
+              vehicleName: null,
+              plateNumber: null,
+              carmodel: null,
+              brand: null
+            },
+            vehicleName: vehicleInfo?.vehicleName || vehicleInfo?.name || vehicleInfo?.vehicle_name || null,
+            plateNumber: vehicleInfo?.plateNumber || vehicleInfo?.plate_number || null,
+            carmodel: vehicleInfo?.carmodel || vehicleInfo?.carModel || vehicleInfo?.car_model || null,
+            severity: incident.severity || incident.severityLevel || "MEDIUM",
+            description: incident.description || incident.incidentDescription || "",
+            occurredOn: incident.occurredOn || incident.occurredOnDate || incident.occurredAt || incident.createdAt,
+            occurredOnDate: incident.occurredOn || incident.occurredOnDate || incident.occurredAt || incident.createdAt,
+            reportedBy: incident.reportedBy || incident.reportedByName || incident.reporterName || incident.reporter || "N/A",
+            reportedByName: incident.reportedBy || incident.reportedByName || incident.reporterName || incident.reporter || "N/A",
+            reportedAt: incident.reportedAt || incident.createdAt,
+            createdAt: incident.createdAt || incident.reportedAt,
+            station: incident.station || {},
+            stationName: incident.station?.name || incident.stationName,
+            resolutionNotes: incident.resolutionNotes || incident.notes || incident.resolution || ""
+          };
+        })
+      );
+      
+      console.log("✅ Mapped incidents:", mappedIncidents);
+      setIncidents(mappedIncidents);
     } catch (error) {
-      console.error("Lỗi tải danh sách sự cố:", error);
+      console.error("❌ Lỗi tải danh sách sự cố:", error);
+      console.error("❌ Error details:", error.response?.data || error.message);
       setIncidents([]);
     } finally {
       setLoading(false);
@@ -61,9 +122,23 @@ const IncidentReportPage = () => {
     return "severity-low";
   };
 
-  const handleViewDetail = (incident) => {
-    setSelectedIncident(incident);
-    setShowDetailModal(true);
+  const handleViewDetail = async (incident) => {
+    try {
+      const incidentId = incident.incidentId || incident.id;
+      if (incidentId) {
+        // Gọi API để lấy thông tin chi tiết đầy đủ
+        const detailData = await incidentReportService.getById(incidentId);
+        setSelectedIncident(detailData);
+      } else {
+        setSelectedIncident(incident);
+      }
+      setShowDetailModal(true);
+    } catch (error) {
+      console.error("Lỗi tải chi tiết sự cố:", error);
+      // Nếu lỗi, vẫn hiển thị dữ liệu từ danh sách
+      setSelectedIncident(incident);
+      setShowDetailModal(true);
+    }
   };
 
   // Lọc sự cố
