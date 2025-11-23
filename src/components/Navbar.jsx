@@ -29,6 +29,9 @@ const Navbar = () => {
         } else if (path === '/location-select') {
             setActiveNav('listcar');
             setActiveCars('');
+        } else if (path === '/pricing') {
+            setActiveNav('pricing');
+            setActiveCars('');
         } else if (path === '/about') {
             setActiveNav('about');
             setActiveCars('');
@@ -149,6 +152,17 @@ const Navbar = () => {
                                     navigate('/location-select');
                                 }}>
                                 DANH SÁCH XE
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/pricing" className={activeNav === 'pricing' ? 'nav-selected' : ''}
+                                onClick={e => {
+                                    e.preventDefault();
+                                    setActiveNav('pricing');
+                                    setActiveCars('');
+                                    navigate('/pricing');
+                                }}>
+                                BẢNG GIÁ
                             </a>
                         </li>
                         <li>
