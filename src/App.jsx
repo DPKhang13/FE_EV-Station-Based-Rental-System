@@ -49,6 +49,7 @@ import LichSuThue from './pages/LichSuThue.jsx';
 import ChiTietDonTrongAdmin from './pages/ChiTietDonTrongAdmin.jsx';
 import VehicleHistoryPage from './pages/VehicleHistoryPage.jsx';
 import IncidentReportPage from './pages/IncidentReportPage.jsx';
+import PricingPage from './pages/PricingPage.jsx';
 
 const HomePage = () => (
   <ScrollToSectionWrapper>
@@ -139,9 +140,9 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="/my-bookings" element={
-              <ProtectedRoute>
+             
                 <MyBookingsPage />
-              </ProtectedRoute>
+              
             } />
             <Route path="/payment/:orderId" element={
               <ProtectedRoute>
@@ -166,6 +167,7 @@ function App() {
                 <ProfilePage />
               </ProtectedRoute>
             } />
+            <Route path="/pricing" element={<PricingPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
             <Route path="/login" element={<LoginPage />} />
