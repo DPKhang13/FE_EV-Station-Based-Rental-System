@@ -36,6 +36,13 @@ export default function OrderDetailPage() {
   const [handoverLoading, setHandoverLoading] = useState(false); // Loading cho các nút hành động bàn giao
   const [otherOrders, setOtherOrders] = useState([]); // Các order khác cùng vehicleId
   const [orderStatus, setOrderStatus] = useState(""); // Order status để kiểm tra đơn đã hoàn thành chưa
+  const [openMenuDetailId, setOpenMenuDetailId] = useState(null); // ID của detail đang mở menu
+  const [showEditServiceModal, setShowEditServiceModal] = useState(false); // Hiển thị modal sửa dịch vụ
+  const [editingService, setEditingService] = useState(null); // Dịch vụ đang được sửa
+  const [editServiceData, setEditServiceData] = useState({
+    price: 0,
+    description: ""
+  });
   
   const showToast = useCallback((type, text, ms = 4000) => {
     setToast({ type, text });
@@ -168,6 +175,7 @@ export default function OrderDetailPage() {
       const data = await res.json();
 
       setReturnPreview(data);
+      setReturnTime(""); // Reset returnTime khi mở modal
       setShowReturnModal(true);
     } catch (err) {
       console.error(err);
@@ -178,10 +186,23 @@ export default function OrderDetailPage() {
   };
 
   const handleConfirmReturn = async () => {
-    const time =
-      returnTime.trim() !== ""
-        ? returnTime
-        : new Date().toISOString().slice(0, 19).replace("T", " ");
+    let time;
+    if (returnTime.trim() !== "") {
+      // Convert từ datetime-local format (YYYY-MM-DDTHH:mm) sang backend format (YYYY-MM-DD HH:mm:ss)
+      // datetime-local trả về format: "YYYY-MM-DDTHH:mm"
+      // Cần convert thành: "YYYY-MM-DD HH:mm:ss"
+      const dateTime = new Date(returnTime);
+      const year = dateTime.getFullYear();
+      const month = String(dateTime.getMonth() + 1).padStart(2, "0");
+      const day = String(dateTime.getDate()).padStart(2, "0");
+      const hours = String(dateTime.getHours()).padStart(2, "0");
+      const minutes = String(dateTime.getMinutes()).padStart(2, "0");
+      const seconds = String(dateTime.getSeconds()).padStart(2, "0");
+      time = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    } else {
+      // Nếu không chọn, dùng thời gian hiện tại
+      time = new Date().toISOString().slice(0, 19).replace("T", " ");
+    }
 
     try {
       setReturnLoading(true);
@@ -193,8 +214,12 @@ export default function OrderDetailPage() {
 
       showToast("success", "🚗 Đã trả xe thành công!");
       setShowReturnModal(false);
-      await refetchDetails(); // Refresh order status để ẩn nút bàn giao 
-      await fetchOrderStatus(); //  Đảm bảo order status được cập nhật 
+      setReturnTime(""); // Reset returnTime sau khi submit
+      // ✅ Gọi các API song song để tăng tốc độ
+      await Promise.all([
+        refetchDetails(),
+        fetchOrderStatus()
+      ]);
     } catch (err) {
       console.error(err);
       showToast("error", "Trả xe thất bại!");
@@ -287,7 +312,20 @@ export default function OrderDetailPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const resCus = await authService.getAllCustomer();
+        // ✅ Gọi các API song song để tăng tốc độ load (trừ fetchPriceList vì nó chỉ set state)
+        const [resCus, resDetails] = await Promise.all([
+          authService.getAllCustomer(),
+          fetch(`http://localhost:8080/api/order-details/order/${orderId}`).then(r => r.json())
+        ]);
+        
+        // Gọi các API khác song song
+        await Promise.all([
+          fetchPayments(),
+          fetchOrderStatus(),
+          fetchPriceList()
+        ]);
+
+        // Xử lý customer
         const customers = resCus.data || resCus || [];
         const foundCustomer = customers.find(
           (c) =>
@@ -295,10 +333,8 @@ export default function OrderDetailPage() {
         );
         setCustomer(foundCustomer || null);
 
-        const res = await fetch(
-          `http://localhost:8080/api/order-details/order/${orderId}`
-        );
-        const details = await res.json();
+        // Xử lý order details
+        const details = resDetails || [];
         const detailsArray = Array.isArray(details) ? details : (details?.data || []);
         setOrderDetails(detailsArray);
         console.log("📋 [Order Details] Loaded:", detailsArray);
@@ -319,45 +355,31 @@ export default function OrderDetailPage() {
           };
           setVehicle(vehicleData);
           
-          // ⭐⭐ KIỂM TRA: Nếu xe đang RENTAL, kiểm tra xem có order khác đang thuê không ⭐⭐
-          // Lưu ý: Order details không có status của vehicle, cần kiểm tra từ order status hoặc bỏ qua check này
-          // Nếu cần check status, có thể gọi API vehicle detail hoặc dùng order status
-          try {
-            // Lấy tất cả orders để tìm order khác cùng vehicleId đang RENTAL
-            const allOrders = await orderService.getAll();
-            const ordersData = Array.isArray(allOrders) ? allOrders : (allOrders?.data || []);
-            
-            // Tìm order khác cùng vehicleId có status RENTAL (không phải order hiện tại)
-            const otherRentalOrders = ordersData.filter(order => {
-              const orderVehicleId = order.vehicleId || order.vehicle_id;
-              const orderStatus = String(order.status || "").toUpperCase();
-              const isSameVehicle = orderVehicleId && Number(orderVehicleId) === Number(first.vehicleId);
-              const isRental = orderStatus === "RENTAL";
-              const isNotCurrentOrder = String(order.orderId || order.order_id) !== String(orderId);
-              
-              return isSameVehicle && isRental && isNotCurrentOrder;
-            });
-            
-            setOtherOrders(otherRentalOrders);
-            console.log("🔍 [Other Orders Check]:", {
-              vehicleId: first.vehicleId,
-              otherRentalOrdersCount: otherRentalOrders.length,
-              otherRentalOrders: otherRentalOrders.map(o => ({ orderId: o.orderId || o.order_id, status: o.status }))
-            });
-          } catch (err) {
-            console.warn("⚠️ Cannot fetch other orders:", err);
-            setOtherOrders([]);
-          }
+          // ⭐⭐ TỐI ƯU: Chỉ check other orders khi thực sự cần (lazy load) ⭐⭐
+          // Thay vì gọi getAll() ngay, chỉ check khi order status là RENTAL hoặc có dấu hiệu cần check
+          // Hoặc có thể bỏ qua check này nếu không quan trọng
+          // Nếu cần check, có thể tạo API endpoint mới chỉ lấy orders của vehicleId cụ thể
+          setOtherOrders([]); // Tạm thời bỏ qua để tăng tốc độ load
+          
+          // ⚠️ Nếu thực sự cần check other orders, có thể gọi sau khi page đã load xong:
+          // setTimeout(async () => {
+          //   try {
+          //     const allOrders = await orderService.getAll();
+          //     const ordersData = Array.isArray(allOrders) ? allOrders : (allOrders?.data || []);
+          //     const otherRentalOrders = ordersData.filter(order => {
+          //       const orderVehicleId = order.vehicleId || order.vehicle_id;
+          //       const orderStatus = String(order.status || "").toUpperCase();
+          //       const isSameVehicle = orderVehicleId && Number(orderVehicleId) === Number(first.vehicleId);
+          //       const isRental = orderStatus === "RENTAL";
+          //       const isNotCurrentOrder = String(order.orderId || order.order_id) !== String(orderId);
+          //       return isSameVehicle && isRental && isNotCurrentOrder;
+          //     });
+          //     setOtherOrders(otherRentalOrders);
+          //   } catch (err) {
+          //     console.warn("⚠️ Cannot fetch other orders:", err);
+          //   }
+          // }, 1000);
         }
-        
-        // Fetch payments
-        await fetchPayments();
-        
-        // Fetch order status (optional, for logging)
-        await fetchOrderStatus();
-        
-        // Fetch price list
-        await fetchPriceList();
       } catch (err) {
         console.error(err);
         setError("Không thể tải dữ liệu!");
@@ -369,6 +391,20 @@ export default function OrderDetailPage() {
     fetchData();
   }, [orderId, userId, fetchOrderStatus, fetchPayments, fetchPriceList]);
 
+  // Đóng menu khi click ra ngoài
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openMenuDetailId && !event.target.closest('[data-menu-container]')) {
+        setOpenMenuDetailId(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openMenuDetailId]);
+
   // Handle confirm payment
   const handleStaffConfirmPayment = useCallback(async () => {
     if (!window.confirm("Xác nhận thanh toán này đã được khách hàng thanh toán bằng tiền mặt?")) {
@@ -378,10 +414,27 @@ export default function OrderDetailPage() {
     try {
       setProcessing(true);
       await api.put(`/payment/cash/approve/order/${orderId}`);
-      showToast("success", " Đã xác nhận thanh toán thành công!");
-      await fetchPayments();
+      showToast("success", "✅ Đã xác nhận thanh toán thành công!");
+      
+      // ⭐⭐ KHI APPROVE PAYMENT TYPE 2: Backend sẽ tạo PICKUP detail trong finalSuccess() ⭐⭐
+      // Cần refresh order details để hiển thị PICKUP detail mới
+      console.log("🔄 [Approve Payment] Backend đã tạo PICKUP detail. Refreshing order details...");
+      
+      // ✅ Gọi các API song song để tăng tốc độ
+      await Promise.all([
+        fetchPayments(),
+        refetchDetails(),
+        fetchOrderStatus()
+      ]);
+      
+      // ⭐⭐ ĐỢI MỘT CHÚT RỒI REFRESH LẠI ĐỂ ĐẢM BẢO PICKUP DETAIL ĐƯỢC HIỂN THỊ ⭐⭐
+      console.log("⏳ [Approve Payment] Waiting 500ms then refreshing again to ensure PICKUP detail is visible...");
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Refresh lại một lần nữa để đảm bảo PICKUP detail được hiển thị
       await refetchDetails();
-      await fetchOrderStatus(); //Đảm bảo order status được cập nhật ⭐⭐
+      console.log("✅ [Approve Payment] Second refresh completed. PICKUP detail should now be visible in the table.");
+      
     } catch (err) {
       console.error("Lỗi xác nhận thanh toán:", err);
       const errorMsg = 
@@ -394,6 +447,99 @@ export default function OrderDetailPage() {
       setProcessing(false);
     }
   }, [orderId, fetchPayments, fetchOrderStatus, showToast, refetchDetails]);
+
+  // Handle edit service - Mở modal sửa dịch vụ
+  const handleEditService = useCallback((detail) => {
+    setEditingService(detail);
+    setEditServiceData({
+      price: detail.price || 0,
+      description: detail.description || ""
+    });
+    setShowEditServiceModal(true);
+    setOpenMenuDetailId(null); // Đóng menu
+  }, []);
+
+  // Handle update service - Gọi API PUT để cập nhật
+  const handleUpdateService = useCallback(async () => {
+    if (!editingService) return;
+
+    if (!editServiceData.description || !editServiceData.description.trim()) {
+      showToast("error", "Vui lòng nhập mô tả dịch vụ!");
+      return;
+    }
+
+    if (!editServiceData.price || editServiceData.price <= 0) {
+      showToast("error", "Vui lòng nhập giá dịch vụ hợp lệ!");
+      return;
+    }
+
+    try {
+      setProcessing(true);
+      const payload = {
+        orderId: editingService.orderId,
+        vehicleId: editingService.vehicleId,
+        type: editingService.type, // Lấy từ detail gốc, không cho sửa
+        startTime: editingService.startTime, // Giữ nguyên
+        endTime: editingService.endTime, // Giữ nguyên
+        price: Number(editServiceData.price),
+        description: editServiceData.description.trim()
+      };
+
+      await api.put(`/order-details/${editingService.detailId}`, payload);
+      showToast("success", "✅ Đã cập nhật dịch vụ thành công!");
+      
+      // ✅ Refresh dữ liệu sau khi cập nhật
+      await Promise.all([
+        refetchDetails(),
+        fetchOrderStatus(),
+        fetchPayments()
+      ]);
+
+      // Đóng modal
+      setShowEditServiceModal(false);
+      setEditingService(null);
+      setEditServiceData({ price: 0, description: "" });
+    } catch (err) {
+      console.error("Lỗi cập nhật dịch vụ:", err);
+      const errorMsg = 
+        err?.response?.data?.message || 
+        err?.response?.data?.error ||
+        err?.message || 
+        "Không thể cập nhật dịch vụ. Vui lòng thử lại sau.";
+      showToast("error", errorMsg);
+    } finally {
+      setProcessing(false);
+    }
+  }, [editingService, editServiceData, refetchDetails, fetchOrderStatus, fetchPayments, showToast]);
+
+  // Handle delete service
+  const handleDeleteService = useCallback(async (detailId) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa dịch vụ này?")) {
+      return;
+    }
+
+    try {
+      setProcessing(true);
+      await api.delete(`/order-details/${detailId}`);
+      showToast("success", "✅ Đã xóa dịch vụ thành công!");
+      // ✅ Refresh dữ liệu sau khi xóa
+      await Promise.all([
+        refetchDetails(),
+        fetchOrderStatus(),
+        fetchPayments()
+      ]);
+    } catch (err) {
+      console.error("Lỗi xóa dịch vụ:", err);
+      const errorMsg = 
+        err?.response?.data?.message || 
+        err?.response?.data?.error ||
+        err?.message || 
+        "Không thể xóa dịch vụ. Vui lòng thử lại sau.";
+      showToast("error", errorMsg);
+    } finally {
+      setProcessing(false);
+    }
+  }, [refetchDetails, fetchOrderStatus, fetchPayments, showToast]);
 
   const fmtVN = (d) =>
     d ? new Date(d).toLocaleString("vi-VN") : "N/A";
@@ -411,6 +557,7 @@ export default function OrderDetailPage() {
       "WAITING": "Chờ xe",
       "CONFIRMED": "Đã xác nhận",
       "COMPLETED": "Đã hoàn thành",
+      "AWAITING": "Chờ nhận xe",
       "PENDING_FINAL_PAYMENT": "Chờ thanh toán cuối",
       "CHECKING": "Đang kiểm tra",
       "CANCELLED": "Đã hủy",
@@ -431,7 +578,7 @@ export default function OrderDetailPage() {
       "RENTAL": "Đang thuê",
       "MAINTENANCE": "Bảo trì",
       "CHECKING": "Đang kiểm tra",
-      "WAITING": "Đang chờ",
+      "WAITING": "Đang chờ xe",
       "UNAVAILABLE": "Không có sẵn"
     };
     return statusMap[statusUpper] || status;
@@ -766,19 +913,21 @@ export default function OrderDetailPage() {
               </div>
             </div>
             
-            {/* Trạng thái */}
-            <div style={{ marginTop: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
-              <svg style={{ width: "18px", height: "18px", flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </svg>
-              <p style={{ margin: 0 }}>
-                <span style={{ fontWeight: "600", color: "#666" }}>Trạng thái:&nbsp;</span>
-                <span className={`pill pill-${(displayStatus || "AVAILABLE").toLowerCase()}`}>
-                  {displayStatusText || "Available"}
-                </span>
-              </p>
-            </div>
+            {/* Trạng thái - Ẩn khi đơn hàng đã hoàn thành */}
+            {orderStatus !== "COMPLETED" && (
+              <div style={{ marginTop: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+                <svg style={{ width: "18px", height: "18px", flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                <p style={{ margin: 0 }}>
+                  <span style={{ fontWeight: "600", color: "#666" }}>Trạng thái:&nbsp;</span>
+                  <span className={`pill pill-${(displayStatus || "AVAILABLE").toLowerCase()}`}>
+                    {displayStatusText || "Available"}
+                  </span>
+                </p>
+              </div>
+            )}
           </div>
         );
       })()}
@@ -811,8 +960,23 @@ export default function OrderDetailPage() {
           </button>
         </div>
 
-        {orderDetails.map((detail) => {
-          const methodPayment = String(detail.methodPayment || "").toUpperCase();
+        {(() => {
+          // ⭐⭐ SẮP XẾP: SERVICE hiển thị trước, sau đó mới đến các loại khác ⭐⭐
+          const sortedDetails = [...orderDetails].sort((a, b) => {
+            const typeA = String(a.type || "").toUpperCase();
+            const typeB = String(b.type || "").toUpperCase();
+            const isServiceA = typeA === "SERVICE" || typeA === "SERVICE_SERVICE";
+            const isServiceB = typeB === "SERVICE" || typeB === "SERVICE_SERVICE";
+            
+            // SERVICE luôn hiển thị trước
+            if (isServiceA && !isServiceB) return -1;
+            if (!isServiceA && isServiceB) return 1;
+            
+            // Nếu cùng loại hoặc không phải SERVICE, giữ nguyên thứ tự
+            return 0;
+          });
+          
+          return sortedDetails.map((detail) => {
           let status = String(detail.status || "").toUpperCase();
           
           // ⭐⭐ HARDCODE: Nếu xe đang được khách khác thuê và detail type = RENTAL → hiển thị WAITING ⭐⭐
@@ -821,69 +985,90 @@ export default function OrderDetailPage() {
             status = "WAITING"; // Hardcode status để hiển thị đúng
           }
           
-          // ⭐⭐ NÚT "XÁC NHẬN ĐÃ THANH TOÁN" - Kiểm tra điều kiện: CASH + PENDING ⭐⭐
-          // Điều kiện 1: methodPayment phải là "CASH"
-          const isCashPayment = methodPayment === "CASH";
-          
-          // Điều kiện 2: Tìm payment CASH PENDING tương ứng với detail này (theo paymentType)
+          // Xác định loại detail
           const detailType = detail.type;
+          const isService = detailType === "SERVICE" || detailType === "SERVICE_SERVICE";
+          
+          // ⭐⭐ NÚT "XÁC NHẬN ĐÃ THANH TOÁN" - ĐƠN GIẢN: Tìm BẤT KỲ payment CASH PENDING nào ⭐⭐
+          // API approve sẽ xử lý tất cả payments PENDING của order, không cần phân biệt paymentType
+          const hasPendingCashPayment = payments.some(p => {
+            const method = String(p.method || "").toUpperCase();
+            const status = String(p.status || "").toUpperCase();
+            return method === "CASH" && status === "PENDING";
+          });
+          
+          // ⭐⭐ HIỂN THỊ NÚT KHI: CÓ BẤT KỲ PAYMENT CASH PENDING NÀO ⭐⭐
+          const showConfirmButton = hasPendingCashPayment;
+          
+          // ⭐⭐ LẤY METHOD PAYMENT TỪ PAYMENT DO CUSTOMER TẠO (KHÔNG TỰ SET) ⭐⭐
+          // Logic: Chỉ lấy method từ payment do customer tạo, không tự set
+          let displayMethodPayment = detail.methodPayment || "";
+          
+          // Tìm payment tương ứng với detail này (theo paymentType)
           let paymentType = null;
           if (detailType === "DEPOSIT") paymentType = 1;
           else if (detailType === "PICKUP") paymentType = 2;
           else if (detailType === "FULL_PAYMENT") paymentType = 3;
+          else if (isService) paymentType = 5; // SERVICE dùng paymentType = 5 (mới)
           
-          // Tìm payment CASH PENDING có cùng paymentType (nếu có paymentType)
-          // Hoặc tìm bất kỳ payment CASH PENDING nào nếu detail type không có paymentType
-          const pendingCashPayment = paymentType !== null 
-            ? payments.find(p => 
-                String(p.method || "").toUpperCase() === "CASH" && 
-                String(p.status || "").toUpperCase() === "PENDING" &&
-                p.paymentType === paymentType
-              )
-            : payments.find(p => 
-                String(p.method || "").toUpperCase() === "CASH" && 
-                String(p.status || "").toUpperCase() === "PENDING"
-              ); // Nếu không có paymentType, tìm bất kỳ payment CASH PENDING nào
+          // ⭐⭐ TÌM PAYMENT DO CUSTOMER TẠO (theo paymentType) - KHÔNG PHÂN BIỆT CASH HAY MOMO ⭐⭐
+          // Ưu tiên: Payment PENDING (đang chờ) > Payment SUCCESS (đã thanh toán) > Payment khác
+          let foundPayment = null;
           
-          // Điều kiện 3: Kiểm tra xem payment có đã SUCCESS chưa (nếu có payment tương ứng)
-          // Tìm payment tương ứng (không phân biệt status) để kiểm tra
-          const relatedPayment = paymentType !== null 
-            ? payments.find(p => 
-                String(p.method || "").toUpperCase() === "CASH" && 
-                p.paymentType === paymentType
-              )
-            : payments.find(p => 
-                String(p.method || "").toUpperCase() === "CASH"
+          if (paymentType !== null) {
+            // Tìm payment với paymentType tương ứng
+            // Ưu tiên PENDING trước (payment đang chờ xác nhận)
+            foundPayment = payments.find(p => 
+              p.paymentType === paymentType && 
+              String(p.status || "").toUpperCase() === "PENDING"
+            );
+            
+            // Nếu không có PENDING, tìm SUCCESS (đã thanh toán)
+            if (!foundPayment) {
+              foundPayment = payments.find(p => 
+                p.paymentType === paymentType && 
+                String(p.status || "").toUpperCase() === "SUCCESS"
               );
+            }
+            
+            // Nếu vẫn không có, tìm bất kỳ payment nào với paymentType này
+            if (!foundPayment) {
+              foundPayment = payments.find(p => p.paymentType === paymentType);
+            }
+          }
           
-          const isPaymentSuccess = relatedPayment && String(relatedPayment.status || "").toUpperCase() === "SUCCESS";
+          // ⭐⭐ CHỈ LẤY METHOD TỪ PAYMENT DO CUSTOMER TẠO - KHÔNG TỰ SET ⭐⭐
+          // ⭐⭐ ĐỐI VỚI SERVICE: Nếu chưa có payment và status = PENDING → hiển thị "Chưa có" ⭐⭐
+          if (isService && !foundPayment && status === "PENDING") {
+            displayMethodPayment = ""; // Để hiển thị "Chưa có"
+          } else if (foundPayment && foundPayment.method) {
+            const method = String(foundPayment.method || "").toUpperCase();
+            // Chuyển đổi method từ backend sang hiển thị
+            if (method === "CASH") {
+              displayMethodPayment = "CASH";
+            } else if (method === "CAPTUREWALLET" || method === "PAYWITHMETHOD" || method === "MOMO") {
+              displayMethodPayment = "MoMo";
+            } else {
+              displayMethodPayment = foundPayment.method;
+            }
+          }
           
-          // ⭐⭐ HIỂN THỊ NÚT KHI: CASH + CÓ PENDING + CHƯA SUCCESS ⭐⭐
-          // ⭐⭐ ẨN NÚT KHI: KHÔNG CASH HOẶC KHÔNG CÓ PENDING HOẶC ĐÃ SUCCESS ⭐⭐
-          const showConfirmButton = isCashPayment && 
-                                   pendingCashPayment !== null && 
-                                   !isPaymentSuccess;
-          
-          // Debug log cho TẤT CẢ details
-          console.log("💰 [Detail Check]:", {
+          // Debug log cho TẤT CẢ details - LOG RÕ RÀNG
+          console.log("💰 [Detail Check - NEW LOGIC]:", {
             detailId: detail.detailId,
             type: detail.type,
+            isService,
             status,
-            methodPayment,
-            isCashPayment,
+            methodPayment: detail.methodPayment,
             paymentType,
-            pendingCashPayment: pendingCashPayment ? { 
-              paymentId: pendingCashPayment.paymentId, 
-              status: pendingCashPayment.status,
-              method: pendingCashPayment.method,
-              paymentType: pendingCashPayment.paymentType
+            foundPayment: foundPayment ? {
+              paymentId: foundPayment.paymentId,
+              method: foundPayment.method,
+              status: foundPayment.status,
+              paymentType: foundPayment.paymentType
             } : null,
-            relatedPayment: relatedPayment ? {
-              paymentId: relatedPayment.paymentId,
-              status: relatedPayment.status,
-              method: relatedPayment.method
-            } : null,
-            isPaymentSuccess,
+            displayMethodPayment,
+            hasPendingCashPayment,
             showConfirmButton,
             paymentsCount: payments.length,
             allPayments: payments.map(p => ({ 
@@ -916,6 +1101,21 @@ export default function OrderDetailPage() {
             return detail.status || "N/A";
           };
 
+          // Xác định text phương thức thanh toán
+          const getMethodPaymentText = (method) => {
+            if (!method || method === "") {
+              // Đối với SERVICE chưa có payment → hiển thị "Chưa có"
+              if (isService && status === "PENDING") {
+                return "Chưa có";
+              }
+              return "N/A";
+            }
+            const methodUpper = String(method).toUpperCase();
+            if (methodUpper === "CASH") return "Tiền mặt";
+            if (methodUpper === "CAPTUREWALLET" || methodUpper === "MOMO") return "MoMo";
+            return method;
+          };
+
           return (
             <div key={detail.detailId} className="detail-card">
               <div className="detail-header" style={{ 
@@ -929,58 +1129,326 @@ export default function OrderDetailPage() {
                   {getTypeLabel(detail.type)}
                 </span>
                 
-                {/* Nút Xác nhận đã thanh toán - Góc trên bên phải */}
-                {showConfirmButton && (
-                  <button
-                    onClick={() => {
-                      // Gọi API với orderId (không cần paymentId nữa)
-                      handleStaffConfirmPayment();
-                    }}
-                    disabled={processing}
-                    style={{
-                      padding: "8px 20px",
-                      background: "#000000",
-                      color: "#FFFFFF",
-                      border: "2px solid #000000",
-                      borderRadius: "0",
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      cursor: processing ? "not-allowed" : "pointer",
-                      letterSpacing: "0.5px",
-                      textTransform: "uppercase",
-                      transition: "all 0.3s ease",
-                      whiteSpace: "nowrap"
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!processing) {
-                        e.target.style.background = "#DC0000";
-                        e.target.style.borderColor = "#DC0000";
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!processing) {
-                        e.target.style.background = "#000000";
-                        e.target.style.borderColor = "#000000";
-                      }
-                    }}
-                  >
-                    {processing ? "Đang xử lý..." : "✅ Xác nhận đã thanh toán"}
-                  </button>
-                )}
+                {/* Nút Xác nhận đã thanh toán hoặc Menu 3 chấm - Góc trên bên phải */}
+                <div style={{ display: "flex", gap: "8px", alignItems: "center", position: "relative" }}>
+                  {/* Menu 3 chấm - Chỉ hiển thị cho SERVICE */}
+                  {isService && (
+                    <div style={{ position: "relative" }} data-menu-container>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuDetailId(openMenuDetailId === detail.detailId ? null : detail.detailId);
+                        }}
+                        disabled={processing}
+                        style={{
+                          padding: "8px 12px",
+                          background: "transparent",
+                          color: "#666666",
+                          border: "1px solid #E5E5E5",
+                          borderRadius: "4px",
+                          fontSize: "18px",
+                          fontWeight: "600",
+                          cursor: processing ? "not-allowed" : "pointer",
+                          transition: "all 0.3s ease",
+                          lineHeight: "1",
+                          opacity: processing ? 0.6 : 1,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          minWidth: "32px",
+                          height: "32px"
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!processing) {
+                            e.target.style.background = "#F3F4F6";
+                            e.target.style.borderColor = "#D1D5DB";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!processing) {
+                            e.target.style.background = "transparent";
+                            e.target.style.borderColor = "#E5E5E5";
+                          }
+                        }}
+                      >
+                        ⋯
+                      </button>
+                      
+                      {/* Dropdown menu */}
+                      {openMenuDetailId === detail.detailId && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: "100%",
+                            right: "0",
+                            marginTop: "4px",
+                            background: "#FFFFFF",
+                            border: "1px solid #E5E5E5",
+                            borderRadius: "4px",
+                            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                            zIndex: 1000,
+                            minWidth: "120px"
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            onClick={() => {
+                              handleEditService(detail);
+                            }}
+                            style={{
+                              width: "100%",
+                              padding: "10px 16px",
+                              background: "transparent",
+                              color: "#333333",
+                              border: "none",
+                              borderBottom: "1px solid #E5E5E5",
+                              borderRadius: "4px 4px 0 0",
+                              fontSize: "14px",
+                              fontWeight: "400",
+                              cursor: "pointer",
+                              textAlign: "left",
+                              transition: "all 0.2s ease"
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.background = "#F3F4F6";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.background = "transparent";
+                            }}
+                          >
+                             Sửa
+                          </button>
+                          <button
+                            onClick={() => {
+                              handleDeleteService(detail.detailId);
+                              setOpenMenuDetailId(null);
+                            }}
+                            style={{
+                              width: "100%",
+                              padding: "10px 16px",
+                              background: "transparent",
+                              color: "#ef4444",
+                              border: "none",
+                              borderRadius: "0 0 4px 4px",
+                              fontSize: "14px",
+                              fontWeight: "400",
+                              cursor: "pointer",
+                              textAlign: "left",
+                              transition: "all 0.2s ease"
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.background = "#FEF2F2";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.background = "transparent";
+                            }}
+                          >
+                             Xóa
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Nút Xác nhận đã thanh toán - CHỈ hiển thị cho DEPOSIT, PICKUP, FULL_PAYMENT (KHÔNG hiển thị cho SERVICE) */}
+                  {/* CHỈ hiển thị khi: có payment PENDING VÀ detail chưa thanh toán (status PENDING) */}
+                  {showConfirmButton && !isService && status === "PENDING" && (
+                    <button
+                      onClick={() => {
+                        // Gọi API với orderId (không cần paymentId nữa)
+                        handleStaffConfirmPayment();
+                      }}
+                      disabled={processing}
+                      style={{
+                        padding: "8px 20px",
+                        background: "#000000",
+                        color: "#FFFFFF",
+                        border: "2px solid #000000",
+                        borderRadius: "0",
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        cursor: processing ? "not-allowed" : "pointer",
+                        letterSpacing: "0.5px",
+                        textTransform: "uppercase",
+                        transition: "all 0.3s ease",
+                        whiteSpace: "nowrap"
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!processing) {
+                          e.target.style.background = "#DC0000";
+                          e.target.style.borderColor = "#DC0000";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!processing) {
+                          e.target.style.background = "#000000";
+                          e.target.style.borderColor = "#000000";
+                        }
+                      }}
+                    >
+                      {processing ? "Đang xử lý..." : "Xác nhận đã thanh toán"}
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="detail-grid">
-                <p><span>Thời gian bắt đầu:</span> {fmtVN(detail.startTime)}</p>
-                <p><span>Thời gian kết thúc:</span> {fmtVN(detail.endTime)}</p>
-                <p><span>Số tiền:</span> {Number(detail.price).toLocaleString("vi-VN")} VND</p>
-                <p><span>Tình trạng thanh toán:</span> <span style={{ textDecoration: "underline" }}>{getStatusText()}</span></p>
-                {detail.description && <p><span>Mô tả:</span> {detail.description}</p>}
+                {/* Cột 1: Thời gian nhận xe và Thời gian trả xe */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <p><span>Thời gian nhận xe:</span> {fmtVN(detail.startTime)}</p>
+                  <p><span>Thời gian trả xe:</span> {fmtVN(detail.endTime)}</p>
+                </div>
+                
+                {/* Cột 2: Số tiền và Tình trạng thanh toán */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <p><span>Số tiền:</span> {Number(detail.price).toLocaleString("vi-VN")} VND</p>
+                  <p><span>Tình trạng thanh toán:</span> <span style={{ textDecoration: "underline" }}>{getStatusText()}</span></p>
+                </div>
+                
+                {/* Cột 3: Phương thức thanh toán và Mô tả */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {/* ⭐⭐ ĐỐI VỚI SERVICE: Luôn hiển thị phương thức thanh toán (kể cả khi chưa có) ⭐⭐ */}
+                  {isService && (
+                    <p><span>Phương thức thanh toán:</span> {getMethodPaymentText(displayMethodPayment || "")}</p>
+                  )}
+                  {/* ⭐⭐ ĐỐI VỚI CÁC LOẠI KHÁC: Chỉ hiển thị khi có payment ⭐⭐ */}
+                  {!isService && displayMethodPayment && (
+                    <p><span>Phương thức thanh toán:</span> {getMethodPaymentText(displayMethodPayment)}</p>
+                  )}
+                  {detail.description && <p><span>Mô tả:</span> {detail.description}</p>}
+                </div>
               </div>
             </div>
           );
-        })}
+          });
+        })()}
       </div>
 
+
+      {/* ⭐⭐ BANNER THANH TOÁN DỊCH VỤ - Hiển thị tổng tiền dịch vụ chưa thanh toán và nút xác nhận ⭐⭐ */}
+      {(() => {
+        // Tính tổng tiền dịch vụ chưa thanh toán
+        const unpaidServices = orderDetails.filter(d => {
+          const type = String(d.type || "").toUpperCase();
+          const status = String(d.status || "").toUpperCase();
+          const isServiceType = type === "SERVICE" || type === "SERVICE_SERVICE";
+          const isUnpaid = status === "PENDING";
+          return isServiceType && isUnpaid;
+        });
+        
+        const totalUnpaidServiceAmount = unpaidServices.reduce((sum, d) => {
+          return sum + (Number(d.price) || 0);
+        }, 0);
+        
+        // Kiểm tra có payment CASH PENDING cho dịch vụ không
+        const hasServicePendingPayment = payments.some(p => 
+          String(p.method || "").toUpperCase() === "CASH" && 
+          String(p.status || "").toUpperCase() === "PENDING"
+        );
+        
+        // ⭐⭐ HIỂN THỊ BANNER KHI CÓ DỊCH VỤ CHƯA THANH TOÁN (không cần payment PENDING) ⭐⭐
+        // ⭐⭐ NÚT CHỈ HIỂN THỊ KHI CÓ PAYMENT PENDING ⭐⭐
+        if (unpaidServices.length > 0) {
+          return (
+            <div className="info-card" style={{
+              backgroundColor: "#FFF3CD",
+              border: "2px solid #FFC107",
+              borderRadius: "8px",
+              padding: "20px",
+              marginBottom: "20px",
+              marginTop: "20px"
+            }}>
+              <div style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px"
+              }}>
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px"
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ margin: 0, color: "#856404", fontSize: "18px", fontWeight: "bold" }}>
+                      Chưa thanh toán số tiền dịch vụ
+                    </h3>
+                    <p style={{ margin: "8px 0 0 0", color: "#856404", fontSize: "14px" }}>
+                      Tổng tiền dịch vụ chưa thanh toán: <strong style={{ fontSize: "16px", color: "#DC0000" }}>{totalUnpaidServiceAmount.toLocaleString("vi-VN")} VND</strong>
+                    </p>
+                  </div>
+                </div>
+                
+                {/* ⭐⭐ CHỈ HIỂN THỊ NÚT KHI CÓ PAYMENT CASH PENDING ⭐⭐ */}
+                {hasServicePendingPayment && (
+                  <div style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    marginTop: "8px"
+                  }}>
+                    <button
+                      onClick={() => {
+                        handleStaffConfirmPayment();
+                      }}
+                      disabled={processing}
+                      style={{
+                        padding: "12px 24px",
+                        background: "#000000",
+                        color: "#FFFFFF",
+                        border: "2px solid #000000",
+                        borderRadius: "0",
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        cursor: processing ? "not-allowed" : "pointer",
+                        letterSpacing: "0.5px",
+                        textTransform: "uppercase",
+                        transition: "all 0.3s ease",
+                        whiteSpace: "nowrap",
+                        opacity: processing ? 0.6 : 1
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!processing) {
+                          e.target.style.background = "#DC0000";
+                          e.target.style.borderColor = "#DC0000";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!processing) {
+                          e.target.style.background = "#000000";
+                          e.target.style.borderColor = "#000000";
+                        }
+                      }}
+                    >
+                      {processing ? "Đang xử lý..." : "✅ Xác nhận đã thanh toán"}
+                    </button>
+                  </div>
+                )}
+                
+                {/* ⭐⭐ THÔNG BÁO KHI CHƯA CÓ PAYMENT PENDING ⭐⭐ */}
+                {!hasServicePendingPayment && (
+                  <div style={{
+                    marginTop: "8px",
+                    padding: "12px",
+                    backgroundColor: "#F3F4F6",
+                    border: "1px solid #D1D5DB",
+                    borderRadius: "6px"
+                  }}>
+                    <p style={{ 
+                      margin: 0, 
+                      color: "#6B7280", 
+                      fontSize: "13px", 
+                      fontStyle: "italic" 
+                    }}>
+                      ⏳ Đang chờ khách hàng thanh toán. Nút xác nhận sẽ hiển thị sau khi khách hàng tạo thanh toán tiền mặt.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+        console.log("❌ [Service Banner] NOT RENDERING - unpaidServices:", unpaidServices.length, "totalAmount:", totalUnpaidServiceAmount);
+        return null;
+      })()}
 
       {/* ⭐⭐ BANNER THÔNG BÁO WAITING - Khi detail status là WAITING HOẶC xe đang được khách khác thuê ⭐⭐ */}
       {(() => {
@@ -1029,6 +1497,7 @@ export default function OrderDetailPage() {
         ) : null;
       })()}
 
+
       {/* ⭐⭐ BANNER THÔNG BÁO CONFIRMED - Xe đã có sẵn ⭐⭐ */}
       {orderDetails.some(d => String(d.status || "").toUpperCase() === "CONFIRMED") && 
        vehicle?.status === "BOOKED" && (
@@ -1063,16 +1532,15 @@ export default function OrderDetailPage() {
 
         <div className="handover-actions">
           {(() => {
-            // ⭐⭐ KIỂM TRA ĐẦU TIÊN: Nếu đơn đã hoàn thành (COMPLETED) hoặc đang chờ thanh toán cuối → KHÔNG hiển thị nút ⭐⭐
+            // ⭐⭐ KIỂM TRA ĐẦU TIÊN: Nếu đơn đã hoàn thành (COMPLETED) → hiển thị thông báo ⭐⭐
             const isCompleted = orderStatus === "COMPLETED";
+            const isAwaiting = orderStatus === "AWAITING";
+            const isPaid = orderStatus === "PAID"; // Status mới: đã thanh toán hết dịch vụ
             const isPendingFinalPayment = orderStatus === "PENDING_FINAL_PAYMENT";
-            const isOrderFinished = isCompleted || isPendingFinalPayment;
             
-            if (isOrderFinished) {
-              console.log("✅ [Handover Check] Đơn đã hoàn thành hoặc đang chờ thanh toán cuối:", {
-                orderStatus,
-                isCompleted,
-                isPendingFinalPayment
+            if (isCompleted) {
+              console.log("✅ [Handover Check] Đơn đã hoàn thành:", {
+                orderStatus
               });
               return (
                 <p style={{ 
@@ -1083,13 +1551,260 @@ export default function OrderDetailPage() {
                   backgroundColor: "#D1FAE5", 
                   borderRadius: "6px" 
                 }}>
-                  {isCompleted 
-                    ? "✅ Đơn hàng đã hoàn thành. Khách hàng đã trả xe." 
-                    : "💰 Đơn hàng đang chờ thanh toán dịch vụ cuối cùng."}
+                  ✅ Đơn hàng đã hoàn thành. Khách hàng đã trả xe.
                 </p>
               );
             }
             
+            // ⭐⭐ DEBUG: Log order status để kiểm tra ⭐⭐
+            console.log("🔍 [Handover Logic Check]:", {
+              orderStatus,
+              isAwaiting,
+              isPaid,
+              isCompleted,
+              isPendingFinalPayment,
+              orderDetailsCount: orderDetails.length,
+              paymentsCount: payments.length,
+              depositedOK,
+              pickupOK,
+              fullOK,
+              allDetailsStatus: orderDetails.map(d => ({ type: d.type, status: d.status }))
+            });
+            
+            // ⭐⭐ KIỂM TRA PAID TRƯỚC → Hiển thị nút "Xác nhận hoàn tất đơn hàng" ⭐⭐
+            // PAID: đã thanh toán hết dịch vụ → hiển thị nút hoàn tất
+            // AWAITING: đã thanh toán đặt cọc, chờ nhận xe → hiển thị nút bàn giao (không phải hoàn tất)
+            const orderStatusUpper = String(orderStatus || "").toUpperCase();
+            const isPaidStatus = orderStatusUpper === "PAID";
+            
+            if (isPaidStatus) {
+              // Kiểm tra có payment CASH PENDING không (theo logic backend)
+              const hasCashPending = payments.some(p => 
+                String(p.method || "").toUpperCase() === "CASH" && 
+                String(p.status || "").toUpperCase() === "PENDING"
+              );
+              
+              // Kiểm tra có service chưa thanh toán không
+              const unpaidServices = orderDetails.filter(d => {
+                const type = String(d.type || "").toUpperCase();
+                const status = String(d.status || "").toUpperCase();
+                const isServiceType = type === "SERVICE" || type === "SERVICE_SERVICE";
+                const isUnpaid = status === "PENDING";
+                return isServiceType && isUnpaid;
+              });
+              
+              // Debug log
+              console.log("🔍 [AWAITING/PAID Logic]:", {
+                hasCashPending,
+                unpaidServicesCount: unpaidServices.length,
+                unpaidServices: unpaidServices.map(s => ({ detailId: s.detailId, type: s.type, status: s.status })),
+                willShowCompleteButton: !(hasCashPending && unpaidServices.length > 0)
+              });
+              
+              // ⭐⭐ ĐỐI VỚI PAID: Nếu có CASH PENDING VÀ có service chưa thanh toán → không hiển thị nút hoàn tất (banner đã có nút xác nhận) ⭐⭐
+              if (hasCashPending && unpaidServices.length > 0) {
+                console.log("❌ [PAID] Không hiển thị nút hoàn tất - có CASH PENDING và unpaid services");
+                return null; // Banner đã hiển thị nút xác nhận thanh toán dịch vụ
+              }
+              
+              // ⭐⭐ PAID: Nếu không còn CASH PENDING hoặc không còn service chưa thanh toán → hiển thị nút "Xác nhận hoàn tất đơn hàng" ⭐⭐
+              console.log("✅ [PAID] Hiển thị nút hoàn tất đơn hàng");
+              
+              // Thông báo cho PAID
+              const statusMessage = "✅ Đơn hàng đã thanh toán đầy đủ (bao gồm dịch vụ) và đã nhận xe. Vui lòng xác nhận hoàn tất đơn hàng.";
+              
+              return (
+                <div style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px",
+                  padding: "16px",
+                  backgroundColor: "#FFF3CD",
+                  border: "2px solid #FFC107",
+                  borderRadius: "8px"
+                }}>
+                  <p style={{ 
+                    margin: 0,
+                    color: "#856404", 
+                    fontSize: "14px", 
+                    fontWeight: "600"
+                  }}>
+                    {statusMessage}
+                  </p>
+                  <button
+                    className="btn btn-primary"
+                    onClick={async () => {
+                      if (!window.confirm("Xác nhận hoàn tất đơn hàng này?")) {
+                        return;
+                      }
+                      
+                      try {
+                        setProcessing(true);
+                        await orderService.complete(orderId);
+                        showToast("success", "✅ Đã xác nhận hoàn tất đơn hàng thành công!");
+                        // ✅ Refresh dữ liệu
+                        await Promise.all([
+                          refetchDetails(),
+                          fetchOrderStatus(),
+                          fetchPayments()
+                        ]);
+                      } catch (err) {
+                        console.error("Lỗi xác nhận hoàn tất đơn hàng:", err);
+                        const errorMsg = 
+                          err?.response?.data?.message || 
+                          err?.response?.data?.error ||
+                          err?.message || 
+                          "Không thể xác nhận hoàn tất đơn hàng. Vui lòng thử lại sau.";
+                        showToast("error", errorMsg);
+                      } finally {
+                        setProcessing(false);
+                      }
+                    }}
+                    disabled={processing}
+                    style={{
+                      padding: "12px 24px",
+                      background: "#000000",
+                      color: "#FFFFFF",
+                      border: "2px solid #000000",
+                      borderRadius: "0",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      cursor: processing ? "not-allowed" : "pointer",
+                      letterSpacing: "0.5px",
+                      textTransform: "uppercase",
+                      transition: "all 0.3s ease",
+                      opacity: processing ? 0.6 : 1
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!processing) {
+                        e.target.style.background = "#DC0000";
+                        e.target.style.borderColor = "#DC0000";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!processing) {
+                        e.target.style.background = "#000000";
+                        e.target.style.borderColor = "#000000";
+                      }
+                    }}
+                  >
+                    {processing ? "Đang xử lý..." : "✅ Xác nhận hoàn tất đơn hàng"}
+                  </button>
+                </div>
+              );
+            }
+            
+            // ⭐⭐ KIỂM TRA PICKUP THÀNH CÔNG → HIỂN THỊ THEO THỨ TỰ: Bàn giao → Nhận xe ⭐⭐
+            const pickupDetail = orderDetails.find(d => 
+              (d.type === "PICKUP" || d.type === "FULL_PAYMENT") && 
+              String(d.status || "").toUpperCase() === "SUCCESS"
+            );
+            
+            if (pickupDetail) {
+              // Có PICKUP/FULL_PAYMENT thành công
+              const backendVehicleStatusForHandover =
+                orderDetails[0]?.vehicleStatus ||
+                orderDetails[0]?.vehicle_status ||
+                orderStatus;
+              const vehicleStatus = String(backendVehicleStatusForHandover || "").toUpperCase();
+              
+              // ⭐⭐ BƯỚC 2: Nếu đã bàn giao (vehicle status = RENTAL) → hiển thị nút "Nhận xe" ⭐⭐
+              if (vehicleStatus === "RENTAL") {
+                return (
+                  <>
+                    <button
+                      className="btn-receive-car"
+                      onClick={handlePreviewReturn}
+                      disabled={handoverLoading || loading}
+                    >
+                      <svg style={{ width: "18px", height: "18px", marginRight: "8px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1"></path>
+                        <polygon points="12 15 17 21 7 21 12 15"></polygon>
+                      </svg>
+                      {handoverLoading || loading ? "Đang xử lý..." : "NHẬN XE"}
+                    </button>
+                  </>
+                );
+              }
+              
+              // ⭐⭐ BƯỚC 1: Nếu chưa bàn giao (vehicle status chưa RENTAL) → hiển thị nút "Bàn giao xe" ⭐⭐
+              // Kiểm tra điều kiện bàn giao:
+              // 1. Thanh toán toàn bộ (FULL_PAYMENT) có status SUCCESS
+              // 2. Hoặc thanh toán từng đợt: cả DEPOSIT và PICKUP đều có status SUCCESS
+              const canHandOver = fullOK || (depositedOK && pickupOK);
+              const vehicleReady =
+                vehicleStatus === "BOOKED" ||
+                vehicleStatus === "AVAILABLE";
+              
+              if (canHandOver && vehicleReady) {
+                return (
+                  <>
+                    <button
+                      className="btn btn-primary"
+                      onClick={handleConfirmHandover}
+                      disabled={false}
+                    >
+                      ✅ Xác nhận bàn giao
+                    </button>
+
+                    <button
+                      className="btn btn-danger"
+                      onClick={handleCancelHandover}
+                      disabled={pickupOK || fullOK}
+                    >
+                      ❌ Hủy bàn giao
+                    </button>
+                  </>
+                );
+              }
+              
+              // Nếu chưa đủ điều kiện bàn giao - hiển thị banner
+              // Kiểm tra xem có dịch vụ chưa thanh toán không
+              const unpaidServices = orderDetails.filter(d => {
+                const type = String(d.type || "").toUpperCase();
+                const status = String(d.status || "").toUpperCase();
+                const isServiceType = type === "SERVICE" || type === "SERVICE_SERVICE";
+                const isUnpaid = status === "PENDING";
+                return isServiceType && isUnpaid;
+              });
+              
+              const hasUnpaidServices = unpaidServices.length > 0;
+              
+              return (
+                <div style={{
+                  padding: "12px 16px",
+                  backgroundColor: "#fee2e2",
+                  border: "1px solid #fca5a5",
+                  borderRadius: "8px",
+                  color: "#dc2626",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  marginTop: "12px"
+                }}>
+                  {hasUnpaidServices 
+                    ? "⚠️ Vui lòng chờ khách hàng trả phí dịch vụ và phát sinh"
+                    : "⚠️ Vui lòng chờ khách hàng thanh toán toàn bộ để tiến hành bàn giao"
+                  }
+                </div>
+              );
+            }
+            
+            if (isPendingFinalPayment) {
+              return (
+                <p style={{ 
+                  color: "#856404", 
+                  fontSize: "14px", 
+                  fontStyle: "italic", 
+                  padding: "12px", 
+                  backgroundColor: "#FFF3CD", 
+                  borderRadius: "6px" 
+                }}>
+                  Đơn hàng đang chờ thanh toán dịch vụ cuối cùng.
+                </p>
+              );
+            }
+            
+            // ⭐⭐ TRƯỜNG HỢP KHÔNG CÓ PICKUP THÀNH CÔNG: Hiển thị logic bàn giao cũ ⭐⭐
             // Kiểm tra xem có detail status WAITING không HOẶC xe đang được khách khác thuê
             const mainDetail = orderDetails.find(d => d.type === "RENTAL");
             const detailStatus = (
@@ -1126,12 +1841,6 @@ export default function OrderDetailPage() {
                     </svg>
                     {handoverLoading || loading ? "Đang xử lý..." : "NHẬN XE"}
                   </button>
-
-                  {hasPendingOrderDetail && (
-                    <p style={{ color: "red", marginTop: 8, fontWeight: "600" }}>
-                      ⚠ Vui lòng chờ khách hàng thanh toán các giao dịch đang chờ xử lý!
-                    </p>
-                  )}
                 </>
               );
             }
@@ -1315,11 +2024,26 @@ export default function OrderDetailPage() {
 
             <label>Thời gian trả thực tế:</label>
             <input
-              type="text"
-              placeholder="YYYY-MM-DD HH:mm:ss (bỏ trống = hiện tại)"
+              type="datetime-local"
               value={returnTime}
               onChange={(e) => setReturnTime(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "10px",
+                fontSize: "16px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                marginTop: "8px"
+              }}
             />
+            <p style={{ 
+              fontSize: "12px", 
+              color: "#666", 
+              marginTop: "4px",
+              fontStyle: "italic"
+            }}>
+              (Bỏ trống = thời gian hiện tại)
+            </p>
 
             <div className="modal-actions">
               <button 
@@ -1333,9 +2057,11 @@ export default function OrderDetailPage() {
                 {returnLoading ? "Đang xử lý..." : "XÁC NHẬN TRẢ XE"}
               </button>
               <button
-                className="btn btn-close-modal"
-                onClick={() => setShowReturnModal(false)}
-                disabled={returnLoading}
+                className="btn btn-danger"
+                onClick={() => {
+                  setShowReturnModal(false);
+                  setReturnTime(""); // Reset returnTime khi đóng modal
+                }}
               >
                 <svg style={{ width: "18px", height: "18px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -1536,6 +2262,126 @@ export default function OrderDetailPage() {
                   setService({ serviceType: "", cost: 0, description: "" });
                   setSelectedServiceList([]);
                 }}
+              >
+                ✖ Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Service Modal */}
+      {showEditServiceModal && editingService && (
+        <div className="modal-overlay" onClick={() => {
+          setShowEditServiceModal(false);
+          setEditingService(null);
+          setEditServiceData({ price: 0, description: "" });
+        }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "600px", width: "90%" }}>
+            <h2>Sửa dịch vụ</h2>
+            
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", marginBottom: "8px", fontWeight: "600" }}>
+                Loại dịch vụ
+              </label>
+              <input
+                type="text"
+                value={(() => {
+                  const type = String(editingService.type || "").toUpperCase();
+                  // Check các loại dịch vụ cụ thể
+                  if (type.includes("TRAFFIC_FEE")) return "Phí giao thông";
+                  if (type.includes("CLEANING")) return "Vệ sinh";
+                  if (type.includes("MAINTENANCE")) return "Bảo trì";
+                  if (type.includes("REPAIR")) return "Sửa chữa";
+                  if (type.includes("OTHER")) return "Khác";
+                  // Nếu chỉ là "SERVICE" hoặc "SERVICE_SERVICE", có thể check description hoặc field khác
+                  // Hoặc trả về "Dịch vụ" nếu không xác định được loại cụ thể
+                  if (type === "SERVICE" || type === "SERVICE_SERVICE") {
+                    // Có thể check description hoặc serviceType nếu có
+                    const description = String(editingService.description || "").toUpperCase();
+                    if (description.includes("GIAO THÔNG") || description.includes("TRAFFIC")) return "Phí giao thông";
+                    if (description.includes("VỆ SINH") || description.includes("CLEANING")) return "Vệ sinh";
+                    if (description.includes("BẢO TRÌ") || description.includes("MAINTENANCE")) return "Bảo trì";
+                    if (description.includes("SỬA CHỮA") || description.includes("REPAIR")) return "Sửa chữa";
+                    return "Dịch vụ";
+                  }
+                  return editingService.type || "N/A";
+                })()}
+                readOnly
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  fontSize: "14px",
+                  border: "1px solid #ddd",
+                  borderRadius: "4px",
+                  backgroundColor: "#f5f5f5",
+                  color: "#666",
+                  cursor: "not-allowed"
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", marginBottom: "8px", fontWeight: "600" }}>
+                Giá dịch vụ (VND) <span style={{ color: "#ef4444" }}>*</span>
+              </label>
+              <input
+                type="number"
+                value={editServiceData.price}
+                onChange={(e) => setEditServiceData({ ...editServiceData, price: e.target.value })}
+                min="0"
+                step="1000"
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  fontSize: "14px",
+                  border: "1px solid #ddd",
+                  borderRadius: "4px"
+                }}
+                disabled={processing}
+                placeholder="Nhập giá dịch vụ"
+              />
+            </div>
+
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", marginBottom: "8px", fontWeight: "600" }}>
+                Mô tả <span style={{ color: "#ef4444" }}>*</span>
+              </label>
+              <textarea
+                value={editServiceData.description}
+                onChange={(e) => setEditServiceData({ ...editServiceData, description: e.target.value })}
+                rows="4"
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  fontSize: "14px",
+                  border: "1px solid #ddd",
+                  borderRadius: "4px",
+                  resize: "vertical",
+                  fontFamily: "inherit"
+                }}
+                disabled={processing}
+                placeholder="Nhập mô tả dịch vụ"
+              />
+            </div>
+
+            <div className="modal-actions">
+              <button 
+                className="btn btn-primary" 
+                onClick={handleUpdateService}
+                disabled={processing}
+                style={{ marginRight: "10px" }}
+              >
+                {processing ? "Đang xử lý..." : "💾 Lưu thay đổi"}
+              </button>
+              <button
+                className="btn btn-danger"
+                onClick={() => {
+                  setShowEditServiceModal(false);
+                  setEditingService(null);
+                  setEditServiceData({ price: 0, description: "" });
+                }}
+                disabled={processing}
               >
                 ✖ Đóng
               </button>

@@ -269,6 +269,21 @@ const ProfilePage = () => {
         setIdPreview(url);
         setIdCardUrl(url);
         console.log('✅ Upload CCCD thành công:', url);
+        
+        // ✅ Cập nhật user context và localStorage ngay sau khi upload thành công
+        updateUser({
+          ...user,
+          cccdImageUrl: url,
+          idCardUrl: url,
+          cccdUrl: url,
+          photo_url: url,
+          photoUrl: url,
+        });
+        
+        console.log('✅ Đã cập nhật user context với CCCD URL');
+        
+        // Thông báo thành công
+        alert('✅ Upload CCCD thành công! Ảnh đã được lưu.');
       } else {
         throw new Error('Không nhận được URL từ server');
       }
@@ -308,6 +323,20 @@ const ProfilePage = () => {
         setDlPreview(url);
         setDriverLicenseUrl(url);
         console.log('✅ Upload Bằng lái thành công:', url);
+        
+        // ✅ Cập nhật user context và localStorage ngay sau khi upload thành công
+        updateUser({
+          ...user,
+          driverLicenseImageUrl: url,
+          driverLicenseUrl: url,
+          licenseUrl: url,
+          license_url: url,
+        });
+        
+        console.log('✅ Đã cập nhật user context với Driver License URL');
+        
+        // Thông báo thành công
+        alert('✅ Upload Bằng lái thành công! Ảnh đã được lưu.');
       } else {
         throw new Error('Không nhận được URL từ server');
       }

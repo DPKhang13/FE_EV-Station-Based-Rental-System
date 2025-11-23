@@ -72,6 +72,36 @@
     border-color: #dc2626;
 }
 
+/* Tóm tắt giá tiền theo ngày */
+.price-summary {
+    margin-top: 8px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: #f3f4ff;
+    border: 1px solid #c7d2fe;
+}
+
+.price-summary-text {
+    margin: 2px 0;
+    font-size: 14px;
+    color: #111827;
+}
+
+.price-summary-total {
+    font-weight: 700;
+    color: #dc2626;
+}
+
+.price-summary-sub {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.original-price {
+    text-decoration: line-through;
+}
+
 .submit-button {
     margin-top: 16px;
     padding: 16px;
@@ -182,7 +212,18 @@
     font-weight: 700;
     color: #1F2937;
     margin: 0 0 20px 0;
-    text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 24px;
+    border-radius: 10px;
+    border: 1px solid #E5E7EB;
+    background: #F9FAFB;
+    box-shadow: 0 4px 8px rgba(15, 23, 42, 0.05);
+}
+
+.vehicle-info-box {
+    text-align: center;
 }
 
 .vehicle-info-grid {
@@ -368,17 +409,27 @@
     width: 100%;
     height: 200px;
     object-fit: cover;
+    border-bottom: 2px solid #E5E5E5;
 }
 
 .similar-car-info {
     padding: 16px;
 }
 
+.similar-car-name-wrapper {
+    border: 1px solid #E5E5E5;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    background: #FFFFFF;
+}
+
 .similar-car-name {
     font-size: 16px;
     font-weight: 600;
     color: #000000;
-    margin: 0 0 8px 0;
+    margin: 0;
+    text-align: center;
 }
 
 .similar-car-price {

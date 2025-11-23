@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { FaChartPie, FaUsers, FaSignOutAlt, FaCar, FaMapMarkerAlt, FaUserTie, FaClipboardList } from "react-icons/fa";
+import { FaChartPie, FaUsers, FaSignOutAlt, FaCar, FaMapMarkerAlt, FaUserTie, FaClipboardList, FaExclamationTriangle } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
 import React, { useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
@@ -62,6 +62,10 @@ export default function SideBarAdmin() {
           <NavLink to="/admin/dashboard" className="sidebar__btn">
             <FaChartPie />
             <span>Thống kê tổng quan</span>
+          </NavLink>
+          <NavLink to="/admin/incident-reports" className="sidebar__btn">
+            <FaExclamationTriangle />
+            <span>Báo cáo sự cố</span>
           </NavLink>
 
           {/* --- Nhóm e. Bảng giá --- */}

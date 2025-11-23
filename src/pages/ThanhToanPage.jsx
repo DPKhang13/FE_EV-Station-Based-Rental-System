@@ -1,125 +1,181 @@
-// pages/ThanhToanPage.jsx
+﻿// pages/ThanhToanPage.jsx
 import React, { useState, useEffect } from "react";
 import transactionService from "../services/transactionService";
 import "./ThanhToanPage.css";
 
-// 🪙 Định dạng tiền VND
+// ðŸª™ Äá»‹nh dáº¡ng tiá»n VND
 const formatVND = (n) =>
   (Number(n) || 0).toLocaleString("vi-VN", {
     style: "currency",
     currency: "VND",
   });
 
-// 🔤 Dịch trạng thái sang tiếng Việt
+// ðŸ”¤ Dá»‹ch tráº¡ng thÃ¡i sang tiáº¿ng Viá»‡t
 const translateStatus = (status = "") => {
   const map = {
-    SUCCESS: "Thành công",
-    FAILED: "Thất bại",
-    PENDING: "Đang xử lý",
+    SUCCESS: "ThÃ nh cÃ´ng",
+    FAILED: "Tháº¥t báº¡i",
+    PENDING: "Äang xá»­ lÃ½",
+    FULL_PAYMENT: "ÄÃ£ thanh toÃ¡n toÃ n bá»™",
+    DEPOSIT: "ÄÃ£ Ä‘áº·t cá»c",
+    PICKUP: "ÄÃ£ tráº£ pháº§n cÃ²n láº¡i",  
+    CANCELLED: "ÄÃ£ há»§y",
+    REFUND: "ÄÃ£ hoÃ n tiá»n",
+    SERVICE: "ÄÃ£ thanh toÃ¡n dá»‹ch vá»¥",
+    SERVICE_SERVICE: "ÄÃ£ thanh toÃ¡n dá»‹ch vá»¥ phÃ¡t sinh",
+    FULL_PAYMENT_PENDING: "ÄÃ£ thanh toÃ¡n toÃ n bá»™ báº±ng tiá»n máº·t",
+    DEPOSIT_PENDING: "ÄÃ£ Ä‘áº·t cá»c báº±ng tiá»n máº·t",
+    PICKUP_PENDING: "ÄÃ£ tráº£ pháº§n cÃ²n láº¡i báº±ng tiá»n máº·t",
+    
+   
   };
-  return map[status.toUpperCase()] || "Không xác định";
+  return map[status.toUpperCase()] || "KhÃ´ng xÃ¡c Ä‘á»‹nh";
 };
 
-// 🔤 Dịch loại giao dịch sang tiếng Việt
+// ðŸ”¤ Dá»‹ch loáº¡i giao dá»‹ch sang tiáº¿ng Viá»‡t
 const translateType = (type = "") => {
+  const typeUpper = type.toUpperCase();
+  
+  // Xá»­ lÃ½ cÃ¡c loáº¡i _PENDING trÆ°á»›c
+  if (typeUpper.includes("_PENDING")) {
+    const baseType = typeUpper.replace("_PENDING", "");
+    const pendingMap = {
+      "FULL_PAYMENT": "Thanh toÃ¡n toÃ n bá»™ (tiá»n máº·t)",
+      "DEPOSIT": "Äáº·t cá»c (tiá»n máº·t)",
+      "PICKUP": "Tráº£ pháº§n cÃ²n láº¡i (tiá»n máº·t)",
+    };
+    return pendingMap[baseType] || `${baseType} (tiá»n máº·t)`;
+  }
+  
   const map = {
-    DEPOSITED: "Đã cọc tiền",
-    FINAL: "Đã thanh toán hết",
-    FULL_PAYMENT: "Đã thanh toán toàn bộ",
-    DEPOSIT: "Đã cọc tiền",
-    WITHDRAW: "Rút tiền",
-    RENTAL_PAYMENT: "Thanh toán thuê xe",
-    REFUND: "Hoàn tiền",
-    TOP_UP: "Nạp tài khoản",
-    PICKUP: "Tiền còn lại sau cọc",
-    PICKUP_PENDING : "Trả phần còn lại bằng tiền mặt",
-    DEPOSIT_PENDING : "Cọc bằng tiền mặt",
-    FULL_PAYMENT_PENDING : "Thanh toán toàn bộ bằng tiền mặt",
-    SERVICE : "Thanh toán dịch vụ",
-    SERVICE_SERVICE : "Thanh toán dịch vụ phát sinh",
+    DEPOSITED: "ÄÃ£ cá»c tiá»n",
+    FINAL: "ÄÃ£ thanh toÃ¡n háº¿t",
+    FULL_PAYMENT: "ÄÃ£ thanh toÃ¡n toÃ n bá»™",
+    DEPOSIT: "ÄÃ£ Ä‘áº·t cá»c",
+    WITHDRAW: "RÃºt tiá»n",
+    RENTAL_PAYMENT: "Thanh toÃ¡n thuÃª xe",
+    REFUND: "HoÃ n tiá»n",
+    TOP_UP: "Náº¡p tÃ i khoáº£n",
+    PICKUP: "Tráº£ pháº§n cÃ²n láº¡i",
+    SERVICE: "Dá»‹ch vá»¥",
+    SERVICE_SERVICE: "Dá»‹ch vá»¥ phÃ¡t sinh",
   };
-  return map[type.toUpperCase()] || "Khác";
+  return map[typeUpper] || type || "KhÃ¡c";
 };
 
 const ThanhToanPage = () => {
   const [transactions, setTransactions] = useState([]);
+  const [allTransactions, setAllTransactions] = useState([]); // LÆ°u táº¥t cáº£ transactions Ä‘á»ƒ filter
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [phone, setPhone] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // 🚀 Lấy toàn bộ giao dịch khi mở trang
+  // ðŸš€ Láº¥y toÃ n bá»™ giao dá»‹ch khi má»Ÿ trang
   useEffect(() => {
     fetchTransactions();
   }, []);
 
-  // 🔁 Hàm tải danh sách giao dịch
+  // ðŸ” HÃ m táº£i danh sÃ¡ch giao dá»‹ch
   const fetchTransactions = async () => {
     try {
       setLoading(true);
       const res = await transactionService.getAllTransactions();
       const data = Array.isArray(res?.data) ? res.data : res;
-      setTransactions(data || []);
+      const transactionsList = data || [];
+      setAllTransactions(transactionsList); // LÆ°u táº¥t cáº£ Ä‘á»ƒ filter
+      setTransactions(transactionsList); // Hiá»ƒn thá»‹ táº¥t cáº£ ban Ä‘áº§u
     } catch (err) {
-      console.error("❌ Lỗi tải giao dịch:", err);
+      console.error("âŒ Lá»—i táº£i giao dá»‹ch:", err);
+      setAllTransactions([]);
       setTransactions([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // 🔍 Tra cứu theo số điện thoại
-  const handleSearch = async () => {
-    if (!phone.trim()) {
-      fetchTransactions();
-      return;
+  // ðŸ” TÃ¬m kiáº¿m theo nhiá»u tiÃªu chÃ­ (tÃªn, sá»‘ Ä‘iá»‡n thoáº¡i, tÃªn tráº¡m) - partial match
+  const handleSearch = () => {
+    const query = searchQuery.trim().toLowerCase();
     
+    if (!query) {
+      // Náº¿u khÃ´ng cÃ³ query, hiá»ƒn thá»‹ táº¥t cáº£
+      setTransactions(allTransactions);
+      setError("");
+      return;
     }
+
     setError("");
-    try {
-      setLoading(true);
-      const res = await transactionService.searchByUserId(phone);
-      setTransactions(Array.isArray(res) ? res : []);
-    } catch (err) {
-      console.error("❌ Lỗi tìm kiếm:", err);
-      setError("Không tìm thấy dữ liệu giao dịch!");
-      setTransactions([]);
-    } finally {
-      setLoading(false);
+    
+    // âœ… Filter theo nhiá»u tiÃªu chÃ­ vá»›i partial match
+    const filtered = allTransactions.filter((t) => {
+      const customerName = (t.customerName || "").toLowerCase();
+      const customerPhone = (t.customerPhone || "").toLowerCase();
+      const stationName = (t.stationName || "").toLowerCase();
+      
+      // TÃ¬m kiáº¿m partial match trong tÃªn, sá»‘ Ä‘iá»‡n thoáº¡i, hoáº·c tÃªn tráº¡m
+      return (
+        customerName.includes(query) ||
+        customerPhone.includes(query) ||
+        stationName.includes(query)
+      );
+    });
+
+    setTransactions(filtered);
+    
+    if (filtered.length === 0) {
+      setError("KhÃ´ng tÃ¬m tháº¥y dá»¯ liá»‡u giao dá»‹ch!");
     }
   };
+
+  // âœ… Tá»± Ä‘á»™ng tÃ¬m kiáº¿m khi nháº­p (debounce)
+  useEffect(() => {
+    if (!allTransactions.length) return; // ChÆ°a load xong thÃ¬ khÃ´ng search
+    
+    const timer = setTimeout(() => {
+      handleSearch();
+    }, 300); // Äá»£i 300ms sau khi ngÆ°á»i dÃ¹ng ngá»«ng gÃµ
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, allTransactions]);
 
   return (
     <div className="page-container">
-      {/* 🔍 Form tìm kiếm */}
+      {/* ðŸ” Form tÃ¬m kiáº¿m */}
       <div className="search-boxs">
-        <h2>Tra cứu lịch sử giao dịch</h2>
+        <h2>Tra cá»©u lá»‹ch sá»­ giao dá»‹ch</h2>
         <div className="search-form">
           <input
             type="text"
-            placeholder="Nhập số điện thoại khách hàng"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Nháº­p tÃªn, sá»‘ Ä‘iá»‡n thoáº¡i hoáº·c tÃªn tráº¡m..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === "Enter") {
+                handleSearch();
+              }
+            }}
           />
           <button onClick={handleSearch} disabled={loading}>
-            {loading ? "Đang tìm..." : "Tìm kiếm"}
+            {loading ? "Äang tÃ¬m..." : "TÃ¬m kiáº¿m"}
           </button>
         </div>
         {error && <p className="error">{error}</p>}
       </div>
 
-      {/* 📊 Bảng kết quả */}
-      {loading && <p className="loading">Đang tải dữ liệu...</p>}
+      {/* ðŸ“Š Báº£ng káº¿t quáº£ */}
+      {loading && <p className="loading">Äang táº£i dá»¯ liá»‡u...</p>}
 
       <table className="transaction-table">
         <thead>
           <tr>
-            <th>Tên khách hàng</th>
-            <th>Số điện thoại</th>
-            <th>Tên trạm</th>
-            <th>Số tiền</th>
-            <th>Trạng thái</th>
-            <th>Loại</th>
-            <th>Thời gian</th>
+            <th>TÃªn khÃ¡ch hÃ ng</th>
+            <th>Sá»‘ Ä‘iá»‡n thoáº¡i</th>
+            <th>TÃªn tráº¡m</th>
+            <th>Sá»‘ tiá»n</th>
+            <th>Tráº¡ng thÃ¡i</th>
+            <th>Loáº¡i</th>
+            <th>Thá»i gian</th>
           </tr>
         </thead>
 
@@ -147,7 +203,7 @@ const ThanhToanPage = () => {
           ) : (
             <tr>
               <td colSpan={7} className="no-data-cell">
-                Không có dữ liệu giao dịch.
+                KhÃ´ng cÃ³ dá»¯ liá»‡u giao dá»‹ch.
               </td>
             </tr>
           )}
@@ -158,3 +214,4 @@ const ThanhToanPage = () => {
 };
 
 export default ThanhToanPage;
+

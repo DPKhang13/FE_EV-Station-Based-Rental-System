@@ -154,6 +154,23 @@ export const orderService = {
         }
     },
 
+    /**
+     * Complete order - Xác nhận hoàn tất đơn hàng
+     * PUT /api/order/{orderId}/complete
+     * Chuyển status từ "AWAITING", "PENDING_FINAL_PAYMENT", "RETURNED" sang "COMPLETED"
+     */
+    complete: async (orderId) => {
+        try {
+            const res = await api.put(`/order/${orderId}/complete`);
+            const data = res?.data ?? res;
+            console.log(`✅ [orderService.complete] Order ${orderId} completed:`, data);
+            return data;
+        } catch (error) {
+            console.error(`❌ [orderService.complete] Order ${orderId} error:`, error);
+            throw error;
+        }
+    },
+
 };
 
 export default orderService;

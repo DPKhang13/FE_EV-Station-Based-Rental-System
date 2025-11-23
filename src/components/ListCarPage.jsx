@@ -7,27 +7,37 @@ import 'react-datepicker/dist/react-datepicker.css';
 import './ListCarPage.css';
 
 // Custom TimePicker Component với 2 cột riêng biệt
-const CustomTimePicker = ({ value, onChange, placeholder = "Chọn giờ" }) => {
+const CustomTimePicker = ({ value, onChange, placeholder = "Chọn giờ", minHour = 0, maxHour = 23 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [selectedHour, setSelectedHour] = useState(value ? parseInt(value.split(':')[0]) : null);
     const [selectedMinute, setSelectedMinute] = useState(value ? parseInt(value.split(':')[1]) : null);
     const timePickerRef = useRef(null);
 
-    // Tạo danh sách giờ (0-23)
-    const hours = Array.from({ length: 24 }, (_, i) => i);
-    // Tạo danh sách phút (0, 5, 10, ..., 55)
-    const minutes = Array.from({ length: 12 }, (_, i) => i * 5);
+    // Tạo danh sách giờ với ràng buộc minHour và maxHour
+    const hours = Array.from({ length: maxHour - minHour + 1 }, (_, i) => i + minHour);
+    // Tạo danh sách phút đầy đủ từ 0 đến 59
+    const minutes = Array.from({ length: 60 }, (_, i) => i);
 
     useEffect(() => {
         if (value) {
             const [h, m] = value.split(':');
-            setSelectedHour(parseInt(h));
-            setSelectedMinute(parseInt(m));
+            const hour = parseInt(h);
+            const minute = parseInt(m);
+            // Validate giờ trong khoảng cho phép
+            if (hour >= minHour && hour <= maxHour) {
+                setSelectedHour(hour);
+                setSelectedMinute(minute);
+            } else {
+                // Nếu giờ nằm ngoài khoảng, reset về null
+                setSelectedHour(null);
+                setSelectedMinute(null);
+                onChange(''); // Reset value
+            }
         } else {
             setSelectedHour(null);
             setSelectedMinute(null);
         }
-    }, [value]);
+    }, [value, minHour, maxHour, onChange]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -46,14 +56,22 @@ const CustomTimePicker = ({ value, onChange, placeholder = "Chọn giờ" }) => 
     }, [isOpen]);
 
     const handleHourSelect = (hour) => {
+        // Validate giờ trong khoảng cho phép
+        if (hour < minHour || hour > maxHour) {
+            return;
+        }
         setSelectedHour(hour);
         const minute = selectedMinute !== null ? selectedMinute : 0;
         onChange(`${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`);
     };
 
     const handleMinuteSelect = (minute) => {
+        const hour = selectedHour !== null ? selectedHour : minHour;
+        // Validate giờ trong khoảng cho phép
+        if (hour < minHour || hour > maxHour) {
+            return;
+        }
         setSelectedMinute(minute);
-        const hour = selectedHour !== null ? selectedHour : 0;
         onChange(`${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`);
     };
 
@@ -128,41 +146,7 @@ const ListCarPage = () => {
         window.scrollTo({ top: 0, behavior: 'instant' });
     }, []);
 
-    // Load tên chi nhánh từ API
-    useEffect(() => {
-        const loadBranchName = async () => {
-            if (!selectedBranch) {
-                setBranchName('Tất cả chi nhánh');
-                setLoadingBranch(false);
-                return;
-            }
-
-            try {
-                setLoadingBranch(true);
-                const stations = await rentalStationService.getAll();
-                const station = stations.find(s =>
-                    String(s.id || '') === String(selectedBranch) ||
-                    String(s.stationid || '') === String(selectedBranch)
-                );
-
-                if (station) {
-                    setBranchName(station.name || `Chi nhánh ${selectedBranch}`);
-                } else {
-                    setBranchName(`Chi nhánh ${selectedBranch}`);
-                }
-                console.log('✅ Loaded branch name:', station?.name);
-            } catch (error) {
-                console.error(' Error loading branch name:', error);
-                setBranchName(`Chi nhánh ${selectedBranch}`);
-            } finally {
-                setLoadingBranch(false);
-            }
-        };
-
-        loadBranchName();
-    }, [selectedBranch]);
-
-    // Load vehicles từ API theo stationId (chỉ khi không có search)
+    // ✅ Load vehicles trước (ưu tiên) - branch name có thể load sau hoặc bỏ qua
     useEffect(() => {
         const loadVehicles = async () => {
             if (!selectedBranch) {
@@ -179,13 +163,28 @@ const ListCarPage = () => {
             try {
                 setLoadingVehicles(true);
                 const response = await fetch(`http://localhost:8080/api/vehicles/station/${selectedBranch}`);
-                if (!response.ok) throw new Error('Failed to fetch vehicles');
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`❌ API Error [${response.status}]:`, {
+                        status: response.status,
+                        statusText: response.statusText,
+                        url: response.url,
+                        error: errorText
+                    });
+                    throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                }
+                
                 const data = await response.json();
                 const vehicleList = Array.isArray(data) ? data : (data.data || []);
                 setVehicles(vehicleList);
                 console.log(`✅ Loaded ${vehicleList.length} vehicles for station ${selectedBranch}`);
             } catch (error) {
-                console.error(`❌ Error loading vehicles:`, error);
+                console.error(`❌ Error loading vehicles for station ${selectedBranch}:`, error);
+                // ⭐⭐ Hiển thị thông báo lỗi chi tiết hơn ⭐⭐
+                if (error.message.includes('500')) {
+                    console.error('⚠️ Backend server error (500). Please check backend logs.');
+                }
                 setVehicles([]);
             } finally {
                 setLoadingVehicles(false);
@@ -193,6 +192,41 @@ const ListCarPage = () => {
         };
 
         loadVehicles();
+    }, [selectedBranch, searching]);
+
+    // ✅ Load branch name sau (không ảnh hưởng đến hiển thị xe) - lazy load
+    useEffect(() => {
+        const loadBranchName = async () => {
+            if (!selectedBranch) {
+                setBranchName('Tất cả chi nhánh');
+                setLoadingBranch(false);
+                return;
+            }
+
+            // ✅ Set tên mặc định ngay, load chi tiết sau
+            setBranchName(`Chi nhánh ${selectedBranch}`);
+            setLoadingBranch(false);
+
+            // ✅ Load chi tiết tên station sau (không block UI)
+            try {
+                const stations = await rentalStationService.getAll();
+                const station = stations.find(s =>
+                    String(s.id || '') === String(selectedBranch) ||
+                    String(s.stationid || '') === String(selectedBranch)
+                );
+
+                if (station?.name) {
+                    setBranchName(station.name);
+                }
+            } catch (error) {
+                console.error('❌ Error loading branch name:', error);
+                // Giữ tên mặc định nếu lỗi
+            }
+        };
+
+        // ✅ Delay nhỏ để ưu tiên load vehicles trước
+        const timer = setTimeout(loadBranchName, 300);
+        return () => clearTimeout(timer);
     }, [selectedBranch]);
 
     // Format datetime cho API (ISO 8601: yyyy-MM-ddTHH:mm:ss)
@@ -300,6 +334,8 @@ const ListCarPage = () => {
                                 value={startTime}
                                 onChange={setStartTime}
                                 placeholder="Chọn giờ"
+                                minHour={8}
+                                maxHour={23}
                             />
                         </div>
                     </div>
@@ -320,6 +356,8 @@ const ListCarPage = () => {
                                 value={endTime}
                                 onChange={setEndTime}
                                 placeholder="Chọn giờ"
+                                minHour={8}
+                                maxHour={23}
                             />
                         </div>
                     </div>
@@ -341,6 +379,7 @@ const ListCarPage = () => {
                 gradeFilter={gradeFilter}
                 seatCount={seatCount}
                 loading={loadingVehicles}
+                branchName={branchName}
             />
         </div>
     );

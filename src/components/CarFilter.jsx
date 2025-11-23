@@ -4,7 +4,7 @@ import { useVehicles } from '../hooks/useVehicles';
 
 import './CarFilter.css';
 
-const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [], gradeFilter: initialGradeFilter = '', seatCount: initialSeatCount = null, loading: propsLoading = false }) => {
+const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [], gradeFilter: initialGradeFilter = '', seatCount: initialSeatCount = null, loading: propsLoading = false, branchName = '' }) => {
     const navigate = useNavigate();
     
     // ✅ Chỉ auto-load khi KHÔNG có vehicles từ props VÀ không có selectedBranch
@@ -22,6 +22,7 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [], gradeFilter: 
     // ✅ Tự động set grade từ gradeFilter nếu có (từ Offers)
     const [grade, setGrade] = useState(initialGradeFilter || '');
     const [selectedColors, setSelectedColors] = useState([]);
+    const [carmodel, setCarmodel] = useState('');
     const [sortBy, setSortBy] = useState('name-asc');
     
     // ✅ Cập nhật grade khi initialGradeFilter thay đổi
@@ -42,6 +43,15 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [], gradeFilter: 
     const availableBrands = [...new Set(vehicleData
         .filter(car => car.brand && car.brand !== 'N/A' && car.brand !== 'null')
         .map(car => car.brand))
+    ].sort();
+
+    // Get unique carmodels from available cars
+    const availableCarmodels = [...new Set(vehicleData
+        .filter(car => {
+            const model = car.carmodel || car.carModel || car.car_model;
+            return model && model !== 'N/A' && model !== 'null' && model !== '';
+        })
+        .map(car => car.carmodel || car.carModel || car.car_model))
     ].sort();
 
     const filteredCars = vehicleData.filter(car => {
@@ -111,6 +121,14 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [], gradeFilter: 
             }
         }
 
+        // 7. LỌC THEO CARMODEL (nếu có chọn)
+        if (carmodel) {
+            const carModel = car.carmodel || car.carModel || car.car_model || '';
+            if (!carModel || String(carModel).toLowerCase() !== String(carmodel).toLowerCase()) {
+                return false;
+            }
+        }
+
         return true;
     });
 
@@ -138,11 +156,12 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [], gradeFilter: 
         console.log('   Branch:', selectedBranch || 'All');
         console.log('   SeatCount:', initialSeatCount || 'All');
         console.log('   Brand:', brand || 'All');
+        console.log('   Carmodel:', carmodel || 'All');
         console.log('   Grade:', grade || 'All');
         console.log('   Colors:', selectedColors.length > 0 ? selectedColors.join(', ') : 'All');
         console.log('   Total cars:', cars.length);
         console.log('   Filtered cars:', filteredCars.length);
-    }, [selectedBranch, initialSeatCount, brand, grade, selectedColors, sortBy, cars.length, filteredCars.length, cars]);
+    }, [selectedBranch, initialSeatCount, brand, carmodel, grade, selectedColors, sortBy, cars.length, filteredCars.length, cars]);
 
     // Xử lý khi thay đổi hãng xe
     // const handleBrandChange = (value) => {
@@ -251,9 +270,13 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [], gradeFilter: 
     const [expandedSections, setExpandedSections] = useState({
         color: true,
         brand: true,
+        carmodel: true,
         grade: true,
         sort: true
     });
+
+    // State để ẩn/hiện filter panel
+    const [filterPanelVisible, setFilterPanelVisible] = useState(true);
 
     const toggleSection = (section) => {
         setExpandedSections(prev => ({
@@ -262,10 +285,15 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [], gradeFilter: 
         }));
     };
 
+    const toggleFilterPanel = () => {
+        setFilterPanelVisible(!filterPanelVisible);
+    };
+
     const resetFilters = () => {
         setBrand('');
         setGrade('');
         setSelectedColors([]);
+        setCarmodel('');
         setSortBy('name-asc');
     };
 
@@ -295,7 +323,17 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [], gradeFilter: 
             {!isLoadingData && (
                 <div className="filter-layout">
                     {/* Left Filter Panel */}
-                    <div className="filter-panel">
+                    {filterPanelVisible ? (
+                        <div className="filter-panel">
+                            {/* Nút toggle filter panel - trong khung lọc */}
+                            <button 
+                                className="filter-toggle-btn"
+                                onClick={toggleFilterPanel}
+                                aria-label="Ẩn bộ lọc"
+                                title="Ẩn bộ lọc"
+                            >
+                                ◀
+                            </button>
                         {/* Section: Chọn Màu */}
                         <div className="filter-section">
                             <div className="filter-section-header">
@@ -358,16 +396,63 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [], gradeFilter: 
                             </div>
                             {expandedSections.brand && (
                                 <div className="filter-section-content">
-                                    <select
-                                        className="filter-select-panel"
-                                        value={brand}
-                                        onChange={e => setBrand(e.target.value)}
-                                    >
-                                        <option value="">-- Chọn một xe --</option>
-                                        <option value="BMW">BMW</option>
-                                        <option value="Tesla">Tesla</option>
-                                        <option value="VinFast">VinFast</option>
-                                    </select>
+                                    <div className="brand-grid">
+                                        <button
+                                            className={`brand-option ${!brand ? 'selected' : ''}`}
+                                            onClick={() => setBrand('')}
+                                        >
+                                            Tất cả
+                                        </button>
+                                        <button
+                                            className={`brand-option ${brand === 'BMW' ? 'selected' : ''}`}
+                                            onClick={() => setBrand('BMW')}
+                                        >
+                                            BMW
+                                        </button>
+                                        <button
+                                            className={`brand-option ${brand === 'Tesla' ? 'selected' : ''}`}
+                                            onClick={() => setBrand('Tesla')}
+                                        >
+                                            Tesla
+                                        </button>
+                                        <button
+                                            className={`brand-option ${brand === 'VinFast' ? 'selected' : ''}`}
+                                            onClick={() => setBrand('VinFast')}
+                                        >
+                                            VinFast
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Section: Loại Xe (Carmodel) */}
+                        <div className="filter-section">
+                            <div className="filter-section-header" onClick={() => toggleSection('carmodel')}>
+                                <span className="filter-section-title">Loại Xe</span>
+                                <span className="filter-section-toggle">
+                                    {expandedSections.carmodel ? '−' : '+'}
+                                </span>
+                            </div>
+                            {expandedSections.carmodel && (
+                                <div className="filter-section-content">
+                                    <div className="brand-grid">
+                                        <button
+                                            className={`brand-option ${!carmodel ? 'selected' : ''}`}
+                                            onClick={() => setCarmodel('')}
+                                        >
+                                            Tất cả
+                                        </button>
+                                        {availableCarmodels.map((model) => (
+                                            <button
+                                                key={model}
+                                                className={`brand-option ${carmodel === model ? 'selected' : ''}`}
+                                                onClick={() => setCarmodel(model)}
+                                            >
+                                                {model}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -425,6 +510,17 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [], gradeFilter: 
                             RESET BỘ LỌC
                         </button>
                     </div>
+                    ) : (
+                        /* Nút hiện bộ lọc khi đang ẩn */
+                        <button 
+                            className="filter-toggle-btn filter-toggle-btn-show"
+                            onClick={toggleFilterPanel}
+                            aria-label="Hiện bộ lọc"
+                            title="Hiện bộ lọc"
+                        >
+                            ▶
+                        </button>
+                    )}
 
                     {/* Right Content Area - Cars Grid */}
                     <div className="cars-content-area">
@@ -440,15 +536,12 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [], gradeFilter: 
                             </div>
                         ) : sortedCars.length === 0 ? (
                             <div className="empty-state" style={{ gridColumn: '1 / -1' }}>
-                                <div className="empty-icon">🚗</div>
+                                {branchName && (
+                                    <p className="empty-branch-name">{branchName}</p>
+                                )}
                                 <h3 className="empty-title">Không tìm thấy xe phù hợp</h3>
                                 <p className="empty-message">
-                                    {selectedBranch && `Chi nhánh: ${selectedBranch} | `}
-                                    {brand && `Hãng xe: ${brand} | `}
-                                    {grade && `Hạng: ${grade} | `}
-                                    Tổng số xe: {cars.length}
-                                    <br /><br />
-                                    💡 Gợi ý: Thử chọn hãng xe, hạng xe hoặc màu sắc khác
+                                    Gợi ý: Thử chọn hãng xe, hạng xe hoặc màu sắc khác
                                 </p>
                             </div>
                         ) : (
@@ -464,7 +557,7 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [], gradeFilter: 
                                                 e.target.src = '/src/assets/Tes4/red.jpg';
                                             }}
                                         />
-                                        <div className="car-status-badge">{car.status || 'Available'}</div>
+                                        {/* <div className="car-status-badge">{car.status || 'Available'}</div> */}
                                     </div>
 
                                     {/* Car Info */}

@@ -1,0 +1,535 @@
+/* Incident Report Page Styles - Mercedes Theme */
+.incident-page {
+  padding: 40px 60px;
+  max-width: 1600px;
+  margin: 0 auto;
+  background: #FFFFFF;
+  min-height: 100vh;
+  font-family: "Poppins", -apple-system, sans-serif;
+}
+
+.incident-header {
+  margin-bottom: 50px;
+}
+
+.incident-title {
+  font-size: 36px;
+  font-weight: 300;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 6px;
+  margin-bottom: 40px;
+  text-align: center;
+  position: relative;
+  padding-bottom: 30px;
+}
+
+.incident-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #DC0000 50%, transparent 100%);
+  filter: blur(0.5px);
+}
+
+.incident-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 30px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.stat-box {
+  background: #FFFFFF;
+  border: 2px solid #000000;
+  border-radius: 0;
+  padding: 30px 40px;
+  text-align: center;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 100%;
+  background: #DC0000;
+  transition: width 0.3s ease;
+  z-index: 0;
+}
+
+.stat-box:hover::before {
+  width: 4px;
+}
+
+.stat-box > * {
+  position: relative;
+  z-index: 1;
+}
+
+.stat-label {
+  display: block;
+  font-size: 11px;
+  color: #666666;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 15px;
+  font-weight: 400;
+}
+
+.stat-value {
+  display: block;
+  font-size: 36px;
+  font-weight: 300;
+  color: #000000;
+  letter-spacing: 2px;
+}
+
+.stat-value.severity-critical {
+  color: #DC0000;
+  font-weight: 400;
+}
+
+.incident-loading {
+  padding: 80px 40px;
+  text-align: center;
+  color: #666666;
+  font-size: 16px;
+}
+
+/* Filters - Mercedes Style */
+.incident-filters {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 30px;
+  margin-bottom: 40px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.filter-group {
+  background: #FFFFFF;
+  border: 2px solid #000000;
+  border-radius: 0;
+  padding: 25px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.filter-group:hover {
+  border-color: #DC0000;
+  box-shadow: 0 4px 12px rgba(220, 0, 0, 0.1);
+}
+
+.filter-group label {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 15px;
+}
+
+.filter-group select,
+.filter-group input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #000000;
+  border-radius: 0;
+  font-size: 14px;
+  background: #FFFFFF;
+  color: #000000;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+}
+
+.filter-group select:focus,
+.filter-group input:focus {
+  outline: none;
+  border-color: #DC0000;
+  box-shadow: 0 0 0 2px rgba(220, 0, 0, 0.1);
+}
+
+.filter-group select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23000000' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  padding-right: 40px;
+}
+
+/* Table - Mercedes Style */
+.incident-table-container {
+  margin-top: 40px;
+  border: 2px solid #000000;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.incident-empty {
+  text-align: center;
+  padding: 80px 40px;
+  color: #666666;
+  background: #FFFFFF;
+  border: 2px solid #E0E0E0;
+}
+
+.incident-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #FFFFFF;
+  border: none;
+}
+
+.incident-table th {
+  background: #000000;
+  color: #FFFFFF;
+  text-align: left;
+  padding: 20px 24px;
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 2px solid #DC0000;
+}
+
+.incident-table th:last-child {
+  border-right: none;
+}
+
+.incident-table td {
+  padding: 18px 24px;
+  border-bottom: 1px solid #E0E0E0;
+  font-size: 13px;
+  font-weight: 300;
+  color: #000000;
+  letter-spacing: 0.3px;
+}
+
+.incident-table tr {
+  transition: background-color 0.2s ease;
+}
+
+.incident-table tbody tr:hover {
+  background-color: #F9F9F9;
+}
+
+.incident-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.description-cell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Badges - Mercedes Style */
+.severity-badge {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 0;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  border: 2px solid;
+}
+
+.severity-critical {
+  background: #DC0000;
+  color: #FFFFFF;
+  border-color: #DC0000;
+}
+
+.severity-high {
+  background: #FFFFFF;
+  color: #DC0000;
+  border-color: #DC0000;
+}
+
+.severity-medium {
+  background: #FFFFFF;
+  color: #000000;
+  border-color: #000000;
+}
+
+.severity-low {
+  background: #F5F5F5;
+  color: #000000;
+  border-color: #E0E0E0;
+}
+
+/* Buttons - Mercedes Style */
+.btn-view-detail {
+  padding: 10px 20px;
+  background: #000000;
+  color: #FFFFFF;
+  border: 2px solid #000000;
+  border-radius: 0;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 100px;
+}
+
+.btn-view-detail:hover {
+  background: #DC0000;
+  border-color: #DC0000;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(220, 0, 0, 0.2);
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+}
+
+.incident-detail-modal {
+  background: #FFFFFF;
+  width: 90%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 0;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+  border: 2px solid #000000;
+}
+
+.modal-header {
+  background: #000000;
+  color: #FFFFFF;
+  padding: 24px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 3px solid #DC0000;
+}
+
+.modal-header h2 {
+  font-size: 18px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin: 0;
+}
+
+.modal-close-btn {
+  background: transparent;
+  border: none;
+  color: #FFFFFF;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s ease;
+}
+
+.modal-close-btn:hover {
+  color: #DC0000;
+}
+
+.incident-detail-content {
+  padding: 30px;
+}
+
+.detail-section {
+  margin-bottom: 30px;
+}
+
+.detail-section h3 {
+  font-size: 14px;
+  font-weight: 400;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #DC0000;
+  position: relative;
+}
+
+.detail-section h3::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background: #DC0000;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-item label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.detail-item span {
+  font-size: 14px;
+  color: #000000;
+}
+
+.description-box {
+  background: #FFFFFF;
+  border: 2px solid #000000;
+  padding: 20px;
+  border-radius: 0;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #000000;
+  min-height: 120px;
+  font-weight: 300;
+  letter-spacing: 0.3px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #E0E0E0;
+}
+
+.btn-cancel {
+  padding: 12px 24px;
+  background: #FFFFFF;
+  color: #000000;
+  border: 2px solid #000000;
+  border-radius: 0;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-cancel:hover {
+  background: #000000;
+  color: #FFFFFF;
+}
+
+.btn-status-update {
+  padding: 12px 24px;
+  background: #DC0000;
+  color: #FFFFFF;
+  border: 2px solid #DC0000;
+  border-radius: 0;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.btn-status-update:hover {
+  background: #B80000;
+  border-color: #B80000;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .incident-page {
+    padding: 20px;
+  }
+
+  .incident-title {
+    font-size: 24px;
+    letter-spacing: 3px;
+    padding-bottom: 20px;
+  }
+
+  .incident-stats {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    max-width: 100%;
+  }
+
+  .stat-box {
+    padding: 25px 30px;
+  }
+
+  .stat-value {
+    font-size: 28px;
+  }
+
+  .incident-filters {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    max-width: 100%;
+  }
+
+  .filter-group {
+    padding: 20px;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .incident-table-container {
+    overflow-x: auto;
+  }
+
+  .incident-table {
+    font-size: 11px;
+    min-width: 800px;
+  }
+
+  .incident-table th,
+  .incident-table td {
+    padding: 12px 16px;
+  }
+
+  .btn-view-detail {
+    padding: 8px 16px;
+    font-size: 10px;
+    min-width: 80px;
+  }
+}
+

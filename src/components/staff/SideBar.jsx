@@ -7,7 +7,7 @@ import "./SideBar.css";
 import React, { useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen = true }) {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
 
@@ -21,7 +21,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? '' : 'sidebar-collapsed'}`}>
       <div>
         <div className="sidebar__title">Quản lý trạm</div>
 

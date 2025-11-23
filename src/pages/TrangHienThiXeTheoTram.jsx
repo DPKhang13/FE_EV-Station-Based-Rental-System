@@ -175,6 +175,7 @@ const TrangHienThiXeTheoTram = () => {
 
   const [editFormData, setEditFormData] = useState({
     status: "Available",
+    stationId: "",
     brand: "VinFast",
     color: "White",
     variant: "air",
@@ -576,12 +577,17 @@ const TrangHienThiXeTheoTram = () => {
   };
 
   // ==== Mở modal sửa xe ====
-  const handleOpenEditModal = (vehicleId) => {
+  const handleOpenEditModal = async (vehicleId) => {
     const vehicle = vehicles.find(
       (v) => (v.vehicleId || v.id) === vehicleId
     );
 
     if (!vehicle) return showNotification("Không tìm thấy xe!", "error");
+
+    // Load danh sách trạm nếu chưa có
+    if (allStations.length === 0) {
+      await fetchAllStations();
+    }
 
     let seatCount = Number(vehicle.seatCount || vehicle.seat_count || 4);
     let variant = vehicle.variant || "air";
@@ -589,7 +595,8 @@ const TrangHienThiXeTheoTram = () => {
       variant = "air";
 
     setEditFormData({
-      status: vehicle.status || "Available",
+      status: vehicle.status || "AVAILABLE",
+      stationId: String(vehicle.stationId || vehicle.station_id || station || ""),
       brand: vehicle.brand || "VinFast",
       color: vehicle.color || "White",
       variant,
@@ -620,16 +627,70 @@ const TrangHienThiXeTheoTram = () => {
       if (!vehicle)
         return showNotification("Không tìm thấy xe!", "error");
 
+      // Kiểm tra nếu xe đang ở trạng thái RENTED hoặc BOOKED, không cho phép thay đổi trạng thái và trạm
+      const currentStatus = (vehicle.status || "").toUpperCase();
+      const newStatus = (editFormData.status || "").toUpperCase();
+      
+      // Nếu xe đang ở trạng thái RENTED hoặc BOOKED, không cho phép thay đổi trạm
+      if (currentStatus === "RENTED" || currentStatus === "RENTAL" || currentStatus === "BOOKED") {
+        const currentStationId = String(vehicle.stationId || vehicle.station_id || "");
+        const newStationId = String(editFormData.stationId || "");
+        
+        // Kiểm tra nếu cố gắng thay đổi trạm
+        if (newStationId && newStationId !== currentStationId) {
+          const statusMessage = (currentStatus === "BOOKED") 
+            ? "Không thể chuyển trạm khi xe đang ở trạng thái 'Đã đặt trước'. Vui lòng hủy đặt trước hoặc đợi khách hàng hoàn tất giao dịch trước khi chuyển trạm."
+            : "Không thể chuyển trạm khi xe đang ở trạng thái 'Đang thuê'. Vui lòng đợi khách hàng trả xe trước khi chuyển trạm.";
+          return showNotification(statusMessage, "error");
+        }
+      }
+      
+      // Kiểm tra pin trước khi cho phép chuyển sang trạng thái Sẵn sàng
+      if (newStatus === "AVAILABLE") {
+        const batteryStatus = vehicle.batteryStatus || vehicle.battery_status || "0";
+        const batteryPercent = Number(String(batteryStatus).replace("%", "").trim());
+        
+        if (batteryPercent <= 60) {
+          return showNotification("Không thể chuyển sang trạng thái 'Sẵn sàng'. Pin phải trên 60%. Pin hiện tại: " + batteryPercent + "%.", "error");
+        }
+      }
+
+      // Nếu xe đang ở trạng thái RENTED, giữ nguyên trạng thái
+      let finalStatus = editFormData.status;
+      if (currentStatus === "RENTED" || currentStatus === "RENTAL") {
+        // Giữ nguyên trạng thái RENTED, không cho phép thay đổi
+        finalStatus = vehicle.status;
+      } else if (newStatus === "RENTED" || newStatus === "RENTAL") {
+        // Nếu cố gắng chuyển sang trạng thái RENTED, từ chối
+        return showNotification("Không thể chuyển sang trạng thái 'Đang thuê'. Trạng thái này chỉ được thay đổi tự động khi khách hàng cọc và bàn giao xe.", "error");
+      }
+
+      // Chuyển đổi status sang lowercase để khớp với backend (available|rented|maintenance)
+      const statusMap = {
+        "AVAILABLE": "available",
+        "RENTED": "rented",
+        "RENTAL": "rented",
+        "MAINTENANCE": "maintenance",
+        "BOOKED": "booked",
+        "CHECKING": "checking"
+      };
+      const normalizedStatus = statusMap[finalStatus?.toUpperCase()] || finalStatus?.toLowerCase() || "available";
+
+      // Nếu xe đang ở trạng thái RENTED hoặc BOOKED, giữ nguyên trạm
+      let finalStationId = Number(editFormData.stationId || vehicle.stationId || vehicle.station_id);
+      if (currentStatus === "RENTED" || currentStatus === "RENTAL" || currentStatus === "BOOKED") {
+        finalStationId = Number(vehicle.stationId || vehicle.station_id);
+      }
+
       const updateData = {
-        status: editFormData.status,
-        stationId: Number(vehicle.stationId || vehicle.station_id),
+        status: normalizedStatus,
+        stationId: finalStationId,
         brand: editFormData.brand,
         color: editFormData.color,
         seatCount: editFormData.seatCount,
         variant: editFormData.variant,
         batteryStatus: String(vehicle.batteryStatus ?? vehicle.battery_status ?? "100"),
-batteryCapacity: String(vehicle.batteryCapacity ?? vehicle.battery_capacity ?? "100"),
-
+        batteryCapacity: String(vehicle.batteryCapacity ?? vehicle.battery_capacity ?? "100"),
         rangeKm: Number(
           vehicle.rangeKm || vehicle.range_km || 350
         )
@@ -1219,6 +1280,7 @@ batteryCapacity: String(vehicle.batteryCapacity ?? vehicle.battery_capacity ?? "
                 <th>TÊN XE</th>
                 <th>BIỂN SỐ</th>
                 <th>HÃNG</th>
+                <th>LOẠI XE</th>
                 <th>MÀU</th>
                 <th>SỐ GHẾ</th>
                 <th>NĂM SX</th>
@@ -1258,6 +1320,7 @@ const battery = Number(String(rawBattery).replace("%", "").trim());
                     <td><strong>{v.vehicleName}</strong></td>
                     <td>{v.plateNumber}</td>
                     <td>{v.brand}</td>
+                    <td>{v.carmodel || v.carModel || "N/A"}</td>
 
                     <td>
                       <span
@@ -1306,7 +1369,7 @@ const battery = Number(String(rawBattery).replace("%", "").trim());
                             <button
                               className="menu-item"
                               onClick={() => {
-                                handleViewRentalHistory(v.vehicleId);
+                                navigate(`/admin/vehicle-history/${v.vehicleId || v.id}`);
                                 setOpenMenuId(null);
                               }}
                             >
@@ -1315,7 +1378,7 @@ const battery = Number(String(rawBattery).replace("%", "").trim());
                             <button
                               className="menu-item"
                               onClick={() => {
-                                handleOpenEditModal(v.vehicleId);
+                                handleOpenEditModal(v.vehicleId || v.id);
                                 setOpenMenuId(null);
                               }}
                             >
@@ -1324,7 +1387,7 @@ const battery = Number(String(rawBattery).replace("%", "").trim());
                             <button
                               className="menu-item danger"
                               onClick={() => {
-                                handleDeleteVehicle(v.vehicleId);
+                                handleDeleteVehicle(v.vehicleId || v.id);
                                 setOpenMenuId(null);
                               }}
                             >
@@ -1623,8 +1686,172 @@ const battery = Number(String(rawBattery).replace("%", "").trim());
         </div>
       )}
 
+      {/* ========== MODAL SỬA XE ========== */}
+      {showEditModal && (
+        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Chỉnh sửa thông tin xe</h2>
+              <button className="modal-close-btn" onClick={() => setShowEditModal(false)}>×</button>
+            </div>
+
+            <form onSubmit={handleSubmitEditVehicle}>
+              <div className="form-group">
+                <label>Trạng thái <span className="required">*</span></label>
+                {(() => {
+                  const vehicle = vehicles.find(v => (v.vehicleId || v.id) === editingVehicleId);
+                  const batteryStatus = vehicle?.batteryStatus || vehicle?.battery_status || "0";
+                  const batteryPercent = Number(String(batteryStatus).replace("%", "").trim());
+                  const isBatteryLow = batteryPercent <= 60;
+                  
+                  return ((editFormData.status || "").toUpperCase() === "RENTED" || 
+                    (editFormData.status || "").toUpperCase() === "RENTAL") ? (
+                    <div style={{ 
+                      padding: "12px", 
+                      background: "#FFF3CD", 
+                      border: "1px solid #FFC107",
+                      borderRadius: "4px",
+                      color: "#856404",
+                      fontSize: "14px"
+                    }}>
+                      <strong>Đang thuê</strong> - Trạng thái này chỉ được thay đổi tự động khi khách hàng cọc và bàn giao xe. Admin không thể chỉnh sửa.
+                    </div>
+                  ) : (
+                    <div className="status-buttons-container">
+                      <button
+                        type="button"
+                        className={`status-button ${(editFormData.status || "").toUpperCase() === "AVAILABLE" ? "active" : ""} ${isBatteryLow ? "disabled" : ""}`}
+                        onClick={() => {
+                          if (isBatteryLow) {
+                            showNotification("Không thể chuyển sang trạng thái 'Sẵn sàng'. Pin phải trên 60%. Pin hiện tại: " + batteryPercent + "%.", "error");
+                            return;
+                          }
+                          handleEditInputChange({ target: { name: "status", value: "AVAILABLE" } });
+                        }}
+                        disabled={isBatteryLow}
+                        title={isBatteryLow ? `Pin hiện tại: ${batteryPercent}%. Cần trên 60% để chuyển sang trạng thái 'Sẵn sàng'.` : ""}
+                      >
+                        <span className="status-button-label">Có sẵn</span>
+                        <span className="status-button-switch">
+                          <span className="status-button-handle"></span>
+                        </span>
+                      </button>
+                    <button
+                      type="button"
+                      className={`status-button ${(editFormData.status || "").toUpperCase() === "BOOKED" ? "active" : ""}`}
+                      onClick={() => handleEditInputChange({ target: { name: "status", value: "BOOKED" } })}
+                    >
+                      <span className="status-button-label">Đã đặt trước</span>
+                      <span className="status-button-switch">
+                        <span className="status-button-handle"></span>
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`status-button ${(editFormData.status || "").toUpperCase() === "CHECKING" ? "active" : ""}`}
+                      onClick={() => handleEditInputChange({ target: { name: "status", value: "CHECKING" } })}
+                    >
+                      <span className="status-button-label">Đang kiểm tra</span>
+                      <span className="status-button-switch">
+                        <span className="status-button-handle"></span>
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`status-button ${(editFormData.status || "").toUpperCase() === "MAINTENANCE" ? "active" : ""}`}
+                      onClick={() => handleEditInputChange({ target: { name: "status", value: "MAINTENANCE" } })}
+                    >
+                      <span className="status-button-label">Bảo trì</span>
+                      <span className="status-button-switch">
+                        <span className="status-button-handle"></span>
+                      </span>
+                    </button>
+                  </div>
+                  );
+                })()}
+              </div>
+
+              <div className="form-group">
+                <label>Trạm <span className="required">*</span></label>
+                {((editFormData.status || "").toUpperCase() === "RENTED" || 
+                  (editFormData.status || "").toUpperCase() === "RENTAL" ||
+                  (editFormData.status || "").toUpperCase() === "BOOKED") ? (
+                  <div>
+                    <select
+                      name="stationId"
+                      value={editFormData.stationId}
+                      disabled
+                      style={{ 
+                        opacity: 0.6, 
+                        cursor: "not-allowed",
+                        background: "#f5f5f5"
+                      }}
+                    >
+                      <option value={editFormData.stationId}>
+                        {allStations.find(st => 
+                          String(st.stationId || st.stationid || st.id) === String(editFormData.stationId)
+                        )?.name || "Đang tải..."} - {
+                          allStations.find(st => 
+                            String(st.stationId || st.stationid || st.id) === String(editFormData.stationId)
+                          )?.city || ""
+                        }
+                      </option>
+                    </select>
+                    <div style={{ 
+                      marginTop: "8px",
+                      padding: "8px", 
+                      background: "#FFF3CD", 
+                      border: "1px solid #FFC107",
+                      borderRadius: "4px",
+                      color: "#856404",
+                      fontSize: "12px"
+                    }}>
+                      {((editFormData.status || "").toUpperCase() === "RENTED" || 
+                        (editFormData.status || "").toUpperCase() === "RENTAL") 
+                        ? "Không thể chuyển trạm khi xe đang ở trạng thái 'Đang thuê'"
+                        : "Không thể chuyển trạm khi xe đang ở trạng thái 'Đã đặt trước'"
+                      }
+                    </div>
+                  </div>
+                ) : (
+                  <select
+                    name="stationId"
+                    value={editFormData.stationId}
+                    onChange={handleEditInputChange}
+                    required
+                  >
+                    <option value="">-- Chọn trạm --</option>
+                    {allStations.map((st) => (
+                      <option key={st.stationId || st.stationid || st.id} value={String(st.stationId || st.stationid || st.id)}>
+                        {st.name} - {st.city}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="btn-cancel"
+                  onClick={() => setShowEditModal(false)}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="btn-submit"
+                >
+                  Lưu thay đổi
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* ========== MODAL CÁC LOẠI KHÁC ========== */}
-      {/* (Toàn bộ phần modal sửa xe, thêm đơn hàng, sửa đơn hàng, xem lịch sử, xem chi tiết...) */}
+      {/* (Toàn bộ phần modal thêm đơn hàng, sửa đơn hàng, xem lịch sử, xem chi tiết...) */}
 
       {/* ----- Notification ----- */}
       {notification.show && (

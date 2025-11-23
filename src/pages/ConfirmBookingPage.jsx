@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { orderService } from '../services';
 import { validateVehicleForBooking } from '../utils/vehicleValidator';
+import { pricingRuleService } from '../services/pricingRuleService';
+import photoService from '../services/photoService';
 import './ConfirmBookingPage.css';
 
 import car4SeatBlack from '../assets/4seatblack.png';
@@ -18,6 +20,21 @@ const ConfirmBookingPage = () => {
   const bookingData = location.state?.bookingData;
 
   const [loading, setLoading] = useState(false);
+  const [pricingRules, setPricingRules] = useState([]);
+
+  // 💰 Load bảng giá
+  useEffect(() => {
+    const fetchPricingRules = async () => {
+      try {
+        const res = await pricingRuleService.getAll();
+        const data = Array.isArray(res) ? res : (res?.data || []);
+        setPricingRules(data);
+      } catch (error) {
+        console.error("❌ Lỗi khi tải bảng giá:", error);
+      }
+    };
+    fetchPricingRules();
+  }, []);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -45,6 +62,88 @@ const ConfirmBookingPage = () => {
   };
 
   // -----------------------
+  // Kiểm tra user đã upload ảnh chưa
+  // -----------------------
+  const checkUserPhotos = async (userId) => {
+    try {
+      console.log('🔍 [ConfirmBooking] Đang kiểm tra ảnh cho userId:', userId);
+      const photosData = await photoService.getPhotos(userId);
+      console.log('📸 [ConfirmBooking] Photos data nhận được:', photosData);
+      
+      let hasCCCD = false;
+      let hasGPLX = false;
+
+      if (photosData) {
+        // Nếu photosData là array
+        if (Array.isArray(photosData)) {
+          console.log('📸 [ConfirmBooking] Photos là array, số lượng:', photosData.length);
+          const cccdPhoto = photosData.find(p => {
+            const type = (p.type || '').toUpperCase();
+            return type === 'CCCD' || type === 'ID_CARD' || type === 'IDCARD';
+          });
+          const gplxPhoto = photosData.find(p => {
+            const type = (p.type || '').toUpperCase();
+            return type === 'GPLX' || type === 'DRIVER_LICENSE' || type === 'DRIVERLICENSE' || type === 'LICENSE';
+          });
+          
+          console.log('📸 [ConfirmBooking] CCCD photo tìm thấy:', cccdPhoto);
+          console.log('📸 [ConfirmBooking] GPLX photo tìm thấy:', gplxPhoto);
+          
+          hasCCCD = !!(cccdPhoto?.photo_url || cccdPhoto?.photoUrl || cccdPhoto?.url || cccdPhoto?.imageUrl);
+          hasGPLX = !!(gplxPhoto?.photo_url || gplxPhoto?.photoUrl || gplxPhoto?.url || gplxPhoto?.imageUrl);
+        } else if (photosData.data && Array.isArray(photosData.data)) {
+          // Nếu wrapped trong data
+          console.log('📸 [ConfirmBooking] Photos wrapped trong data, số lượng:', photosData.data.length);
+          const cccdPhoto = photosData.data.find(p => {
+            const type = (p.type || '').toUpperCase();
+            return type === 'CCCD' || type === 'ID_CARD' || type === 'IDCARD';
+          });
+          const gplxPhoto = photosData.data.find(p => {
+            const type = (p.type || '').toUpperCase();
+            return type === 'GPLX' || type === 'DRIVER_LICENSE' || type === 'DRIVERLICENSE' || type === 'LICENSE';
+          });
+          
+          console.log('📸 [ConfirmBooking] CCCD photo tìm thấy:', cccdPhoto);
+          console.log('📸 [ConfirmBooking] GPLX photo tìm thấy:', gplxPhoto);
+          
+          hasCCCD = !!(cccdPhoto?.photo_url || cccdPhoto?.photoUrl || cccdPhoto?.url || cccdPhoto?.imageUrl);
+          hasGPLX = !!(gplxPhoto?.photo_url || gplxPhoto?.photoUrl || gplxPhoto?.url || gplxPhoto?.imageUrl);
+        } else {
+          // Nếu là object với cccd và license fields
+          console.log('📸 [ConfirmBooking] Photos là object, keys:', Object.keys(photosData));
+          hasCCCD = !!(
+            photosData.cccd?.photo_url || 
+            photosData.cccd?.url || 
+            photosData.cccdUrl ||
+            photosData.idCard?.photo_url ||
+            photosData.idCard?.url ||
+            photosData.idCardUrl
+          );
+          hasGPLX = !!(
+            photosData.license?.photo_url || 
+            photosData.license?.url || 
+            photosData.licenseUrl || 
+            photosData.gplx?.photo_url || 
+            photosData.gplx?.url ||
+            photosData.driverLicense?.photo_url ||
+            photosData.driverLicense?.url ||
+            photosData.driverLicenseUrl
+          );
+        }
+      } else {
+        console.warn('⚠️ [ConfirmBooking] Không nhận được photosData hoặc null');
+      }
+
+      console.log('✅ [ConfirmBooking] Kết quả kiểm tra - hasCCCD:', hasCCCD, 'hasGPLX:', hasGPLX);
+      return { hasCCCD, hasGPLX };
+    } catch (error) {
+      console.error("❌ [ConfirmBooking] Lỗi khi kiểm tra ảnh:", error);
+      // Nếu không fetch được, giả sử chưa có ảnh để yêu cầu upload
+      return { hasCCCD: false, hasGPLX: false };
+    }
+  };
+
+  // -----------------------
   // Handle booking
   // -----------------------
   const handleConfirmBooking = async () => {
@@ -55,6 +154,60 @@ const ConfirmBookingPage = () => {
       if (!token) {
         navigate("/login");
         return;
+      }
+
+      // ✅ Kiểm tra user đã upload ảnh chưa
+      const userId = user?.id || user?.userId || user?.data?.id;
+      console.log('👤 [ConfirmBooking] User object:', user);
+      console.log('👤 [ConfirmBooking] UserId:', userId);
+      
+      if (userId) {
+        // Kiểm tra từ API photos
+        const { hasCCCD, hasGPLX } = await checkUserPhotos(userId);
+        
+        // Fallback: Kiểm tra trong user object nếu API không trả về
+        let finalHasCCCD = hasCCCD;
+        let finalHasGPLX = hasGPLX;
+        
+        if (!hasCCCD) {
+          // Thử check trong user object
+          const userCCCD = user?.cccdImageUrl || user?.idCardUrl || user?.cccdUrl || 
+                          user?.photo_url || user?.photoUrl || 
+                          user?.data?.cccdImageUrl || user?.data?.idCardUrl;
+          if (userCCCD) {
+            console.log('✅ [ConfirmBooking] Tìm thấy CCCD trong user object');
+            finalHasCCCD = true;
+          }
+        }
+        
+        if (!hasGPLX) {
+          // Thử check trong user object
+          const userGPLX = user?.driverLicenseImageUrl || user?.driverLicenseUrl || user?.licenseUrl ||
+                          user?.license_url || user?.licenseUrl ||
+                          user?.data?.driverLicenseImageUrl || user?.data?.driverLicenseUrl;
+          if (userGPLX) {
+            console.log('✅ [ConfirmBooking] Tìm thấy GPLX trong user object');
+            finalHasGPLX = true;
+          }
+        }
+        
+        console.log('✅ [ConfirmBooking] Kết quả cuối cùng - hasCCCD:', finalHasCCCD, 'hasGPLX:', finalHasGPLX);
+        
+        if (!finalHasCCCD || !finalHasGPLX) {
+          const missingPhotos = [];
+          if (!finalHasCCCD) missingPhotos.push("CCCD/CMND");
+          if (!finalHasGPLX) missingPhotos.push("Bằng lái xe");
+          
+          const confirmMessage = `Bạn chưa upload ${missingPhotos.join(" và ")}.\n\nVui lòng upload ảnh trong trang cá nhân trước khi đặt xe.\n\nBạn có muốn chuyển đến trang cá nhân để upload ảnh không?`;
+          
+          if (window.confirm(confirmMessage)) {
+            navigate("/profile");
+          }
+          setLoading(false);
+          return;
+        }
+      } else {
+        console.warn('⚠️ [ConfirmBooking] Không tìm thấy userId, bỏ qua kiểm tra ảnh');
       }
 
       const car = bookingData.car;
@@ -121,6 +274,141 @@ const ConfirmBookingPage = () => {
     if (c.includes("đỏ") || c.includes("red")) return car4SeatRed;
     if (c.includes("trắng") || c.includes("white")) return car4SeatWhite;
     return car4SeatSilver;
+  };
+
+  // 🎫 Tính số ngày đặt xe (theo backend: dùng getDays, không ceil)
+  const calculateDays = (startTime, endTime) => {
+    if (!startTime || !endTime) return 0;
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    // Chỉ lấy phần ngày (bỏ giờ)
+    const startDate = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const endDate = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+    const diffTime = endDate - startDate;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  };
+
+  // 🎫 Kiểm tra cuối tuần (giống backend)
+  const isWeekend = (date) => {
+    const day = date.getDay();
+    return day === 6 || day === 0; // Saturday = 6, Sunday = 0
+  };
+
+  // 💰 Lấy giá thuê theo ngày của xe
+  const getDailyPrice = (car, isHoliday = false) => {
+    if (!car || !pricingRules || pricingRules.length === 0) return 0;
+
+    // Ưu tiên match theo pricingRuleId
+    let rule = null;
+    if (car.pricingRuleId != null) {
+      const targetId = Number(car.pricingRuleId);
+      rule = pricingRules.find(
+        (r) => Number(r.pricingRuleId) === targetId
+      );
+    }
+
+    // Fallback: match theo carmodel/variant/grade
+    if (!rule) {
+      const modelKey =
+        (car.carmodel || car.carModel || car.variant || car.grade || "").trim();
+      if (!modelKey) return 0;
+      const normalizedModelKey = modelKey.toUpperCase();
+      rule = pricingRules.find((r) => {
+        const ruleModel = (r.carmodel || "").trim().toUpperCase();
+        return ruleModel === normalizedModelKey;
+      });
+    }
+
+    if (!rule) return 0;
+    return isHoliday ? rule.holidayPrice : rule.dailyPrice;
+  };
+
+  // 💰 Tính giá thuê theo từng ngày (giống backend)
+  const calculateRentalPrice = (car, startTime, endTime) => {
+    if (!car || !startTime || !endTime || !pricingRules || pricingRules.length === 0) {
+      return { total: 0, days: 0, dailyPrice: 0, holidayPrice: 0 };
+    }
+
+    // Tìm pricing rule
+    let rule = null;
+    if (car.pricingRuleId != null) {
+      const targetId = Number(car.pricingRuleId);
+      rule = pricingRules.find((r) => Number(r.pricingRuleId) === targetId);
+    }
+    if (!rule) {
+      const modelKey = (car.carmodel || car.carModel || car.variant || car.grade || "").trim();
+      if (modelKey) {
+        const normalizedModelKey = modelKey.toUpperCase();
+        rule = pricingRules.find((r) => {
+          const ruleModel = (r.carmodel || "").trim().toUpperCase();
+          return ruleModel === normalizedModelKey;
+        });
+      }
+    }
+
+    if (!rule) return { total: 0, days: 0, dailyPrice: 0, holidayPrice: 0 };
+
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    const startDate = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const endDate = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+
+    let total = 0;
+    let days = 0;
+    let weekendDays = 0;
+
+    // Tính từng ngày (giống backend)
+    for (let d = new Date(startDate); d < endDate; d.setDate(d.getDate() + 1)) {
+      days++;
+      const currentDate = new Date(d);
+      if (isWeekend(currentDate) && rule.holidayPrice) {
+        total += rule.holidayPrice;
+        weekendDays++;
+      } else {
+        total += rule.dailyPrice;
+      }
+    }
+
+    return {
+      total: Math.round(total),
+      days,
+      dailyPrice: rule.dailyPrice,
+      holidayPrice: rule.holidayPrice || rule.dailyPrice,
+      weekendDays,
+    };
+  };
+
+  // 💰 Tính tổng tiền
+  const calculateTotalPrice = () => {
+    if (!bookingData?.startTime || !bookingData?.endTime || !car) {
+      return { days: 0, dailyPrice: 0, baseTotal: 0, discountPercent: 0, finalTotal: 0 };
+    }
+    
+    // Tính giá theo từng ngày (giống backend)
+    const priceInfo = calculateRentalPrice(car, bookingData.startTime, bookingData.endTime);
+    const baseTotal = priceInfo.total;
+
+    // Tính giảm giá nếu có mã coupon
+    let discountPercent = 0;
+    const couponCode = bookingData.orderData?.couponCode?.trim() || "";
+    if (couponCode === "EV20") discountPercent = 20;
+    else if (couponCode === "EV10") discountPercent = 10;
+
+    const finalTotal =
+      discountPercent > 0
+        ? Math.round(baseTotal * (1 - discountPercent / 100))
+        : baseTotal;
+
+    return {
+      days: priceInfo.days,
+      dailyPrice: priceInfo.dailyPrice,
+      holidayPrice: priceInfo.holidayPrice,
+      weekendDays: priceInfo.weekendDays,
+      baseTotal,
+      discountPercent,
+      finalTotal,
+    };
   };
 
   return (
@@ -366,22 +654,60 @@ const ConfirmBookingPage = () => {
                 </div>
               </div>
 
-              {/* Mã giảm giá nếu có */}
-              {bookingData.orderData?.couponCode && (
-                <div className="booking-coupon-section">
-                  <svg className="booking-info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 12c0 1.66-1.34 3-3 3h-4v-2h4c.55 0 1-.45 1-1s-.45-1-1-1h-4V8h4c1.66 0 3 1.34 3 3z" />
-                    <path d="M3 12c0-1.66 1.34-3 3-3h4v2H6c-.55 0-1 .45-1 1s.45 1 1 1h4v2H6c-1.66 0-3-1.34-3-3z" />
-                    <line x1="12" y1="8" x2="12" y2="16" />
-                  </svg>
-                  <div className="booking-info-content">
-                    <span className="booking-info-label">Mã giảm giá</span>
-                    <span className="booking-info-value booking-coupon-code">
-                      {bookingData.orderData.couponCode}
-                    </span>
+              {/* Mã giảm giá và giá tiền - cùng hàng */}
+              <div className="booking-price-coupon-row">
+                {/* Mã giảm giá nếu có */}
+                {bookingData.orderData?.couponCode && (
+                  <div className="booking-coupon-section">
+                    <svg className="booking-info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 12c0 1.66-1.34 3-3 3h-4v-2h4c.55 0 1-.45 1-1s-.45-1-1-1h-4V8h4c1.66 0 3 1.34 3 3z" />
+                      <path d="M3 12c0-1.66 1.34-3 3-3h4v2H6c-.55 0-1 .45-1 1s.45 1 1 1h4v2H6c-1.66 0-3-1.34-3-3z" />
+                      <line x1="12" y1="8" x2="12" y2="16" />
+                    </svg>
+                    <div className="booking-info-content">
+                      <span className="booking-info-label">Mã giảm giá</span>
+                      <span className="booking-info-value booking-coupon-code">
+                        {bookingData.orderData.couponCode}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+
+                {/* Giá tiền */}
+                {(() => {
+                  const priceInfo = calculateTotalPrice();
+                  if (!priceInfo || priceInfo.days <= 0 || priceInfo.dailyPrice <= 0) {
+                    return null;
+                  }
+
+                  const formatCurrency = (value) =>
+                    value.toLocaleString("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                      maximumFractionDigits: 0,
+                    });
+
+                  return (
+                    <div className="booking-price-section">
+                      <svg className="booking-info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="12" y1="1" x2="12" y2="23" />
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                      </svg>
+                      <div className="booking-info-content">
+                        <span className="booking-info-label">Tổng tiền</span>
+                        <span className="booking-info-value booking-price-total">
+                          {formatCurrency(priceInfo.finalTotal)}
+                        </span>
+                        {priceInfo.discountPercent > 0 && (
+                          <span className="booking-price-original">
+                            (Giá gốc: {formatCurrency(priceInfo.baseTotal)})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
           </div>
 

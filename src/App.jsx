@@ -47,6 +47,9 @@ import TrangHienThiXeTheoTram from './pages/TrangHienThiXeTheoTram.jsx';
 import ChiTietKhachHang from './pages/ChiTietKhachHang.jsx';
 import LichSuThue from './pages/LichSuThue.jsx';
 import ChiTietDonTrongAdmin from './pages/ChiTietDonTrongAdmin.jsx';
+import VehicleHistoryPage from './pages/VehicleHistoryPage.jsx';
+import IncidentReportPage from './pages/IncidentReportPage.jsx';
+import PricingPage from './pages/PricingPage.jsx';
 
 const HomePage = () => (
   <ScrollToSectionWrapper>
@@ -121,9 +124,9 @@ function App() {
             } />
             
              <Route path="/order-detail-cus/:orderId" element={
-              <ProtectedRoute>
+              
                 <OrderDetailCusPage />
-              </ProtectedRoute>
+              
             } />
             
             <Route path="/booking-7seater" element={
@@ -132,14 +135,14 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="/confirm-booking" element={
-              <ProtectedRoute>
+            
                 <ConfirmBookingPage />
-              </ProtectedRoute>
+              
             } />
             <Route path="/my-bookings" element={
-              <ProtectedRoute>
+             
                 <MyBookingsPage />
-              </ProtectedRoute>
+              
             } />
             <Route path="/payment/:orderId" element={
               <ProtectedRoute>
@@ -164,6 +167,7 @@ function App() {
                 <ProfilePage />
               </ProtectedRoute>
             } />
+            <Route path="/pricing" element={<PricingPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
             <Route path="/login" element={<LoginPage />} />
@@ -190,10 +194,7 @@ function App() {
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="dashboard" element={<AdminDashBoardPage />} />
               <Route path="employees" element={<EmployeesPage />} />
-
-
-              
-
+             
               <Route path="quanlyxetaitram" element={<QuanLiXeTaiTram />} />
               <Route path="locations" element={<StationManagement />} />
               <Route path="customers" element={<CustomerManagement />} />
@@ -203,6 +204,8 @@ function App() {
               <Route path="lichsu-thue/:userId" element={<LichSuThue/>}/>
               <Route path="order-detail/:orderId" element={<ChiTietDonTrongAdmin/>}/>
               <Route path="banggia" element={<AdminBangGiaPage/>}/>
+              <Route path="vehicle-history/:vehicleId" element={<VehicleHistoryPage/>}/>
+              <Route path="incident-reports" element={<IncidentReportPage/>}/>
             </Route>
           </Routes >
         </LayoutWrapper >
