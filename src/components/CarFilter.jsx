@@ -557,7 +557,6 @@ const CarFilter = ({ selectedBranch, vehicles: propsVehicles = [], gradeFilter: 
                                                 e.target.src = '/src/assets/Tes4/red.jpg';
                                             }}
                                         />
-                                        <div className="car-status-badge">{car.status || 'Available'}</div>
                                     </div>
 
                                     {/* Car Info */}

@@ -550,6 +550,7 @@ export default function OrderDetailPage() {
     const statusUpper = String(status).toUpperCase();
     const statusMap = {
       "PENDING": "Chờ xử lý",
+      "PENDING_DEPOSIT": "CHỜ ĐẶT CỌC",
       "DEPOSITED": "Đã đặt cọc",
       "BOOKED": "Đã đặt",
       "RENTAL": "Đang thuê",
@@ -1438,7 +1439,7 @@ export default function OrderDetailPage() {
                       fontSize: "13px", 
                       fontStyle: "italic" 
                     }}>
-                      ⏳ Đang chờ khách hàng thanh toán. Nút xác nhận sẽ hiển thị sau khi khách hàng tạo thanh toán tiền mặt.
+                      ⏳ Đang chờ khách hàng thanh toán.
                     </p>
                   </div>
                 )}

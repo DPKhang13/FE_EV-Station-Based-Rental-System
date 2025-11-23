@@ -122,9 +122,9 @@ function App() {
             } />
             
              <Route path="/order-detail-cus/:orderId" element={
-              <ProtectedRoute>
+            
                 <OrderDetailCusPage />
-              </ProtectedRoute>
+              
             } />
             
             <Route path="/booking-7seater" element={

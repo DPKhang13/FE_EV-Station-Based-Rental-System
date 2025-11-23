@@ -769,16 +769,15 @@
 
 /* Return Modal - Specific styles với higher specificity */
 .order-detail-page .modal-overlay .modal{
-  background: #000000 !important;
+  background: #FFFFFF !important;
   width: 480px;
   max-width: 90vw;
   padding: 32px;
   border-radius: 0;
-  border: 2px solid #DC0000 !important;
+  border: 2px solid #000000 !important;
   box-shadow: 
-    0 20px 60px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(220, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 20px 60px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(0, 0, 0, 0.1);
   animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
 }
@@ -797,7 +796,7 @@
   margin: 0 0 24px 0;
   font-size: 1.5rem;
   font-weight: 800;
-  color: #FFFFFF !important;
+  color: #000000 !important;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   border-bottom: 2px solid #DC0000;
@@ -808,11 +807,11 @@
   margin: 12px 0;
   font-size: 14px;
   line-height: 1.6;
-  color: #FFFFFF !important;
+  color: #000000 !important;
 }
 
 .order-detail-page .modal-overlay .modal p strong {
-  color: #FFFFFF !important;
+  color: #000000 !important;
   font-weight: 700;
   min-width: 140px;
   display: inline-block;
@@ -823,7 +822,7 @@
   margin-top: 20px;
   margin-bottom: 8px;
   font-weight: 700;
-  color: #FFFFFF !important;
+  color: #000000 !important;
   font-size: 14px;
   letter-spacing: 0.3px;
 }
@@ -832,10 +831,10 @@
   width: 100%;
   padding: 12px 16px;
   margin-top: 6px;
-  border: 2px solid #DC0000 !important;
+  border: 2px solid #000000 !important;
   border-radius: 0;
-  background: #1a1a1a !important;
-  color: #FFFFFF !important;
+  background: #FFFFFF !important;
+  color: #000000 !important;
   font-size: 14px;
   transition: all 0.3s ease;
   font-family: inherit;
@@ -843,9 +842,9 @@
 
 .order-detail-page .modal-overlay .modal input:focus {
   outline: none;
-  border-color: #FF0000 !important;
-  box-shadow: 0 0 0 3px rgba(220, 0, 0, 0.3);
-  background: #2a2a2a !important;
+  border-color: #DC0000 !important;
+  box-shadow: 0 0 0 3px rgba(220, 0, 0, 0.1);
+  background: #FFFFFF !important;
 }
 
 .order-detail-page .modal-overlay .modal input::placeholder {

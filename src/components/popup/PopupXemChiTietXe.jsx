@@ -150,8 +150,10 @@ const PopupXemChiTietXe = ({ vehicleId, onClose, onReload }) => {
             </div>
 
 
-            {/* Thông tin đặt xe (nếu có) - Chỉ hiển thị khi trạng thái xe không phải "Có sẵn" */}
-            {vehicleDetail.hasBooking && vehicleDetail.status?.toUpperCase() !== "AVAILABLE" && (
+            {/* Thông tin đặt xe (nếu có) - Chỉ hiển thị khi trạng thái xe không phải "Có sẵn" hoặc "Bảo trì" */}
+            {vehicleDetail.hasBooking && 
+             vehicleDetail.status?.toUpperCase() !== "AVAILABLE" && 
+             vehicleDetail.status?.toUpperCase() !== "MAINTENANCE" && (
               <div className="info-section booking-section">
                 <h3 className="section-title">Thông tin đặt xe hiện tại</h3>
                 <div className="info-grid">
@@ -207,8 +209,10 @@ const PopupXemChiTietXe = ({ vehicleId, onClose, onReload }) => {
               </div>
             )}
 
-            {/* Ghi chú - Chỉ hiển thị khi trạng thái xe không phải "Có sẵn" */}
-            {vehicleDetail.bookingNote && vehicleDetail.status?.toUpperCase() !== "AVAILABLE" && (
+            {/* Ghi chú - Chỉ hiển thị khi trạng thái xe không phải "Có sẵn" hoặc "Bảo trì" */}
+            {vehicleDetail.bookingNote && 
+             vehicleDetail.status?.toUpperCase() !== "AVAILABLE" && 
+             vehicleDetail.status?.toUpperCase() !== "MAINTENANCE" && (
               <div className="info-section">
                 <h3 className="section-title">Ghi chú</h3>
                 <div className="note-box">
