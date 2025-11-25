@@ -60,7 +60,7 @@ const QuanLyXePage = () => {
       hinhAnh: v.image,
     };
   })
-  .sort((a, b) => a.id - b.id); // 🧩 Sắp xếp tăng dần theo id
+  .sort((a, b) => a.id - b.id); //  Sắp xếp tăng dần theo id
 
 
 
