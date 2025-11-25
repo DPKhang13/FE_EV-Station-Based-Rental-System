@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useContext, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { orderService, authService } from "../services";
 import "./XacThucKhachHang.css";
 import PopupXacThucHoSoCaNhan from "../components/staff/PopupXacThucHoSoCaNhan";
@@ -12,6 +12,7 @@ const fmtRange = (s, e) => `${fmtVN(s)} - ${fmtVN(e)}`;
 export default function VerifyCustomerPage() {
   const { user } = useContext(AuthContext);
   const nav = useNavigate();
+  const location = useLocation();
 
   const [orders, setOrders] = useState([]);
   const [stations, setStations] = useState([]); // ⭐ Danh sách trạm
@@ -24,9 +25,10 @@ export default function VerifyCustomerPage() {
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState(null);
   const [verifyLoading, setVerifyLoading] = useState(false);
+  
 
   // 🧾 Lấy đơn hàng theo trạm
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       const res = await orderService.getPendingOrders();
       const data = res.data || res || [];
@@ -39,10 +41,10 @@ export default function VerifyCustomerPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.stationId]);
 
   // 🚉 Fetch toàn bộ trạm
-  const fetchStations = async () => {
+  const fetchStations = useCallback(async () => {
     try {
       const res = await fetch("http://localhost:8080/api/rentalstation/getAll");
       const data = await res.json();
@@ -50,21 +52,54 @@ export default function VerifyCustomerPage() {
     } catch (err) {
       console.error("❌ Không thể tải danh sách trạm:", err);
     }
-  };
+  }, []);
+
+  // 👉 Xem chi tiết đơn hàng - Phải định nghĩa trước khi sử dụng trong useEffect
+  const handleViewOrderDetail = useCallback((orderId, userId) => {
+    console.log('📋 Navigating to order detail:', { orderId, userId });
+    nav(`/staff/chitiet/${orderId}/${userId}`);
+  }, [nav]);
 
   useEffect(() => {
-    fetchOrders();
+    // ✅ Chạy lại khi user data ready (có stationId) hoặc location thay đổi
+    if (user?.stationId) {
+      console.log('👤 User ready with stationId:', user.stationId);
+      fetchOrders();
+    } else {
+      // ✅ Nếu không có stationId, vẫn set loading = false để hiển thị trang
+      console.log('⚠️ User chưa có stationId, không thể tải đơn hàng');
+      setLoading(false);
+    }
     fetchStations(); // ⭐ Tải trạm khi mở trang
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user?.stationId, fetchOrders, fetchStations]);
+
+  // ✅ Tự động mở chi tiết đơn hàng khi navigate từ GiaoTraXe
+  useEffect(() => {
+    const autoOpenOrderDetail = location.state?.autoOpenOrderDetail;
+    const userId = location.state?.userId;
+    
+    if (autoOpenOrderDetail && orders.length > 0 && userId) {
+      const orderId = typeof autoOpenOrderDetail === 'string' || typeof autoOpenOrderDetail === 'number' 
+        ? autoOpenOrderDetail 
+        : location.state?.autoOpenOrderDetail;
+      
+      if (orderId && userId) {
+        console.log('🎯 Auto opening order detail:', { orderId, userId });
+        // Không cần delay, orders đã ready
+        handleViewOrderDetail(orderId, userId);
+      }
+    }
+  }, [location.state?.autoOpenOrderDetail, location.state?.userId, orders.length, handleViewOrderDetail]);
 
   // 🔍 Tìm kiếm
   const filtered = orders.filter((x) => {
-    if (x.status === "COMPLETED") return false;
-    const t = search.toLowerCase();
-    return [x.customerName, x.phone, x.orderId]
-      .some((f) => (f || "").toLowerCase().includes(t));
-  });
+  if (!search.trim()) return true;
+
+  const t = search.toLowerCase();
+  return [x.customerName, x.phone, x.orderId]
+    .some((f) => (f || "").toLowerCase().includes(t));
+});
+
 
   // 👤 Xác thực hồ sơ
   const handleOpenProfile = async (row) => {
@@ -110,18 +145,37 @@ export default function VerifyCustomerPage() {
     }
   };
 
-  // 👉 Xem chi tiết đơn hàng
-  const handleViewOrderDetail = (orderId, userId) => {
-    nav(`/staff/chitiet/${orderId}/${userId}`);
-  };
-
-  if (loading)
+  if (loading) {
     return (
       <div className="verify-container">
         <h1 className="verify-title">Xác thực khách hàng</h1>
         <p style={{ textAlign: "center", padding: 40 }}>Đang tải dữ liệu...</p>
       </div>
     );
+  }
+
+  // ✅ Hiển thị thông báo nếu không có user hoặc stationId
+  if (!user) {
+    return (
+      <div className="verify-container">
+        <h1 className="verify-title">Xác thực khách hàng</h1>
+        <p style={{ textAlign: "center", padding: 40, color: "#dc2626" }}>
+          ⚠️ Vui lòng đăng nhập để tiếp tục
+        </p>
+      </div>
+    );
+  }
+
+  if (!user?.stationId) {
+    return (
+      <div className="verify-container">
+        <h1 className="verify-title">Xác thực khách hàng</h1>
+        <p style={{ textAlign: "center", padding: 40, color: "#dc2626" }}>
+          ⚠️ Tài khoản của bạn chưa được gán trạm. Vui lòng liên hệ quản trị viên.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -134,6 +188,7 @@ export default function VerifyCustomerPage() {
               Kiểm tra giấy tờ và xử lý hồ sơ đặt xe
             </p>
 
+            {/* 🔍 Tìm kiếm */}
             <input
               className="verify-search"
               type="text"

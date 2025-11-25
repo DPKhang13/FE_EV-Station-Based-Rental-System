@@ -22,8 +22,6 @@ const MyBookingsPage = () => {
 
 
     useEffect(() => {
-        window.scrollTo({ top: 0, behavior: 'instant' });
-
         const token = localStorage.getItem('accessToken');
         const user = localStorage.getItem('user');
 
@@ -33,11 +31,11 @@ const MyBookingsPage = () => {
         });
 
         if (!token || !user) {
-            alert('Please login to view your bookings');
-            navigate('/login');
+            navigate('/login', { replace: true });
             return;
         }
 
+        window.scrollTo({ top: 0, behavior: 'instant' });
         loadMyBookings();
 
         if (location.state?.highlightOrderId) {
