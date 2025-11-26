@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { authService, orderService } from "../services";
+import { authService, orderService, vehicleService } from "../services";
 import api from "../services/api";
 import "./OrderDetailPage.css";
 
@@ -73,10 +73,8 @@ export default function OrderDetailPage() {
     try {
       const preview = await orderService.getReturnPreview(orderId);
       const status = String(preview?.status || "").toUpperCase();
-      console.log("📋 Order status:", status);
       setOrderStatus(status); // Lưu order status vào state
     } catch (err) {
-      console.warn("⚠️ Cannot fetch order status:", err);
       setOrderStatus("");
     }
   }, [orderId]);
@@ -103,14 +101,11 @@ export default function OrderDetailPage() {
 
       if (rentalOrder) {
         const rentalOrderId = rentalOrder.orderId || rentalOrder.order_id;
-        console.log("🔍 [Check Rental] Xe đang được thuê bởi orderId:", rentalOrderId);
         setCurrentRentalOrderId(String(rentalOrderId));
       } else {
-        console.log("✅ [Check Rental] Xe không được thuê bởi order nào");
         setCurrentRentalOrderId(null);
       }
     } catch (err) {
-      console.warn("⚠️ Cannot check current rental order:", err);
       setCurrentRentalOrderId(null);
     }
   }, []);
@@ -137,7 +132,6 @@ export default function OrderDetailPage() {
       const res = await fetch("http://localhost:8080/api/order-services/price-list");
       const data = await res.json();
       const priceListData = Array.isArray(data) ? data : (data.data || []);
-      console.log("✅ [Price List] Loaded:", priceListData);
       // Không cần setPriceList vì fetchServiceListByType sẽ fetch lại khi cần
     } catch (err) {
       console.error(" Lỗi khi tải price list:", err);
@@ -161,7 +155,6 @@ export default function OrderDetailPage() {
         String(item.serviceType || "").toUpperCase() === String(serviceType).toUpperCase()
       );
       setSelectedServiceList(filtered);
-      console.log("✅ [Service List] Loaded for type", serviceType, ":", filtered);
     } catch (err) {
       console.error("❌ [Fetch Service List] Error:", err);
       setSelectedServiceList([]);
@@ -177,7 +170,6 @@ export default function OrderDetailPage() {
     const details = await res.json();
     const detailsArray = Array.isArray(details) ? details : (details?.data || []);
     setOrderDetails(detailsArray);
-    console.log("📋 [Order Details] Refetched:", detailsArray);
 
     const first = details?.[0];
    
@@ -323,8 +315,6 @@ export default function OrderDetailPage() {
         description: service.description.trim()
       };
 
-      console.log("🚀 [Add Service] Sending request:", payload);
-
       const response = await fetch("http://localhost:8080/api/order-services", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -336,8 +326,7 @@ export default function OrderDetailPage() {
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
-      const result = await response.json();
-      console.log("✅ [Add Service] Success:", result);
+      await response.json();
 
       showToast("success", "➕ Đã thêm dịch vụ!");
       setService({ serviceType: "", cost: 0, description: "" });
@@ -410,6 +399,32 @@ export default function OrderDetailPage() {
     }
   };
 
+  const handleSuggestAlternativeVehicle = () => {
+    navigate("/staff/quan-ly-giao-nhan-xe");
+  };
+
+  const renderVehicleRentedWarning = (conflictOrderId) => (
+    <div className="handover-warning handover-warning-with-actions">
+      <p>
+        ⚠️ Xe này đang được thuê bởi đơn hàng #{conflictOrderId}. Chỉ đơn hàng đang thuê xe mới có thể trả xe.
+      </p>
+      <div className="handover-warning-actions">
+        <button
+          className="btn btn-suggest-vehicle"
+          onClick={handleSuggestAlternativeVehicle}
+        >
+          Thay thế xe tương tự
+        </button>
+        <button
+          className="btn btn-danger"
+          onClick={handleCancelHandover}
+          disabled={handoverLoading}
+        >
+          Hủy đơn
+        </button>
+      </div>
+    </div>
+  );
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -438,7 +453,6 @@ export default function OrderDetailPage() {
         const details = resDetails || [];
         const detailsArray = Array.isArray(details) ? details : (details?.data || []);
         setOrderDetails(detailsArray);
-        console.log("📋 [Order Details] Loaded:", detailsArray);
 
         const first = detailsArray[0];
         // ✅ Dùng thông tin từ order details thay vì gọi API vehicles/get
@@ -459,30 +473,7 @@ export default function OrderDetailPage() {
           // ⭐⭐ KIỂM TRA ĐƠN ĐANG THUÊ XE ⭐⭐
           await checkCurrentRentalOrder(first.vehicleId);
           
-          // ⭐⭐ TỐI ƯU: Chỉ check other orders khi thực sự cần (lazy load) ⭐⭐
-          // Thay vì gọi getAll() ngay, chỉ check khi order status là RENTAL hoặc có dấu hiệu cần check
-          // Hoặc có thể bỏ qua check này nếu không quan trọng
-          // Nếu cần check, có thể tạo API endpoint mới chỉ lấy orders của vehicleId cụ thể
-          setOtherOrders([]); // Tạm thời bỏ qua để tăng tốc độ load
-          
-          // ⚠️ Nếu thực sự cần check other orders, có thể gọi sau khi page đã load xong:
-          // setTimeout(async () => {
-          //   try {
-          //     const allOrders = await orderService.getAll();
-          //     const ordersData = Array.isArray(allOrders) ? allOrders : (allOrders?.data || []);
-          //     const otherRentalOrders = ordersData.filter(order => {
-          //       const orderVehicleId = order.vehicleId || order.vehicle_id;
-          //       const orderStatus = String(order.status || "").toUpperCase();
-          //       const isSameVehicle = orderVehicleId && Number(orderVehicleId) === Number(first.vehicleId);
-          //       const isRental = orderStatus === "RENTAL";
-          //       const isNotCurrentOrder = String(order.orderId || order.order_id) !== String(orderId);
-          //       return isSameVehicle && isRental && isNotCurrentOrder;
-          //     });
-          //     setOtherOrders(otherRentalOrders);
-          //   } catch (err) {
-          //     console.warn("⚠️ Cannot fetch other orders:", err);
-          //   }
-          // }, 1000);
+          setOtherOrders([]);
         }
       } catch (err) {
         console.error(err);
@@ -522,8 +513,6 @@ export default function OrderDetailPage() {
       
       // ⭐⭐ KHI APPROVE PAYMENT TYPE 2: Backend sẽ tạo PICKUP detail trong finalSuccess() ⭐⭐
       // Cần refresh order details để hiển thị PICKUP detail mới
-      console.log("🔄 [Approve Payment] Backend đã tạo PICKUP detail. Refreshing order details...");
-      
       // ✅ Gọi các API song song để tăng tốc độ
       await Promise.all([
         fetchPayments(),
@@ -532,12 +521,10 @@ export default function OrderDetailPage() {
       ]);
       
       // ⭐⭐ ĐỢI MỘT CHÚT RỒI REFRESH LẠI ĐỂ ĐẢM BẢO PICKUP DETAIL ĐƯỢC HIỂN THỊ ⭐⭐
-      console.log("⏳ [Approve Payment] Waiting 500ms then refreshing again to ensure PICKUP detail is visible...");
       await new Promise(resolve => setTimeout(resolve, 500));
       
       // Refresh lại một lần nữa để đảm bảo PICKUP detail được hiển thị
       await refetchDetails();
-      console.log("✅ [Approve Payment] Second refresh completed. PICKUP detail should now be visible in the table.");
       
     } catch (err) {
       console.error("Lỗi xác nhận thanh toán:", err);
@@ -750,6 +737,20 @@ export default function OrderDetailPage() {
     (d) => String(d.status).toUpperCase() === "PENDING"
   );
 
+  const hasPendingCashPaymentGlobal = payments.some((p) => {
+    const method = String(p.method || "").toUpperCase();
+    const status = String(p.status || "").toUpperCase();
+    return method === "CASH" && status === "PENDING";
+  });
+
+  const hasPendingServiceDetail = orderDetails.some((d) => {
+    const type = String(d.type || "").toUpperCase();
+    const status = String(d.status || "").toUpperCase();
+    return (type === "SERVICE" || type === "SERVICE_SERVICE") && status === "PENDING";
+  });
+
+  const isOrderCompleted = String(orderStatus || "").toUpperCase() === "COMPLETED";
+
   if (loading)
     return (
       <div className="order-detail-page">
@@ -949,10 +950,13 @@ export default function OrderDetailPage() {
           <button 
             className="btn btn-add-service" 
             onClick={() => {
+              if (isOrderCompleted) return;
               setService({ serviceType: "", cost: 0, description: "" });
               setSelectedServiceList([]);
               setShowServiceModal(true);
             }}
+            disabled={isOrderCompleted}
+            title={isOrderCompleted ? "Đơn hàng đã hoàn tất, không thể thêm dịch vụ." : undefined}
           >
             ➕ Thêm dịch vụ
           </button>
@@ -1052,31 +1056,6 @@ export default function OrderDetailPage() {
           }
           
           // Debug log cho TẤT CẢ details - LOG RÕ RÀNG
-          console.log("💰 [Detail Check - NEW LOGIC]:", {
-            detailId: detail.detailId,
-            type: detail.type,
-            isService,
-            status,
-            methodPayment: detail.methodPayment,
-            paymentType,
-            foundPayment: foundPayment ? {
-              paymentId: foundPayment.paymentId,
-              method: foundPayment.method,
-              status: foundPayment.status,
-              paymentType: foundPayment.paymentType
-            } : null,
-            displayMethodPayment,
-            hasPendingCashPayment,
-            showConfirmButton,
-            paymentsCount: payments.length,
-            allPayments: payments.map(p => ({ 
-              paymentId: p.paymentId, 
-              method: p.method, 
-              status: p.status, 
-              paymentType: p.paymentType 
-            }))
-          });
-          
           // Xác định loại dịch vụ
           const getTypeLabel = (type) => {
             if (type === "RENTAL") return "Thuê Xe";
@@ -1281,7 +1260,6 @@ export default function OrderDetailPage() {
             </div>
           );
         }
-        console.log("❌ [Service Banner] NOT RENDERING - unpaidServices:", unpaidServices.length, "totalAmount:", totalUnpaidServiceAmount);
         return null;
       })()}
 
@@ -1295,16 +1273,6 @@ export default function OrderDetailPage() {
         const shouldShowWaitingBanner = hasWaitingDetail || vehicleRentedByOther;
         
         // Debug log
-        console.log("🔍 [WAITING Banner Check]:", {
-          hasWaitingDetail,
-          vehicleRentedByOther,
-          shouldShowWaitingBanner,
-          vehicleStatus: vehicle?.status,
-          otherOrdersCount: otherOrders.length,
-          waitingDetail: waitingDetail ? { detailId: waitingDetail.detailId, type: waitingDetail.type, status: waitingDetail.status } : null,
-          allDetails: orderDetails.map(d => ({ detailId: d.detailId, type: d.type, status: d.status }))
-        });
-        
         return shouldShowWaitingBanner ? (
           <div className="info-card waiting-banner">
             <div className="waiting-banner-content-flex">
@@ -1350,19 +1318,22 @@ export default function OrderDetailPage() {
             // ⭐ NEW RULE: Nếu xe RENTAL bởi order khác → không được bàn giao
 
             
-if (otherOrders.length > 0) {
-  const otherRental = otherOrders.find(o => 
-    String(o.status).toUpperCase() === "RENTAL"
-  );
-
-  if (otherRental && String(otherRental.orderId) !== String(orderId)) {
-    return (
-      <div className="handover-warning">
-        ⚠️ Xe này đang được sử dụng bởi đơn hàng #{otherRental.orderId}.  
-        Không thể bàn giao cho đơn hàng hiện tại.
-      </div>
+  if (otherOrders.length > 0) {
+    const otherRental = otherOrders.find(o => 
+      String(o.status).toUpperCase() === "RENTAL"
     );
+
+    if (otherRental && String(otherRental.orderId) !== String(orderId)) {
+      return renderVehicleRentedWarning(otherRental.orderId);
+    }
   }
+
+if (hasPendingServiceDetail) {
+  return (
+    <div className="handover-warning">
+      ⚠️ Vui lòng chờ khách hàng thanh toán phí phát sinh và dịch vụ trước khi hoàn tất bàn giao.
+    </div>
+  );
 }
 
             // ⭐⭐ KIỂM TRA ĐẦU TIÊN: Nếu đơn đã hoàn thành (COMPLETED) → hiển thị thông báo ⭐⭐
@@ -1380,9 +1351,6 @@ if (depositedOK && !pickupOK && !fullOK) {
 }
 
             if (isCompleted) {
-              console.log("✅ [Handover Check] Đơn đã hoàn thành:", {
-                orderStatus
-              });
               return (
                 <p className="handover-status-success">
                   ✅ Đơn hàng đã hoàn thành. Khách hàng đã trả xe.
@@ -1391,61 +1359,21 @@ if (depositedOK && !pickupOK && !fullOK) {
             }
             
             // ⭐⭐ DEBUG: Log order status để kiểm tra ⭐⭐
-            console.log("🔍 [Handover Logic Check]:", {
-              orderStatus,
-              isAwaiting,
-              isPaid,
-              isCompleted,
-              isPendingFinalPayment,
-              orderDetailsCount: orderDetails.length,
-              paymentsCount: payments.length,
-              depositedOK,
-              pickupOK,
-              fullOK,
-              allDetailsStatus: orderDetails.map(d => ({ type: d.type, status: d.status }))
-            });
-            
             // ⭐⭐ KIỂM TRA PAID TRƯỚC → Hiển thị nút "Xác nhận hoàn tất đơn hàng" ⭐⭐
             // PAID: đã thanh toán hết dịch vụ → hiển thị nút hoàn tất
             // AWAITING: đã thanh toán đặt cọc, chờ nhận xe → hiển thị nút bàn giao (không phải hoàn tất)
             const orderStatusUpper = String(orderStatus || "").toUpperCase();
-            const isPaidStatus = orderStatusUpper === "PAID";
+            const completionEligibleStatuses = ["PAID", "CHECKING", "PENDING_FINAL_PAYMENT"];
+            const isReadyForCompletion =
+              completionEligibleStatuses.includes(orderStatusUpper) &&
+              !hasPendingServiceDetail &&
+              !hasPendingCashPaymentGlobal;
             
-            if (isPaidStatus) {
-              // Kiểm tra có payment CASH PENDING không (theo logic backend)
-              const hasCashPending = payments.some(p => 
-                String(p.method || "").toUpperCase() === "CASH" && 
-                String(p.status || "").toUpperCase() === "PENDING"
-              );
-              
-              // Kiểm tra có service chưa thanh toán không
-              const unpaidServices = orderDetails.filter(d => {
-                const type = String(d.type || "").toUpperCase();
-                const status = String(d.status || "").toUpperCase();
-                const isServiceType = type === "SERVICE" || type === "SERVICE_SERVICE";
-                const isUnpaid = status === "PENDING";
-                return isServiceType && isUnpaid;
-              });
-              
-              // Debug log
-              console.log("🔍 [AWAITING/PAID Logic]:", {
-                hasCashPending,
-                unpaidServicesCount: unpaidServices.length,
-                unpaidServices: unpaidServices.map(s => ({ detailId: s.detailId, type: s.type, status: s.status })),
-                willShowCompleteButton: !(hasCashPending && unpaidServices.length > 0)
-              });
-              
-              // ⭐⭐ ĐỐI VỚI PAID: Nếu có CASH PENDING VÀ có service chưa thanh toán → không hiển thị nút hoàn tất (banner đã có nút xác nhận) ⭐⭐
-              if (hasCashPending && unpaidServices.length > 0) {
-                console.log("❌ [PAID] Không hiển thị nút hoàn tất - có CASH PENDING và unpaid services");
-                return null; // Banner đã hiển thị nút xác nhận thanh toán dịch vụ
-              }
-              
-              // ⭐⭐ PAID: Nếu không còn CASH PENDING hoặc không còn service chưa thanh toán → hiển thị nút "Xác nhận hoàn tất đơn hàng" ⭐⭐
-              console.log("✅ [PAID] Hiển thị nút hoàn tất đơn hàng");
-              
-              // Thông báo cho PAID
-              const statusMessage = "✅ Đơn hàng đã thanh toán đầy đủ (bao gồm dịch vụ) và đã nhận xe. Vui lòng xác nhận hoàn tất đơn hàng.";
+            if (isReadyForCompletion) {
+              const statusMessage =
+                orderStatusUpper === "PAID"
+                  ? "✅ Đơn hàng đã thanh toán đầy đủ (bao gồm dịch vụ) và đã nhận xe. Vui lòng xác nhận hoàn tất đơn hàng."
+                  : "✅ Khách hàng đã trả xe đúng hạn, không phát sinh phí. Vui lòng xác nhận hoàn tất đơn hàng.";
               
               return (
                 <div className="handover-info-box-content">
@@ -1511,9 +1439,14 @@ if (pickupDetail && vehicleStatus !== "RENTAL") {
     const isVehicleRentedByOther = currentRentalOrderId && String(currentRentalOrderId) !== String(orderId);
     
     if (isVehicleRentedByOther) {
+        return renderVehicleRentedWarning(currentRentalOrderId);
+    }
+
+    const readyStatuses = ["BOOKED", "AVAILABLE"];
+    if (!readyStatuses.includes(vehicleStatus)) {
         return (
             <div className="handover-warning">
-                ⚠️ Xe này đang được thuê bởi đơn hàng #{currentRentalOrderId}. Không thể bàn giao cho đơn hàng hiện tại. Vui lòng đợi xe được trả về và có trạng thái BOOKED.
+                ⚠️ Xe đang ở trạng thái {getVehicleStatusText(vehicleStatus)?.toLowerCase() || "chưa sẵn sàng"}. Vui lòng chờ xe hoàn tất kiểm tra trước khi bàn giao.
             </div>
         );
     }
@@ -1545,11 +1478,7 @@ if (vehicleStatus === "RENTAL") {
     const isCurrentOrderRenting = !currentRentalOrderId || String(currentRentalOrderId) === String(orderId);
     
     if (!isCurrentOrderRenting) {
-        return (
-            <div className="handover-warning">
-                ⚠️ Xe này đang được thuê bởi đơn hàng #{currentRentalOrderId}. Chỉ đơn hàng đang thuê xe mới có thể trả xe.
-            </div>
-        );
+        return renderVehicleRentedWarning(currentRentalOrderId);
     }
     
     return (
@@ -1578,11 +1507,7 @@ if (vehicleStatus === "RENTAL") {
               
               if (canHandOver && vehicleReady) {
                 if (isVehicleRentedByOther) {
-                  return (
-                    <div className="handover-warning">
-                      ⚠️ Xe này đang được thuê bởi đơn hàng #{currentRentalOrderId}. Không thể bàn giao cho đơn hàng hiện tại. Vui lòng đợi xe được trả về và có trạng thái BOOKED.
-                    </div>
-                  );
+                  return renderVehicleRentedWarning(currentRentalOrderId);
                 }
                 
                 return (
@@ -1606,6 +1531,15 @@ if (vehicleStatus === "RENTAL") {
                 );
               }
               
+if (canHandOver && !vehicleReady && !isVehicleRentedByOther) {
+  const humanStatus = getVehicleStatusText(vehicleStatus) || "chưa sẵn sàng";
+  return (
+    <div className="handover-warning">
+      ⚠️ Xe đang ở trạng thái {humanStatus.toLowerCase()}. Vui lòng chờ xe sẵn sàng trước khi bàn giao.
+    </div>
+  );
+}
+
               // Nếu chưa đủ điều kiện bàn giao - hiển thị banner
               // Kiểm tra xem có dịch vụ chưa thanh toán không
               const unpaidServices = orderDetails.filter(d => {
@@ -1664,11 +1598,7 @@ if (vehicleStatus === "RENTAL") {
               const isCurrentOrderRenting = !currentRentalOrderId || String(currentRentalOrderId) === String(orderId);
               
               if (!isCurrentOrderRenting) {
-                return (
-                  <div className="handover-warning">
-                    ⚠️ Xe này đang được thuê bởi đơn hàng #{currentRentalOrderId}. Chỉ đơn hàng đang thuê xe mới có thể trả xe.
-                  </div>
-                );
+                return renderVehicleRentedWarning(currentRentalOrderId);
               }
               
               return (
@@ -1699,11 +1629,7 @@ if (vehicleStatus === "RENTAL") {
             
             if (canHandOver && vehicleReady && !isWaiting) {
               if (isVehicleRentedByOther) {
-                return (
-                  <div className="handover-warning">
-                    ⚠️ Xe này đang được thuê bởi đơn hàng #{currentRentalOrderId}. Không thể bàn giao cho đơn hàng hiện tại. Vui lòng đợi xe được trả về và có trạng thái BOOKED.
-                  </div>
-                );
+                return renderVehicleRentedWarning(currentRentalOrderId);
               }
               
               return (
@@ -1724,6 +1650,15 @@ if (vehicleStatus === "RENTAL") {
                     ❌ Hủy bàn giao
                   </button>
                 </>
+              );
+            }
+
+            if (canHandOver && !vehicleReady && !isWaiting && !isVehicleRentedByOther) {
+              const humanVehicleStatus = getVehicleStatusText(backendVehicleStatusForHandover) || "chưa sẵn sàng";
+              return (
+                <div className="handover-warning">
+                  ⚠️ Xe đang ở trạng thái {humanVehicleStatus.toLowerCase()}. Vui lòng chờ xe sẵn sàng trước khi bàn giao.
+                </div>
               );
             }
             

@@ -125,15 +125,22 @@
     text-transform: uppercase;
     color: #FFFFFF;
     font-family: 'Helvetica Neue', Arial, sans-serif;
+<<<<<<< HEAD
+    border-bottom: none !important;
+=======
     position: relative;
     text-decoration: none;
     border-bottom: none;
+>>>>>>> fd5b3dfa058c80ca57c240dc1f512aa29e93ad93
 }
 
 .showcase-model::after,
 .showcase-model::before {
     display: none !important;
+<<<<<<< HEAD
+=======
     content: none !important;
+>>>>>>> fd5b3dfa058c80ca57c240dc1f512aa29e93ad93
 }
 
 .showcase-title {
@@ -145,7 +152,33 @@
     text-transform: uppercase;
     color: #FFFFFF;
     font-family: 'Helvetica Neue', Arial, sans-serif;
+<<<<<<< HEAD
+    border-bottom: none !important;
+}
+
+.showcase-title::after,
+.showcase-title::before {
+    display: none !important;
+}
+
+/* Ẩn đường gạch chân đỏ nếu có */
+.showcase-info::after,
+.showcase-info::before,
+.showcase-content::after,
+.showcase-content::before {
+    display: none !important;
+}
+
+/* Ẩn các element separator màu đỏ */
+.showcase-info .separator,
+.showcase-info hr[style*="red"],
+.showcase-info hr[style*="#DC0000"],
+.showcase-info div[style*="red"],
+.showcase-info div[style*="#DC0000"] {
+    display: none !important;
+=======
     white-space: nowrap;
+>>>>>>> fd5b3dfa058c80ca57c240dc1f512aa29e93ad93
 }
 
 .showcase-description {

@@ -72,10 +72,16 @@ export const profileService = {
     /**
      * Cập nhật profile
      * POST /api/profile/update
+     * ✅ Gửi userId trong body để backend không phải parse từ token
      */
-    update: async (profileData) => {
+    update: async (profileData, userId = null) => {
         console.log('📤 Updating profile with data:', profileData);
-        const response = await api.post('/profile/update', profileData);
+        console.log('🔑 User ID being sent:', userId);
+        
+        // Nếu có userId, gửi trong payload
+        const payload = userId ? { ...profileData, userId } : profileData;
+        
+        const response = await api.post('/profile/update', payload);
         console.log('✅ Profile update response:', response);
         return response;
     }

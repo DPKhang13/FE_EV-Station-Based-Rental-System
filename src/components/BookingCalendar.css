@@ -1,11 +1,7 @@
 .booked-day {
-  background-color: black !important;
-  color: white !important;
-  border-radius: 50% !important;
-}
-.booked-day {
   background-color: #d1d5db !important; /* xám nhạt */
   color: #9ca3af !important;
   pointer-events: none;
   opacity: 0.6;
+  border-radius: 50% !important;
 }

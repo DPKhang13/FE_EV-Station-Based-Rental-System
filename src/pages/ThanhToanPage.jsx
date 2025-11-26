@@ -66,7 +66,7 @@ const ThanhToanPage = () => {
   const [allTransactions, setAllTransactions] = useState([]); // Lưu tất cả transactions để filter
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [phone, setPhone] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // 🚀 Lấy toàn bộ giao dịch khi mở trang
   useEffect(() => {

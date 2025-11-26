@@ -54,7 +54,7 @@
 
 .navbar-menu a {
     color: #393c41;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     font-weight: 500;
     font-size: 14px;
     letter-spacing: 0.3px;
@@ -64,6 +64,8 @@
     font-family: 'Gotham', 'Helvetica Neue', Arial, sans-serif;
     position: relative;
     overflow: visible;
+    white-space: nowrap;
+    display: inline-block;
 }
 
 .navbar-menu a:hover {
@@ -80,21 +82,31 @@
     height: 2px;
     background: #dc2626;
     transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: center;
 }
 
 .navbar-menu a::before {
     left: 50%;
+    transform: translateX(-50%);
     border-radius: 2px 0 0 2px;
 }
 
 .navbar-menu a::after {
     right: 50%;
+    transform: translateX(50%);
     border-radius: 0 2px 2px 0;
 }
 
-.navbar-menu a:hover::before,
+.navbar-menu a:hover::before {
+    width: 50%;
+    left: 50%;
+    transform: translateX(-100%);
+}
+
 .navbar-menu a:hover::after {
     width: 50%;
+    right: 50%;
+    transform: translateX(100%);
 }
 
 /* Prevent animation when link is active/selected */
@@ -456,9 +468,11 @@
 
 .nav-selected {
     color: #000000 !important;
-    font-weight: 600;
+    font-weight: 500 !important;
     background-color: rgba(0, 0, 0, 0.05) !important;
     text-decoration: none !important;
+    white-space: nowrap !important;
+    display: inline-block !important;
 }
 
 @media (max-width: 1200px) {

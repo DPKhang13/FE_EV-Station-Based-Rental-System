@@ -31,7 +31,7 @@
   margin: 20px auto 0;
 }
 
-/* 🔍 Search bar */
+/* ========== THANH TÌM KIẾM ========== */
 .search-bar {
   display: flex;
   justify-content: flex-end;
@@ -76,6 +76,10 @@
   font-weight: 300;
 }
 
+<<<<<<< HEAD
+/* ========== TABS FILTER ========== */
+.tabs {
+=======
 .btn-search {
   padding: 8px 16px;
   border: 2px solid #000000;
@@ -105,6 +109,7 @@
 
 /* 🧭 Tabs */
 .giaoTraXe-container .tabs {
+>>>>>>> fd5b3dfa058c80ca57c240dc1f512aa29e93ad93
   display: flex;
   justify-content: stretch;
   flex-wrap: nowrap;
@@ -166,6 +171,7 @@
   align-items: stretch;
 }
 
+/* ========== THẺ XE ========== */
 .xe-card {
   background: #FFFFFF;
   border: 2px solid #E0E0E0;
@@ -186,12 +192,16 @@
   border-color: #DC0000;
 }
 
+<<<<<<< HEAD
+/* Ảnh xe */
+=======
 .xe-img-wrapper {
   position: relative;
   width: 100%;
   overflow: hidden;
 }
 
+>>>>>>> fd5b3dfa058c80ca57c240dc1f512aa29e93ad93
 .xe-img {
   width: 100%;
   height: 180px;
@@ -265,7 +275,11 @@
   font-weight: 500;
 }
 
-/* 🌈 Trạng thái */
+.xe-card p strong {
+  color: var(--text-main);
+}
+
+/* ========== BADGE TRẠNG THÁI ========== */
 .xe-status {
   font-weight: 400;
   margin: 8px 20px;
@@ -310,6 +324,9 @@
   border: 1px solid #FF9800;
 }
 
+<<<<<<< HEAD
+/* ========== NÚT HÀNH ĐỘNG ========== */
+=======
 /* ⚙️ Button hành động */
 .btn-wrapper {
   margin-top: auto;
@@ -319,6 +336,7 @@
   gap: 8px;
 }
 
+>>>>>>> fd5b3dfa058c80ca57c240dc1f512aa29e93ad93
 .btn-action {
   margin: 0;
   background: #000000;

@@ -31,54 +31,59 @@ export default function VerifyCustomerPage() {
   // 🧾 Lấy đơn hàng theo trạm
   const fetchOrders = async () => {
     try {
-      setError(null); // Clear error trước khi fetch
-      const res = await orderService.getPendingOrders();
-      const data = res.data || res || [];
-      
-      console.log('📋 [fetchOrders] Raw data:', data);
-      console.log('📋 [fetchOrders] Data length:', data.length);
-      
-      // Lấy stationId từ user hoặc default
-      const userStationId = user?.stationId || user?.station_id || user?.stationid;
-      
-      console.log('👤 [fetchOrders] User stationId:', userStationId);
-      console.log('📋 [fetchOrders] All orders before filter:', data);
-      
-      // Nếu không có user stationId, hiển thị tất cả orders
-      let filtered;
-      if (!userStationId) {
-        console.log('⚠️ [fetchOrders] No user stationId, showing all orders');
-        filtered = data;
-      } else {
-        const stationId = userStationId;
-        console.log('🔍 [fetchOrders] Filtering with stationId:', stationId);
-        
-        // Xử lý nhiều tên field có thể có: stationId, station_id, stationid
-        filtered = data.filter((o) => {
-          const orderStationId = o.stationId || o.station_id || o.stationid;
-          const match = Number(orderStationId) === Number(stationId);
-          console.log('🔍 [fetchOrders] Order:', {
-            orderId: o.orderId,
-            orderStationId: orderStationId,
-            targetStationId: stationId,
-            match: match
-          });
-          return match;
-        });
-        
-        // ⚠️ Nếu sau khi filter không có order nào, hiển thị tất cả để tránh mất dữ liệu
-        if (filtered.length === 0 && data.length > 0) {
-          console.log('⚠️ [fetchOrders] No orders match stationId, showing all orders instead');
-          filtered = data;
-        }
+      setLoading(true);
+      setError(null);
+
+      const rawStationId =
+        user?.stationId ?? user?.station_id ?? user?.stationid ?? null;
+
+      if (rawStationId === null || rawStationId === undefined) {
+        setOrders([]);
+        setError("Tài khoản chưa được gán trạm. Vui lòng liên hệ quản trị.");
+        return;
       }
-      
-      console.log('✅ [fetchOrders] Filtered orders:', filtered.length);
-      console.log('✅ [fetchOrders] Filtered orders data:', filtered);
-      setOrders(filtered);
+
+      const stationNumeric = Number(rawStationId);
+      const filterByStation = (list = []) =>
+        list.filter((order) => {
+          const orderStationId =
+            order.stationId || order.station_id || order.stationid;
+          return Number(orderStationId) === stationNumeric;
+        });
+
+      const pendingRes = await orderService.getPendingOrders();
+      const pendingData = pendingRes?.data || pendingRes || [];
+      let mergedOrders = filterByStation(pendingData);
+
+      try {
+        const allRes = await orderService.getAll();
+        const allOrders = allRes?.data || allRes || [];
+        const refundOrders = allOrders.filter(
+          (order) =>
+            String(order.status || "").toUpperCase() === "REFUNDED"
+        );
+        const filteredRefunds = filterByStation(refundOrders);
+        const existingIds = new Set(
+          mergedOrders.map((order) => String(order.orderId))
+        );
+        filteredRefunds.forEach((order) => {
+          const id = String(order.orderId);
+          if (!existingIds.has(id)) {
+            mergedOrders.push(order);
+            existingIds.add(id);
+          }
+        });
+      } catch (refundErr) {
+        console.error("❌ Không thể tải danh sách đơn đã hoàn tiền:", refundErr);
+      }
+
+      setOrders(mergedOrders);
     } catch (err) {
       console.error("❌ Lỗi tải hồ sơ:", err);
-      const errorMessage = err?.response?.data?.message || err?.message || "Không thể tải danh sách đơn hàng. Vui lòng thử lại sau.";
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Không thể tải danh sách đơn hàng. Vui lòng thử lại sau.";
       setError(errorMessage);
       setOrders([]);
     } finally {
