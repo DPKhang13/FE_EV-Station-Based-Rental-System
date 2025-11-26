@@ -1,84 +1,134 @@
+// Component Dashboard: Hiển thị thống kê tổng quan hệ thống
+// Component này fetch và hiển thị các metrics quan trọng như doanh thu, số xe, tỷ lệ sử dụng
 import React, { useEffect, useState } from "react";
 import "./AdminDashBoardPage.css";
 import { adminService } from "../services/adminService";
 
 const AdminDashBoardPage = () => {
+  // State quản lý dữ liệu dashboard từ API
+  // null: Chưa có dữ liệu (chưa fetch hoặc đang fetch)
   const [data, setData] = useState(null);
+  
+  // State quản lý trạng thái loading
   const [loading, setLoading] = useState(true);
 
-  // Fetch Dashboard
+  // useEffect: Fetch dữ liệu dashboard khi component mount
+  // Dependency array [] rỗng = chỉ chạy 1 lần
   useEffect(() => {
+    // Hàm async bên trong useEffect
     const fetchDashboard = async () => {
       try {
+        // Gọi API service để lấy dashboard stats
         const res = await adminService.getDashboardStats();
+        
+        // Xử lý response: Có thể là { data: {...} } hoặc object trực tiếp
+        // Nullish coalescing: Dùng res.data nếu có, không thì dùng res
         setData(res.data || res);
       } catch (err) {
-        console.error("❌ Lỗi tải dashboard:", err);
+        // Xử lý lỗi: Log error nhưng không crash app
+        console.error("Lỗi tải dashboard:", err);
       } finally {
+        // finally: Luôn chạy dù có lỗi hay không
+        // Tắt loading indicator
         setLoading(false);
       }
     };
+    
+    // Gọi hàm fetch
     fetchDashboard();
   }, []);
 
+  // Conditional rendering: Early return nếu đang loading
+  // Hiển thị loading message thay vì render toàn bộ component
   if (loading)
-    return <div className="dashboard-container">⏳ Đang tải dữ liệu...</div>;
+    return <div className="dashboard-container">Đang tải dữ liệu...</div>;
+  
+  // Early return nếu không có dữ liệu
   if (!data)
     return (
-      <div className="dashboard-container">⚠️ Không có dữ liệu hiển thị!</div>
+      <div className="dashboard-container">Không có dữ liệu hiển thị!</div>
     );
 
   // ====== SAFE PARSE DATA ======
+  // Defensive programming: Luôn kiểm tra và có fallback để tránh crash
+  
+  // KPI (Key Performance Indicators): Các chỉ số hiệu suất chính
+  // Fallback với {} nếu data.kpi không tồn tại
   const kpi = data.kpi || {};
 
+  // Danh sách vehicles theo trạm
+  // Array.isArray(): Kiểm tra có phải array không
+  // Fallback với [] nếu không phải array (tránh lỗi khi map)
   const vehicles = Array.isArray(data.vehiclesByStation)
     ? data.vehiclesByStation
     : [];
 
+  // Phân tích doanh thu theo trạm
   const revenueAnalysis = Array.isArray(data.revenueByStationAnalysis)
     ? data.revenueByStationAnalysis
     : [];
 
+  // Danh sách incidents gần đây
   const incidents = Array.isArray(data.recentIncidents)
     ? data.recentIncidents
     : [];
 
+  // Thống kê incidents với default values
+  // Object với default values: Đảm bảo luôn có các field cần thiết
   const incidentStats = data.incidentKpi || {
     totalIncidentsInRange: 0,
     openIncidents: 0,
     incidentCostInRange: 0,
   };
 
+  // Giờ cao điểm với default values
   const peak = data.peakHourWindow || { startHour: "--", endHour: "--" };
 
-  // ====== SUMMARY ======
+  // ====== SUMMARY: Tổng hợp các chỉ số chính ======
   const summary = {
+    // Doanh thu: Format số theo chuẩn Việt Nam (dấu chấm phân cách hàng nghìn)
+    // toLocaleString("vi-VN"): Format 900000 -> "900.000"
     revenue: `${(kpi.revenueInRange || 0).toLocaleString("vi-VN")} đ`,
+    
+    // Tổng số xe
     totalCars: kpi.totalVehicles || 0,
+    
+    // Tỷ lệ sử dụng: (Xe đang thuê / Tổng xe) * 100
+    // Math.round(): Làm tròn số
+    // (kpi.totalVehicles || 1): Tránh chia cho 0 (nếu totalVehicles = 0 thì dùng 1)
     usageRate: `${Math.round(
       (kpi.rentedVehicles / (kpi.totalVehicles || 1)) * 100
     )}%`,
+    
+    // Số xe đang được thuê
     activeCars: kpi.rentedVehicles || 0,
   };
 
-  // ====== REVENUE BY STATION ======
+  // ====== REVENUE BY STATION: Doanh thu theo từng trạm ======
+  // Array.map(): Transform mỗi station thành object với format chuẩn
   const branches = revenueAnalysis.map((st) => ({
     name: st.stationName,
+    
+    // Format tiền cho từng khoảng thời gian
     today: `${(st.todayRevenue || 0).toLocaleString("vi-VN")} đ`,
     week: `${(st.weekRevenue || 0).toLocaleString("vi-VN")} đ`,
     month: `${(st.monthRevenue || 0).toLocaleString("vi-VN")} đ`,
     avgPerDay: `${(st.avgPerDay || 0).toLocaleString("vi-VN")} đ`,
+    
+    // Tăng trưởng: Dùng nullish coalescing (??) thay vì || để phân biệt 0 và undefined
+    // ?? chỉ thay thế nếu null hoặc undefined, không thay thế 0
     growthDay: st.growthDay ?? 0,
     growthWeek: st.growthWeek ?? 0,
     growthMonth: st.growthMonth ?? 0,
   }));
 
-  // ====== VEHICLE USAGE ======
+  // ====== VEHICLE USAGE: Tỷ lệ sử dụng xe theo trạm ======
+  // Transform data để dễ hiển thị trong UI
   const usage = vehicles.map((s) => ({
     name: s.stationName,
-    used: s.rented || 0,
-    total: s.total || 0,
-    rate: s.utilization || 0,
+    used: s.rented || 0,      // Số xe đang được thuê
+    total: s.total || 0,      // Tổng số xe
+    rate: s.utilization || 0, // Tỷ lệ sử dụng (%)
   }));
 
   // MOCK TREND DATA
@@ -127,7 +177,7 @@ const AdminDashBoardPage = () => {
 
       {/* REVENUE ANALYSIS */}
       <div className="section">
-        <h2>💰 Phân tích doanh thu theo trạm</h2>
+        <h2>Phân tích doanh thu theo trạm</h2>
         <div style={{ overflowX: 'auto', marginTop: '20px' }}>
           <table>
             <thead>
@@ -169,7 +219,7 @@ const AdminDashBoardPage = () => {
       {/* USAGE + TRENDS */}
       <div className="usage-trend">
         <div className="usage">
-          <h2>🚗 Tỷ lệ sử dụng xe</h2>
+          <h2>Tỷ lệ sử dụng xe</h2>
           {usage.map((u, i) => (
             <div key={i} className="usage-item">
               <p>
@@ -189,7 +239,7 @@ const AdminDashBoardPage = () => {
         </div>
 
         <div className="trends">
-          <h2>📈 Xu hướng thuê xe</h2>
+          <h2>Xu hướng thuê xe</h2>
           <div className="trend-cards">
             {trends.map((t, i) => (
               <div key={i} className={`trend ${t.color}`}>
@@ -262,7 +312,7 @@ const AdminDashBoardPage = () => {
 
       {/* PEAK HOURS */}
       <div className="peak-time">
-        <h2>⏰ Phân tích giờ cao điểm</h2>
+        <h2>Phân tích giờ cao điểm</h2>
         <div className="peak-time-container">
           {peakTimes.map((p, i) => (
             <div key={i} className="peak-time-branch">

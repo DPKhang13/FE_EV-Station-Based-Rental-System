@@ -202,37 +202,63 @@ const StationManagement = () => {
             setLoading(false);
         }
     };
+    // Hàm xử lý khi user nhập liệu trong form
+    // Controlled component pattern: Mỗi input được bind với state
     const handleInputChange = (e) => {
+        // Destructuring: Lấy name và value từ event target (input element)
         const { name, value } = e.target;
+        
+        // Functional update: Dùng prev để đảm bảo cập nhật state đúng
+        // setFormData(prev => ...): prev là giá trị hiện tại của formData
         setFormData(prev => ({
-            ...prev,
-            [name]: value
+            ...prev,        // Spread: Giữ nguyên các field khác
+            [name]: value   // Computed property name: Cập nhật field có tên = name
         }));
     };
 
+    // Hàm xử lý submit form (tạo mới hoặc cập nhật trạm)
+    // async: Vì sẽ gọi API
     const handleSubmit = async (e) => {
+        // e.preventDefault(): Ngăn form submit mặc định (reload trang)
+        // Quan trọng trong SPA (Single Page Application)
         e.preventDefault();
 
         try {
+            // Conditional logic: Kiểm tra đang edit hay create
             if (editingStation) {
+                // UPDATE: Đang sửa trạm có sẵn
+                // Lấy ID của trạm đang edit
                 const stationId = editingStation.stationid || editingStation.id;
+                
+                // Gọi API service để cập nhật
                 await stationService.updateStation(stationId, formData);
-                alert('✅ Cập nhật điểm thuê thành công!');
+                alert('Cập nhật điểm thuê thành công!');
             } else {
+                // CREATE: Tạo trạm mới
                 await stationService.createStation(formData);
-                alert('✅ Thêm điểm thuê mới thành công!');
+                alert('Thêm điểm thuê mới thành công!');
             }
 
+            // Refresh danh sách trạm sau khi thêm/sửa thành công
             fetchStations();
+            
+            // Đóng modal form
             handleCloseModal();
         } catch (err) {
-            console.error('❌ Error saving station:', err);
-            alert('❌ Có lỗi xảy ra. Vui lòng thử lại.');
+            // Xử lý lỗi: Log và hiển thị thông báo
+            console.error('Error saving station:', err);
+            alert('Có lỗi xảy ra. Vui lòng thử lại.');
         }
     };
 
+    // Hàm mở modal sửa trạm
+    // Nhận station object cần sửa làm parameter
     const handleEdit = (station) => {
+        // Lưu station đang được edit vào state
         setEditingStation(station);
+        
+        // Pre-fill form với dữ liệu hiện tại của station
+        // Fallback với '' nếu field không có giá trị
         setFormData({
             name: station.name || '',
             city: station.city || '',
@@ -240,21 +266,34 @@ const StationManagement = () => {
             ward: station.ward || '',
             street: station.street || ''
         });
+        
+        // Hiển thị modal
         setShowModal(true);
     };
 
+    // Hàm xóa trạm
+    // async: Vì sẽ gọi API
     const handleDelete = async (stationId) => {
+        // Confirmation dialog: Xác nhận trước khi xóa
+        // window.confirm(): Trả về true nếu user chọn OK, false nếu Cancel
         if (!window.confirm('Bạn có chắc chắn muốn xóa điểm thuê này?')) {
+            // Early return: Nếu user chọn Cancel thì dừng lại
             return;
         }
 
         try {
+            // Gọi API service để xóa trạm
             await stationService.deleteStation(stationId);
-            alert('✅ Xóa điểm thuê thành công!');
+            
+            // Hiển thị thông báo thành công
+            alert('Xóa điểm thuê thành công!');
+            
+            // Refresh danh sách trạm (để cập nhật UI)
             fetchStations();
         } catch (err) {
-            console.error('❌ Error deleting station:', err);
-            alert('❌ Không thể xóa điểm thuê. Vui lòng thử lại.');
+            // Xử lý lỗi
+            console.error('Error deleting station:', err);
+            alert('Không thể xóa điểm thuê. Vui lòng thử lại.');
         }
     };
 
@@ -329,94 +368,134 @@ const StationManagement = () => {
         });
     };
 
+    // Hàm xử lý khi user nhập liệu trong form thêm xe
+    // async: Vì có thể gọi API để tự động fetch ảnh
     const handleVehicleInputChange = async (e) => {
+        // Destructuring: Lấy name và value từ input element
         const { name, value } = e.target;
+        
+        // Tạo object mới với giá trị đã cập nhật
         const newFormData = {
-            ...vehicleFormData,
-            [name]: value
+            ...vehicleFormData,  // Copy tất cả field cũ
+            [name]: value        // Override field có tên = name
         };
         
+        // Cập nhật state với form data mới
         setVehicleFormData(newFormData);
         
-        // Tự động fetch ảnh khi đủ 3 trường: vehicleName (brand), color, seatCount
+        // Feature: Tự động fetch ảnh xe khi user đã nhập đủ 3 trường
+        // Điều kiện: vehicleName (brand), color, seatCount đều có giá trị
+        // Truthy check: Kiểm tra field có giá trị (không rỗng, không null, không undefined)
         if (newFormData.vehicleName && newFormData.color && newFormData.seatCount) {
             try {
+                // Lấy token từ localStorage để authenticate API request
                 const token = localStorage.getItem('accessToken');
                 const API_BASE_URL = 'http://localhost:8080/api';
                 
-                // Convert color name to lowercase for API (White -> white, Blue -> blue)
+                // Normalize color: Chuyển về lowercase để match với API
+                // Ví dụ: "White" -> "white", "Blue" -> "blue"
                 const colorForAPI = newFormData.color.toLowerCase();
                 
-                console.log('🎨 [Auto-fetch image] Brand:', newFormData.vehicleName, 'Color:', colorForAPI, 'Seats:', newFormData.seatCount);
+                console.log('[Auto-fetch image] Brand:', newFormData.vehicleName, 'Color:', colorForAPI, 'Seats:', newFormData.seatCount);
                 
+                // Tạo URL với query parameters
+                // encodeURIComponent(): Encode special characters trong URL (ví dụ: space -> %20)
+                // Template literal: Chèn biến vào chuỗi URL
                 const url = `${API_BASE_URL}/vehicles/image-url?brand=${encodeURIComponent(newFormData.vehicleName)}&color=${encodeURIComponent(colorForAPI)}&seatCount=${newFormData.seatCount}`;
                 
+                // Fetch API: Gọi GET request để lấy URL ảnh
                 const response = await fetch(url, {
                     method: 'GET',
                     headers: {
-                        'Authorization': `Bearer ${token}`
+                        'Authorization': `Bearer ${token}`  // Gửi token trong header
                     }
                 });
 
+                // Kiểm tra response status
                 if (response.ok) {
+                    // Parse JSON response
                     const data = await response.json();
-                    console.log('✅ [Auto-fetch image] Success:', data.imageUrl);
+                    console.log('[Auto-fetch image] Success:', data.imageUrl);
+                    
+                    // Cập nhật imageUrl vào form data
                     setVehicleFormData(prev => ({
                         ...prev,
                         imageUrl: data.imageUrl
                     }));
                 } else {
+                    // Nếu API trả về lỗi (404, 500, etc.)
                     const errorData = await response.text();
-                    console.log('⚠️ [Auto-fetch image] No image found. Response:', errorData);
+                    console.log('[Auto-fetch image] No image found. Response:', errorData);
+                    // Không làm gì, để user tự nhập imageUrl
                 }
             } catch (error) {
-                console.error('❌ [Auto-fetch image] Error:', error);
+                // Xử lý lỗi network hoặc parse error
+                console.error('[Auto-fetch image] Error:', error);
+                // Fail silently: Không hiển thị error để không làm gián đoạn user
             }
         }
     };
 
+    // Hàm xử lý submit form thêm xe mới
+    // async: Vì sẽ gọi API để tạo xe
     const handleAddVehicle = async (e) => {
+        // Ngăn form submit mặc định (reload trang)
         e.preventDefault();
 
         try {
-            const brand = vehicleFormData.vehicleName; // VinFast, BMW, Tesla
+            // Lấy brand từ form (VinFast, BMW, Tesla)
+            const brand = vehicleFormData.vehicleName;
+            
+            // parseInt(): Convert string sang number
+            // Ví dụ: "4" -> 4, "7" -> 7
             const seatCount = parseInt(vehicleFormData.seatCount);
             
-            // ✅ Normalize variant về dạng First-letter capitalized (Air, Plus, Pro)
+            // Normalize variant: Chuyển về dạng First-letter capitalized
+            // formatVariant() là helper function từ utils
+            // Ví dụ: "air" -> "Air", "plus" -> "Plus"
             const variant = formatVariant(vehicleFormData.variant);
 
-            // Tạo vehicleName theo format: Brand + Số ghế + S + Variant
+            // Tạo vehicleName theo format chuẩn: Brand + Số ghế + S + Variant
+            // Ternary operator: Nếu seatCount === 4 thì '4S', không thì '7S'
             // Ví dụ: "VinFast 7S Air", "BMW 4S Plus"
             const seatLabel = seatCount === 4 ? '4S' : '7S';
             const vehicleName = `${brand} ${seatLabel} ${variant}`;
 
-            // Tạo description theo format: Brand EV X-seater, Variant variant
+            // Tạo description cho xe
+            // Ví dụ: "VinFast EV 4-seater, Air variant"
             const seatText = seatCount === 4 ? '4-seater' : '7-seater';
             const description = `${brand} EV ${seatText}, ${variant} variant`;
 
-            // Prepare data to send to backend
+            // Chuẩn bị data object để gửi lên backend
+            // Object này phải match với DTO (Data Transfer Object) của backend
             const vehicleData = {
                 plateNumber: vehicleFormData.plateNumber,
                 stationId: selectedStationForVehicle.stationid || selectedStationForVehicle.id,
                 brand: brand,
-                vehicleName: vehicleName, // VinFast 7S Air
+                vehicleName: vehicleName, // Ví dụ: "VinFast 7S Air"
                 color: vehicleFormData.color,
                 seatCount: seatCount,
                 variant: variant,
-                status: 'AVAILABLE',
-                description: description, // VinFast EV 7-seater, Air variant
-                batteryStatus: '100%', // Thêm % vào
-                batteryCapacity: '100 kWh', // Thêm kWh vào
-                rangeKm: 500
+                status: 'AVAILABLE',  // Trạng thái mặc định khi tạo xe mới
+                description: description, // Ví dụ: "VinFast EV 7-seater, Air variant"
+                batteryStatus: '100%', // Pin mặc định 100%
+                batteryCapacity: '100 kWh', // Dung lượng pin mặc định
+                rangeKm: 500  // Quãng đường tối đa (km)
             };
 
-            console.log('🚗 Adding vehicle:', vehicleData);
+            console.log('Adding vehicle:', vehicleData);
 
-            // Call API to add vehicle
+            // Gọi API service để tạo xe mới
+            // vehicleService.createVehicle(): Hàm từ service layer
+            // await: Đợi API response trước khi tiếp tục
             const result = await vehicleService.createVehicle(vehicleData);
-            console.log('✅ Vehicle created successfully:', result);
+            console.log('Vehicle created successfully:', result);
 
-            alert(`✅ Đã thêm xe thành công vào trạm: ${selectedStationForVehicle.name}`);
+            // Hiển thị thông báo thành công
+            // Template literal: Chèn tên trạm vào thông báo
+            alert(`Đã thêm xe thành công vào trạm: ${selectedStationForVehicle.name}`);
+            
+            // Đóng modal và reset form
             handleCloseAddVehicleModal();
 
             // Refresh station list to show updated vehicle counts
@@ -587,7 +666,7 @@ const StationManagement = () => {
     };
 
     if (loading) {
-        return <div className="station-loading">⏳ Đang tải danh sách điểm thuê...</div>;
+        return <div className="station-loading">Đang tải danh sách điểm thuê...</div>;
     }
 
     return (
@@ -601,13 +680,13 @@ const StationManagement = () => {
                 <div className="error-message">
                     <div>
                         <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
-                            ⚠️ Lỗi tải dữ liệu
+                            Lỗi tải dữ liệu
                         </div>
                         <div style={{ fontSize: '14px', color: '#666' }}>
                             {error}
                         </div>
                         <div style={{ fontSize: '12px', color: '#999', marginTop: '8px' }}>
-                            💡 Kiểm tra: Backend có chạy không? (http://localhost:8080)
+                            Kiểm tra: Backend có chạy không? (http://localhost:8080)
                         </div>
                     </div>
                     <button onClick={fetchStations}>
@@ -1110,18 +1189,18 @@ const StationManagement = () => {
                 <div className="modal-overlay" onClick={handleCloseOrderHistoryModal}>
                     <div className="modal-content detail-modal" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>📜 Lịch sử đặt xe: {selectedVehicleForHistory.plateNumber}</h2>
+                            <h2>Lịch sử đặt xe: {selectedVehicleForHistory.plateNumber}</h2>
                             <button className="modal-close" onClick={handleCloseOrderHistoryModal}>✕</button>
                         </div>
 
                         <div className="detail-content">
                             {loadingOrderHistory ? (
                                 <div style={{ textAlign: 'center', padding: '40px' }}>
-                                    <div style={{ fontSize: '18px', marginBottom: '10px' }}>⏳ Đang tải lịch sử...</div>
+                                    <div style={{ fontSize: '18px', marginBottom: '10px' }}>Đang tải lịch sử...</div>
                                 </div>
                             ) : orderHistory.length === 0 ? (
                                 <div style={{ textAlign: 'center', padding: '40px' }}>
-                                    <div style={{ fontSize: '18px', marginBottom: '10px' }}>📭 Chưa có lịch sử đặt xe</div>
+                                    <div style={{ fontSize: '18px', marginBottom: '10px' }}>Chưa có lịch sử đặt xe</div>
                                     <div style={{ fontSize: '14px', color: '#666' }}>
                                         Xe này chưa từng được đặt thuê.
                                     </div>
@@ -1185,13 +1264,13 @@ const StationManagement = () => {
                 <div className="modal-overlay" onClick={() => { setShowVehicleDetailsModal(false); setVehicleDetails(null); }}>
                     <div className="modal-content detail-modal" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>🔍 Thông tin xe</h2>
+                            <h2>Thông tin xe</h2>
                             <button className="modal-close" onClick={() => { setShowVehicleDetailsModal(false); setVehicleDetails(null); }}>✕</button>
                         </div>
 
                         <div className="detail-content">
                             {loadingVehicleDetails ? (
-                                <div style={{ textAlign: 'center', padding: '40px' }}>⏳ Đang tải thông tin xe...</div>
+                                <div style={{ textAlign: 'center', padding: '40px' }}>Đang tải thông tin xe...</div>
                             ) : !vehicleDetails ? (
                                 <div style={{ textAlign: 'center', padding: '40px' }}>Không tìm thấy thông tin xe.</div>
                             ) : (

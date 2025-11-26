@@ -29,7 +29,7 @@ const ChiTietDonTrongAdmin = () => {
   }, [orderId]);
 
   if (loading) {
-    return <div className="od-loading">⏳ Đang tải chi tiết đơn hàng...</div>;
+    return <div className="od-loading">Đang tải chi tiết đơn hàng...</div>;
   }
 
   return (
@@ -37,14 +37,14 @@ const ChiTietDonTrongAdmin = () => {
 
       {/* Nút quay lại */}
       <button className="od-back-btn" onClick={() => navigate(-1)}>
-        ⬅ Quay lại
+        Quay lại
       </button>
 
       <h1 className="od-title">Chi tiết đơn hàng</h1>
 
       <div className="od-card">
         {details.length === 0 ? (
-          <div className="od-empty">📭 Không có dữ liệu chi tiết đơn hàng</div>
+          <div className="od-empty">Không có dữ liệu chi tiết đơn hàng</div>
         ) : (
           <table className="od-table">
             <thead>

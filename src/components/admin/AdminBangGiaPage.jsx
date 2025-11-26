@@ -1,9 +1,13 @@
+// Component quản lý bảng giá
+// Component này cho phép admin xem, thêm, sửa, xóa bảng giá thuê xe và dịch vụ
 import React, { useState, useEffect } from "react";
 import "./AdminBangGiaPage.css";
 // import axios from "axios"; // TODO: Uncomment khi kết nối API
 
 const AdminBangGiaPage = () => {
-  // Dữ liệu bảng giá thuê xe
+  // State quản lý bảng giá thuê xe
+  // Initial state: Mảng chứa các object với id, type, dailyPrice, lateFee, holidayPrice
+  // useState với initial value: React sẽ dùng giá trị này khi component mount lần đầu
   const [rentalPricing, setRentalPricing] = useState([
     { id: 1, type: "B-SUV", dailyPrice: 900000, lateFee: 200000, holidayPrice: 1200000 },
     { id: 2, type: "C-SUV", dailyPrice: 1100000, lateFee: 260000, holidayPrice: 1400000 },
@@ -13,8 +17,11 @@ const AdminBangGiaPage = () => {
     { id: 6, type: "G-SUV", dailyPrice: 2300000, lateFee: 520000, holidayPrice: 2900000 }
   ]);
 
-  // Fetch data từ API (nếu có)
+  // useEffect: Fetch data từ API khi component mount
+  // Dependency array [] rỗng = chỉ chạy 1 lần khi component mount
   useEffect(() => {
+    // Hàm async bên trong useEffect
+    // Cần wrap trong function vì useEffect không thể nhận async function trực tiếp
     const fetchPricing = async () => {
       try {
         // TODO: Thay bằng API thực tế khi có
@@ -24,6 +31,8 @@ const AdminBangGiaPage = () => {
         console.error("Lỗi khi tải bảng giá:", error);
       }
     };
+    
+    // Gọi hàm fetch
     fetchPricing();
   }, []);
 
@@ -97,33 +106,46 @@ const AdminBangGiaPage = () => {
     price: 0
   });
 
-  // Format số tiền
+  // Helper function: Format số tiền theo chuẩn Việt Nam
+  // Input: 900000
+  // Output: "900.000₫"
+  // Intl.NumberFormat: API của JavaScript để format số theo locale
+  // "vi-VN": Locale Việt Nam (dùng dấu chấm làm separator hàng nghìn)
   const formatPrice = (price) => {
     return new Intl.NumberFormat("vi-VN").format(price) + "₫";
   };
 
-  // ========== BẢNG GIÁ THUÊ XE - CRUD ==========
+  // ========== BẢNG GIÁ THUÊ XE - CRUD OPERATIONS ==========
+  // CRUD = Create, Read, Update, Delete
   
-  // Thêm mới bảng giá thuê xe
+  // Hàm mở modal thêm mới bảng giá thuê xe
+  // Reset form về giá trị mặc định và hiển thị modal
   const handleAddRental = () => {
+    // Reset form data về giá trị ban đầu
     setNewRentalItem({
       type: "",
       dailyPrice: 0,
       lateFee: 0,
       holidayPrice: 0
     });
+    
+    // Hiển thị modal thêm mới
     setShowAddRentalModal(true);
   };
 
-  // Tạo mới bảng giá thuê xe
+  // Hàm tạo mới bảng giá thuê xe
+  // async: Vì sẽ gọi API (hiện tại đang dùng mock data)
   const handleCreateRental = async () => {
+    // Validation: Kiểm tra tất cả field đã được điền chưa
+    // Toán tử !: Phủ định (truthy -> false, falsy -> true)
+    // Nếu một trong các field rỗng/0 thì hiển thị alert và dừng lại
     if (!newRentalItem.type || !newRentalItem.dailyPrice || !newRentalItem.lateFee || !newRentalItem.holidayPrice) {
       alert("Vui lòng điền đầy đủ thông tin!");
-      return;
+      return; // Early return: Dừng hàm ngay tại đây
     }
 
     try {
-      // TODO: Uncomment axios import và thay bằng API thực tế khi có
+      // TODO: Uncomment khi có API thực tế
       // await axios.post("http://localhost:8080/api/pricing-rules/create", {
       //   type: newRentalItem.type,
       //   dailyPrice: newRentalItem.dailyPrice,
@@ -131,32 +153,53 @@ const AdminBangGiaPage = () => {
       //   holidayPrice: newRentalItem.holidayPrice
       // });
 
+      // Mock: Tạo item mới với ID tự tăng
+      // rentalPricing.length + 1: ID mới = số lượng hiện tại + 1
       const newItem = {
         id: rentalPricing.length + 1,
+        // Spread operator: Copy tất cả properties từ newRentalItem
         ...newRentalItem
       };
+      
+      // Cập nhật state: Thêm item mới vào mảng
+      // Spread operator [...rentalPricing]: Copy mảng cũ
+      // newItem: Thêm phần tử mới vào cuối
       setRentalPricing([...rentalPricing, newItem]);
+      
+      // Đóng modal
       setShowAddRentalModal(false);
-      alert("✅ Thêm bảng giá thuê xe thành công!");
+      
+      // Hiển thị thông báo thành công
+      alert("Thêm bảng giá thuê xe thành công!");
     } catch (error) {
-      console.error("❌ Lỗi khi thêm bảng giá:", error);
+      // Xử lý lỗi
+      console.error("Lỗi khi thêm bảng giá:", error);
       alert("Không thể thêm bảng giá. Vui lòng thử lại!");
     }
   };
 
-  // Sửa bảng giá thuê xe
+  // Hàm mở modal sửa bảng giá thuê xe
+  // Nhận item cần sửa làm parameter
   const handleEditRental = (item) => {
+    // Lưu item đang được sửa vào state
     setEditingRentalItem(item);
+    
+    // Pre-fill form với dữ liệu hiện tại của item
+    // Để user có thể xem và chỉnh sửa
     setEditRentalFormData({
       dailyPrice: item.dailyPrice,
       lateFee: item.lateFee,
       holidayPrice: item.holidayPrice
     });
+    
+    // Hiển thị modal sửa
     setShowEditRentalModal(true);
   };
 
-  // Cập nhật bảng giá thuê xe
+  // Hàm cập nhật bảng giá thuê xe
+  // async: Vì sẽ gọi API (hiện tại đang dùng mock data)
   const handleUpdateRental = async () => {
+    // Validation: Kiểm tra tất cả field đã được điền chưa
     if (!editRentalFormData.dailyPrice || !editRentalFormData.lateFee || !editRentalFormData.holidayPrice) {
       alert("Vui lòng điền đầy đủ thông tin!");
       return;
@@ -170,23 +213,34 @@ const AdminBangGiaPage = () => {
       //   holidayPrice: editRentalFormData.holidayPrice
       // });
 
+      // Mock: Cập nhật item trong mảng
+      // Array.map(): Tạo mảng mới, thay thế item có id khớp
       setRentalPricing(rentalPricing.map(item => 
+        // Ternary operator: Nếu id khớp thì merge với editRentalFormData, không thì giữ nguyên
         item.id === editingRentalItem.id
-          ? { ...item, ...editRentalFormData }
-          : item
+          ? { ...item, ...editRentalFormData } // Spread: Copy properties cũ và override với data mới
+          : item // Giữ nguyên item khác
       ));
+      
+      // Đóng modal và reset state
       setShowEditRentalModal(false);
       setEditingRentalItem(null);
-      alert("✅ Cập nhật bảng giá thuê xe thành công!");
+      
+      alert("Cập nhật bảng giá thuê xe thành công!");
     } catch (error) {
-      console.error("❌ Lỗi khi cập nhật:", error);
+      console.error("Lỗi khi cập nhật:", error);
       alert("Cập nhật thất bại!");
     }
   };
 
-  // Xóa bảng giá thuê xe
+  // Hàm xóa bảng giá thuê xe
+  // async: Vì sẽ gọi API (hiện tại đang dùng mock data)
   const handleDeleteRental = async (item) => {
+    // Confirmation dialog: Xác nhận trước khi xóa
+    // window.confirm(): Hiển thị dialog Yes/No, trả về true/false
+    // Template literal: Chèn item.type vào chuỗi thông báo
     if (!window.confirm(`Bạn có chắc chắn muốn xóa bảng giá cho xe ${item.type}?`)) {
+      // Early return: Nếu user chọn "Cancel" thì dừng lại
       return;
     }
 
@@ -194,55 +248,80 @@ const AdminBangGiaPage = () => {
       // TODO: Thay bằng API thực tế khi có
       // await axios.delete(`http://localhost:8080/api/pricing-rules/delete/${item.id}`);
 
+      // Mock: Xóa item khỏi mảng
+      // Array.filter(): Tạo mảng mới chỉ chứa các phần tử thỏa mãn điều kiện
+      // p.id !== item.id: Giữ lại tất cả item có id khác với item cần xóa
       setRentalPricing(rentalPricing.filter(p => p.id !== item.id));
-      alert("🗑️ Đã xóa bảng giá thuê xe thành công!");
+      
+      alert("Đã xóa bảng giá thuê xe thành công!");
     } catch (error) {
-      console.error("❌ Lỗi khi xóa:", error);
+      console.error("Lỗi khi xóa:", error);
       alert("Không thể xóa bảng giá. Vui lòng thử lại!");
     }
   };
 
-  // ========== BẢNG GIÁ DỊCH VỤ - CRUD ==========
+  // ========== BẢNG GIÁ DỊCH VỤ - CRUD OPERATIONS ==========
+  // Dịch vụ được nhóm theo category (Phí giao thông, Vệ sinh, Bảo trì, Sửa chữa)
 
-  // Thêm mới bảng giá dịch vụ
+  // Hàm mở modal thêm mới dịch vụ
   const handleAddService = () => {
+    // Reset form về giá trị mặc định
     setNewServiceItem({
       category: "",
       description: "",
       price: 0
     });
+    
+    // Hiển thị modal
     setShowAddServiceModal(true);
   };
 
-  // Tạo mới bảng giá dịch vụ
+  // Hàm tạo mới dịch vụ
+  // Lưu ý: Không phải async vì đang dùng mock data (không gọi API)
   const handleCreateService = () => {
+    // Validation: Kiểm tra tất cả field đã được điền
+    // Truthy check: Kiểm tra field có giá trị (không rỗng, không 0)
     if (!newServiceItem.category || !newServiceItem.description || !newServiceItem.price) {
       alert("Vui lòng điền đầy đủ thông tin!");
       return;
     }
 
+    // Tạo service object mới
+    // Date.now(): Lấy timestamp hiện tại làm ID (milliseconds từ 1970)
+    // Đảm bảo ID unique
     const newService = {
       id: Date.now(),
       description: newServiceItem.description,
       price: newServiceItem.price
     };
 
+    // Cập nhật state: Thêm service vào category tương ứng
+    // Array.map(): Tạo mảng mới với logic update
     setServicePricing(servicePricing.map(cat => 
+      // Nếu category khớp thì thêm service mới vào mảng services
       cat.category === newServiceItem.category
-        ? { ...cat, services: [...cat.services, newService] }
-        : cat
+        ? { 
+            ...cat,  // Copy properties của category
+            services: [...cat.services, newService]  // Thêm service mới vào cuối mảng
+          }
+        : cat  // Giữ nguyên category khác
     ));
 
-    // Nếu category mới, thêm category mới
+    // Kiểm tra nếu category mới (chưa tồn tại trong danh sách)
+    // Array.find(): Tìm phần tử đầu tiên thỏa mãn điều kiện
+    // Trả về undefined nếu không tìm thấy
     if (!servicePricing.find(cat => cat.category === newServiceItem.category)) {
+      // Thêm category mới vào danh sách
+      // Spread operator: Copy mảng cũ và thêm object mới
       setServicePricing([...servicePricing, {
         category: newServiceItem.category,
-        services: [newService]
+        services: [newService]  // Mảng services chỉ có 1 service mới
       }]);
     }
 
+    // Đóng modal và hiển thị thông báo
     setShowAddServiceModal(false);
-    alert("✅ Thêm bảng giá dịch vụ thành công!");
+    alert("Thêm bảng giá dịch vụ thành công!");
   };
 
   // Sửa bảng giá dịch vụ

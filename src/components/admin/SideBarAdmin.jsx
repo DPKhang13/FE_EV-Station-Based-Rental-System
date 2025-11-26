@@ -1,18 +1,35 @@
+// Import các thư viện và component cần thiết
+// NavLink: Component từ react-router-dom để tạo link điều hướng với style active
+// useNavigate: Hook để điều hướng programmatically (không dùng link)
+// useContext: Hook để lấy dữ liệu từ Context API
 import { NavLink, useNavigate } from "react-router-dom";
-import { FaChartPie, FaUsers, FaSignOutAlt, FaCar, FaMapMarkerAlt, FaUserTie, FaClipboardList, FaExclamationTriangle, FaShoppingCart } from "react-icons/fa";
-import { MdVerified } from "react-icons/md";
 import React, { useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import "./SideBarAdmin.css";
 
+// Component Sidebar cho trang Admin
+// Đây là component hiển thị menu điều hướng bên trái màn hình
 export default function SideBarAdmin() {
+  // useNavigate: Hook để điều hướng đến trang khác bằng code (không dùng link)
+  // Ví dụ: navigate("/login") sẽ chuyển đến trang login
   const navigate = useNavigate();
+  
+  // useContext: Lấy dữ liệu user từ AuthContext
+  // AuthContext là nơi lưu trữ thông tin user đã đăng nhập
   const { user } = useContext(AuthContext);
 
+  // Early return: Nếu chưa có user thì hiển thị loading
+  // Đây là pattern phổ biến để tránh render khi chưa có dữ liệu
   if (!user) return <p>Đang tải dữ liệu người dùng...</p>;
 
+  // Lấy tên user, nếu không có thì dùng "Admin" làm mặc định
+  // Toán tử || (OR) sẽ trả về giá trị đầu tiên truthy
   const name = user.name || "Admin";
 
+  // Hàm xử lý đăng xuất
+  // Khi user click nút đăng xuất:
+  // 1. Xóa token khỏi localStorage (token dùng để xác thực)
+  // 2. Điều hướng về trang login
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
     navigate("/login");
@@ -27,7 +44,6 @@ export default function SideBarAdmin() {
           {/* --- Nhóm a. Quản lý đội xe & điểm thuê --- */}
           <p className="sidebar__section-title">Đội xe & Điểm thuê</p>
           <NavLink to="/admin/quanlyxetaitram" className="sidebar__btn">
-            <FaCar />
             <span>Quản lý xe tại trạm</span>
           </NavLink>
          
@@ -37,21 +53,18 @@ export default function SideBarAdmin() {
 
 
           <NavLink to="/admin/locations" className="sidebar__btn">
-            <FaMapMarkerAlt />
             <span>Điểm thuê</span>
           </NavLink>
 
           {/* --- Nhóm b. Quản lý khách hàng --- */}
           <p className="sidebar__section-title"> Khách hàng</p>
           <NavLink to="/admin/customers" className="sidebar__btn">
-            <FaUsers />
             <span>Danh sách khách hàng</span>
           </NavLink>
 
           {/* --- Nhóm f. Quản lý đơn hàng --- */}
           <p className="sidebar__section-title"> Quản lý đơn hàng</p>
           <NavLink to="/admin/quanlydonhang" className="sidebar__btn">
-            <FaShoppingCart />
             <span>Quản lý đơn hàng</span>
           </NavLink>
 
@@ -59,7 +72,6 @@ export default function SideBarAdmin() {
           {/* --- Nhóm c. Quản lý nhân viên --- */}
           <p className="sidebar__section-title"> Nhân viên</p>
           <NavLink to="/admin/employees" className="sidebar__btn">
-            <FaUserTie />
             <span>Danh sách nhân viên</span>
           </NavLink>
 
@@ -67,18 +79,15 @@ export default function SideBarAdmin() {
           {/* --- Nhóm d. Báo cáo & phân tích --- */}
           <p className="sidebar__section-title"> Báo cáo & Phân tích</p>
           <NavLink to="/admin/dashboard" className="sidebar__btn">
-            <FaChartPie />
             <span>Thống kê tổng quan</span>
           </NavLink>
           <NavLink to="/admin/incident-reports" className="sidebar__btn">
-            <FaExclamationTriangle />
             <span>Báo cáo sự cố</span>
           </NavLink>
 
           {/* --- Nhóm e. Bảng giá --- */}
           <p className="sidebar__section-title"> Bảng giá</p>
           <NavLink to="/admin/banggia" className="sidebar__btn">
-            <FaClipboardList />
             <span>Bảng giá</span>
           </NavLink>
 
@@ -96,7 +105,6 @@ export default function SideBarAdmin() {
         </div>
 
         <button className="sidebar__logout" onClick={handleLogout}>
-          <FaSignOutAlt />
           <span>Đăng xuất</span>
         </button>
       </div>
