@@ -2390,3 +2390,135 @@ p {
 .icon-md.margin-right {
   margin-right: 8px;
 }
+
+/* Alternative Vehicle Modal */
+.modal-vehicle-list {
+  max-height: 500px;
+  overflow-y: auto;
+  margin: 20px 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  padding: 8px;
+}
+
+.modal-vehicle-item {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: #ffffff;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.modal-vehicle-item:hover {
+  border-color: var(--primary);
+  background: #f0f4ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+
+.modal-vehicle-item-selected {
+  border-color: var(--accent);
+  background: #d1fae5;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+.modal-vehicle-item-selected::before {
+  content: "✓";
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  background: var(--accent);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+}
+
+.modal-vehicle-image {
+  width: 100%;
+  height: 180px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-vehicle-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.modal-vehicle-item:hover .modal-vehicle-image img {
+  transform: scale(1.05);
+}
+
+.modal-vehicle-info {
+  flex: 1;
+}
+
+.modal-vehicle-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+
+.modal-vehicle-header strong {
+  font-size: 18px;
+  color: var(--text);
+  font-weight: 700;
+  flex: 1;
+}
+
+.modal-vehicle-badge {
+  background: var(--primary);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.modal-vehicle-details {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.modal-vehicle-details span:first-child {
+  grid-column: 1 / -1;
+  font-weight: 600;
+  color: var(--text);
+  background: #eff6ff;
+  border-color: var(--primary);
+}
+
+.modal-vehicle-details span {
+  padding: 6px 10px;
+  background: #f9fafb;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  text-align: center;
+  font-weight: 500;
+}

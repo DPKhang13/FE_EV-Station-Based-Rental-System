@@ -50,6 +50,7 @@ import ChiTietDonTrongAdmin from './pages/ChiTietDonTrongAdmin.jsx';
 import VehicleHistoryPage from './pages/VehicleHistoryPage.jsx';
 import AdminQuanLyDonHangPage from './components/admin/AdminQuanLyDonHangPage.jsx';
 import IncidentReportPage from './components/admin/IncidentReportPage.jsx';
+import PricingPage from './pages/PricingPage.jsx';
 
 const HomePage = () => (
   <ScrollToSectionWrapper>
@@ -149,6 +150,13 @@ function App() {
                 <PaymentPage />
               </ProtectedRoute>
             } />
+
+            <Route path="/pricing" element={
+              <ProtectedRoute>
+                <PricingPage />
+              </ProtectedRoute> 
+            } />
+              
 
             {/* ✅ Payment routes */}
             <Route path="/payment-callback" element={<PaymentCallbackPage />} />

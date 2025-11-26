@@ -498,6 +498,62 @@ export const getVehicleOrderHistory = async (vehicleId) => {
     }
 };
 
+/**
+ * Lấy danh sách xe có sẵn tại trạm theo carmodel
+ * @param {Number} stationId - ID của trạm
+ * @param {String} carmodel - Model của xe (tùy chọn)
+ * @returns {Promise<Array>} Danh sách xe có sẵn
+ */
+export const getAvailableVehiclesByStation = async (stationId, carmodel = null) => {
+    try {
+        const token = localStorage.getItem('accessToken');
+
+        let url = `${API_BASE_URL}/vehicles/station/${stationId}/available`;
+        if (carmodel) {
+            url += `?carmodel=${encodeURIComponent(carmodel)}`;
+        }
+
+        console.log('🚀 [API] Đang lấy xe có sẵn theo trạm và model:', url);
+
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: headers
+        });
+
+        console.log('📡 [API] Response status:', response.status);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ [API] Error response:', errorText);
+            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ [API] Nhận được danh sách xe có sẵn:', Array.isArray(data) ? data.length : 1, 'xe');
+
+        // API có thể trả về object hoặc array
+        if (Array.isArray(data)) {
+            return data;
+        } else if (data && typeof data === 'object') {
+            // Nếu là object, trả về array chứa object đó
+            return [data];
+        }
+
+        return [];
+    } catch (error) {
+        console.error('❌ [API] Lỗi khi lấy xe có sẵn:', error);
+        throw error;
+    }
+};
+
 // Default export cho vehicleService object
 const vehicleService = {
     getVehicles,
@@ -506,6 +562,7 @@ const vehicleService = {
     createVehicle,
     deleteVehicle,
     getVehiclesByStation,
+    getAvailableVehiclesByStation,
     updateVehicle,
     updateVehicleStatus,
     getVehicleDetail,

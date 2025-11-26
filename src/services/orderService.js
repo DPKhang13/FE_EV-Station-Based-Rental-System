@@ -179,6 +179,35 @@ export const orderService = {
         }
     },
 
+    /**
+     * Change vehicle - Thay đổi xe cho đơn hàng
+     * PUT /api/order/{orderId}/change-vehicle
+     * @param {string} orderId - ID của đơn hàng
+     * @param {number} newVehicleId - ID của xe mới
+     * @param {string} note - Ghi chú (tùy chọn)
+     */
+    changeVehicle: async (orderId, newVehicleId, note = "") => {
+        const body = {
+            newVehicleId: Number(newVehicleId),
+            note: note || ""
+        };
+        
+        console.log('🚀 [orderService.changeVehicle] Request:', {
+            orderId,
+            body,
+            endpoint: `/order/${orderId}/change-vehicle`
+        });
+        
+        try {
+            const result = await api.put(`/order/${orderId}/change-vehicle`, body);
+            console.log('✅ [orderService.changeVehicle] Success:', result);
+            return result;
+        } catch (error) {
+            console.error('❌ [orderService.changeVehicle] Error:', error);
+            throw error;
+        }
+    },
+
 };
 
 export default orderService;
