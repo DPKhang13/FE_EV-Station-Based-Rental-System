@@ -21,6 +21,14 @@ export default function OrderDetailPage() {
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [returnLoading, setReturnLoading] = useState(false);
   const [returnTimeError, setReturnTimeError] = useState(""); // Error message cho validation ngày trả
+  const [showCancelOrderModal, setShowCancelOrderModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelLoading, setCancelLoading] = useState(false);
+  
+  // State cho modal hủy bàn giao
+  const [showCancelHandoverModal, setShowCancelHandoverModal] = useState(false);
+  const [cancelHandoverReason, setCancelHandoverReason] = useState("");
+  const [cancelHandoverLoading, setCancelHandoverLoading] = useState(false);
 
   const [service, setService] = useState({
     serviceType: "",
@@ -418,23 +426,93 @@ export default function OrderDetailPage() {
     }
   };
 
-  const handleCancelHandover = async () => {
-    const ok = window.confirm("Hủy bàn giao và hủy đơn?");
-    if (!ok) return;
+  const openCancelOrderModal = () => {
+    setCancelReason("");
+    setShowCancelOrderModal(true);
+  };
+
+  const closeCancelOrderModal = () => {
+    if (cancelLoading) return;
+    setShowCancelOrderModal(false);
+    setCancelReason("");
+  };
+
+  // ⭐ Xác nhận hủy đơn hàng
+  const confirmCancelOrder = async () => {
+    if (!orderId) return;
 
     try {
-      setHandoverLoading(true);
-      
-      // ⭐ Gọi API cancel như trong ảnh: PUT /api/order/cancel/{orderId}
-      await orderService.cancel(orderId, "Hủy bàn giao");
+      setCancelLoading(true);
 
-      showToast("success", "✅ Đã hủy bàn giao và hủy đơn!");
-      await refetchDetails();
+      // ⭐ Giới hạn độ dài lý do hủy như MyBookingsPage
+      let trimmedReason = cancelReason.trim();
+      if (trimmedReason.length > 500) {
+        trimmedReason = trimmedReason.substring(0, 500);
+      }
+
+      // ⭐ Gọi API cancel
+      await orderService.cancel(orderId, trimmedReason || "Hủy đơn hàng");
+
+      showToast("success", "✅ Đã hủy đơn hàng thành công!");
+      setShowCancelOrderModal(false);
+      setCancelReason("");
+
+      await Promise.all([
+        refetchDetails(),
+        fetchOrderStatus(),
+        checkCurrentRentalOrder(vehicle?.vehicleId)
+      ]);
     } catch (err) {
       console.error(err);
       showToast("error", getApiMessage(err));
     } finally {
-      setHandoverLoading(false);
+      setCancelLoading(false);
+    }
+  };
+
+  // ⭐ Mở modal hủy bàn giao
+  const openCancelHandoverModal = () => {
+    setCancelHandoverReason("");
+    setShowCancelHandoverModal(true);
+  };
+
+  // ⭐ Đóng modal hủy bàn giao
+  const closeCancelHandoverModal = () => {
+    if (cancelHandoverLoading) return;
+    setShowCancelHandoverModal(false);
+    setCancelHandoverReason("");
+  };
+
+  // ⭐ Xác nhận hủy bàn giao (giữ nguyên logic API)
+  const handleCancelHandover = async () => {
+    if (!orderId) return;
+
+    try {
+      setCancelHandoverLoading(true);
+
+      // ⭐ Giới hạn độ dài lý do hủy như MyBookingsPage
+      let trimmedReason = cancelHandoverReason.trim();
+      if (trimmedReason.length > 500) {
+        trimmedReason = trimmedReason.substring(0, 500);
+      }
+
+      // ⭐ Gọi API cancel như trong ảnh: PUT /api/order/cancel/{orderId}
+      await orderService.cancel(orderId, trimmedReason || "Hủy bàn giao");
+
+      showToast("success", "✅ Đã hủy bàn giao và hủy đơn!");
+      setShowCancelHandoverModal(false);
+      setCancelHandoverReason("");
+
+      await Promise.all([
+        refetchDetails(),
+        fetchOrderStatus(),
+        checkCurrentRentalOrder(vehicle?.vehicleId)
+      ]);
+    } catch (err) {
+      console.error(err);
+      showToast("error", getApiMessage(err));
+    } finally {
+      setCancelHandoverLoading(false);
     }
   };
 
@@ -531,7 +609,7 @@ export default function OrderDetailPage() {
         </button>
         <button
           className="btn btn-danger"
-          onClick={handleCancelHandover}
+          onClick={openCancelOrderModal}
           disabled={handoverLoading}
         >
           Hủy đơn
@@ -1589,7 +1667,7 @@ if (pickupDetail && vehicleStatus !== "RENTAL") {
 
             <button 
                 className="btn btn-danger"
-                onClick={handleCancelHandover}
+                onClick={openCancelHandoverModal}
                 disabled={handoverLoading}
             >
                 ❌ Hủy bàn giao
@@ -1648,7 +1726,7 @@ if (vehicleStatus === "RENTAL") {
 
                     <button
                       className="btn btn-danger"
-                      onClick={handleCancelHandover}
+                      onClick={openCancelHandoverModal}
                       disabled={pickupOK || fullOK || handoverLoading}
                     >
                       ❌ Hủy bàn giao
@@ -1770,7 +1848,7 @@ if (canHandOver && !vehicleReady && !isVehicleRentedByOther) {
 
                   <button
                     className="btn btn-danger"
-                    onClick={handleCancelHandover}
+                    onClick={openCancelHandoverModal}
                     disabled={pickupOK || fullOK || handoverLoading}
                   >
                     ❌ Hủy bàn giao
@@ -1898,6 +1976,160 @@ if (canHandOver && !vehicleReady && !isVehicleRentedByOther) {
                   <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
                 ĐÓNG
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Order Modal */}
+      {showCancelOrderModal && (
+        <div
+          className="modal-overlay"
+          onClick={closeCancelOrderModal}
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1200
+          }}
+        >
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#fff",
+              borderRadius: "16px",
+              padding: "24px",
+              width: "100%",
+              maxWidth: "520px",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
+              border: "2px solid #111"
+            }}
+          >
+            <h2 style={{ marginTop: 0 }}>Hủy đơn hàng</h2>
+            <p style={{ color: "#4b5563", marginBottom: "16px" }}>
+              Lý do hủy đơn (tùy chọn):
+            </p>
+            <textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="Nhập lý do hủy đơn hàng..."
+              style={{
+                width: "100%",
+                minHeight: "110px",
+                padding: "12px",
+                border: "1px solid #d1d5db",
+                borderRadius: "8px",
+                fontSize: "14px",
+                fontFamily: "inherit",
+                marginBottom: "20px"
+              }}
+            />
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}>
+              <button
+                className="btn btn-secondary"
+                onClick={closeCancelOrderModal}
+                disabled={cancelLoading}
+                style={{
+                  background: "#f3f4f6",
+                  color: "#111827",
+                  borderColor: "#d1d5db"
+                }}
+              >
+                Đóng
+              </button>
+              <button
+                className="btn btn-danger"
+                onClick={confirmCancelOrder}
+                disabled={cancelLoading}
+                style={{
+                  minWidth: "140px",
+                  background: "#dc2626",
+                  borderColor: "#dc2626"
+                }}
+              >
+                {cancelLoading ? "Đang hủy..." : "Xác nhận hủy"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Handover Modal */}
+      {showCancelHandoverModal && (
+        <div
+          className="modal-overlay"
+          onClick={closeCancelHandoverModal}
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1200
+          }}
+        >
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#fff",
+              borderRadius: "16px",
+              padding: "24px",
+              width: "100%",
+              maxWidth: "520px",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
+              border: "2px solid #111"
+            }}
+          >
+            <h2 style={{ marginTop: 0 }}>Hủy bàn giao</h2>
+            <p style={{ color: "#4b5563", marginBottom: "16px" }}>
+              Lý do hủy bàn giao (tùy chọn):
+            </p>
+            <textarea
+              value={cancelHandoverReason}
+              onChange={(e) => setCancelHandoverReason(e.target.value)}
+              placeholder="Nhập lý do hủy bàn giao..."
+              style={{
+                width: "100%",
+                minHeight: "110px",
+                padding: "12px",
+                border: "1px solid #d1d5db",
+                borderRadius: "8px",
+                fontSize: "14px",
+                fontFamily: "inherit",
+                marginBottom: "20px"
+              }}
+            />
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}>
+              <button
+                className="btn btn-secondary"
+                onClick={closeCancelHandoverModal}
+                disabled={cancelHandoverLoading}
+                style={{
+                  background: "#f3f4f6",
+                  color: "#111827",
+                  borderColor: "#d1d5db"
+                }}
+              >
+                Đóng
+              </button>
+              <button
+                className="btn btn-danger"
+                onClick={handleCancelHandover}
+                disabled={cancelHandoverLoading}
+                style={{
+                  minWidth: "140px",
+                  background: "#dc2626",
+                  borderColor: "#dc2626"
+                }}
+              >
+                {cancelHandoverLoading ? "Đang hủy..." : "Xác nhận hủy"}
               </button>
             </div>
           </div>
