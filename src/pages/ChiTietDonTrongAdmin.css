@@ -31,6 +31,16 @@
   bottom: 0;
 }
 
+/* Action buttons container - Nút quay lại và xem lý do hủy */
+.od-action-buttons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
 /* Back button */
 .od-back-btn {
   background: #111827;
@@ -39,9 +49,9 @@
   border-radius: 8px;
   font-size: 14px;
   border: none;
-  margin-bottom: 18px;
   cursor: pointer;
   transition: 0.2s ease;
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 .od-back-btn:hover {
@@ -69,6 +79,7 @@
 .od-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .od-table th {
@@ -79,12 +90,34 @@
   color: #374151;
   text-transform: uppercase;
   border-bottom: 2px solid #e5e7eb;
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 .od-table td {
   padding: 14px 12px;
   border-bottom: 1px solid #e5e7eb;
   font-size: 14px;
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Cột Detail ID - nhỏ lại */
+.od-table th:nth-child(1),
+.od-table td:nth-child(1) {
+  width: 60px;
+  min-width: 60px;
+  max-width: 60px;
+  text-align: center;
+}
+
+/* Cột Mô tả - tăng độ rộng để hiển thị rõ hơn */
+.od-table th:nth-child(3),
+.od-table td:nth-child(3) {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Money formatting */
@@ -100,6 +133,7 @@
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 /* Status styling */
@@ -131,4 +165,327 @@
 .od-loading {
   padding: 20px;
   font-size: 16px;
+}
+
+/* Refund Banner */
+.od-refund-banner {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 2px solid #f59e0b;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+}
+
+.od-refund-banner-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.od-refund-banner-content strong {
+  font-size: 18px;
+  color: #d97706;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.od-refund-banner-content p {
+  font-size: 14px;
+  color: #92400e;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.od-refund-amount {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(217, 119, 6, 0.3);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.od-refund-amount strong {
+  color: #d97706;
+  font-size: 16px;
+}
+
+/* Cancel Reason Button */
+.od-cancel-reason-btn {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.od-cancel-reason-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+}
+
+.od-cancel-reason-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.od-cancel-reason-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Refund Action Button */
+.od-refund-action {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.od-refund-btn {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.od-refund-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+}
+
+.od-refund-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.od-refund-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Refund Modal */
+.od-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.od-modal-content {
+  background: #FFFFFF;
+  padding: 32px;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  border-top: 3px solid #DC0000;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.od-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #E0E0E0;
+}
+
+.od-modal-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #000000;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.od-modal-close {
+  background: transparent;
+  border: 2px solid #000000;
+  color: #000000;
+  width: 32px;
+  height: 32px;
+  border-radius: 0;
+  cursor: pointer;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  padding: 0;
+  line-height: 1;
+}
+
+.od-modal-close:hover {
+  background: #000000;
+  color: #FFFFFF;
+}
+
+.od-modal-body {
+  margin-bottom: 24px;
+}
+
+.od-form-group {
+  margin-bottom: 20px;
+}
+
+.od-form-group label {
+  display: block;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.od-form-group input,
+.od-form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #E0E0E0;
+  border-radius: 0;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.3s;
+  box-sizing: border-box;
+}
+
+.od-form-group input:focus,
+.od-form-group textarea:focus {
+  outline: none;
+  border-color: #DC0000;
+  box-shadow: 0 0 0 3px rgba(220, 0, 0, 0.1);
+}
+
+.od-form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.od-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid #E0E0E0;
+}
+
+.od-modal-btn-cancel,
+.od-modal-btn-submit {
+  padding: 12px 24px;
+  border-radius: 0;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 2px solid;
+}
+
+.od-modal-btn-cancel {
+  background: transparent;
+  color: #000000;
+  border-color: #000000;
+}
+
+.od-modal-btn-cancel:hover:not(:disabled) {
+  background: #000000;
+  color: #FFFFFF;
+}
+
+.od-modal-btn-submit {
+  background: #DC0000;
+  color: #FFFFFF;
+  border-color: #DC0000;
+}
+
+.od-modal-btn-submit:hover:not(:disabled) {
+  background: #B80000;
+  border-color: #B80000;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 0, 0, 0.3);
+}
+
+.od-modal-btn-cancel:disabled,
+.od-modal-btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+.od-modal-btn-submit {
+  padding: 12px 24px;
+  border-radius: 0;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 2px solid;
+}
+
+.od-modal-btn-cancel {
+  background: transparent;
+  color: #000000;
+  border-color: #000000;
+}
+
+.od-modal-btn-cancel:hover:not(:disabled) {
+  background: #000000;
+  color: #FFFFFF;
+}
+
+.od-modal-btn-submit {
+  background: #DC0000;
+  color: #FFFFFF;
+  border-color: #DC0000;
+}
+
+.od-modal-btn-submit:hover:not(:disabled) {
+  background: #B80000;
+  border-color: #B80000;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 0, 0, 0.3);
+}
+
+.od-modal-btn-cancel:disabled,
+.od-modal-btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }

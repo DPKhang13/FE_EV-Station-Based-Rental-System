@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import api from "../services/api";
 import "./ChiTietDonTrongAdmin.css";
 
 const ChiTietDonTrongAdmin = () => {
@@ -9,15 +10,91 @@ const ChiTietDonTrongAdmin = () => {
   const navigate = useNavigate();
 
   const [details, setDetails] = useState([]);
+  const [orderStatus, setOrderStatus] = useState(null);
+  const [refundedAmount, setRefundedAmount] = useState(null);
+  const [cancellationReason, setCancellationReason] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refunding, setRefunding] = useState(false);
+  const [loadingCancelReason, setLoadingCancelReason] = useState(false);
+  const [showRefundModal, setShowRefundModal] = useState(false);
+  const [showCancelReasonModal, setShowCancelReasonModal] = useState(false);
+  const [refundForm, setRefundForm] = useState({
+    amount: '',
+    reason: ''
+  });
 
   useEffect(() => {
-    const fetchDetails = async () => {
+    const fetchData = async () => {
       try {
-        const res = await axios.get(
+        // Fetch order details
+        const detailsRes = await axios.get(
           `http://localhost:8080/api/order-details/order/${orderId}`
         );
-        setDetails(res.data || []);
+        setDetails(detailsRes.data || []);
+
+        // Lấy order status từ getAll() - tìm order theo orderId
+        let fetchedOrderStatus = null;
+        try {
+          const { orderService } = await import("../services/orderService");
+          const allOrdersRes = await orderService.getAll();
+          const allOrders = Array.isArray(allOrdersRes?.data) ? allOrdersRes.data : 
+                           Array.isArray(allOrdersRes) ? allOrdersRes : [];
+          
+          const order = allOrders.find(o => 
+            String(o.orderId || o.order_id) === String(orderId)
+          );
+          
+          if (order) {
+            fetchedOrderStatus = order.status || null;
+            setOrderStatus(fetchedOrderStatus);
+            // Không lấy lý do hủy ngay, chỉ lấy khi user click button
+          } else {
+            // Thử lấy từ details nếu có
+            if (detailsRes.data && detailsRes.data.length > 0) {
+              const firstDetail = detailsRes.data[0];
+              if (firstDetail.order && firstDetail.order.status) {
+                fetchedOrderStatus = firstDetail.order.status;
+                setOrderStatus(fetchedOrderStatus);
+                // Không lấy lý do hủy ngay, chỉ lấy khi user click button
+              }
+            }
+          }
+        } catch (orderErr) {
+          console.error("❌ Không thể tải thông tin đơn hàng:", orderErr);
+          // Thử lấy từ details nếu có
+          if (detailsRes.data && detailsRes.data.length > 0) {
+            const firstDetail = detailsRes.data[0];
+            if (firstDetail.order && firstDetail.order.status) {
+              fetchedOrderStatus = firstDetail.order.status;
+              setOrderStatus(fetchedOrderStatus);
+              // Không lấy lý do hủy ngay, chỉ lấy khi user click button
+            }
+          }
+        }
+
+        // Fetch refunded amount nếu order status là REFUNDED
+        // API: GET /api/payment/order/{orderId}/refunded-amount
+        if (fetchedOrderStatus && fetchedOrderStatus.toUpperCase() === 'REFUNDED') {
+          try {
+            const refundRes = await api.get(`/payment/order/${orderId}/refunded-amount`);
+            const refundData = refundRes?.data || refundRes;
+            
+            // API có thể trả về object với các properties hoặc refundedAmount trực tiếp
+            if (refundData) {
+              // Thử nhiều cách để lấy refundedAmount
+              const amount = refundData.refundedAmount || 
+                            refundData.amount ||
+                            (typeof refundData === 'number' ? refundData : null);
+              
+              if (amount !== null && amount !== undefined) {
+                setRefundedAmount(amount);
+              }
+            }
+          } catch (refundErr) {
+            console.error("❌ Không thể tải số tiền đã hoàn:", refundErr);
+            // Không set error vì có thể đơn hàng chưa được hoàn tiền
+          }
+        }
       } catch (err) {
         console.error("❌ Lỗi tải chi tiết đơn:", err);
       } finally {
@@ -25,22 +102,213 @@ const ChiTietDonTrongAdmin = () => {
       }
     };
 
-    fetchDetails();
+    fetchData();
   }, [orderId]);
+
+  // Helper function: Chuyển status sang tiếng Việt
+  const getStatusText = (status) => {
+    if (!status) return 'N/A';
+    const s = status.toUpperCase();
+    const statusMap = {
+      'SUCCESS': 'Thành công',
+      'PENDING': 'Chờ xử lý',
+      'PROCESSING': 'Đang xử lý',
+      'FAILED': 'Thất bại',
+      'CANCEL': 'Đã hủy',
+      'CANCELLED': 'Đã hủy',
+      'CANCELED': 'Đã hủy',
+      'COMPLETED': 'Hoàn thành',
+      'REFUNDED': 'Đã hoàn tiền',
+      'PAID': 'Đã thanh toán',
+      'UNPAID': 'Chưa thanh toán'
+    };
+    return statusMap[s] || status;
+  };
 
   if (loading) {
     return <div className="od-loading">Đang tải chi tiết đơn hàng...</div>;
   }
 
+  // Kiểm tra nếu đơn hàng đã được hoàn tiền
+  const isRefunded = orderStatus && orderStatus.toUpperCase() === 'REFUNDED';
+  
+  // Kiểm tra nếu đơn hàng đã bị hủy (cần hoàn tiền)
+  // Hỗ trợ cả CANCELED và CANCELLED
+  // Cũng hiển thị button cho đơn hàng REFUNDED (vì đơn hàng đã hoàn tiền thường là do đã bị hủy trước đó)
+  const statusUpper = orderStatus ? orderStatus.toUpperCase() : '';
+  const isCanceled = statusUpper === 'CANCELED' || 
+                     statusUpper === 'CANCELLED' || 
+                     statusUpper === 'CANCEL' ||
+                     statusUpper.includes('CANCEL') ||
+                     isRefunded; // Hiển thị button cho cả đơn hàng đã hoàn tiền (có thể đã bị hủy trước đó)
+  
+  // Debug: Log để kiểm tra
+  console.log('🔍 [ChiTietDonTrongAdmin] Debug:', {
+    orderStatus,
+    statusUpper,
+    isCanceled,
+    isRefunded,
+    orderId
+  });
+
+  // Mở popup hoàn tiền
+  const handleOpenRefundModal = () => {
+    setShowRefundModal(true);
+    setRefundForm({ amount: '', reason: '' });
+  };
+
+  // Đóng popup hoàn tiền
+  const handleCloseRefundModal = () => {
+    setShowRefundModal(false);
+    setRefundForm({ amount: '', reason: '' });
+  };
+
+  // Xem lý do hủy - Gọi API khi click button
+  const handleViewCancelReason = async () => {
+    try {
+      setLoadingCancelReason(true);
+      setCancellationReason(null);
+      setShowCancelReasonModal(true);
+
+      // Gọi API để lấy chi tiết đơn hàng
+      const { orderService } = await import("../services/orderService");
+      const allOrdersRes = await orderService.getAll();
+      const allOrders = Array.isArray(allOrdersRes?.data) ? allOrdersRes.data : 
+                       Array.isArray(allOrdersRes) ? allOrdersRes : [];
+      
+      const order = allOrders.find(o => 
+        String(o.orderId || o.order_id) === String(orderId)
+      );
+
+      if (order) {
+        const reason = order.cancellationReason || 
+                     order.cancelReason || 
+                     order.reason || 
+                     'Không có lý do hủy';
+        setCancellationReason(reason);
+      } else {
+        // Thử lấy từ details nếu có
+        try {
+          const detailsRes = await axios.get(
+            `http://localhost:8080/api/order-details/order/${orderId}`
+          );
+          if (detailsRes.data && detailsRes.data.length > 0) {
+            const firstDetail = detailsRes.data[0];
+            if (firstDetail.order) {
+              const reason = firstDetail.order.cancellationReason || 
+                           firstDetail.order.cancelReason || 
+                           firstDetail.order.reason || 
+                           'Không có lý do hủy';
+              setCancellationReason(reason);
+            } else {
+              setCancellationReason('Không tìm thấy thông tin lý do hủy');
+            }
+          } else {
+            setCancellationReason('Không tìm thấy thông tin lý do hủy');
+          }
+        } catch (detailErr) {
+          console.error("❌ Lỗi khi lấy chi tiết đơn hàng:", detailErr);
+          setCancellationReason('Không thể tải lý do hủy. Vui lòng thử lại sau.');
+        }
+      }
+    } catch (err) {
+      console.error('❌ Lỗi khi lấy lý do hủy:', err);
+      setCancellationReason('Không thể tải lý do hủy. Vui lòng thử lại sau.');
+    } finally {
+      setLoadingCancelReason(false);
+    }
+  };
+
+  // Đóng modal lý do hủy
+  const handleCloseCancelReasonModal = () => {
+    setShowCancelReasonModal(false);
+    setCancellationReason(null);
+  };
+
+  // Xử lý submit hoàn tiền
+  const handleRefund = async () => {
+    try {
+      setRefunding(true);
+      
+      // Xây dựng URL với query parameter amount nếu có
+      let url = `/payment/refund/${orderId}`;
+      if (refundForm.amount && refundForm.amount.trim()) {
+        const amount = parseFloat(refundForm.amount);
+        if (!isNaN(amount) && amount > 0) {
+          url += `?amount=${amount}`;
+        }
+      }
+      
+      // Gọi API hoàn tiền: POST /api/payment/refund/{orderId}?amount={amount}
+      const refundRes = await api.post(url);
+      
+      alert('✅ Hoàn tiền thành công!');
+      
+      // Đóng popup và reload dữ liệu
+      handleCloseRefundModal();
+      window.location.reload();
+    } catch (err) {
+      console.error('❌ Lỗi khi hoàn tiền:', err);
+      const errorMsg = err?.response?.data?.message || 
+                      err?.message || 
+                      'Không thể hoàn tiền. Vui lòng thử lại sau.';
+      alert(`Lỗi: ${errorMsg}`);
+    } finally {
+      setRefunding(false);
+    }
+  };
+
   return (
     <div className="od-container">
 
-      {/* Nút quay lại */}
-      <button className="od-back-btn" onClick={() => navigate(-1)}>
-        Quay lại
-      </button>
-
       <h1 className="od-title">Chi tiết đơn hàng</h1>
+
+      {/* Banner thông báo REFUNDED */}
+      {isRefunded && (
+        <div className="od-refund-banner">
+          <div className="od-refund-banner-content">
+            <strong>Đơn hàng đã được hoàn tiền</strong>
+            <p>Đơn hàng này đã được hoàn tiền và không còn hiệu lực.</p>
+            {refundedAmount !== null && refundedAmount !== undefined && (
+              <p className="od-refund-amount">
+                Số tiền đã hoàn: <strong>{Number(refundedAmount).toLocaleString('vi-VN')} VNĐ</strong>
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Nút quay lại và xem lý do hủy nằm kế nhau */}
+      <div className="od-action-buttons">
+        <button className="od-back-btn" onClick={() => navigate(-1)}>
+          Quay lại
+        </button>
+        
+        {/* Button xem lý do hủy cho đơn hàng bị hủy */}
+        {isCanceled && (
+          <button 
+            className="od-cancel-reason-btn" 
+            onClick={handleViewCancelReason}
+            disabled={loadingCancelReason}
+          >
+            {loadingCancelReason ? 'Đang tải...' : 'Xem lý do hủy'}
+          </button>
+        )}
+      </div>
+
+      {/* Nút hoàn tiền cho đơn hàng đã hủy */}
+      {/* Hiển thị nút nếu đơn hàng bị hủy và chưa được hoàn tiền */}
+      {isCanceled && !isRefunded && (
+        <div className="od-refund-action">
+          <button 
+            className="od-refund-btn" 
+            onClick={handleOpenRefundModal}
+            disabled={refunding}
+          >
+            Hoàn tiền
+          </button>
+        </div>
+      )}
 
       <div className="od-card">
         {details.length === 0 ? (
@@ -60,9 +328,9 @@ const ChiTietDonTrongAdmin = () => {
             </thead>
 
             <tbody>
-              {details.map((d) => (
-                <tr key={d.detailId}>
-                  <td>{d.detailId}</td>
+              {details.map((d, index) => (
+                <tr key={d.detailId || index}>
+                  <td>{index + 1}</td>
                   <td>{d.type}</td>
                   <td>{d.description}</td>
                   <td className="od-money">
@@ -73,7 +341,7 @@ const ChiTietDonTrongAdmin = () => {
 
                   <td>
                     <span className={`od-badge status-${d.status}`}>
-                      {d.status}
+                      {getStatusText(d.status)}
                     </span>
                   </td>
                 </tr>
@@ -82,6 +350,106 @@ const ChiTietDonTrongAdmin = () => {
           </table>
         )}
       </div>
+
+      {/* Popup hoàn tiền */}
+      {showRefundModal && (
+        <div className="od-modal-overlay" onClick={handleCloseRefundModal}>
+          <div className="od-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="od-modal-header">
+              <h2>Hoàn tiền đơn hàng</h2>
+              <button className="od-modal-close" onClick={handleCloseRefundModal}>
+                ×
+              </button>
+            </div>
+
+            <div className="od-modal-body">
+              <div className="od-form-group">
+                <label htmlFor="refund-amount">
+                  Số tiền hoàn (VNĐ) <span style={{ color: '#999', fontSize: '12px' }}>(Tùy chọn - để trống để hoàn toàn bộ)</span>
+                </label>
+                <input
+                  id="refund-amount"
+                  type="number"
+                  placeholder="Nhập số tiền cần hoàn..."
+                  value={refundForm.amount}
+                  onChange={(e) => setRefundForm({ ...refundForm, amount: e.target.value })}
+                  min="0"
+                  step="1000"
+                />
+              </div>
+
+              <div className="od-form-group">
+                <label htmlFor="refund-reason">Lý do hoàn tiền</label>
+                <textarea
+                  id="refund-reason"
+                  placeholder="Nhập lý do hoàn tiền (tùy chọn)..."
+                  value={refundForm.reason}
+                  onChange={(e) => setRefundForm({ ...refundForm, reason: e.target.value })}
+                  rows="4"
+                />
+              </div>
+            </div>
+
+            <div className="od-modal-actions">
+              <button 
+                className="od-modal-btn-cancel" 
+                onClick={handleCloseRefundModal}
+                disabled={refunding}
+              >
+                Hủy
+              </button>
+              <button 
+                className="od-modal-btn-submit" 
+                onClick={handleRefund}
+                disabled={refunding}
+              >
+                {refunding ? 'Đang xử lý...' : 'Xác nhận hoàn tiền'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal hiển thị lý do hủy */}
+      {showCancelReasonModal && (
+        <div className="od-modal-overlay" onClick={handleCloseCancelReasonModal}>
+          <div className="od-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="od-modal-header">
+              <h2>Lý do hủy đơn hàng</h2>
+              <button className="od-modal-close" onClick={handleCloseCancelReasonModal}>
+                ×
+              </button>
+            </div>
+
+            <div className="od-modal-body">
+              {loadingCancelReason ? (
+                <p style={{ textAlign: 'center', padding: '20px' }}>Đang tải...</p>
+              ) : (
+                <p style={{ 
+                  fontSize: '14px', 
+                  lineHeight: '1.6',
+                  color: '#374151',
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                  margin: 0
+                }}>
+                  {cancellationReason || 'Không có lý do hủy'}
+                </p>
+              )}
+            </div>
+
+            <div className="od-modal-actions">
+              <button 
+                className="od-modal-btn-submit" 
+                onClick={handleCloseCancelReasonModal}
+                disabled={loadingCancelReason}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

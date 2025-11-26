@@ -1,0 +1,280 @@
+/* ================================
+   ADMIN QUẢN LÝ ĐƠN HÀNG - Mercedes Professional Design
+   Design giống với trang staff
+   ================================ */
+
+.verify-container {
+  background: #FFFFFF;
+  padding: 40px 60px;
+  border-radius: 0;
+  min-height: 100vh;
+  font-family: "Poppins", -apple-system, sans-serif;
+}
+
+.verify-title {
+  font-size: 24px;
+  font-weight: 300;
+  margin-bottom: 8px;
+  color: #000000;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  position: relative;
+  padding-bottom: 30px;
+  text-align: center;
+}
+
+.verify-title::after {
+  content: '';
+  display: block;
+  width: 120px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, #DC0000 50%, transparent 100%);
+  margin: 20px auto 0;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+}
+
+.verify-subtitle {
+  color: #666666;
+  font-size: 14px;
+  font-weight: 300;
+  margin-bottom: 20px;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+/* Search box */
+.verify-search {
+  width: 100%;
+  padding: 14px 20px;
+  border: 2px solid #E0E0E0;
+  border-radius: 0;
+  font-size: 14px;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  background: #FFFFFF;
+  margin-bottom: 20px;
+}
+
+.verify-search:focus {
+  outline: none;
+  border-color: #000000;
+  box-shadow: none;
+}
+
+.verify-search::placeholder {
+  color: #999999;
+  font-weight: 300;
+}
+
+/* Section */
+.verify-section {
+  background: #FFFFFF;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+  border: 2px solid #E0E0E0;
+  border-top: 3px solid #DC0000;
+}
+
+.verify-section h2 {
+  font-size: 20px;
+  font-weight: 400;
+  margin-bottom: 0;
+  padding: 20px 50px;
+  color: #000000;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-bottom: 1px solid #E0E0E0;
+  background: #FAFAFA;
+}
+
+/* Table */
+.verify-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.verify-table thead tr {
+  background: #000000;
+  color: #FFFFFF;
+}
+
+.verify-table th {
+  padding: 18px 20px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border-bottom: 2px solid #DC0000;
+}
+
+.verify-table tbody tr {
+  border-bottom: 1px solid #E0E0E0;
+  transition: all 0.3s ease;
+}
+
+.verify-table tbody tr:hover {
+  background-color: #F5F5F5;
+}
+
+.verify-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.verify-table td {
+  padding: 16px 20px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 300;
+  color: #333333;
+  vertical-align: middle;
+  letter-spacing: 0.3px;
+}
+
+/* Phone */
+.verify-phone {
+  color: #666666;
+  font-size: 13px;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+}
+
+/* Status */
+.verify-status {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 0;
+  font-weight: 400;
+  font-size: 12px;
+  white-space: nowrap;
+  box-shadow: none;
+  transition: all 0.3s ease;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border: 1px solid;
+}
+
+.verify-status.success {
+  background: #E8F5E9;
+  color: #2E7D32;
+  border-color: #4CAF50;
+}
+
+.verify-status.warning {
+  background: #FFF9C4;
+  color: #F57F17;
+  border-color: #FBC02D;
+}
+
+/* Buttons */
+.verify-btn {
+  border: 2px solid #000000;
+  border-radius: 0;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-weight: 400;
+  font-size: 12px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.verify-btn.primary {
+  background: #000000;
+  color: #FFFFFF;
+  position: relative;
+  overflow: hidden;
+}
+
+.verify-btn.primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: #DC0000;
+  transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: -1;
+}
+
+.verify-btn.primary:hover::before {
+  left: 0;
+}
+
+.verify-btn.primary:hover {
+  border-color: #DC0000;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(220, 0, 0, 0.3);
+}
+
+.verify-btn.info {
+  background: transparent;
+  color: #0B5ED7;
+  border-color: #0B5ED7;
+}
+
+.verify-btn.info:hover {
+  background: #0B5ED7;
+  color: #FFFFFF;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(11, 94, 215, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .verify-container {
+    padding: 30px 20px;
+  }
+
+  .verify-title {
+    font-size: 28px;
+    letter-spacing: 4px;
+  }
+
+  .verify-table th,
+  .verify-table td {
+    font-size: 12px;
+    padding: 12px;
+  }
+
+  .verify-btn {
+    padding: 8px 16px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 768px) {
+  .verify-title {
+    font-size: 24px;
+    letter-spacing: 3px;
+  }
+
+  .verify-section h2 {
+    font-size: 18px;
+    padding: 15px 20px;
+  }
+
+  .verify-table {
+    font-size: 11px;
+  }
+
+  .verify-table th,
+  .verify-table td {
+    padding: 10px;
+  }
+}
+

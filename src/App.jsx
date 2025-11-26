@@ -48,7 +48,7 @@ import ChiTietKhachHang from './pages/ChiTietKhachHang.jsx';
 import LichSuThue from './pages/LichSuThue.jsx';
 import ChiTietDonTrongAdmin from './pages/ChiTietDonTrongAdmin.jsx';
 import VehicleHistoryPage from './pages/VehicleHistoryPage.jsx';
-import AdminQuanLyDonHangPage from './pages/AdminQuanLyDonHangPage.jsx';
+import AdminQuanLyDonHangPage from './components/admin/AdminQuanLyDonHangPage.jsx';
 import IncidentReportPage from './components/admin/IncidentReportPage.jsx';
 
 const HomePage = () => (

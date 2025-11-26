@@ -42,6 +42,14 @@ export const orderService = {
     },
 
     /**
+     * Lấy tất cả đơn hàng (simple version)
+     * GET /api/order/getAll/simple
+     */
+    getAllSimple: async () => {
+        return await api.get('/order/getAll/simple');
+    },
+
+    /**
      * Lấy đơn hàng của tôi
      * GET /api/order/get/my-orders
      */
