@@ -336,12 +336,12 @@
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  animation: fadeIn 0.25s ease;
+  animation: fadeIn 0.15s ease-out;
+  will-change: opacity;
 }
 
 .modal {
@@ -354,7 +354,8 @@
   border-radius: 0;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
   border: 2px solid #000000;
-  animation: slideUp 0.3s ease;
+  animation: slideUp 0.2s ease-out;
+  will-change: transform, opacity;
 }
 
 .modal h2 {
@@ -404,7 +405,7 @@
   color: #000000;
   font-size: 14px;
   font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  transition: all 0.3s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .form-group input:focus,
@@ -432,22 +433,20 @@
   letter-spacing: 1.5px;
   text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   border-radius: 0;
   border: 2px solid;
 }
 
 .modal-actions .btn-primary {
-  background: #000000;
+  background: #DC0000;
   color: #FFFFFF;
-  border-color: #000000;
+  border-color: #DC0000;
 }
 
 .modal-actions .btn-primary:hover {
-  background: #DC0000;
-  border-color: #DC0000;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(220, 0, 0, 0.3);
+  background: #B80000;
+  border-color: #B80000;
 }
 
 .modal-actions .btn-danger {
@@ -474,7 +473,7 @@
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;

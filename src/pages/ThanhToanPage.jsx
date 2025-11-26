@@ -3,14 +3,14 @@ import React, { useState, useEffect } from "react";
 import transactionService from "../services/transactionService";
 import "./ThanhToanPage.css";
 
-// 🪙 Định dạng tiền VND
+// 💰 Định dạng tiền VND
 const formatVND = (n) =>
   (Number(n) || 0).toLocaleString("vi-VN", {
     style: "currency",
     currency: "VND",
   });
 
-// 🔤 Dịch trạng thái sang tiếng Việt
+// 🔄 Dịch trạng thái sang tiếng Việt
 const translateStatus = (status = "") => {
   const map = {
     SUCCESS: "Thành công",
@@ -24,10 +24,8 @@ const translateStatus = (status = "") => {
     SERVICE: "Đã thanh toán dịch vụ",
     SERVICE_SERVICE: "Đã thanh toán dịch vụ phát sinh",
     FULL_PAYMENT_PENDING: "Đã thanh toán toàn bộ bằng tiền mặt",
-    DEPOSIT_PENpusDING: "Đã đặt cọc bằng tiền mặt",
+    DEPOSIT_PENDING: "Đã đặt cọc bằng tiền mặt",
     PICKUP_PENDING: "Đã trả phần còn lại bằng tiền mặt",
-    
-   
   };
   return map[status.toUpperCase()] || "Không xác định";
 };
@@ -65,6 +63,7 @@ const translateType = (type = "") => {
 
 const ThanhToanPage = () => {
   const [transactions, setTransactions] = useState([]);
+  const [allTransactions, setAllTransactions] = useState([]); // Lưu tất cả transactions để filter
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [phone, setPhone] = useState("");
@@ -74,41 +73,69 @@ const ThanhToanPage = () => {
     fetchTransactions();
   }, []);
 
-  // 🔁 Hàm tải danh sách giao dịch
+  // 📁 Hàm tải danh sách giao dịch
   const fetchTransactions = async () => {
     try {
       setLoading(true);
       const res = await transactionService.getAllTransactions();
       const data = Array.isArray(res?.data) ? res.data : res;
-      setTransactions(data || []);
+      const transactionsList = data || [];
+      setAllTransactions(transactionsList); // Lưu tất cả để filter
+      setTransactions(transactionsList); // Hiển thị tất cả ban đầu
     } catch (err) {
       console.error("❌ Lỗi tải giao dịch:", err);
+      setAllTransactions([]);
       setTransactions([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // 🔍 Tra cứu theo số điện thoại
-  const handleSearch = async () => {
-    if (!phone.trim()) {
-      fetchTransactions();
+  // 🔍 Tìm kiếm theo nhiều tiêu chí (tên, số điện thoại, tên trạm) - partial match
+  const handleSearch = () => {
+    const query = searchQuery.trim().toLowerCase();
+    
+    if (!query) {
+      // Nếu không có query, hiển thị tất cả
+      setTransactions(allTransactions);
+      setError("");
       return;
     
     }
     setError("");
-    try {
-      setLoading(true);
-      const res = await transactionService.searchByUserId(phone);
-      setTransactions(Array.isArray(res) ? res : []);
-    } catch (err) {
-      console.error("❌ Lỗi tìm kiếm:", err);
+    
+    // ✅ Filter theo nhiều tiêu chí với partial match
+    const filtered = allTransactions.filter((t) => {
+      const customerName = (t.customerName || "").toLowerCase();
+      const customerPhone = (t.customerPhone || "").toLowerCase();
+      const stationName = (t.stationName || "").toLowerCase();
+      
+      // Tìm kiếm partial match trong tên, số điện thoại, hoặc tên trạm
+      return (
+        customerName.includes(query) ||
+        customerPhone.includes(query) ||
+        stationName.includes(query)
+      );
+    });
+
+    setTransactions(filtered);
+    
+    if (filtered.length === 0) {
       setError("Không tìm thấy dữ liệu giao dịch!");
-      setTransactions([]);
-    } finally {
-      setLoading(false);
     }
   };
+
+  // ✅ Tự động tìm kiếm khi nhập (debounce)
+  useEffect(() => {
+    if (!allTransactions.length) return; // Chưa load xong thì không search
+    
+    const timer = setTimeout(() => {
+      handleSearch();
+    }, 300); // Đợi 300ms sau khi người dùng ngừng gõ
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, allTransactions]);
 
   return (
     <div className="page-container">
@@ -118,9 +145,14 @@ const ThanhToanPage = () => {
         <div className="search-form">
           <input
             type="text"
-            placeholder="Nhập số điện thoại khách hàng"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Nhập tên, số điện thoại hoặc tên trạm..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === "Enter") {
+                handleSearch();
+              }
+            }}
           />
           <button onClick={handleSearch} disabled={loading}>
             {loading ? "Đang tìm..." : "Tìm kiếm"}

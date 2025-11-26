@@ -190,10 +190,12 @@
 .showcase-actions {
     display: flex;
     gap: 20px;
+    align-items: center;
 }
 
-.btn-primary,
-.btn-secondary {
+/* Chỉ áp dụng cho các nút trong car-showcase để không ảnh hưởng đến các trang khác */
+.car-showcase .btn-primary,
+.car-showcase .btn-secondary {
     padding: 16px 40px;
     font-size: 13px;
     font-weight: 600;
@@ -202,67 +204,38 @@
     border: 2px solid;
     border-radius: 0;
     cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     font-family: 'Helvetica Neue', Arial, sans-serif;
+    flex-shrink: 0;
+    white-space: nowrap;
     position: relative;
-    overflow: hidden;
+    background: none;
+    margin: 0;
+    box-shadow: none;
+    outline: none;
 }
 
-.btn-primary {
-    background: #FFFFFF;
-    color: #000000;
-    border-color: #FFFFFF;
+.car-showcase .btn-primary {
+    background: #DC0000 !important;
+    color: #FFFFFF !important;
+    border-color: #DC0000 !important;
 }
 
-.btn-primary::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: #DC0000;
-    transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: -1;
+.car-showcase .btn-primary::before,
+.car-showcase .btn-primary::after {
+    display: none !important;
+    content: none !important;
 }
 
-.btn-primary:hover::before {
-    left: 0;
+.car-showcase .btn-secondary {
+    background: transparent !important;
+    color: #FFFFFF !important;
+    border-color: #FFFFFF !important;
 }
 
-.btn-primary:hover {
-    color: #FFFFFF;
-    border-color: #DC0000;
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(220, 0, 0, 0.3);
-}
-
-.btn-secondary {
-    background: transparent;
-    color: #FFFFFF;
-    border-color: #FFFFFF;
-}
-
-.btn-secondary::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: #FFFFFF;
-    transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: -1;
-}
-
-.btn-secondary:hover::before {
-    left: 0;
-}
-
-.btn-secondary:hover {
-    color: #000000;
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(255, 255, 255, 0.2);
+.car-showcase .btn-secondary::before,
+.car-showcase .btn-secondary::after {
+    display: none !important;
+    content: none !important;
 }
 
 /* Navigation Controls */

@@ -576,15 +576,10 @@ const OrderDetailCusPage = () => {
       
       {/* Trạng thái đơn hàng */}
       {orderStatus && (
-        <div style={{
-          background: "#F5F5F5",
-          borderTop: "2px solid #DC0000",
-          padding: "16px 20px",
-          marginBottom: "20px"
-        }}>
-          <p style={{ margin: 0 }}>
-            <strong style={{ color: "#DC0000", textTransform: "uppercase" }}>Trạng thái: </strong>
-            <span style={{ color: "#333", fontWeight: "500" }}>{getOrderStatusText(orderStatus)}</span>
+        <div className="order-status-header">
+          <p className="order-status-text">
+            <strong className="order-status-label">Trạng thái: </strong>
+            <span className="order-status-value">{getOrderStatusText(orderStatus)}</span>
           </p>
         </div>
       )}
@@ -599,7 +594,7 @@ const OrderDetailCusPage = () => {
           <div className="order-info-grid">
             <div className="order-info-item">
               <div className="order-info-icon-circle">
-                <svg style={{ width: "16px", height: "16px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg className="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
                 </svg>
@@ -614,7 +609,7 @@ const OrderDetailCusPage = () => {
 
             <div className="order-info-item">
               <div className="order-info-icon-circle">
-                <svg style={{ width: "16px", height: "16px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg className="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                   <polyline points="22,6 12,13 2,6" />
                 </svg>
@@ -629,7 +624,7 @@ const OrderDetailCusPage = () => {
 
             <div className="order-info-item">
               <div className="order-info-icon-circle">
-                <svg style={{ width: "16px", height: "16px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg className="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                 </svg>
               </div>
@@ -661,7 +656,7 @@ const OrderDetailCusPage = () => {
             <div className="vehicle-meta-grid">
               <div className="vehicle-meta-item">
                 <div className="vehicle-meta-icon-box">
-                  <svg style={{ width: "16px", height: "16px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg className="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1" />
                     <polygon points="12 15 17 21 7 21 12 15" />
                   </svg>
@@ -676,7 +671,7 @@ const OrderDetailCusPage = () => {
 
               <div className="vehicle-meta-item">
                 <div className="vehicle-meta-icon-box">
-                  <svg style={{ width: "16px", height: "16px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg className="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                     <line x1="3" y1="9" x2="21" y2="9" />
                     <line x1="9" y1="21" x2="9" y2="9" />
@@ -692,7 +687,7 @@ const OrderDetailCusPage = () => {
 
               <div className="vehicle-meta-item">
                 <div className="vehicle-meta-icon-box">
-                  <svg style={{ width: "16px", height: "16px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg className="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
                     <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
                     <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
@@ -702,19 +697,12 @@ const OrderDetailCusPage = () => {
                 </div>
                 <div className="vehicle-meta-text">
                   <span className="vehicle-meta-label">Màu sắc</span>
-                  <span className="vehicle-meta-value" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span className="vehicle-meta-value vehicle-meta-value-flex">
                     {firstDetail.color || "N/A"}
                     {firstDetail.color && (
                       <span
-                        style={{
-                          width: "16px",
-                          height: "16px",
-                          backgroundColor: getColorHex(firstDetail.color),
-                          border: "1px solid #E5E5E5",
-                          borderRadius: "3px",
-                          display: "inline-block",
-                          flexShrink: 0
-                        }}
+                        className="color-swatch-small"
+                        style={{ backgroundColor: getColorHex(firstDetail.color) }}
                       />
                     )}
                   </span>
@@ -723,7 +711,7 @@ const OrderDetailCusPage = () => {
 
               <div className="vehicle-meta-item">
                 <div className="vehicle-meta-icon-box">
-                  <svg style={{ width: "16px", height: "16px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg className="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                     <circle cx="12" cy="10" r="3" />
                   </svg>
@@ -762,25 +750,14 @@ const OrderDetailCusPage = () => {
 
       {/* ⭐⭐ BANNER THÔNG BÁO WAITING - Khi detail status là WAITING ⭐⭐ */}
       {orderDetails.some(d => String(d.status || "").toUpperCase() === "WAITING") && (
-        <div style={{
-          backgroundColor: "#FFF3CD",
-          border: "2px solid #FFC107",
-          borderRadius: "8px",
-          padding: "20px",
-          marginBottom: "20px",
-          marginTop: "20px"
-        }}>
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "12px"
-          }}>
-            <span style={{ fontSize: "24px" }}>⚠️</span>
+        <div className="waiting-banner-cus">
+          <div className="waiting-banner-content-cus">
+            <span className="waiting-banner-icon-cus">⚠️</span>
             <div>
-              <h3 style={{ margin: 0, color: "#856404", fontSize: "18px", fontWeight: "bold" }}>
+              <h3 className="waiting-banner-title-cus">
                 Xe này đã được khách hàng khác thuê
               </h3>
-              <p style={{ margin: "8px 0 0 0", color: "#856404", fontSize: "14px" }}>
+              <p className="waiting-banner-text-cus">
                 Đơn hàng của bạn đang trong hàng chờ. Chúng tôi sẽ thông báo khi xe có sẵn để bàn giao.
               </p>
             </div>
@@ -790,25 +767,14 @@ const OrderDetailCusPage = () => {
 
       {/* ⭐⭐ BANNER THÔNG BÁO CONFIRMED - Xe đã có sẵn ⭐⭐ */}
       {orderDetails.some(d => String(d.status || "").toUpperCase() === "CONFIRMED") && (
-        <div style={{
-          backgroundColor: "#D1FAE5",
-          border: "2px solid #10B981",
-          borderRadius: "8px",
-          padding: "20px",
-          marginBottom: "20px",
-          marginTop: "20px"
-        }}>
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "12px"
-          }}>
-            <span style={{ fontSize: "24px" }}>✅</span>
+        <div className="confirmed-banner-cus">
+          <div className="confirmed-banner-content-cus">
+            <span className="confirmed-banner-icon-cus">✅</span>
             <div>
-              <h3 style={{ margin: 0, color: "#065F46", fontSize: "18px", fontWeight: "bold" }}>
+              <h3 className="confirmed-banner-title-cus">
                 Xe đã có sẵn! Bạn có thể đến nhận xe
               </h3>
-              <p style={{ margin: "8px 0 0 0", color: "#065F46", fontSize: "14px" }}>
+              <p className="confirmed-banner-text-cus">
                 Xe đã sẵn sàng để bàn giao. Vui lòng đến trạm để hoàn tất thủ tục nhận xe.
               </p>
             </div>
@@ -1015,8 +981,8 @@ const OrderDetailCusPage = () => {
                   <tr key={d.detailId || d.id || d.orderDetailId || index}>
                     <td>{index + 1}</td>
                     <td>{typeLabel}</td>
-                    <td style={{ whiteSpace: "nowrap" }}>
-                      <div style={{ display: "flex", flexDirection: "column", lineHeight: "1.5" }}>
+                    <td className="table-cell-nowrap">
+                      <div className="table-time-cell">
                         <span>{fmtDateTimeVN(d.startTime)}</span>
                         <span>{fmtDateTimeVN(d.endTime)}</span>
                       </div>
@@ -1024,68 +990,22 @@ const OrderDetailCusPage = () => {
                     <td>{d.price?.toLocaleString("vi-VN")} VND</td>
                     <td>
                       {isPaid ? (
-                        <span
-                          style={{
-                            background: "#dcfce7",
-                            color: "#166534",
-                            padding: "6px 10px",
-                            borderRadius: "6px",
-                            fontWeight: "600",
-                          }}
-                        >
+                        <span className="status-badge-success">
                           {statusText}
                         </span>
                       ) : isFailed ? (
-                        <span
-                          style={{
-                            background: "#fee2e2",
-                            color: "#991b1b",
-                            padding: "6px 10px",
-                            borderRadius: "6px",
-                            fontWeight: "600",
-                          }}
-                        >
-                          {statusText}
-                        </span>
-                      ) : isPending ? (
-                        <span
-                          style={{
-                            background: "#fef3c7",
-                            color: "#92400e",
-                            padding: "6px 10px",
-                            borderRadius: "6px",
-                            fontWeight: "600",
-                          }}
-                        >
+                        <span className="status-badge-failed">
                           {statusText}
                         </span>
                       ) : (
-                        <span
-                          style={{
-                            background: "#fef3c7",
-                            color: "#92400e",
-                            padding: "6px 10px",
-                            borderRadius: "6px",
-                            fontWeight: "600",
-                          }}
-                        >
+                        <span className="status-badge-pending">
                           {statusText}
                         </span>
                       )}
                     </td>
                     {/* Cột Phương thức thanh toán */}
-                    <td style={{
-                      whiteSpace: "normal",
-                      wordWrap: "break-word",
-                      maxWidth: "150px",
-                      wordBreak: "break-word"
-                    }}>
-                      <span style={{
-                        fontWeight: "500",
-                        color: paymentMethod === "CASH" ? "#DC0000" : "#0066CC",
-                        display: "inline-block",
-                        maxWidth: "100%"
-                      }}>
+                    <td className="payment-method-cell">
+                      <span className={`payment-method-text ${paymentMethod === "CASH" ? "cash" : "momo"}`}>
                         {paymentMethodText}
                       </span>
                     </td>
@@ -1099,38 +1019,12 @@ const OrderDetailCusPage = () => {
                             handleStaffConfirmPayment();
                           }}
                           disabled={processing}
-                          style={{
-                            padding: "10px 20px",
-                            background: "#000000",
-                            color: "#FFFFFF",
-                            border: "2px solid #000000",
-                            borderRadius: "0",
-                            fontSize: "13px",
-                            fontWeight: "600",
-                            cursor: processing ? "not-allowed" : "pointer",
-                            letterSpacing: "0.5px",
-                            textTransform: "uppercase",
-                            transition: "all 0.3s ease",
-                            opacity: processing ? 0.6 : 1,
-                            minWidth: "180px"
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!processing) {
-                              e.target.style.background = "#DC0000";
-                              e.target.style.borderColor = "#DC0000";
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (!processing) {
-                              e.target.style.background = "#000000";
-                              e.target.style.borderColor = "#000000";
-                            }
-                          }}
+                          className="btn-confirm-payment-staff"
                         >
                           {processing ? "Đang xử lý..." : "✅ Xác nhận đã thanh toán"}
                         </button>
                         ) : (
-                          <span style={{ color: "#999", fontStyle: "italic" }}>-</span>
+                          <span className="table-empty-text">-</span>
                         )}
                       </td>
                     )}
@@ -1145,44 +1039,19 @@ const OrderDetailCusPage = () => {
 
       {/* Số tiền chưa thanh toán - Nằm dưới bảng, góc bên phải - Chỉ hiển thị khi còn số tiền chưa thanh toán */}
       {remainingAmountFromDetails > 0 && (
-        <div style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          marginTop: "20px",
-          marginBottom: "20px"
-        }}>
-          <div style={{
-            background: "#FFFFFF",
-            border: "1px solid #E0E0E0",
-            borderRadius: "8px",
-            padding: "20px",
-            minWidth: "300px",
-            textAlign: "right"
-          }}>
-            <h2 style={{ 
-              fontSize: "18px", 
-              fontWeight: "600", 
-              marginBottom: "16px",
-              color: "#000000",
-              borderBottom: "2px solid #DC0000",
-              paddingBottom: "10px",
-              textAlign: "left"
-            }}>
+        <div className="remaining-amount-container">
+          <div className="remaining-amount-box">
+            <h2 className="remaining-amount-title">
               Số tiền chưa thanh toán
             </h2>
-            <div style={{
-              fontSize: "24px",
-              fontWeight: "700",
-              color: "#DC0000",
-              textAlign: "right"
-            }}>
+            <div className="remaining-amount-value">
               {remainingAmountFromDetails.toLocaleString("vi-VN")} VND
             </div>
           </div>
         </div>
       )}
 
-      <div style={{ marginTop: "24px", display: "flex", gap: "12px" }}>
+      <div className="button-container">
         {hasPendingPayment() && (
           <button
             className="btn-back"
@@ -1350,19 +1219,11 @@ const OrderDetailCusPage = () => {
             
             {/* ⭐⭐ HIỂN THỊ THÔNG BÁO KHI ĐÃ CÓ DEPOSIT (THANH TOÁN PHẦN CÒN LẠI) ⭐⭐ */}
             {selectedPaymentType === "RENTAL" && hasDepositPayment() && (
-              <div className="payment-options" style={{ marginBottom: '20px' }}>
-                <div style={{
-                  padding: '12px 16px',
-                  background: '#FFF3CD',
-                  border: '1px solid #FFC107',
-                  borderRadius: '8px',
-                  color: '#856404',
-                  fontSize: '14px',
-                  fontWeight: '500'
-                }}>
+              <div className="payment-options payment-options-spacing">
+                <div className="payment-options-warning">
                  Thanh toán phần còn lại 
                   {selectedAmount !== 2 && (
-                    <span style={{ marginLeft: '8px', fontSize: '12px', fontStyle: 'italic' }}>
+                    <span className="payment-options-warning-note">
                       (Đang tự động set paymentType = 2...)
                     </span>
                   )}

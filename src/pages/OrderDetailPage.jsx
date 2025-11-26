@@ -17,7 +17,7 @@ export default function OrderDetailPage() {
   const [returnPreview, setReturnPreview] = useState(null);
   const [returnTime, setReturnTime] = useState("");
   const [showReturnModal, setShowReturnModal] = useState(false);
-  const [returnLoading, setReturnLoading] = useState(false); // Loading cho nút xác nhận trả xe
+  const [returnLoading, setReturnLoading] = useState(false);
 
   const [service, setService] = useState({
     serviceType: "",
@@ -43,6 +43,7 @@ export default function OrderDetailPage() {
     price: 0,
     description: ""
   });
+  const [currentRentalOrderId, setCurrentRentalOrderId] = useState(null); // OrderId đang thuê xe hiện tại
   
   const showToast = useCallback((type, text, ms = 4000) => {
     setToast({ type, text });
@@ -79,6 +80,40 @@ export default function OrderDetailPage() {
       setOrderStatus("");
     }
   }, [orderId]);
+
+  // ⭐⭐ KIỂM TRA ĐƠN ĐANG THUÊ XE - Tìm orderId đang thuê xe hiện tại ⭐⭐
+  const checkCurrentRentalOrder = useCallback(async (vehicleId) => {
+    if (!vehicleId) {
+      setCurrentRentalOrderId(null);
+      return;
+    }
+
+    try {
+      const allOrders = await orderService.getAll();
+      const ordersData = Array.isArray(allOrders) ? allOrders : (allOrders?.data || []);
+      
+      // Tìm order có cùng vehicleId và status RENTAL
+      const rentalOrder = ordersData.find(order => {
+        const orderVehicleId = order.vehicleId || order.vehicle_id;
+        const orderStatus = String(order.status || "").toUpperCase();
+        const isSameVehicle = orderVehicleId && Number(orderVehicleId) === Number(vehicleId);
+        const isRental = orderStatus === "RENTAL";
+        return isSameVehicle && isRental;
+      });
+
+      if (rentalOrder) {
+        const rentalOrderId = rentalOrder.orderId || rentalOrder.order_id;
+        console.log("🔍 [Check Rental] Xe đang được thuê bởi orderId:", rentalOrderId);
+        setCurrentRentalOrderId(String(rentalOrderId));
+      } else {
+        console.log("✅ [Check Rental] Xe không được thuê bởi order nào");
+        setCurrentRentalOrderId(null);
+      }
+    } catch (err) {
+      console.warn("⚠️ Cannot check current rental order:", err);
+      setCurrentRentalOrderId(null);
+    }
+  }, []);
 
   // Fetch payments
   const fetchPayments = useCallback(async () => {
@@ -145,9 +180,9 @@ export default function OrderDetailPage() {
     console.log("📋 [Order Details] Refetched:", detailsArray);
 
     const first = details?.[0];
-    // ✅ Dùng thông tin từ order details thay vì gọi API vehicles/get
+   
     if (first) {
-      // Order details đã có đầy đủ thông tin xe: vehicleName, plateNumber, brand, carmodel, color, etc.
+      
       setVehicle({
         vehicleId: first.vehicleId,
         vehicleName: first.vehicleName,
@@ -158,15 +193,38 @@ export default function OrderDetailPage() {
         stationId: first.stationId,
         stationName: first.stationName
       });
+      
+      // ⭐⭐ KIỂM TRA ĐƠN ĐANG THUÊ XE ⭐⭐
+      await checkCurrentRentalOrder(first.vehicleId);
     }
     
     // Fetch order status
     await fetchOrderStatus();
     // Fetch payments
     await fetchPayments();
-  }, [orderId, fetchOrderStatus, fetchPayments]);
+  }, [orderId, fetchOrderStatus, fetchPayments, checkCurrentRentalOrder]);
 
   const handlePreviewReturn = async () => {
+    // ⭐⭐ VALIDATION: Kiểm tra nếu xe đang được thuê bởi order khác ⭐⭐
+    if (currentRentalOrderId && String(currentRentalOrderId) !== String(orderId)) {
+      showToast("error", `⚠️ Xe này đang được thuê bởi đơn hàng #${currentRentalOrderId}. Chỉ đơn hàng đang thuê xe mới có thể trả xe.`);
+      return;
+    }
+
+    // ⭐⭐ VALIDATION: Kiểm tra vehicle status - chỉ cho phép khi RENTAL và orderId khớp ⭐⭐
+    const backendVehicleStatus = orderDetails[0]?.vehicleStatus || orderDetails[0]?.vehicle_status || orderStatus;
+    const vehicleStatus = String(backendVehicleStatus || "").toUpperCase();
+    
+    if (vehicleStatus !== "RENTAL") {
+      showToast("error", `⚠️ Xe không đang ở trạng thái thuê (RENTAL). Không thể trả xe.`);
+      return;
+    }
+
+    if (vehicleStatus === "RENTAL" && String(currentRentalOrderId) !== String(orderId)) {
+      showToast("error", `⚠️ Xe đang được thuê bởi đơn hàng khác. Chỉ đơn hàng đang thuê xe mới có thể trả xe.`);
+      return;
+    }
+
     try {
       setHandoverLoading(true);
       const res = await fetch(
@@ -186,6 +244,29 @@ export default function OrderDetailPage() {
   };
 
   const handleConfirmReturn = async () => {
+    // ⭐⭐ VALIDATION: Kiểm tra nếu xe đang được thuê bởi order khác ⭐⭐
+    if (currentRentalOrderId && String(currentRentalOrderId) !== String(orderId)) {
+      showToast("error", `⚠️ Xe này đang được thuê bởi đơn hàng #${currentRentalOrderId}. Chỉ đơn hàng đang thuê xe mới có thể trả xe.`);
+      setShowReturnModal(false);
+      return;
+    }
+
+    // ⭐⭐ VALIDATION: Kiểm tra vehicle status - chỉ cho phép khi RENTAL và orderId khớp ⭐⭐
+    const backendVehicleStatus = orderDetails[0]?.vehicleStatus || orderDetails[0]?.vehicle_status || orderStatus;
+    const vehicleStatus = String(backendVehicleStatus || "").toUpperCase();
+    
+    if (vehicleStatus !== "RENTAL") {
+      showToast("error", `⚠️ Xe không đang ở trạng thái thuê (RENTAL). Không thể trả xe.`);
+      setShowReturnModal(false);
+      return;
+    }
+
+    if (vehicleStatus === "RENTAL" && String(currentRentalOrderId) !== String(orderId)) {
+      showToast("error", `⚠️ Xe đang được thuê bởi đơn hàng khác. Chỉ đơn hàng đang thuê xe mới có thể trả xe.`);
+      setShowReturnModal(false);
+      return;
+    }
+
     let time;
     if (returnTime.trim() !== "") {
       // Convert từ datetime-local format (YYYY-MM-DDTHH:mm) sang backend format (YYYY-MM-DD HH:mm:ss)
@@ -218,7 +299,8 @@ export default function OrderDetailPage() {
       // ✅ Gọi các API song song để tăng tốc độ
       await Promise.all([
         refetchDetails(),
-        fetchOrderStatus()
+        fetchOrderStatus(),
+        checkCurrentRentalOrder(vehicle?.vehicleId) // Refresh lại để cập nhật currentRentalOrderId
       ]);
     } catch (err) {
       console.error(err);
@@ -269,6 +351,21 @@ export default function OrderDetailPage() {
   };
 
   const handleConfirmHandover = async () => {
+    // ⭐⭐ VALIDATION: Kiểm tra nếu xe đang được thuê bởi order khác ⭐⭐
+    if (currentRentalOrderId && String(currentRentalOrderId) !== String(orderId)) {
+      showToast("error", `⚠️ Xe này đang được thuê bởi đơn hàng #${currentRentalOrderId}. Không thể bàn giao cho đơn hàng hiện tại. Vui lòng đợi xe được trả về và có trạng thái BOOKED.`);
+      return;
+    }
+
+    // ⭐⭐ VALIDATION: Kiểm tra vehicle status - chỉ cho phép khi BOOKED hoặc AVAILABLE ⭐⭐
+    const backendVehicleStatus = orderDetails[0]?.vehicleStatus || orderDetails[0]?.vehicle_status || orderStatus;
+    const vehicleStatus = String(backendVehicleStatus || "").toUpperCase();
+    
+    if (vehicleStatus === "RENTAL" && String(currentRentalOrderId) !== String(orderId)) {
+      showToast("error", `⚠️ Xe đang được thuê bởi đơn hàng khác. Không thể bàn giao cho đơn hàng hiện tại.`);
+      return;
+    }
+
     const ok = window.confirm("Xác nhận bàn giao xe cho khách?");
     if (!ok) return;
 
@@ -276,7 +373,11 @@ export default function OrderDetailPage() {
       setHandoverLoading(true);
       await orderService.pickup(orderId);
       showToast("success", "✅ Đã xác nhận bàn giao!");
-      await refetchDetails();
+      // Refresh lại để cập nhật currentRentalOrderId
+      await Promise.all([
+        refetchDetails(),
+        checkCurrentRentalOrder(vehicle?.vehicleId)
+      ]);
     } catch (e) {
       console.error(e);
       showToast("error", getApiMessage(e));
@@ -355,6 +456,9 @@ export default function OrderDetailPage() {
           };
           setVehicle(vehicleData);
           
+          // ⭐⭐ KIỂM TRA ĐƠN ĐANG THUÊ XE ⭐⭐
+          await checkCurrentRentalOrder(first.vehicleId);
+          
           // ⭐⭐ TỐI ƯU: Chỉ check other orders khi thực sự cần (lazy load) ⭐⭐
           // Thay vì gọi getAll() ngay, chỉ check khi order status là RENTAL hoặc có dấu hiệu cần check
           // Hoặc có thể bỏ qua check này nếu không quan trọng
@@ -389,7 +493,7 @@ export default function OrderDetailPage() {
     };
 
     fetchData();
-  }, [orderId, userId, fetchOrderStatus, fetchPayments, fetchPriceList]);
+  }, [orderId, userId, fetchOrderStatus, fetchPayments, fetchPriceList, checkCurrentRentalOrder]);
 
   // Đóng menu khi click ra ngoài
   useEffect(() => {
@@ -558,15 +662,17 @@ export default function OrderDetailPage() {
       "CONFIRMED": "Đã xác nhận",
       "COMPLETED": "Đã hoàn thành",
       "AWAITING": "Chờ nhận xe",
-      "PENDING_FINAL_PAYMENT": "Chờ thanh toán cuối",
+      "PENDING_FINAL_PAYMENT": "Chờ thanh xác nhận",
       "CHECKING": "Đang kiểm tra",
       "CANCELLED": "Đã hủy",
       "PAID": "Đã thanh toán",
       "FAILED": "Thất bại",
       "PAYMENT_FAILED": "Thanh toán thất bại"
+      
     };
     return statusMap[statusUpper] || status;
   };
+  
 
   // Chuyển đổi vehicle status sang tiếng Việt
   const getVehicleStatusText = (status) => {
@@ -592,7 +698,7 @@ export default function OrderDetailPage() {
     // Icon đồng hồ cho các trạng thái chờ
     if (["PENDING", "WAITING", "WAITING_FOR_VEHICLE", "PENDING_FINAL_PAYMENT", "CHECKING"].includes(statusUpper)) {
       return (
-        <svg style={{ width: "20px", height: "20px", flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg className="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="12" cy="12" r="10" />
           <polyline points="12 6 12 12 16 14" />
         </svg>
@@ -602,7 +708,7 @@ export default function OrderDetailPage() {
     // Icon checkmark cho các trạng thái thành công
     if (["PAID", "COMPLETED", "CONFIRMED", "DEPOSITED", "BOOKED"].includes(statusUpper)) {
       return (
-        <svg style={{ width: "20px", height: "20px", flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg className="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
           <polyline points="22 4 12 14.01 9 11.01" />
         </svg>
@@ -612,7 +718,7 @@ export default function OrderDetailPage() {
     // Icon X cho các trạng thái thất bại/hủy
     if (["FAILED", "PAYMENT_FAILED", "CANCELLED"].includes(statusUpper)) {
       return (
-        <svg style={{ width: "20px", height: "20px", flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg className="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="12" cy="12" r="10" />
           <line x1="15" y1="9" x2="9" y2="15" />
           <line x1="9" y1="9" x2="15" y2="15" />
@@ -622,7 +728,7 @@ export default function OrderDetailPage() {
     
     // Icon mặc định (xe) cho các trạng thái khác
     return (
-      <svg style={{ width: "20px", height: "20px", flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <svg className="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1" />
         <polygon points="12 15 17 21 7 21 12 15" />
       </svg>
@@ -668,19 +774,11 @@ export default function OrderDetailPage() {
 
       {/* Trạng thái đơn hàng */}
       {orderStatus && (
-        <div style={{
-          background: "#F5F5F5",
-          borderTop: "2px solid #DC0000",
-          padding: "16px 20px",
-          marginBottom: "20px",
-          display: "flex",
-          alignItems: "center",
-          gap: "12px"
-        }}>
+        <div className="order-status-header">
           {getStatusIcon(orderStatus)}
-          <p style={{ margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-            <strong style={{ color: "#DC0000", textTransform: "uppercase" }}>Trạng thái: </strong>
-            <span style={{ color: "#333", fontWeight: "500" }}>{getOrderStatusText(orderStatus)}</span>
+          <p className="order-status-text">
+            <strong className="order-status-label">Trạng thái: </strong>
+            <span className="order-status-value">{getOrderStatusText(orderStatus)}</span>
           </p>
         </div>
       )}
@@ -690,59 +788,35 @@ export default function OrderDetailPage() {
         <div className="info-card">
           <h2>Thông tin khách hàng</h2>
 
-          <div className="info-grid" style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "16px" }}>
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              padding: "12px",
-              background: "#f9fafb",
-              borderRadius: "8px",
-              border: "1px solid #e5e7eb"
-            }}>
-              <svg style={{ width: "20px", height: "20px", flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <div className="customer-info-grid">
+            <div className="customer-info-item">
+              <svg className="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
-              <p style={{ margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ fontWeight: "600", color: "#666" }}>Họ tên:</span> 
+              <p className="customer-info-text">
+                <span className="customer-info-label">Họ tên:</span> 
                 <span>{customer.fullName}</span>
               </p>
             </div>
             
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              padding: "12px",
-              background: "#f9fafb",
-              borderRadius: "8px",
-              border: "1px solid #e5e7eb"
-            }}>
-              <svg style={{ width: "20px", height: "20px", flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <div className="customer-info-item">
+              <svg className="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                 <polyline points="22,6 12,13 2,6" />
               </svg>
-              <p style={{ margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ fontWeight: "600", color: "#666" }}>Email:</span> 
+              <p className="customer-info-text">
+                <span className="customer-info-label">Email:</span> 
                 <span>{customer.email}</span>
               </p>
             </div>
             
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              padding: "12px",
-              background: "#f9fafb",
-              borderRadius: "8px",
-              border: "1px solid #e5e7eb"
-            }}>
-              <svg style={{ width: "20px", height: "20px", flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <div className="customer-info-item">
+              <svg className="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
               </svg>
-              <p style={{ margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ fontWeight: "600", color: "#666" }}>Số điện thoại:</span> 
+              <p className="customer-info-text">
+                <span className="customer-info-label">Số điện thoại:</span> 
                 <span>{customer.phone}</span>
               </p>
             </div>
@@ -774,140 +848,76 @@ export default function OrderDetailPage() {
           <div className="info-card">
             <h2>{vehicle.vehicleName || "Thông tin xe"}</h2>
             
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gap: "12px",
-              marginTop: "16px"
-            }}>
+            <div className="vehicle-info-grid">
               {/* Biển số */}
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "12px",
-                background: "#f9fafb",
-                borderRadius: "8px",
-                border: "1px solid #e5e7eb"
-              }}>
-                <svg style={{ width: "20px", height: "20px", flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <div className="vehicle-info-item">
+                <svg className="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1" />
                   <path d="M12 15l-3-3H7a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-2l-3 3z" />
                 </svg>
-                <span style={{ fontSize: "14px", fontWeight: "500" }}>
+                <span className="vehicle-info-text">
                   {vehicle.plateNumber || "N/A"}
                 </span>
               </div>
               
               {/* Số chỗ */}
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "12px",
-                background: "#f9fafb",
-                borderRadius: "8px",
-                border: "1px solid #e5e7eb"
-              }}>
-                <svg style={{ width: "20px", height: "20px", flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <div className="vehicle-info-item">
+                <svg className="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                   <circle cx="9" cy="7" r="4" />
                   <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
                   <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                 </svg>
-                <span style={{ fontSize: "14px", fontWeight: "500" }}>
+                <span className="vehicle-info-text">
                   {seatCount} chỗ
                 </span>
               </div>
               
               {/* Loại xe */}
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "12px",
-                background: "#f9fafb",
-                borderRadius: "8px",
-                border: "1px solid #e5e7eb"
-              }}>
-                <svg style={{ width: "20px", height: "20px", flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <div className="vehicle-info-item">
+                <svg className="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                   <line x1="3" y1="10" x2="21" y2="10" />
                   <path d="M8 4v6M16 4v6" />
                 </svg>
-                <span style={{ fontSize: "14px", fontWeight: "500" }}>
+                <span className="vehicle-info-text">
                   {variant}
                 </span>
               </div>
               
               {/* Variant/Grade */}
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "12px",
-                background: "#f9fafb",
-                borderRadius: "8px",
-                border: "1px solid #e5e7eb"
-              }}>
-                <svg style={{ width: "20px", height: "20px", flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <div className="vehicle-info-item">
+                <svg className="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M12 2L2 7l10 5 10-5-10-5z" />
                   <path d="M2 17l10 5 10-5" />
                   <path d="M2 12l10 5 10-5" />
                 </svg>
-                <span style={{ fontSize: "14px", fontWeight: "500" }}>
+                <span className="vehicle-info-text">
                   {variant}
                 </span>
               </div>
               
               {/* Màu sắc */}
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "12px",
-                background: "#f9fafb",
-                borderRadius: "8px",
-                border: "1px solid #e5e7eb"
-              }}>
-                <svg style={{ width: "20px", height: "20px", flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <div className="vehicle-info-item">
+                <svg className="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10" />
                   <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
                 </svg>
-                <span style={{ fontSize: "14px", fontWeight: "500" }}>
+                <span className="vehicle-info-text">
                   {vehicle.color || "N/A"}
                 </span>
                 {vehicle.color && vehicle.color !== "N/A" && (
-                  <span style={{
-                    width: "16px",
-                    height: "16px",
-                    borderRadius: "4px",
-                    backgroundColor: vehicle.color === "Red" ? "#FF0000" :
-                                   vehicle.color === "Blue" ? "#0000FF" :
-                                   vehicle.color === "White" ? "#FFFFFF" :
-                                   vehicle.color === "Black" ? "#000000" :
-                                   vehicle.color === "Silver" ? "#C0C0C0" : "#CCCCCC",
-                    border: vehicle.color === "White" ? "1px solid #E5E5E5" : "none",
-                    display: "inline-block"
-                  }}></span>
+                  <span className={`color-swatch ${vehicle.color.toLowerCase()}`}></span>
                 )}
               </div>
               
               {/* Trạm hiện tại */}
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "12px",
-                background: "#f9fafb",
-                borderRadius: "8px",
-                border: "1px solid #e5e7eb"
-              }}>
-                <svg style={{ width: "20px", height: "20px", flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <div className="vehicle-info-item">
+                <svg className="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                   <circle cx="12" cy="10" r="3" />
                 </svg>
-                <span style={{ fontSize: "14px", fontWeight: "500" }}>
+                <span className="vehicle-info-text">
                   {vehicle.stationName || "N/A"}
                 </span>
               </div>
@@ -915,13 +925,13 @@ export default function OrderDetailPage() {
             
             {/* Trạng thái - Ẩn khi đơn hàng đã hoàn thành */}
             {orderStatus !== "COMPLETED" && (
-              <div style={{ marginTop: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
-                <svg style={{ width: "18px", height: "18px", flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <div className="vehicle-status-container">
+                <svg className="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10" />
                   <polyline points="12 6 12 12 16 14" />
                 </svg>
-                <p style={{ margin: 0 }}>
-                  <span style={{ fontWeight: "600", color: "#666" }}>Trạng thái:&nbsp;</span>
+                <p>
+                  <span className="vehicle-status-label">Trạng thái:&nbsp;</span>
                   <span className={`pill pill-${(displayStatus || "AVAILABLE").toLowerCase()}`}>
                     {displayStatusText || "Available"}
                   </span>
@@ -934,26 +944,14 @@ export default function OrderDetailPage() {
 
       {/* ORDER DETAILS */}
       <div className="info-card">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <h2 style={{ margin: 0 }}>Các giao dịch trong đơn hàng</h2>
+        <div className="order-details-header">
+          <h2 className="order-details-title">Các giao dịch trong đơn hàng</h2>
           <button 
             className="btn btn-add-service" 
             onClick={() => {
               setService({ serviceType: "", cost: 0, description: "" });
               setSelectedServiceList([]);
               setShowServiceModal(true);
-            }}
-            style={{
-              padding: "10px 20px",
-              background: "#000000",
-              color: "#FFFFFF",
-              border: "2px solid #000000",
-              borderRadius: "0",
-              fontSize: "14px",
-              fontWeight: "600",
-              cursor: "pointer",
-              letterSpacing: "0.5px",
-              textTransform: "uppercase"
             }}
           >
             ➕ Thêm dịch vụ
@@ -1118,58 +1116,24 @@ export default function OrderDetailPage() {
 
           return (
             <div key={detail.detailId} className="detail-card">
-              <div className="detail-header" style={{ 
-                display: "flex", 
-                justifyContent: "space-between", 
-                alignItems: "center",
-                gap: "16px"
-              }}>
+              <div className="detail-header detail-header-flex">
                 {/* Loại - Góc trên bên trái */}
                 <span className="status-tag type-tag">
                   {getTypeLabel(detail.type)}
                 </span>
                 
                 {/* Nút Xác nhận đã thanh toán hoặc Menu 3 chấm - Góc trên bên phải */}
-                <div style={{ display: "flex", gap: "8px", alignItems: "center", position: "relative" }}>
+                <div className="detail-actions">
                   {/* Menu 3 chấm - Chỉ hiển thị cho SERVICE */}
                   {isService && (
-                    <div style={{ position: "relative" }} data-menu-container>
+                    <div className="menu-container" data-menu-container>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setOpenMenuDetailId(openMenuDetailId === detail.detailId ? null : detail.detailId);
                         }}
                         disabled={processing}
-                        style={{
-                          padding: "8px 12px",
-                          background: "transparent",
-                          color: "#666666",
-                          border: "1px solid #E5E5E5",
-                          borderRadius: "4px",
-                          fontSize: "18px",
-                          fontWeight: "600",
-                          cursor: processing ? "not-allowed" : "pointer",
-                          transition: "all 0.3s ease",
-                          lineHeight: "1",
-                          opacity: processing ? 0.6 : 1,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          minWidth: "32px",
-                          height: "32px"
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!processing) {
-                            e.target.style.background = "#F3F4F6";
-                            e.target.style.borderColor = "#D1D5DB";
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!processing) {
-                            e.target.style.background = "transparent";
-                            e.target.style.borderColor = "#E5E5E5";
-                          }
-                        }}
+                        className="menu-button"
                       >
                         ⋯
                       </button>
@@ -1177,44 +1141,14 @@ export default function OrderDetailPage() {
                       {/* Dropdown menu */}
                       {openMenuDetailId === detail.detailId && (
                         <div
-                          style={{
-                            position: "absolute",
-                            top: "100%",
-                            right: "0",
-                            marginTop: "4px",
-                            background: "#FFFFFF",
-                            border: "1px solid #E5E5E5",
-                            borderRadius: "4px",
-                            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-                            zIndex: 1000,
-                            minWidth: "120px"
-                          }}
+                          className="menu-dropdown"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <button
                             onClick={() => {
                               handleEditService(detail);
                             }}
-                            style={{
-                              width: "100%",
-                              padding: "10px 16px",
-                              background: "transparent",
-                              color: "#333333",
-                              border: "none",
-                              borderBottom: "1px solid #E5E5E5",
-                              borderRadius: "4px 4px 0 0",
-                              fontSize: "14px",
-                              fontWeight: "400",
-                              cursor: "pointer",
-                              textAlign: "left",
-                              transition: "all 0.2s ease"
-                            }}
-                            onMouseEnter={(e) => {
-                              e.target.style.background = "#F3F4F6";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.target.style.background = "transparent";
-                            }}
+                            className="menu-item-edit"
                           >
                              Sửa
                           </button>
@@ -1223,25 +1157,7 @@ export default function OrderDetailPage() {
                               handleDeleteService(detail.detailId);
                               setOpenMenuDetailId(null);
                             }}
-                            style={{
-                              width: "100%",
-                              padding: "10px 16px",
-                              background: "transparent",
-                              color: "#ef4444",
-                              border: "none",
-                              borderRadius: "0 0 4px 4px",
-                              fontSize: "14px",
-                              fontWeight: "400",
-                              cursor: "pointer",
-                              textAlign: "left",
-                              transition: "all 0.2s ease"
-                            }}
-                            onMouseEnter={(e) => {
-                              e.target.style.background = "#FEF2F2";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.target.style.background = "transparent";
-                            }}
+                            className="menu-item-delete"
                           >
                              Xóa
                           </button>
@@ -1259,32 +1175,7 @@ export default function OrderDetailPage() {
                         handleStaffConfirmPayment();
                       }}
                       disabled={processing}
-                      style={{
-                        padding: "8px 20px",
-                        background: "#000000",
-                        color: "#FFFFFF",
-                        border: "2px solid #000000",
-                        borderRadius: "0",
-                        fontSize: "12px",
-                        fontWeight: "600",
-                        cursor: processing ? "not-allowed" : "pointer",
-                        letterSpacing: "0.5px",
-                        textTransform: "uppercase",
-                        transition: "all 0.3s ease",
-                        whiteSpace: "nowrap"
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!processing) {
-                          e.target.style.background = "#DC0000";
-                          e.target.style.borderColor = "#DC0000";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!processing) {
-                          e.target.style.background = "#000000";
-                          e.target.style.borderColor = "#000000";
-                        }
-                      }}
+                      className="btn-confirm-payment"
                     >
                       {processing ? "Đang xử lý..." : "Xác nhận đã thanh toán"}
                     </button>
@@ -1294,19 +1185,19 @@ export default function OrderDetailPage() {
 
               <div className="detail-grid">
                 {/* Cột 1: Thời gian nhận xe và Thời gian trả xe */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div className="detail-grid-column">
                   <p><span>Thời gian nhận xe:</span> {fmtVN(detail.startTime)}</p>
                   <p><span>Thời gian trả xe:</span> {fmtVN(detail.endTime)}</p>
                 </div>
                 
                 {/* Cột 2: Số tiền và Tình trạng thanh toán */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div className="detail-grid-column">
                   <p><span>Số tiền:</span> {Number(detail.price).toLocaleString("vi-VN")} VND</p>
-                  <p><span>Tình trạng thanh toán:</span> <span style={{ textDecoration: "underline" }}>{getStatusText()}</span></p>
+                  <p><span>Tình trạng thanh toán:</span> <span className="status-underline">{getStatusText()}</span></p>
                 </div>
                 
                 {/* Cột 3: Phương thức thanh toán và Mô tả */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div className="detail-grid-column">
                   {/* ⭐⭐ ĐỐI VỚI SERVICE: Luôn hiển thị phương thức thanh toán (kể cả khi chưa có) ⭐⭐ */}
                   {isService && (
                     <p><span>Phương thức thanh toán:</span> {getMethodPaymentText(displayMethodPayment || "")}</p>
@@ -1350,73 +1241,28 @@ export default function OrderDetailPage() {
         // ⭐⭐ NÚT CHỈ HIỂN THỊ KHI CÓ PAYMENT PENDING ⭐⭐
         if (unpaidServices.length > 0) {
           return (
-            <div className="info-card" style={{
-              backgroundColor: "#FFF3CD",
-              border: "2px solid #FFC107",
-              borderRadius: "8px",
-              padding: "20px",
-              marginBottom: "20px",
-              marginTop: "20px"
-            }}>
-              <div style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "16px"
-              }}>
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px"
-                }}>
-                  <div style={{ flex: 1 }}>
-                    <h3 style={{ margin: 0, color: "#856404", fontSize: "18px", fontWeight: "bold" }}>
+            <div className="info-card service-banner">
+              <div className="service-banner-content">
+                <div className="service-banner-header-flex">
+                  <div className="service-banner-header-content">
+                    <h3 className="service-banner-title-text">
                       Chưa thanh toán số tiền dịch vụ
                     </h3>
-                    <p style={{ margin: "8px 0 0 0", color: "#856404", fontSize: "14px" }}>
-                      Tổng tiền dịch vụ chưa thanh toán: <strong style={{ fontSize: "16px", color: "#DC0000" }}>{totalUnpaidServiceAmount.toLocaleString("vi-VN")} VND</strong>
+                    <p className="service-banner-description">
+                      Tổng tiền dịch vụ chưa thanh toán: <strong className="service-banner-amount-strong">{totalUnpaidServiceAmount.toLocaleString("vi-VN")} VND</strong>
                     </p>
                   </div>
                 </div>
                 
                 {/* ⭐⭐ CHỈ HIỂN THỊ NÚT KHI CÓ PAYMENT CASH PENDING ⭐⭐ */}
                 {hasServicePendingPayment && (
-                  <div style={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    marginTop: "8px"
-                  }}>
+                  <div className="service-banner-actions-right">
                     <button
                       onClick={() => {
                         handleStaffConfirmPayment();
                       }}
                       disabled={processing}
-                      style={{
-                        padding: "12px 24px",
-                        background: "#000000",
-                        color: "#FFFFFF",
-                        border: "2px solid #000000",
-                        borderRadius: "0",
-                        fontSize: "14px",
-                        fontWeight: "600",
-                        cursor: processing ? "not-allowed" : "pointer",
-                        letterSpacing: "0.5px",
-                        textTransform: "uppercase",
-                        transition: "all 0.3s ease",
-                        whiteSpace: "nowrap",
-                        opacity: processing ? 0.6 : 1
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!processing) {
-                          e.target.style.background = "#DC0000";
-                          e.target.style.borderColor = "#DC0000";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!processing) {
-                          e.target.style.background = "#000000";
-                          e.target.style.borderColor = "#000000";
-                        }
-                      }}
+                      className="btn-service-confirm"
                     >
                       {processing ? "Đang xử lý..." : "✅ Xác nhận đã thanh toán"}
                     </button>
@@ -1425,19 +1271,8 @@ export default function OrderDetailPage() {
                 
                 {/* ⭐⭐ THÔNG BÁO KHI CHƯA CÓ PAYMENT PENDING ⭐⭐ */}
                 {!hasServicePendingPayment && (
-                  <div style={{
-                    marginTop: "8px",
-                    padding: "12px",
-                    backgroundColor: "#F3F4F6",
-                    border: "1px solid #D1D5DB",
-                    borderRadius: "6px"
-                  }}>
-                    <p style={{ 
-                      margin: 0, 
-                      color: "#6B7280", 
-                      fontSize: "13px", 
-                      fontStyle: "italic" 
-                    }}>
+                  <div className="service-banner-notice">
+                    <p className="service-banner-notice-text">
                       ⏳ Đang chờ khách hàng thanh toán. Nút xác nhận sẽ hiển thị sau khi khách hàng tạo thanh toán tiền mặt.
                     </p>
                   </div>
@@ -1471,24 +1306,14 @@ export default function OrderDetailPage() {
         });
         
         return shouldShowWaitingBanner ? (
-          <div className="info-card" style={{
-            backgroundColor: "#FFF3CD",
-            border: "2px solid #FFC107",
-            borderRadius: "8px",
-            padding: "20px",
-            marginBottom: "20px"
-          }}>
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px"
-            }}>
-              <span style={{ fontSize: "24px" }}>⚠️</span>
+          <div className="info-card waiting-banner">
+            <div className="waiting-banner-content-flex">
+              <span className="waiting-banner-icon">⚠️</span>
               <div>
-                <h3 style={{ margin: 0, color: "#856404", fontSize: "18px", fontWeight: "bold" }}>
+                <h3 className="waiting-banner-title-text">
                   Xe này đã được khách hàng khác thuê
                 </h3>
-                <p style={{ margin: "8px 0 0 0", color: "#856404", fontSize: "14px" }}>
+                <p className="waiting-banner-description">
                   Đơn hàng của bạn đang trong hàng chờ. Chúng tôi sẽ thông báo khi xe có sẵn để bàn giao.
                 </p>
               </div>
@@ -1501,24 +1326,14 @@ export default function OrderDetailPage() {
       {/* ⭐⭐ BANNER THÔNG BÁO CONFIRMED - Xe đã có sẵn ⭐⭐ */}
       {orderDetails.some(d => String(d.status || "").toUpperCase() === "CONFIRMED") && 
        vehicle?.status === "BOOKED" && (
-        <div className="info-card" style={{
-          backgroundColor: "#D1FAE5",
-          border: "2px solid #10B981",
-          borderRadius: "8px",
-          padding: "20px",
-          marginBottom: "20px"
-        }}>
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "12px"
-          }}>
-            <span style={{ fontSize: "24px" }}>✅</span>
+        <div className="info-card confirmed-banner">
+          <div className="confirmed-banner-content-flex">
+            <span className="confirmed-banner-icon">✅</span>
             <div>
-              <h3 style={{ margin: 0, color: "#065F46", fontSize: "18px", fontWeight: "bold" }}>
+              <h3 className="confirmed-banner-title-text">
                 Xe đã có sẵn! Bạn có thể đến nhận xe
               </h3>
-              <p style={{ margin: "8px 0 0 0", color: "#065F46", fontSize: "14px" }}>
+              <p className="confirmed-banner-description">
                 Xe đã sẵn sàng để bàn giao. Vui lòng đến trạm để hoàn tất thủ tục nhận xe.
               </p>
             </div>
@@ -1532,25 +1347,44 @@ export default function OrderDetailPage() {
 
         <div className="handover-actions">
           {(() => {
+            // ⭐ NEW RULE: Nếu xe RENTAL bởi order khác → không được bàn giao
+
+            
+if (otherOrders.length > 0) {
+  const otherRental = otherOrders.find(o => 
+    String(o.status).toUpperCase() === "RENTAL"
+  );
+
+  if (otherRental && String(otherRental.orderId) !== String(orderId)) {
+    return (
+      <div className="handover-warning">
+        ⚠️ Xe này đang được sử dụng bởi đơn hàng #{otherRental.orderId}.  
+        Không thể bàn giao cho đơn hàng hiện tại.
+      </div>
+    );
+  }
+}
+
             // ⭐⭐ KIỂM TRA ĐẦU TIÊN: Nếu đơn đã hoàn thành (COMPLETED) → hiển thị thông báo ⭐⭐
             const isCompleted = orderStatus === "COMPLETED";
             const isAwaiting = orderStatus === "AWAITING";
             const isPaid = orderStatus === "PAID"; // Status mới: đã thanh toán hết dịch vụ
             const isPendingFinalPayment = orderStatus === "PENDING_FINAL_PAYMENT";
-            
+            // ⭐⭐ NEW: Nếu chỉ có đặt cọc thành công → KHÔNG render nút, chỉ báo chờ thanh toán ⭐⭐
+if (depositedOK && !pickupOK && !fullOK) {
+  return (
+    <div className="handover-warning">
+      ⚠️ Vui lòng chờ khách hàng thanh toán toàn bộ để tiến hành bàn giao
+    </div>
+  );
+}
+
             if (isCompleted) {
               console.log("✅ [Handover Check] Đơn đã hoàn thành:", {
                 orderStatus
               });
               return (
-                <p style={{ 
-                  color: "#10B981", 
-                  fontSize: "14px", 
-                  fontStyle: "italic", 
-                  padding: "12px", 
-                  backgroundColor: "#D1FAE5", 
-                  borderRadius: "6px" 
-                }}>
+                <p className="handover-status-success">
                   ✅ Đơn hàng đã hoàn thành. Khách hàng đã trả xe.
                 </p>
               );
@@ -1614,25 +1448,12 @@ export default function OrderDetailPage() {
               const statusMessage = "✅ Đơn hàng đã thanh toán đầy đủ (bao gồm dịch vụ) và đã nhận xe. Vui lòng xác nhận hoàn tất đơn hàng.";
               
               return (
-                <div style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "12px",
-                  padding: "16px",
-                  backgroundColor: "#FFF3CD",
-                  border: "2px solid #FFC107",
-                  borderRadius: "8px"
-                }}>
-                  <p style={{ 
-                    margin: 0,
-                    color: "#856404", 
-                    fontSize: "14px", 
-                    fontWeight: "600"
-                  }}>
+                <div className="handover-info-box-content">
+                  <p className="handover-info-text-content">
                     {statusMessage}
                   </p>
                   <button
-                    className="btn btn-primary"
+                    className="btn-complete-order"
                     onClick={async () => {
                       if (!window.confirm("Xác nhận hoàn tất đơn hàng này?")) {
                         return;
@@ -1661,32 +1482,6 @@ export default function OrderDetailPage() {
                       }
                     }}
                     disabled={processing}
-                    style={{
-                      padding: "12px 24px",
-                      background: "#000000",
-                      color: "#FFFFFF",
-                      border: "2px solid #000000",
-                      borderRadius: "0",
-                      fontSize: "14px",
-                      fontWeight: "600",
-                      cursor: processing ? "not-allowed" : "pointer",
-                      letterSpacing: "0.5px",
-                      textTransform: "uppercase",
-                      transition: "all 0.3s ease",
-                      opacity: processing ? 0.6 : 1
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!processing) {
-                        e.target.style.background = "#DC0000";
-                        e.target.style.borderColor = "#DC0000";
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!processing) {
-                        e.target.style.background = "#000000";
-                        e.target.style.borderColor = "#000000";
-                      }
-                    }}
                   >
                     {processing ? "Đang xử lý..." : "✅ Xác nhận hoàn tất đơn hàng"}
                   </button>
@@ -1708,24 +1503,66 @@ export default function OrderDetailPage() {
                 orderStatus;
               const vehicleStatus = String(backendVehicleStatusForHandover || "").toUpperCase();
               
+              
               // ⭐⭐ BƯỚC 2: Nếu đã bàn giao (vehicle status = RENTAL) → hiển thị nút "Nhận xe" ⭐⭐
-              if (vehicleStatus === "RENTAL") {
-                return (
-                  <>
-                    <button
-                      className="btn-receive-car"
-                      onClick={handlePreviewReturn}
-                      disabled={handoverLoading || loading}
-                    >
-                      <svg style={{ width: "18px", height: "18px", marginRight: "8px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1"></path>
-                        <polygon points="12 15 17 21 7 21 12 15"></polygon>
-                      </svg>
-                      {handoverLoading || loading ? "Đang xử lý..." : "NHẬN XE"}
-                    </button>
-                  </>
-                );
-              }
+              // ⭐ NEW: Nếu PICKUP thành công nhưng xe CHƯA bàn giao thật sự → vẫn phải BÀN GIAO XE
+              // ⭐⭐ VALIDATION: Kiểm tra nếu xe đang được thuê bởi order khác ⭐⭐
+if (pickupDetail && vehicleStatus !== "RENTAL") {
+    const isVehicleRentedByOther = currentRentalOrderId && String(currentRentalOrderId) !== String(orderId);
+    
+    if (isVehicleRentedByOther) {
+        return (
+            <div className="handover-warning">
+                ⚠️ Xe này đang được thuê bởi đơn hàng #{currentRentalOrderId}. Không thể bàn giao cho đơn hàng hiện tại. Vui lòng đợi xe được trả về và có trạng thái BOOKED.
+            </div>
+        );
+    }
+    
+    return (
+        <>
+            <button 
+                className="btn btn-primary"
+                onClick={handleConfirmHandover}
+                disabled={handoverLoading}
+            >
+                {handoverLoading ? "Đang xử lý..." : "✅ Xác nhận bàn giao xe"}
+            </button>
+
+            <button 
+                className="btn btn-danger"
+                onClick={handleCancelHandover}
+                disabled={handoverLoading}
+            >
+                ❌ Hủy bàn giao
+            </button>
+        </>
+    );
+}
+
+// ⭐ Nếu xe thực sự đang được thuê → mới hiển thị "NHẬN XE"
+// ⭐⭐ VALIDATION: Chỉ cho phép nếu orderId khớp với đơn đang thuê xe ⭐⭐
+if (vehicleStatus === "RENTAL") {
+    const isCurrentOrderRenting = !currentRentalOrderId || String(currentRentalOrderId) === String(orderId);
+    
+    if (!isCurrentOrderRenting) {
+        return (
+            <div className="handover-warning">
+                ⚠️ Xe này đang được thuê bởi đơn hàng #{currentRentalOrderId}. Chỉ đơn hàng đang thuê xe mới có thể trả xe.
+            </div>
+        );
+    }
+    
+    return (
+        <button 
+            className="btn-receive-car"
+            onClick={handlePreviewReturn}
+            disabled={handoverLoading || loading}
+        >
+            {handoverLoading || loading ? "Đang xử lý..." : "NHẬN XE"}
+        </button>
+    );
+}
+
               
               // ⭐⭐ BƯỚC 1: Nếu chưa bàn giao (vehicle status chưa RENTAL) → hiển thị nút "Bàn giao xe" ⭐⭐
               // Kiểm tra điều kiện bàn giao:
@@ -1736,21 +1573,32 @@ export default function OrderDetailPage() {
                 vehicleStatus === "BOOKED" ||
                 vehicleStatus === "AVAILABLE";
               
+              // ⭐⭐ VALIDATION: Kiểm tra nếu xe đang được thuê bởi order khác ⭐⭐
+              const isVehicleRentedByOther = currentRentalOrderId && String(currentRentalOrderId) !== String(orderId);
+              
               if (canHandOver && vehicleReady) {
+                if (isVehicleRentedByOther) {
+                  return (
+                    <div className="handover-warning">
+                      ⚠️ Xe này đang được thuê bởi đơn hàng #{currentRentalOrderId}. Không thể bàn giao cho đơn hàng hiện tại. Vui lòng đợi xe được trả về và có trạng thái BOOKED.
+                    </div>
+                  );
+                }
+                
                 return (
                   <>
                     <button
                       className="btn btn-primary"
                       onClick={handleConfirmHandover}
-                      disabled={false}
+                      disabled={handoverLoading}
                     >
-                      ✅ Xác nhận bàn giao
+                      {handoverLoading ? "Đang xử lý..." : "✅ Xác nhận bàn giao"}
                     </button>
 
                     <button
                       className="btn btn-danger"
                       onClick={handleCancelHandover}
-                      disabled={pickupOK || fullOK}
+                      disabled={pickupOK || fullOK || handoverLoading}
                     >
                       ❌ Hủy bàn giao
                     </button>
@@ -1771,16 +1619,7 @@ export default function OrderDetailPage() {
               const hasUnpaidServices = unpaidServices.length > 0;
               
               return (
-                <div style={{
-                  padding: "12px 16px",
-                  backgroundColor: "#fee2e2",
-                  border: "1px solid #fca5a5",
-                  borderRadius: "8px",
-                  color: "#dc2626",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  marginTop: "12px"
-                }}>
+                <div className="handover-warning">
                   {hasUnpaidServices 
                     ? "⚠️ Vui lòng chờ khách hàng trả phí dịch vụ và phát sinh"
                     : "⚠️ Vui lòng chờ khách hàng thanh toán toàn bộ để tiến hành bàn giao"
@@ -1791,14 +1630,7 @@ export default function OrderDetailPage() {
             
             if (isPendingFinalPayment) {
               return (
-                <p style={{ 
-                  color: "#856404", 
-                  fontSize: "14px", 
-                  fontStyle: "italic", 
-                  padding: "12px", 
-                  backgroundColor: "#FFF3CD", 
-                  borderRadius: "6px" 
-                }}>
+                <p className="handover-status-warning">
                   Đơn hàng đang chờ thanh toán dịch vụ cuối cùng.
                 </p>
               );
@@ -1827,7 +1659,18 @@ export default function OrderDetailPage() {
             }
             
             // Nếu vehicle status = RENTAL và không phải WAITING, hiển thị nút nhận xe
+            // ⭐⭐ VALIDATION: Chỉ cho phép nếu orderId khớp với đơn đang thuê xe ⭐⭐
             if (backendVehicleStatusForHandover === "RENTAL") {
+              const isCurrentOrderRenting = !currentRentalOrderId || String(currentRentalOrderId) === String(orderId);
+              
+              if (!isCurrentOrderRenting) {
+                return (
+                  <div className="handover-warning">
+                    ⚠️ Xe này đang được thuê bởi đơn hàng #{currentRentalOrderId}. Chỉ đơn hàng đang thuê xe mới có thể trả xe.
+                  </div>
+                );
+              }
+              
               return (
                 <>
                   <button
@@ -1835,7 +1678,7 @@ export default function OrderDetailPage() {
                     onClick={handlePreviewReturn}
                     disabled={hasPendingOrderDetail || handoverLoading || loading}
                   >
-                    <svg style={{ width: "18px", height: "18px", marginRight: "8px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg className="icon-md margin-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1"></path>
                       <polygon points="12 15 17 21 7 21 12 15"></polygon>
                     </svg>
@@ -1846,164 +1689,67 @@ export default function OrderDetailPage() {
             }
             
             // Trường hợp khác (xe chưa RENTAL) - hiển thị nút bàn giao
-            return (
-            <>
-              {/* ⭐⭐ CHỈ HIỂN THỊ NÚT BÀN GIAO KHI đã thanh toán đầy đủ ⭐⭐ */}
-              {(() => {
-                const mainDetail = orderDetails.find(d => d.type === "RENTAL");
-                const detailStatus = mainDetail ? String(mainDetail.status || "").toUpperCase() : "";
-                const hasWaitingDetail = detailStatus === "WAITING";
-                const vehicleRentedByOther = vehicle?.status === "RENTAL" && otherOrders.length > 0;
-                const isWaiting = hasWaitingDetail || vehicleRentedByOther;
-                
-                // Debug log
-                console.log("🔍 [Handover Debug]:", {
-                  mainDetail: mainDetail ? { type: mainDetail.type, status: mainDetail.status } : null,
-                  detailStatus,
-                  hasWaitingDetail,
-                  vehicleRentedByOther,
-                  isWaiting,
-                  vehicleStatus: vehicle?.status,
-                  otherOrdersCount: otherOrders.length,
-                  depositedOK,
-                  pickupOK,
-                  fullOK,
-                  hasPaidAll: fullOK || (depositedOK && pickupOK)
-                });
-                
-                if (isWaiting) {
-                  return (
-                    <p style={{ color: "#856404", fontSize: "14px", fontStyle: "italic", padding: "12px", backgroundColor: "#FFF3CD", borderRadius: "6px" }}>
-                      ⏳ Đơn hàng đang trong hàng chờ. Xe sẽ được bàn giao khi có sẵn.
-                    </p>
-                  );
-                }
-                
-                // Điều kiện bàn giao: 
-                // 1. Đã thanh toán đầy đủ: 
-                //    - Toàn bộ (FULL_PAYMENT) đã thanh toán thành công, HOẶC
-                //    - Đã đặt cọc (DEPOSIT) thành công VÀ đã trả phần còn lại (PICKUP) thành công
-                //    - KHÔNG cho phép chỉ có đặt cọc (DEPOSIT) mà không có PICKUP
-                // 2. TẤT CẢ các giao dịch trong đơn hàng phải có status là "SUCCESS"
-                // 3. Xe sẵn sàng (chỉ AVAILABLE hoặc BOOKED, KHÔNG phải RENTAL - vì RENTAL là xe đang được khách khác thuê)
-                // 4. Detail status không phải WAITING (đã check ở trên)
-            const canHandOver = fullOK || (depositedOK && pickupOK);
-            
-            // ⭐⭐ KIỂM TRA: Tất cả các giao dịch phải có status là "SUCCESS" ⭐⭐
-            const allTransactionsSuccess = orderDetails.every(
-              (d) => String(d.status || "").toUpperCase() === "SUCCESS"
-            );
-            
-            console.log("🔍 [Handover Check] All transactions status:", {
-              orderDetailsCount: orderDetails.length,
-              allTransactionsSuccess,
-              orderDetailsStatus: orderDetails.map(d => ({ 
-                type: d.type, 
-                status: d.status 
-              }))
-            });
-            
-            // ⭐⭐ QUAN TRỌNG: Nếu xe đang RENTAL → xe đang được khách khác thuê → KHÔNG được bàn giao ⭐⭐
+            const canHandOver = fullOK || depositedOK;
             const vehicleReady =
               backendVehicleStatusForHandover === "BOOKED" ||
               backendVehicleStatusForHandover === "AVAILABLE";
-                // KHÔNG cho phép vehicle.status === "RENTAL" vì đó là xe đang được khách khác thuê
-                
-                // Cho phép bàn giao khi: đã thanh toán đầy đủ + TẤT CẢ giao dịch đã thành công + xe BOOKED/AVAILABLE
-                if (canHandOver && vehicleReady && !isWaiting) {
-                  // Nếu chưa đủ điều kiện (chưa tất cả giao dịch thành công), hiển thị thông báo
-                  if (!allTransactionsSuccess) {
-                    const pendingTransactions = orderDetails.filter(
-                      (d) => String(d.status || "").toUpperCase() !== "SUCCESS"
-                    );
-                    return (
-                      <div>
-                        <button
-                          className="btn btn-confirm-handover"
-                          disabled={true}
-                          style={{ opacity: 0.5, cursor: "not-allowed" }}
-                        >
-                          <svg style={{ width: "18px", height: "18px", marginRight: "8px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                          </svg>
-                          XÁC NHẬN BÀN GIAO
-                        </button>
-                        <p style={{ 
-                          color: "#DC0000", 
-                          fontSize: "14px", 
-                          fontWeight: "600", 
-                          marginTop: "12px",
-                          padding: "12px",
-                          backgroundColor: "#FEE",
-                          borderRadius: "6px",
-                          border: "1px solid #FCC"
-                        }}>
-                          ⚠️ Vui lòng chờ tất cả các giao dịch thanh toán thành công trước khi bàn giao xe.
-                          {pendingTransactions.length > 0 && (
-                            <span style={{ display: "block", marginTop: "8px", fontSize: "12px", fontWeight: "normal" }}>
-                              Các giao dịch chưa thành công: {pendingTransactions.map(d => getTypeLabel(d.type)).join(", ")}
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                    );
-                  }
-                  
-                  return (
-                    <>
-                      <button
-                        className="btn btn-confirm-handover"
-                        onClick={handleConfirmHandover}
-                        disabled={handoverLoading || loading}
-                      >
-                        <svg style={{ width: "18px", height: "18px", marginRight: "8px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                        {handoverLoading || loading ? "Đang xử lý..." : "XÁC NHẬN BÀN GIAO"}
-                      </button>
-
-                      <button
-                        className="btn btn-cancel-handover"
-                        onClick={handleCancelHandover}
-                        disabled={pickupOK || fullOK || handoverLoading || loading}
-                      >
-                        <svg style={{ width: "18px", height: "18px", marginRight: "8px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                          <line x1="18" y1="6" x2="6" y2="18"></line>
-                          <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                        {handoverLoading || loading ? "Đang xử lý..." : "HỦY BÀN GIAO"}
-                      </button>
-                    </>
-                  );
-                }
-                
-                // Hiển thị lý do không thể bàn giao
+            
+            // ⭐⭐ VALIDATION: Kiểm tra nếu xe đang được thuê bởi order khác ⭐⭐
+            const isVehicleRentedByOther = currentRentalOrderId && String(currentRentalOrderId) !== String(orderId);
+            
+            if (canHandOver && vehicleReady && !isWaiting) {
+              if (isVehicleRentedByOther) {
                 return (
-                  <div style={{ color: "#666", fontSize: "14px" }}>
-                    {!canHandOver && (
-                      <p style={{ margin: "4px 0", fontStyle: "italic" }}>
-                        ❌ Chưa đủ điều kiện bàn giao. 
-                        {!fullOK && !depositedOK && " Thiếu thanh toán toàn bộ hoặc đặt cọc."}
-                        {depositedOK && !pickupOK && " Đã đặt cọc nhưng chưa thanh toán phần còn lại."}
-                        {!depositedOK && !fullOK && " Chưa có thanh toán nào."}
-                      </p>
-                    )}
-                    {canHandOver && !vehicleReady && (
-                      <p style={{ margin: "4px 0", fontStyle: "italic" }}>
-                        {vehicle?.status === "RENTAL" 
-                          ? "⚠️ Xe đang được khách hàng khác thuê. Vui lòng đợi xe được trả về."
-                          : `⚠️ Xe chưa sẵn sàng: ${getVehicleStatusText(backendVehicleStatusForHandover || vehicle?.status || "N/A")}`}
-                      </p>
-                    )}
-                    {canHandOver && vehicleReady && (
-                      <p style={{ margin: "4px 0", fontStyle: "italic" }}>
-                        Trạng thái chi tiết: {detailStatus || "N/A"}. Chờ điều kiện bàn giao.
-                      </p>
-                    )}
+                  <div className="handover-warning">
+                    ⚠️ Xe này đang được thuê bởi đơn hàng #{currentRentalOrderId}. Không thể bàn giao cho đơn hàng hiện tại. Vui lòng đợi xe được trả về và có trạng thái BOOKED.
                   </div>
                 );
-              })()}
-            </>
+              }
+              
+              return (
+                <>
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleConfirmHandover}
+                    disabled={handoverLoading}
+                  >
+                    {handoverLoading ? "Đang xử lý..." : "✅ Xác nhận bàn giao"}
+                  </button>
+
+                  <button
+                    className="btn btn-danger"
+                    onClick={handleCancelHandover}
+                    disabled={pickupOK || fullOK || handoverLoading}
+                  >
+                    ❌ Hủy bàn giao
+                  </button>
+                </>
+              );
+            }
+            
+            // Hiển thị lý do không thể bàn giao
+            return (
+              <div className="handover-error-container">
+                {!canHandOver && (
+                  <p className="handover-error-item">
+                    ❌ Chưa đủ điều kiện bàn giao. 
+                    {!depositedOK && " Thiếu đặt cọc."}
+                    {!fullOK && " Thiếu thanh toán toàn bộ."}
+                  </p>
+                )}
+                {canHandOver && !vehicleReady && (
+                  <p className="handover-error-item">
+                    {vehicle?.status === "RENTAL" 
+                      ? "⚠️ Xe đang được khách hàng khác thuê. Vui lòng đợi xe được trả về."
+                      : "⚠️ Vui lòng chờ khách hàng thanh toán đầy đủ để bàn giao xe."}
+                  </p>
+                )}
+                {canHandOver && vehicleReady && (
+                  <p className="handover-error-item">
+                    Trạng thái chi tiết: {detailStatus || "N/A"}. Chờ điều kiện bàn giao.
+                  </p>
+                )}
+              </div>
             );
           })()}
         </div>
@@ -2027,21 +1773,9 @@ export default function OrderDetailPage() {
               type="datetime-local"
               value={returnTime}
               onChange={(e) => setReturnTime(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "10px",
-                fontSize: "16px",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-                marginTop: "8px"
-              }}
+              className="modal-text-input-field"
             />
-            <p style={{ 
-              fontSize: "12px", 
-              color: "#666", 
-              marginTop: "4px",
-              fontStyle: "italic"
-            }}>
+            <p className="return-modal-time-hint">
               (Bỏ trống = thời gian hiện tại)
             </p>
 
@@ -2051,7 +1785,7 @@ export default function OrderDetailPage() {
                 onClick={handleConfirmReturn}
                 disabled={returnLoading}
               >
-                <svg style={{ width: "18px", height: "18px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
                 {returnLoading ? "Đang xử lý..." : "XÁC NHẬN TRẢ XE"}
@@ -2063,7 +1797,7 @@ export default function OrderDetailPage() {
                   setReturnTime(""); // Reset returnTime khi đóng modal
                 }}
               >
-                <svg style={{ width: "18px", height: "18px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
                   <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
@@ -2077,12 +1811,12 @@ export default function OrderDetailPage() {
       {/* Service Modal */}
       {showServiceModal && (
         <div className="modal-overlay" onClick={() => setShowServiceModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "800px", width: "90%" }}>
+          <div className="modal-content modal-content-wrapper" onClick={(e) => e.stopPropagation()}>
             <h2>Thêm dịch vụ</h2>
             
-            <div style={{ marginBottom: "16px" }}>
-              <label style={{ display: "block", marginBottom: "12px", fontWeight: "600" }}>Loại dịch vụ</label>
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            <div className="modal-section-spacing">
+              <label className="modal-label-block">Loại dịch vụ</label>
+              <div className="modal-options-column">
                 {[
                   { value: "TRAFFIC_FEE", label: "Phí giao thông" },
                   { value: "CLEANING", label: "Vệ sinh" },
@@ -2106,16 +1840,9 @@ export default function OrderDetailPage() {
                         setSelectedServiceList([]);
                       }
                     }}
-                    style={{
-                      padding: "12px 16px",
-                      border: service.serviceType === option.value ? "2px solid #000000" : "1px solid #ddd",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                      backgroundColor: service.serviceType === option.value ? "#f5f5f5" : "#fff",
-                      transition: "all 0.2s ease"
-                    }}
+                    className={`modal-option-item ${service.serviceType === option.value ? "selected" : ""}`}
                   >
-                    <span style={{ fontSize: "14px", fontWeight: service.serviceType === option.value ? "600" : "400" }}>
+                    <span className={service.serviceType === option.value ? "modal-option-text-selected" : "modal-option-text-normal"}>
                       {option.label}
                     </span>
                   </div>
@@ -2125,14 +1852,14 @@ export default function OrderDetailPage() {
 
             {/* Danh sách dịch vụ theo loại đã chọn - Chỉ hiện khi không phải OTHER */}
             {service.serviceType && service.serviceType !== "OTHER" && (
-              <div style={{ marginBottom: "16px" }}>
-                <label style={{ display: "block", marginBottom: "12px", fontWeight: "600" }}>Chọn dịch vụ</label>
+              <div className="modal-section-spacing">
+                <label className="modal-label-block">Chọn dịch vụ</label>
                 {loadingServiceList ? (
-                  <p style={{ color: "#777", fontSize: "14px" }}>Đang tải danh sách dịch vụ...</p>
+                  <p className="modal-loading-text">Đang tải danh sách dịch vụ...</p>
                 ) : selectedServiceList.length === 0 ? (
-                  <p style={{ color: "#777", fontSize: "14px" }}>Không có dịch vụ nào cho loại này.</p>
+                  <p className="modal-empty-text">Không có dịch vụ nào cho loại này.</p>
                 ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "300px", overflowY: "auto" }}>
+                  <div className="modal-service-list-scroll">
                     {selectedServiceList.map((sv) => {
                       const isSelected = service.description === sv.description;
                       const displayCost = isSelected ? service.cost : (sv.cost || 0);
@@ -2148,25 +1875,14 @@ export default function OrderDetailPage() {
                               cost: sv.cost || 0
                             });
                           }}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            gap: "12px",
-                            padding: "12px 16px",
-                            border: isSelected ? "2px solid #000000" : "1px solid #ddd",
-                            borderRadius: "4px",
-                            cursor: "pointer",
-                            backgroundColor: isSelected ? "#f5f5f5" : "#fff",
-                            transition: "all 0.2s ease"
-                          }}
+                          className={`modal-service-item-row ${isSelected ? "selected" : ""}`}
                         >
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: "14px", fontWeight: isSelected ? "600" : "400" }}>
+                          <div className="modal-service-name-wrapper">
+                            <div className={isSelected ? "modal-service-name-selected" : "modal-service-name-normal"}>
                               {sv.description || sv.serviceType || "Dịch vụ"}
                             </div>
                           </div>
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <div className="modal-service-price-wrapper">
                             <input
                               type="number"
                               value={displayCost}
@@ -2180,16 +1896,9 @@ export default function OrderDetailPage() {
                                   cost: newCost
                                 });
                               }}
-                              style={{
-                                width: "120px",
-                                padding: "6px 10px",
-                                border: "1px solid #ddd",
-                                borderRadius: "4px",
-                                fontSize: "13px",
-                                textAlign: "right"
-                              }}
+                              className="modal-price-input-field"
                             />
-                            <span style={{ fontSize: "12px", color: "#666", whiteSpace: "nowrap" }}>VND</span>
+                            <span className="modal-price-label-text">VND</span>
                           </div>
                         </div>
                       );
@@ -2202,8 +1911,8 @@ export default function OrderDetailPage() {
             {/* Tên dịch vụ và Giá tiền - Chỉ hiện khi chọn OTHER */}
             {service.serviceType === "OTHER" && (
               <>
-                <div style={{ marginBottom: "16px" }}>
-                  <label style={{ display: "block", marginBottom: "8px", fontWeight: "600" }}>Tên dịch vụ</label>
+                <div className="modal-section-spacing">
+                  <label className="modal-label-block-small">Tên dịch vụ</label>
                   <input
                     type="text"
                     value={service.description}
@@ -2214,18 +1923,12 @@ export default function OrderDetailPage() {
                         description: e.target.value
                       })
                     }
-                    style={{
-                      width: "100%",
-                      padding: "10px",
-                      border: "1px solid #ddd",
-                      borderRadius: "4px",
-                      fontSize: "14px"
-                    }}
+                    className="modal-text-input-field"
                   />
                 </div>
 
-                <div style={{ marginBottom: "20px" }}>
-                  <label style={{ display: "block", marginBottom: "8px", fontWeight: "600" }}>Giá tiền (VND)</label>
+                <div className="modal-section-spacing">
+                  <label className="modal-label-block-small">Giá tiền (VND)</label>
                   <input
                     type="number"
                     value={service.cost}
@@ -2235,13 +1938,7 @@ export default function OrderDetailPage() {
                         cost: Number(e.target.value) || 0
                       })
                     }
-                    style={{
-                      width: "100%",
-                      padding: "10px",
-                      border: "1px solid #ddd",
-                      borderRadius: "4px",
-                      fontSize: "14px"
-                    }}
+                    className="modal-number-input-field"
                   />
                 </div>
               </>
@@ -2251,7 +1948,6 @@ export default function OrderDetailPage() {
               <button 
                 className="btn btn-primary" 
                 onClick={handleAddService}
-                style={{ marginRight: "10px" }}
               >
                 ➕ Thêm dịch vụ
               </button>
@@ -2277,11 +1973,11 @@ export default function OrderDetailPage() {
           setEditingService(null);
           setEditServiceData({ price: 0, description: "" });
         }}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "600px", width: "90%" }}>
+          <div className="modal-content modal-content-wrapper" onClick={(e) => e.stopPropagation()}>
             <h2>Sửa dịch vụ</h2>
             
-            <div style={{ marginBottom: "16px" }}>
-              <label style={{ display: "block", marginBottom: "8px", fontWeight: "600" }}>
+            <div className="modal-section-spacing">
+              <label className="modal-label-block-small">
                 Loại dịch vụ
               </label>
               <input
@@ -2308,22 +2004,13 @@ export default function OrderDetailPage() {
                   return editingService.type || "N/A";
                 })()}
                 readOnly
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  fontSize: "14px",
-                  border: "1px solid #ddd",
-                  borderRadius: "4px",
-                  backgroundColor: "#f5f5f5",
-                  color: "#666",
-                  cursor: "not-allowed"
-                }}
+                className="modal-input-readonly"
               />
             </div>
 
-            <div style={{ marginBottom: "16px" }}>
-              <label style={{ display: "block", marginBottom: "8px", fontWeight: "600" }}>
-                Giá dịch vụ (VND) <span style={{ color: "#ef4444" }}>*</span>
+            <div className="modal-section-spacing">
+              <label className="modal-label-block-small">
+                Giá dịch vụ (VND) <span className="required-asterisk">*</span>
               </label>
               <input
                 type="number"
@@ -2331,35 +2018,21 @@ export default function OrderDetailPage() {
                 onChange={(e) => setEditServiceData({ ...editServiceData, price: e.target.value })}
                 min="0"
                 step="1000"
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  fontSize: "14px",
-                  border: "1px solid #ddd",
-                  borderRadius: "4px"
-                }}
+                className="modal-number-input-field"
                 disabled={processing}
                 placeholder="Nhập giá dịch vụ"
               />
             </div>
 
-            <div style={{ marginBottom: "16px" }}>
-              <label style={{ display: "block", marginBottom: "8px", fontWeight: "600" }}>
-                Mô tả <span style={{ color: "#ef4444" }}>*</span>
+            <div className="modal-section-spacing">
+              <label className="modal-label-block-small">
+                Mô tả <span className="required-asterisk">*</span>
               </label>
               <textarea
                 value={editServiceData.description}
                 onChange={(e) => setEditServiceData({ ...editServiceData, description: e.target.value })}
                 rows="4"
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  fontSize: "14px",
-                  border: "1px solid #ddd",
-                  borderRadius: "4px",
-                  resize: "vertical",
-                  fontFamily: "inherit"
-                }}
+                className="modal-textarea-field"
                 disabled={processing}
                 placeholder="Nhập mô tả dịch vụ"
               />
@@ -2370,7 +2043,6 @@ export default function OrderDetailPage() {
                 className="btn btn-primary" 
                 onClick={handleUpdateService}
                 disabled={processing}
-                style={{ marginRight: "10px" }}
               >
                 {processing ? "Đang xử lý..." : "💾 Lưu thay đổi"}
               </button>
