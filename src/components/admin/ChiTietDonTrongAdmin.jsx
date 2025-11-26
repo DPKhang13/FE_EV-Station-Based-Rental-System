@@ -1,9 +1,9 @@
-// pages/ChiTietDonTrongAdmin.jsx
+// components/admin/ChiTietDonTrongAdmin.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import api from "../services/api";
-import { notificationService } from "../services/notificationService";
+import api from "../../services/api";
+import { notificationService } from "../../services/notificationService";
 import "./ChiTietDonTrongAdmin.css";
 
 const ChiTietDonTrongAdmin = () => {
@@ -15,6 +15,7 @@ const ChiTietDonTrongAdmin = () => {
   const [refundedAmount, setRefundedAmount] = useState(null);
   const [refundReason, setRefundReason] = useState(null); // Lý do hoàn tiền
   const [cancellationReason, setCancellationReason] = useState(null);
+  const [maxRefundAmount, setMaxRefundAmount] = useState(null); // Số tiền tối đa có thể hoàn (tổng đã trả)
   const [loading, setLoading] = useState(true);
   const [refunding, setRefunding] = useState(false);
   const [loadingCancelReason, setLoadingCancelReason] = useState(false);
@@ -39,7 +40,7 @@ const ChiTietDonTrongAdmin = () => {
         // Lấy order status từ getAll() - tìm order theo orderId
         let fetchedOrderStatus = null;
         try {
-          const { orderService } = await import("../services/orderService");
+          const { orderService } = await import("../../services/orderService");
           const allOrdersRes = await orderService.getAll();
           const allOrders = Array.isArray(allOrdersRes?.data) ? allOrdersRes.data : 
                            Array.isArray(allOrdersRes) ? allOrdersRes : [];
@@ -98,6 +99,29 @@ const ChiTietDonTrongAdmin = () => {
             console.error("❌ Không thể tải số tiền đã hoàn:", refundErr);
             // Không set error vì có thể đơn hàng chưa được hoàn tiền
           }
+        }
+
+        // Fetch tổng số tiền đã trả để validate số tiền hoàn tối đa
+        try {
+          const paymentsRes = await api.get(`/payment/order/${orderId}`);
+          const payments = Array.isArray(paymentsRes?.data) ? paymentsRes.data : 
+                          Array.isArray(paymentsRes) ? paymentsRes : [];
+          
+          // Tính tổng số tiền đã trả thành công
+          const totalPaid = payments
+            .filter(p => p.status === 'SUCCESS' || p.status === 'Success')
+            .reduce((sum, p) => {
+              const amount = Number(p.amount || 0);
+              return sum + amount;
+            }, 0);
+          
+          if (totalPaid > 0) {
+            setMaxRefundAmount(totalPaid);
+            console.log('💰 Tổng số tiền đã trả:', totalPaid);
+          }
+        } catch (paymentErr) {
+          console.error("❌ Không thể tải thông tin thanh toán:", paymentErr);
+          // Không set error vì có thể đơn hàng chưa có thanh toán
         }
       } catch (err) {
         console.error("❌ Lỗi tải chi tiết đơn:", err);
@@ -220,7 +244,7 @@ const ChiTietDonTrongAdmin = () => {
           }
         } else {
           // Fallback: Thử lấy từ order nếu không tìm thấy notification
-          const { orderService } = await import("../services/orderService");
+          const { orderService } = await import("../../services/orderService");
           const allOrdersRes = await orderService.getAll();
           const allOrders = Array.isArray(allOrdersRes?.data) ? allOrdersRes.data : 
                            Array.isArray(allOrdersRes) ? allOrdersRes : [];
@@ -334,22 +358,52 @@ const ChiTietDonTrongAdmin = () => {
     setRefundReason(null);
   };
 
+  // Validate và tự động chỉnh số tiền hoàn nếu vượt quá số tiền tối đa
+  const handleRefundAmountChange = (e) => {
+    const inputValue = e.target.value;
+    let amount = parseFloat(inputValue);
+    
+    // Nếu có maxRefundAmount và số tiền nhập vượt quá, tự động chỉnh về max
+    if (maxRefundAmount && !isNaN(amount) && amount > maxRefundAmount) {
+      amount = maxRefundAmount;
+      alert(`Số tiền hoàn không được vượt quá ${maxRefundAmount.toLocaleString('vi-VN')} VNĐ (tổng số tiền đã trả). Đã tự động chỉnh về mức tối đa.`);
+    }
+    
+    setRefundForm({ 
+      ...refundForm, 
+      amount: inputValue === '' ? '' : (isNaN(amount) ? inputValue : amount.toString())
+    });
+  };
+
   // Xử lý submit hoàn tiền
   const handleRefund = async () => {
     try {
       setRefunding(true);
       
-      // Xây dựng URL với query parameter amount nếu có
-      let url = `/payment/refund/${orderId}`;
+      // Validate số tiền trước khi submit
+      let finalAmount = null;
       if (refundForm.amount && refundForm.amount.trim()) {
-        const amount = parseFloat(refundForm.amount);
+        let amount = parseFloat(refundForm.amount);
+        
+        // Nếu vượt quá maxRefundAmount, tự động chỉnh về max
+        if (maxRefundAmount && !isNaN(amount) && amount > maxRefundAmount) {
+          amount = maxRefundAmount;
+          alert(`⚠️ Số tiền hoàn đã được chỉnh về mức tối đa: ${maxRefundAmount.toLocaleString('vi-VN')} VNĐ`);
+        }
+        
         if (!isNaN(amount) && amount > 0) {
-          url += `?amount=${amount}`;
+          finalAmount = amount;
         }
       }
       
+      // Xây dựng URL với query parameter amount nếu có
+      let url = `/payment/refund/${orderId}`;
+      if (finalAmount !== null) {
+        url += `?amount=${finalAmount}`;
+      }
+      
       // Gọi API hoàn tiền: POST /api/payment/refund/{orderId}?amount={amount}
-      const refundRes = await api.post(url);
+      await api.post(url);
       
       alert('✅ Hoàn tiền thành công!');
       
@@ -494,14 +548,20 @@ const ChiTietDonTrongAdmin = () => {
               <div className="od-form-group">
                 <label htmlFor="refund-amount">
                   Số tiền hoàn (VNĐ) <span style={{ color: '#999', fontSize: '12px' }}>(Tùy chọn - để trống để hoàn toàn bộ)</span>
+                  {maxRefundAmount && (
+                    <span style={{ color: '#dc2626', fontSize: '12px', display: 'block', marginTop: '4px' }}>
+                      Tối đa: {maxRefundAmount.toLocaleString('vi-VN')} VNĐ (tổng số tiền đã trả)
+                    </span>
+                  )}
                 </label>
                 <input
                   id="refund-amount"
                   type="number"
                   placeholder="Nhập số tiền cần hoàn..."
                   value={refundForm.amount}
-                  onChange={(e) => setRefundForm({ ...refundForm, amount: e.target.value })}
+                  onChange={handleRefundAmountChange}
                   min="0"
+                  max={maxRefundAmount || undefined}
                   step="1000"
                 />
               </div>

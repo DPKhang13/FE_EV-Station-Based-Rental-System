@@ -109,6 +109,17 @@ const Offers = () => {
 
                                     <div>
                                         <h3 className="offer-title">{variant}</h3>
+                                        
+                                        {/* Hiển thị carmodel */}
+                                        <p className="offer-carmodel" style={{ 
+                                            fontSize: '16px', 
+                                            color: '#666', 
+                                            marginTop: '4px',
+                                            marginBottom: '8px',
+                                            fontWeight: '600'
+                                        }}>
+                                            {getCarModel(4, variant) || ''}
+                                        </p>
 
                                         <p className="offer-price">
                                             {(() => {
@@ -180,6 +191,17 @@ const Offers = () => {
 
                                     <div>
                                         <h3 className="offer-title">{variant}</h3>
+                                        
+                                        {/* Hiển thị carmodel */}
+                                        <p className="offer-carmodel" style={{ 
+                                            fontSize: '16px', 
+                                            color: '#666', 
+                                            marginTop: '4px',
+                                            marginBottom: '8px',
+                                            fontWeight: '600'
+                                        }}>
+                                            {getCarModel(7, variant) || ''}
+                                        </p>
 
                                         <p className="offer-price">
                                             {(() => {

@@ -2,7 +2,7 @@
 // Component này fetch và hiển thị các metrics quan trọng như doanh thu, số xe, tỷ lệ sử dụng
 import React, { useEffect, useState } from "react";
 import "./AdminDashBoardPage.css";
-import { adminService } from "../services/adminService";
+import { adminService } from "../../services/adminService";
 
 const AdminDashBoardPage = () => {
   // State quản lý dữ liệu dashboard từ API
