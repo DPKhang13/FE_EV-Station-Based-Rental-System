@@ -41,9 +41,32 @@ export const rentalStationService = {
 
    updateVehicleStatus: async (vehicle_id, {status,battery }) => {
   try {
+    // ✅ Normalize status về lowercase để khớp với backend (available|rental|maintenance|checking)
+    let normalizedStatus = status;
+    if (status) {
+      const statusUpper = status.toUpperCase();
+      const statusMap = {
+        "AVAILABLE": "available",
+        "RENTED": "rental",
+        "RENTAL": "rental",
+        "MAINTENANCE": "maintenance",
+        "CHECKING": "checking",
+        "BOOKED": "available" // BOOKED không được backend hỗ trợ, map về available
+      };
+      normalizedStatus = statusMap[statusUpper] || status.toLowerCase();
+    }
+
+    // ⭐⭐ VALIDATION: Kiểm tra pin trước khi cho phép chuyển sang trạng thái "available" ⭐⭐
+    if (normalizedStatus === "available") {
+      const batteryPercent = Number(String(battery).replace("%", "").trim());
+      if (batteryPercent <= 60) {
+        throw new Error(`Không thể chuyển sang trạng thái 'Sẵn sàng'. Pin phải trên 60%. Pin hiện tại: ${batteryPercent}%.`);
+      }
+    }
+
     const body = {
        // ✅ đúng key swagger (không dấu %)
-      status: status || undefined,
+      status: normalizedStatus || undefined,
       batteryStatus: `${battery}%`,
     };
 

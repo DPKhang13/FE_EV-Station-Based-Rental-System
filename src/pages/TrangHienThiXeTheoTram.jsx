@@ -647,11 +647,12 @@ const TrangHienThiXeTheoTram = () => {
       
       // Kiểm tra pin trước khi cho phép chuyển sang trạng thái Sẵn sàng
       if (newStatus === "AVAILABLE") {
-        const batteryStatus = vehicle.batteryStatus || vehicle.battery_status || "0";
+        // Lấy pin từ editFormData (nếu đã thay đổi) hoặc từ vehicle (pin hiện tại)
+        const batteryStatus = editFormData.batteryStatus || vehicle.batteryStatus || vehicle.battery_status || "0";
         const batteryPercent = Number(String(batteryStatus).replace("%", "").trim());
         
-        if (batteryPercent <= 60) {
-          return showNotification("Không thể chuyển sang trạng thái 'Sẵn sàng'. Pin phải trên 60%. Pin hiện tại: " + batteryPercent + "%.", "error");
+        if (isNaN(batteryPercent) || batteryPercent <= 60) {
+          return showNotification("Không thể chuyển sang trạng thái 'Sẵn sàng'. Pin phải trên 60%. Pin hiện tại: " + (isNaN(batteryPercent) ? "N/A" : batteryPercent) + "%.", "error");
         }
       }
 
@@ -663,16 +664,19 @@ const TrangHienThiXeTheoTram = () => {
       } else if (newStatus === "RENTED" || newStatus === "RENTAL") {
         // Nếu cố gắng chuyển sang trạng thái RENTED, từ chối
         return showNotification("Không thể chuyển sang trạng thái 'Đang thuê'. Trạng thái này chỉ được thay đổi tự động khi khách hàng cọc và bàn giao xe.", "error");
+      } else if (newStatus === "BOOKED") {
+        // Admin không có quyền chuyển xe sang trạng thái "Đã đặt trước" - chỉ tự động khi customer đặt xe
+        return showNotification("Không thể chuyển sang trạng thái 'Đã đặt trước'. Trạng thái này chỉ được thay đổi tự động khi khách hàng đặt xe.", "error");
       }
 
-      // Chuyển đổi status sang lowercase để khớp với backend (available|rented|maintenance)
+      // Chuyển đổi status sang lowercase để khớp với backend (available|rental|maintenance|checking)
       const statusMap = {
         "AVAILABLE": "available",
-        "RENTED": "rented",
-        "RENTAL": "rented",
+        "RENTED": "rental",
+        "RENTAL": "rental",
         "MAINTENANCE": "maintenance",
-        "BOOKED": "booked",
-        "CHECKING": "checking"
+        "CHECKING": "checking", // Backend đã hỗ trợ trạng thái checking
+        "BOOKED": "available" // BOOKED không được backend hỗ trợ, map về available
       };
       const normalizedStatus = statusMap[finalStatus?.toUpperCase()] || finalStatus?.toLowerCase() || "available";
 
@@ -682,6 +686,15 @@ const TrangHienThiXeTheoTram = () => {
         finalStationId = Number(vehicle.stationId || vehicle.station_id);
       }
 
+      // ⭐⭐ VALIDATION: Kiểm tra lại pin một lần nữa trước khi gửi API (phòng trường hợp có thay đổi) ⭐⭐
+      if (normalizedStatus === "available") {
+        const batteryStatus = editFormData.batteryStatus || vehicle.batteryStatus || vehicle.battery_status || "0";
+        const batteryPercent = Number(String(batteryStatus).replace("%", "").trim());
+        if (isNaN(batteryPercent) || batteryPercent <= 60) {
+          return showNotification("Không thể chuyển sang trạng thái 'Sẵn sàng'. Pin phải trên 60%. Pin hiện tại: " + (isNaN(batteryPercent) ? "N/A" : batteryPercent) + "%.", "error");
+        }
+      }
+
       const updateData = {
         status: normalizedStatus,
         stationId: finalStationId,
@@ -689,7 +702,7 @@ const TrangHienThiXeTheoTram = () => {
         color: editFormData.color,
         seatCount: editFormData.seatCount,
         variant: editFormData.variant,
-        batteryStatus: String(vehicle.batteryStatus ?? vehicle.battery_status ?? "100"),
+        batteryStatus: String(editFormData.batteryStatus || (vehicle.batteryStatus ?? vehicle.battery_status ?? "100")),
         batteryCapacity: String(vehicle.batteryCapacity ?? vehicle.battery_capacity ?? "100"),
         rangeKm: Number(
           vehicle.rangeKm || vehicle.range_km || 350
@@ -1736,16 +1749,7 @@ const battery = Number(String(rawBattery).replace("%", "").trim());
                           <span className="status-button-handle"></span>
                         </span>
                       </button>
-                    <button
-                      type="button"
-                      className={`status-button ${(editFormData.status || "").toUpperCase() === "BOOKED" ? "active" : ""}`}
-                      onClick={() => handleEditInputChange({ target: { name: "status", value: "BOOKED" } })}
-                    >
-                      <span className="status-button-label">Đã đặt trước</span>
-                      <span className="status-button-switch">
-                        <span className="status-button-handle"></span>
-                      </span>
-                    </button>
+                    {/* Admin không có quyền chuyển xe sang trạng thái "Đã đặt trước" - chỉ tự động khi customer đặt xe */}
                     <button
                       type="button"
                       className={`status-button ${(editFormData.status || "").toUpperCase() === "CHECKING" ? "active" : ""}`}

@@ -25,21 +25,26 @@ const ensureTokenCookie = () => {
 
     console.log('🔍 [API] Checking token in localStorage:');
     console.log('  - Token exists:', !!token);
-    console.log('  - Token value:', token ? `${token.substring(0, 20)}...` : 'NULL/UNDEFINED');
+    console.log('  - Token type:', typeof token);
+    console.log('  - Token value:', token && typeof token === 'string' ? `${token.substring(0, 20)}...` : (token || 'NULL/UNDEFINED'));
+    console.log('  - All localStorage keys:', Object.keys(localStorage));
 
     const headers = {
         'Content-Type': 'application/json'
     };
 
-    if (token) {
+    // ✅ Kiểm tra token hợp lệ (phải là string và không rỗng)
+    if (token && typeof token === 'string' && token.trim() !== '' && token !== 'undefined' && token !== 'null') {
         setTokenCookie(token);
         // ✅ GỬI TOKEN TRONG HEADER để backend đọc được
         headers['Authorization'] = `Bearer ${token}`;
         console.log('✅ [API] Token added to Authorization header');
     } else {
-        console.error('❌❌❌ [API] No token found in localStorage!');
+        console.error('❌❌❌ [API] No valid token found in localStorage!');
+        console.error('❌ Token value:', token);
         console.error('❌ YOU NEED TO LOGIN FIRST!');
         console.error('❌ Current localStorage keys:', Object.keys(localStorage));
+        console.error('❌ Current localStorage values:', Object.keys(localStorage).map(key => ({ key, value: localStorage.getItem(key)?.substring(0, 50) })));
     }
 
     return headers;

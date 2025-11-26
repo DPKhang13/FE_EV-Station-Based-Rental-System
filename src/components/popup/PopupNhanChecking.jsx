@@ -159,6 +159,15 @@ const PopupNhanChecking = ({ xe, onClose, onReload }) => {
     setShowConfirmPopup(false);
     const newStatus = choice === "MAINTENANCE" ? "MAINTENANCE" : "AVAILABLE";
 
+    // ⭐⭐ VALIDATION: Kiểm tra pin trước khi cho phép chuyển sang trạng thái "SẴN SÀNG" ⭐⭐
+    if (newStatus === "AVAILABLE") {
+      const batteryPercent = xe.pin || 100;
+      if (batteryPercent <= 60) {
+        alert(`Không thể chuyển sang trạng thái 'Sẵn sàng'. Pin phải trên 60%. Pin hiện tại: ${batteryPercent}%.`);
+        return;
+      }
+    }
+
     try {
       await rentalStationService.updateVehicleStatus(xe.id || xe.vehicleId, {
         status: newStatus,

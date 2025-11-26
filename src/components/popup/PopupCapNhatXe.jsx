@@ -149,6 +149,26 @@ const PopupCapNhatXe = ({ vehicle, onClose, onSuccess }) => {
       const currentStatus = statusMap[vehicle?.trangThai] || vehicle?.status || "";
       const newStatus = formData.status && formData.status.trim() ? formData.status.trim() : null;
       
+      // ⭐⭐ Admin không có quyền chuyển xe sang trạng thái "Đã đặt trước" - chỉ tự động khi customer đặt xe ⭐⭐
+      if (newStatus === "BOOKED") {
+        setLoading(false);
+        alert("Không thể chuyển sang trạng thái 'Đã đặt trước'. Trạng thái này chỉ được thay đổi tự động khi khách hàng đặt xe.");
+        return;
+      }
+      
+      // ⭐⭐ KIỂM TRA PIN TRƯỚC KHI CHO PHÉP CHUYỂN SANG TRẠNG THÁI "SẴN SÀNG" ⭐⭐
+      if (newStatus === "AVAILABLE") {
+        // Lấy pin từ formData (nếu đã thay đổi) hoặc từ vehicle (pin hiện tại)
+        const batteryStatus = formData.batteryStatus || `${vehicle.pin}%`;
+        const batteryPercent = Number(String(batteryStatus).replace("%", "").trim());
+        
+        if (batteryPercent <= 60) {
+          setLoading(false);
+          alert(`Không thể chuyển sang trạng thái 'Sẵn sàng'. Pin phải trên 60%. Pin hiện tại: ${batteryPercent}%.`);
+          return;
+        }
+      }
+      
       // ⭐⭐ KHÔNG CHO PHÉP ĐỔI TRẠNG THÁI KHI XE ĐANG "ĐÃ ĐẶT TRƯỚC" (TRỪ KHI ĐANG "ĐANG KIỂM TRA") ⭐⭐
       // Nếu xe đang CHECKING, cho phép đổi trạng thái bình thường (không cần kiểm tra BOOKED)
       if (currentStatus !== "CHECKING" && currentStatus === "BOOKED" && newStatus && newStatus !== "BOOKED") {
@@ -232,23 +252,26 @@ const PopupCapNhatXe = ({ vehicle, onClose, onSuccess }) => {
                 const currentStatus = statusMap[vehicle?.trangThai] || vehicle?.status || "";
                 
                 // ⭐⭐ DANH SÁCH TRẠNG THÁI MẶC ĐỊNH ⭐⭐
+                // Admin không có quyền chuyển xe sang trạng thái "Đã đặt trước" - chỉ tự động khi customer đặt xe
                 const allStatusOptions = [
                   { value: "AVAILABLE", label: "Có sẵn", bgColor: "#D1FAE5" }, // Light green
-                  { value: "BOOKED", label: "Đã đặt trước", bgColor: "#FEE2E2" }, // Light red
                   { value: "CHECKING", label: "Đang kiểm tra", bgColor: "#FFFFFF" }, // White
                   { value: "MAINTENANCE", label: "Bảo trì", bgColor: "#FFFFFF" } // White
                 ];
                 
-                // ⭐⭐ NẾU XE ĐANG "ĐANG KIỂM TRA", LOẠI BỎ "ĐÃ ĐẶT TRƯỚC" KHỎI DANH SÁCH ⭐⭐
-                const statusOptions = currentStatus === "CHECKING" 
-                  ? allStatusOptions.filter(opt => opt.value !== "BOOKED")
-                  : allStatusOptions;
+                // ⭐⭐ LOẠI BỎ "ĐÃ ĐẶT TRƯỚC" KHỎI DANH SÁCH (admin không có quyền chọn) ⭐⭐
+                const statusOptions = allStatusOptions;
                 
                 return statusOptions;
               })().map((statusOption) => {
                 const isChecked = formData.status === statusOption.value;
                 // Nếu toggle ON, dùng màu background của option, nếu OFF thì dùng white
                 const barBgColor = isChecked ? statusOption.bgColor : "#FFFFFF";
+                
+                // ⭐⭐ KIỂM TRA PIN ĐỂ DISABLE BUTTON "SẴN SÀNG" NẾU PIN < 60% ⭐⭐
+                const batteryStatus = formData.batteryStatus || `${vehicle.pin}%`;
+                const batteryPercent = Number(String(batteryStatus).replace("%", "").trim());
+                const isBatteryLow = statusOption.value === "AVAILABLE" && batteryPercent <= 60;
                 
                 return (
                   <div 
@@ -261,40 +284,42 @@ const PopupCapNhatXe = ({ vehicle, onClose, onSuccess }) => {
                       backgroundColor: barBgColor,
                       border: '1px solid #E5E7EB',
                       borderRadius: '8px',
-                      transition: 'all 0.3s ease'
+                      transition: 'all 0.3s ease',
+                      opacity: isBatteryLow ? 0.5 : 1,
+                      cursor: isBatteryLow ? 'not-allowed' : 'default'
                     }}
+                    title={isBatteryLow ? `Pin hiện tại: ${batteryPercent}%. Cần trên 60% để chuyển sang trạng thái 'Sẵn sàng'.` : ""}
                   >
-                    <span style={{ fontSize: '14px', color: '#374151', fontWeight: '500' }}>
+                    <span style={{ fontSize: '14px', color: isBatteryLow ? '#9CA3AF' : '#374151', fontWeight: '500' }}>
                       {statusOption.label}
                     </span>
-                    <label className="toggle-switch" style={{ margin: 0 }}>
+                    <label className="toggle-switch" style={{ margin: 0, opacity: isBatteryLow ? 0.5 : 1 }}>
                       <input
                         type="checkbox"
                         checked={isChecked}
+                        disabled={isBatteryLow}
                         onChange={(e) => {
-                          // ⭐⭐ NGĂN CHECKBOX TỰ ĐỘNG BẬT NẾU CẦN HIỂN THỊ POPUP CẢNH BÁO ⭐⭐
-                          if (e.target.checked) {
-                            // ⭐⭐ RÀNG BUỘC: Kiểm tra nếu xe đang "Đã đặt trước" và muốn đổi sang trạng thái khác ⭐⭐
-                            const statusMap = {
-                              "Có sẵn": "AVAILABLE",
-                              "Đang cho thuê": "RENTAL",
-                              "Bảo trì": "MAINTENANCE",
-                              "Đang kiểm tra": "CHECKING",
-                              "Đã đặt trước": "BOOKED",
-                            };
-                            const currentStatus = statusMap[vehicle?.trangThai] || vehicle?.status || "";
+                          // ⭐⭐ Admin không có quyền chọn BOOKED - đã loại bỏ khỏi danh sách ⭐⭐
+                          if (e.target.checked && statusOption.value === "BOOKED") {
+                            e.preventDefault();
+                            alert("Không thể chuyển sang trạng thái 'Đã đặt trước'. Trạng thái này chỉ được thay đổi tự động khi khách hàng đặt xe.");
+                            return;
+                          }
+                          
+                          // ⭐⭐ KIỂM TRA PIN TRƯỚC KHI CHO PHÉP CHỌN "SẴN SÀNG" ⭐⭐
+                          if (e.target.checked && statusOption.value === "AVAILABLE") {
+                            const batteryStatus = formData.batteryStatus || `${vehicle.pin}%`;
+                            const batteryPercent = Number(String(batteryStatus).replace("%", "").trim());
                             
-                            // ⭐⭐ Nếu xe đang "Đã đặt trước" và muốn đổi sang trạng thái khác (TRỪ KHI ĐANG "ĐANG KIỂM TRA") ⭐⭐
-                            // Nếu xe đang CHECKING, cho phép đổi trạng thái bình thường (không cần kiểm tra BOOKED)
-                            if (currentStatus !== "CHECKING" && currentStatus === "BOOKED" && statusOption.value !== "BOOKED") {
-                              // ⭐⭐ NGĂN CHECKBOX BẬT NGAY, HIỂN THỊ POPUP CẢNH BÁO ⭐⭐
+                            if (batteryPercent <= 60) {
                               e.preventDefault();
-                              setPendingStatusChange(statusOption.value);
-                              setShowWarningModal(true);
+                              alert(`Không thể chuyển sang trạng thái 'Sẵn sàng'. Pin phải trên 60%. Pin hiện tại: ${batteryPercent}%.`);
                               return;
                             }
-                            
-                            // ⭐⭐ Khi bật một toggle, set trạng thái đó (các toggle khác sẽ tự động tắt vì checked dựa trên formData.status) ⭐⭐
+                          }
+                          
+                          // ⭐⭐ Khi bật một toggle, set trạng thái đó (các toggle khác sẽ tự động tắt vì checked dựa trên formData.status) ⭐⭐
+                          if (e.target.checked) {
                             setFormData(prev => ({
                               ...prev,
                               status: statusOption.value

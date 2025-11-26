@@ -162,6 +162,13 @@ const QuanLyXePage = () => {
     if (!selectedXe) return;
     const finalPin = pinValue || selectedXe.pin;
     const finalStatus = newStatus || selectedXe.statusRaw;
+    
+    // ⭐⭐ KIỂM TRA PIN TRƯỚC KHI CHO PHÉP CHUYỂN SANG TRẠNG THÁI "SẴN SÀNG" ⭐⭐
+    if (finalStatus === "AVAILABLE" && finalPin <= 60) {
+      alert(`Không thể chuyển sang trạng thái 'Sẵn sàng'. Pin phải trên 60%. Pin hiện tại: ${finalPin}%.`);
+      return;
+    }
+    
     try {
       await rentalStationService.updateVehicleStatus(selectedXe.id, {
         status: finalStatus,

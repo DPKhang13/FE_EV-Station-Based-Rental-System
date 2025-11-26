@@ -462,6 +462,16 @@ const StationManagement = () => {
     const vehicleId = editingVehicle.vehicleId || editingVehicle.id;
     if (!vehicleId) throw new Error("Không tìm thấy ID xe!");
 
+    // ⭐⭐ VALIDATION: Kiểm tra pin trước khi cho phép chuyển sang trạng thái "AVAILABLE" ⭐⭐
+    if (vehicleFormData.status === "AVAILABLE" || vehicleFormData.status === "available") {
+      const batteryStatus = vehicleFormData.batteryStatus || editingVehicle.batteryStatus || "100%";
+      const batteryPercent = Number(String(batteryStatus).replace("%", "").trim());
+      if (batteryPercent <= 60) {
+        alert(`Không thể chuyển sang trạng thái 'Sẵn sàng'. Pin phải trên 60%. Pin hiện tại: ${batteryPercent}%.`);
+        return;
+      }
+    }
+
     const vehicleData = {
       status: vehicleFormData.status,
       color: vehicleFormData.color,
