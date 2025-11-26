@@ -798,7 +798,6 @@ const OrderDetailCusPage = () => {
                 <th>Giá</th>
                 <th>Trạng thái</th>
                 <th>Phương thức thanh toán</th>
-                {isStaff && <th>Hành động</th>}
               </tr>
             </thead>
             <tbody>
@@ -1009,25 +1008,6 @@ const OrderDetailCusPage = () => {
                         {paymentMethodText}
                       </span>
                     </td>
-                    {/* Cột Hành động - Chỉ hiển thị cho staff/admin */}
-                    {isStaff && (
-                      <td>
-                        {showConfirmButton ? (
-                        <button
-                          onClick={() => {
-                            // Gọi API với orderId (không cần paymentId nữa)
-                            handleStaffConfirmPayment();
-                          }}
-                          disabled={processing}
-                          className="btn-confirm-payment-staff"
-                        >
-                          {processing ? "Đang xử lý..." : "✅ Xác nhận đã thanh toán"}
-                        </button>
-                        ) : (
-                          <span className="table-empty-text">-</span>
-                        )}
-                      </td>
-                    )}
                   </tr>
                 );
                 });

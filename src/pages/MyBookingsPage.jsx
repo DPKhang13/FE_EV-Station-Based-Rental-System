@@ -966,28 +966,68 @@ const MyBookingsPage = () => {
 
                     {/* Nút xóa đơn hàng - chỉ hiển thị khi đã hủy hoặc hoàn thành */}
                     {["CANCELLED", "COMPLETED", "FAILED"].includes(booking.status?.toUpperCase()) && (
-                      <button
-                        onClick={() => handleDeleteOrder(booking.orderId)}
-                        style={{
-                          background: "#6b7280",
-                          color: "white",
-                          border: "none",
-                          padding: "10px 20px",
-                          borderRadius: "8px",
-                          fontSize: "14px",
-                          fontWeight: "600",
-                          cursor: "pointer",
-                          transition: "all 0.3s",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.target.style.background = "#4b5563";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.background = "#6b7280";
-                        }}
-                      >
-                        Xóa đơn hàng
-                      </button>
+                      <>
+                        <button
+                          onClick={() => handleDeleteOrder(booking.orderId)}
+                          style={{
+                            background: "#6b7280",
+                            color: "white",
+                            border: "none",
+                            padding: "10px 20px",
+                            borderRadius: "8px",
+                            fontSize: "14px",
+                            fontWeight: "600",
+                            cursor: "pointer",
+                            transition: "all 0.3s",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.background = "#4b5563";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.background = "#6b7280";
+                          }}
+                        >
+                          Xóa đơn hàng
+                        </button>
+                        {["CANCELLED", "FAILED"].includes(booking.status?.toUpperCase()) && (
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "12px",
+                              padding: "12px 16px",
+                              background: "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
+                              border: "1px solid #fbbf24",
+                              borderRadius: "12px",
+                              boxShadow: "0 2px 8px rgba(251, 191, 36, 0.2)",
+                              flex: 1,
+                              maxWidth: "100%",
+                            }}
+                          >
+                            <div style={{ flex: 1 }}>
+                              <div
+                                style={{
+                                  fontWeight: "600",
+                                  color: "#92400e",
+                                  fontSize: "14px",
+                                  marginBottom: "4px",
+                                }}
+                              >
+                                Đơn hàng của bạn đã hủy
+                              </div>
+                              <div
+                                style={{
+                                  color: "#78350f",
+                                  fontSize: "12px",
+                                  lineHeight: "1.4",
+                                }}
+                              >
+                                Admin sẽ xem xét và hoàn tiền nếu có
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 )}

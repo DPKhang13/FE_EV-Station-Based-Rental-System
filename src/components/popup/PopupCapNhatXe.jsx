@@ -251,7 +251,7 @@ const PopupCapNhatXe = ({ vehicle, onClose, onSuccess }) => {
                 };
                 const currentStatus = statusMap[vehicle?.trangThai] || vehicle?.status || "";
                 
-                // ⭐⭐ DANH SÁCH TRẠNG THÁI MẶC ĐỊNH ⭐⭐
+                //  DANH SÁCH TRẠNG THÁI MẶC ĐỊNH 
                 // Admin không có quyền chuyển xe sang trạng thái "Đã đặt trước" - chỉ tự động khi customer đặt xe
                 const allStatusOptions = [
                   { value: "AVAILABLE", label: "Có sẵn", bgColor: "#D1FAE5" }, // Light green
