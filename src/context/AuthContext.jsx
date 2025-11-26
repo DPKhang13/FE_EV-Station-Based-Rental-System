@@ -4,26 +4,12 @@ import axios from "axios";
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem("accessToken") || null);
-  const [loading, setLoading] = useState(true);
-
-  // ✅ Không xóa session nữa — thay vào đó load lại thông tin từ localStorage
-  useEffect(() => {
-    const savedToken = localStorage.getItem("accessToken");
+  const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem("user");
-
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
-      axios.defaults.headers.common["Authorization"] = `Bearer ${savedToken}`;
-      console.log("🔐 Session restored:", JSON.parse(savedUser));
-    } else {
-      console.log("🚫 No session found");
-    }
-
-    setLoading(false);
-  }, []);
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+  const [token, setToken] = useState(() => localStorage.getItem("accessToken") || null);
+  const [loading, setLoading] = useState(true);
 
   // 🔹 Tự động thêm token vào axios
   useEffect(() => {
@@ -33,6 +19,11 @@ export const AuthProvider = ({ children }) => {
       delete axios.defaults.headers.common["Authorization"];
     }
   }, [token]);
+
+  // ✅ Chỉ cần 1 tick để đánh dấu đã load session từ localStorage (đã gán ngay trong useState)
+  useEffect(() => {
+    setLoading(false);
+  }, []);
 
   // 🔹 Đăng nhập
   const login = (data) => {

@@ -1,12 +1,14 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { authService, orderService, vehicleService } from "../services";
 import api from "../services/api";
+import { AuthContext } from "../context/AuthContext";
 import "./OrderDetailPage.css";
 
 export default function OrderDetailPage() {
   const { orderId, userId } = useParams();
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
 
   const [customer, setCustomer] = useState(null);
   const [orderDetails, setOrderDetails] = useState([]);
@@ -18,6 +20,7 @@ export default function OrderDetailPage() {
   const [returnTime, setReturnTime] = useState("");
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [returnLoading, setReturnLoading] = useState(false);
+  const [returnTimeError, setReturnTimeError] = useState(""); // Error message cho validation ngày trả
 
   const [service, setService] = useState({
     serviceType: "",
@@ -44,6 +47,10 @@ export default function OrderDetailPage() {
     description: ""
   });
   const [currentRentalOrderId, setCurrentRentalOrderId] = useState(null); // OrderId đang thuê xe hiện tại
+  const [showAlternativeVehicleModal, setShowAlternativeVehicleModal] = useState(false); // Hiển thị modal gợi ý xe tương tự
+  const [alternativeVehicles, setAlternativeVehicles] = useState([]); // Danh sách xe tương tự
+  const [loadingAlternativeVehicles, setLoadingAlternativeVehicles] = useState(false); // Loading danh sách xe tương tự
+  const [selectedAlternativeVehicle, setSelectedAlternativeVehicle] = useState(null); // Xe đang được chọn để thay thế
   
   const showToast = useCallback((type, text, ms = 4000) => {
     setToast({ type, text });
@@ -236,6 +243,7 @@ export default function OrderDetailPage() {
       });
 
       setReturnTime(""); // Reset returnTime khi mở modal
+      setReturnTimeError(""); // Clear error khi mở modal
       setShowReturnModal(true);
     } catch (err) {
       console.error(err);
@@ -275,6 +283,18 @@ export default function OrderDetailPage() {
       // datetime-local trả về format: "YYYY-MM-DDTHH:mm"
       // Cần convert thành: "YYYY-MM-DD HH:mm:ss"
       const dateTime = new Date(returnTime);
+      
+      // ⭐⭐ VALIDATION: Kiểm tra ngày trả phải lớn hơn ngày bắt đầu thuê ⭐⭐
+      const startTimeStr = returnPreview?.startTime || orderDetails[0]?.startTime || orderDetails[0]?.start_time;
+      if (startTimeStr) {
+        const startDateTime = new Date(startTimeStr);
+        if (dateTime <= startDateTime) {
+          setReturnTimeError("⚠️ Thời gian trả xe phải lớn hơn thời gian bắt đầu thuê!");
+          return;
+        }
+      }
+      setReturnTimeError(""); // Clear error nếu validation pass
+      
       const year = dateTime.getFullYear();
       const month = String(dateTime.getMonth() + 1).padStart(2, "0");
       const day = String(dateTime.getDate()).padStart(2, "0");
@@ -284,6 +304,18 @@ export default function OrderDetailPage() {
       time = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     } else {
       // Nếu không chọn, dùng thời gian hiện tại
+      // ⭐⭐ VALIDATION: Kiểm tra thời gian hiện tại phải lớn hơn ngày bắt đầu thuê ⭐⭐
+      const now = new Date();
+      const startTimeStr = returnPreview?.startTime || orderDetails[0]?.startTime || orderDetails[0]?.start_time;
+      if (startTimeStr) {
+        const startDateTime = new Date(startTimeStr);
+        if (now <= startDateTime) {
+          setReturnTimeError("⚠️ Thời gian trả xe phải lớn hơn thời gian bắt đầu thuê!");
+          return;
+        }
+      }
+      setReturnTimeError(""); // Clear error nếu validation pass
+      
       time = new Date().toISOString().slice(0, 19).replace("T", " ");
     }
 
@@ -298,6 +330,7 @@ export default function OrderDetailPage() {
       showToast("success", "🚗 Đã trả xe thành công!");
       setShowReturnModal(false);
       setReturnTime(""); // Reset returnTime sau khi submit
+      setReturnTimeError(""); // Clear error khi thành công
       // ✅ Gọi các API song song để tăng tốc độ
       await Promise.all([
         refetchDetails(),
@@ -405,8 +438,83 @@ export default function OrderDetailPage() {
     }
   };
 
-  const handleSuggestAlternativeVehicle = () => {
-    navigate("/staff/quan-ly-giao-nhan-xe");
+  const handleSuggestAlternativeVehicle = async () => {
+    try {
+      setShowAlternativeVehicleModal(true);
+      setLoadingAlternativeVehicles(true);
+      setSelectedAlternativeVehicle(null); // Reset selection khi mở modal
+      
+      // ⭐ Lấy stationId từ staff đang đăng nhập (AuthContext)
+      const staffStationId = user?.stationId || 
+                            user?.station_id || 
+                            user?.tramId || 
+                            null;
+      
+      // Lấy carmodel từ xe hiện tại
+      const currentVehicle = orderDetails[0];
+      const carmodel = currentVehicle?.carmodel || vehicle?.carmodel;
+      
+      console.log("🔍 [Alternative Vehicle] Staff StationId:", staffStationId, "Carmodel:", carmodel);
+      
+      if (!staffStationId) {
+        showToast("error", "Không tìm thấy thông tin trạm của staff!");
+        setShowAlternativeVehicleModal(false);
+        return;
+      }
+      
+      // ⭐ Gọi API lấy danh sách xe có sẵn tại trạm của staff với carmodel tương tự
+      const vehicles = await vehicleService.getAvailableVehiclesByStation(staffStationId, carmodel);
+      // Transform vehicles để có ảnh
+      const transformedVehicles = vehicles.map(v => vehicleService.transformVehicleData(v));
+      setAlternativeVehicles(transformedVehicles || []);
+      
+      if (!vehicles || vehicles.length === 0) {
+        showToast("info", "Không tìm thấy xe tương tự có sẵn tại trạm này.");
+      }
+    } catch (err) {
+      console.error("❌ [Alternative Vehicles] Error:", err);
+      showToast("error", `Không thể tải danh sách xe: ${getApiMessage(err)}`);
+      setAlternativeVehicles([]);
+    } finally {
+      setLoadingAlternativeVehicles(false);
+    }
+  };
+  
+  const handleConfirmReplaceVehicle = async () => {
+    if (!selectedAlternativeVehicle) {
+      showToast("error", "Vui lòng chọn xe để thay thế!");
+      return;
+    }
+    
+    const confirm = window.confirm(
+      `Bạn có chắc muốn thay thế xe hiện tại bằng xe ${selectedAlternativeVehicle.vehicleName || selectedAlternativeVehicle.vehicle_name || selectedAlternativeVehicle.plateNumber}?`
+    );
+    
+    if (!confirm) return;
+    
+    try {
+      setHandoverLoading(true);
+      
+      // ⭐ Gọi API change-vehicle
+      const newVehicleId = selectedAlternativeVehicle.vehicleId || selectedAlternativeVehicle.id;
+      await orderService.changeVehicle(orderId, newVehicleId, "Thay thế xe tương tự");
+      
+      showToast("success", `✅ Đã thay thế xe thành công!`);
+      setShowAlternativeVehicleModal(false);
+      setSelectedAlternativeVehicle(null);
+      
+      // ⭐ Load lại dữ liệu để cập nhật thông tin mới
+      await Promise.all([
+        refetchDetails(),
+        fetchOrderStatus(),
+        checkCurrentRentalOrder(newVehicleId)
+      ]);
+    } catch (err) {
+      console.error("❌ [Confirm Replace Vehicle] Error:", err);
+      showToast("error", getApiMessage(err));
+    } finally {
+      setHandoverLoading(false);
+    }
   };
 
   const renderVehicleRentedWarning = (conflictOrderId) => (
@@ -1725,9 +1833,43 @@ if (canHandOver && !vehicleReady && !isVehicleRentedByOther) {
             <input
               type="datetime-local"
               value={returnTime}
-              onChange={(e) => setReturnTime(e.target.value)}
+              onChange={(e) => {
+                const newReturnTime = e.target.value;
+                setReturnTime(newReturnTime);
+                
+                // ⭐⭐ VALIDATION REAL-TIME: Kiểm tra ngay khi user nhập ⭐⭐
+                if (newReturnTime.trim() !== "") {
+                  const dateTime = new Date(newReturnTime);
+                  const startTimeStr = returnPreview?.startTime || orderDetails[0]?.startTime || orderDetails[0]?.start_time;
+                  if (startTimeStr) {
+                    const startDateTime = new Date(startTimeStr);
+                    if (dateTime <= startDateTime) {
+                      setReturnTimeError("⚠️ Thời gian trả xe phải lớn hơn thời gian bắt đầu thuê!");
+                    } else {
+                      setReturnTimeError(""); // Clear error nếu hợp lệ
+                    }
+                  } else {
+                    setReturnTimeError(""); // Clear error nếu không có startTime
+                  }
+                } else {
+                  setReturnTimeError(""); // Clear error nếu để trống
+                }
+              }}
               className="modal-text-input-field"
+              style={returnTimeError ? { borderColor: '#DC0000', borderWidth: '2px' } : {}}
             />
+            {returnTimeError && (
+              <p style={{ 
+                color: '#DC0000', 
+                fontSize: '14px', 
+                marginTop: '8px', 
+                marginBottom: '0',
+                fontWeight: '500',
+                display: 'block'
+              }}>
+                {returnTimeError}
+              </p>
+            )}
             <p className="return-modal-time-hint">
               (Bỏ trống = thời gian hiện tại)
             </p>
@@ -1745,10 +1887,11 @@ if (canHandOver && !vehicleReady && !isVehicleRentedByOther) {
               </button>
               <button
                 className="btn btn-danger"
-                onClick={() => {
-                  setShowReturnModal(false);
-                  setReturnTime(""); // Reset returnTime khi đóng modal
-                }}
+              onClick={() => {
+                setShowReturnModal(false);
+                setReturnTime(""); // Reset returnTime khi đóng modal
+                setReturnTimeError(""); // Clear error khi đóng modal
+              }}
               >
                 <svg className="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -2010,6 +2153,82 @@ if (canHandOver && !vehicleReady && !isVehicleRentedByOther) {
               >
                 ✖ Đóng
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Alternative Vehicle Modal */}
+      {showAlternativeVehicleModal && (
+        <div className="modal-overlay" onClick={() => {
+          setShowAlternativeVehicleModal(false);
+          setSelectedAlternativeVehicle(null);
+        }}>
+          <div className="modal-content modal-content-lg" onClick={(e) => e.stopPropagation()}>
+            <h2>Gợi ý xe tương tự</h2>
+            
+            {loadingAlternativeVehicles ? (
+              <div className="modal-loading-text">Đang tải danh sách xe...</div>
+            ) : alternativeVehicles.length === 0 ? (
+              <div className="modal-empty-text">Không tìm thấy xe tương tự có sẵn tại trạm này.</div>
+            ) : (
+              <div className="modal-vehicle-list">
+                {alternativeVehicles.map((v) => {
+                  const isSelected = selectedAlternativeVehicle?.vehicleId === v.vehicleId || selectedAlternativeVehicle?.id === v.id;
+                  return (
+                    <div 
+                      key={v.vehicleId || v.id} 
+                      className={`modal-vehicle-item ${isSelected ? 'modal-vehicle-item-selected' : ''}`}
+                      onClick={() => setSelectedAlternativeVehicle(v)}
+                    >
+                      <div className="modal-vehicle-image">
+                        <img 
+                          src={v.image || (v.seatCount >= 7 ? '/src/assets/7standard.jpg' : '/src/assets/4standard.jpg')} 
+                          alt={v.vehicleName || v.plateNumber}
+                          onError={(e) => {
+                            e.target.src = v.seatCount >= 7 ? '/src/assets/7standard.jpg' : '/src/assets/4standard.jpg';
+                          }}
+                        />
+                      </div>
+                      <div className="modal-vehicle-info">
+                        <div className="modal-vehicle-header">
+                          <strong>{v.vehicleName || v.vehicle_name || v.plateNumber}</strong>
+                          <span className="modal-vehicle-badge">{v.plateNumber || v.vehicle_id}</span>
+                        </div>
+                        <div className="modal-vehicle-details">
+                          <span>Biển số: {v.plateNumber || v.plate_number || v.vehicle_id || "N/A"}</span>
+                          <span>Hãng: {v.brand || "N/A"}</span>
+                          <span>Model: {v.carmodel || "N/A"}</span>
+                          <span>Màu: {v.color || "N/A"}</span>
+                          <span>Số chỗ: {v.seatCount || 4}</span>
+                          <span>Trạm: {v.stationName || "N/A"}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="modal-actions">
+              <button
+                className="btn btn-danger"
+                onClick={() => {
+                  setShowAlternativeVehicleModal(false);
+                  setSelectedAlternativeVehicle(null);
+                }}
+              >
+                ✖ Đóng
+              </button>
+              {alternativeVehicles.length > 0 && (
+                <button
+                  className="btn btn-primary"
+                  onClick={handleConfirmReplaceVehicle}
+                  disabled={!selectedAlternativeVehicle || handoverLoading}
+                >
+                  {handoverLoading ? "Đang xử lý..." : "✅ Xác nhận đổi xe"}
+                </button>
+              )}
             </div>
           </div>
         </div>
