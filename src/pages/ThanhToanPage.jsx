@@ -1,6 +1,7 @@
 // pages/ThanhToanPage.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import transactionService from "../services/transactionService";
+import { AuthContext } from "../context/AuthContext";
 import "./ThanhToanPage.css";
 
 // 💰 Định dạng tiền VND
@@ -62,16 +63,21 @@ const translateType = (type = "") => {
 };
 
 const ThanhToanPage = () => {
+  const { user } = useContext(AuthContext);
   const [transactions, setTransactions] = useState([]);
   const [allTransactions, setAllTransactions] = useState([]); // Lưu tất cả transactions để filter
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // ⭐ Lấy stationId của staff đang đăng nhập
+  const staffStationId = user?.stationId || user?.station_id || user?.tramId || null;
 
-  // 🚀 Lấy toàn bộ giao dịch khi mở trang
+  // 🚀 Lấy toàn bộ giao dịch khi mở trang hoặc khi user thay đổi
   useEffect(() => {
     fetchTransactions();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [staffStationId]); // Re-fetch khi stationId thay đổi
 
   // 📁 Hàm tải danh sách giao dịch
   const fetchTransactions = async () => {
@@ -80,8 +86,22 @@ const ThanhToanPage = () => {
       const res = await transactionService.getAllTransactions();
       const data = Array.isArray(res?.data) ? res.data : res;
       const transactionsList = data || [];
-      setAllTransactions(transactionsList); // Lưu tất cả để filter
-      setTransactions(transactionsList); // Hiển thị tất cả ban đầu
+      
+      // ⭐ Lọc transactions theo stationId của staff (nếu có)
+      let filteredTransactions = transactionsList;
+      if (staffStationId) {
+        filteredTransactions = transactionsList.filter((t) => {
+          const transactionStationId = t.stationId || t.station_id || t.tramId || null;
+          // So sánh stationId (có thể là string hoặc number)
+          return String(transactionStationId) === String(staffStationId);
+        });
+        console.log(`🔍 [ThanhToanPage] Lọc transactions theo stationId: ${staffStationId}, Tổng: ${filteredTransactions.length}/${transactionsList.length}`);
+      } else {
+        console.warn("⚠️ [ThanhToanPage] Không tìm thấy stationId của staff, hiển thị tất cả transactions");
+      }
+      
+      setAllTransactions(filteredTransactions); // Lưu transactions đã lọc
+      setTransactions(filteredTransactions); // Hiển thị transactions đã lọc
     } catch (err) {
       console.error("❌ Lỗi tải giao dịch:", err);
       setAllTransactions([]);

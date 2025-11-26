@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import api from "../services/api";
+import { notificationService } from "../services/notificationService";
 import "./ChiTietDonTrongAdmin.css";
 
 const ChiTietDonTrongAdmin = () => {
@@ -12,12 +13,15 @@ const ChiTietDonTrongAdmin = () => {
   const [details, setDetails] = useState([]);
   const [orderStatus, setOrderStatus] = useState(null);
   const [refundedAmount, setRefundedAmount] = useState(null);
+  const [refundReason, setRefundReason] = useState(null); // Lý do hoàn tiền
   const [cancellationReason, setCancellationReason] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refunding, setRefunding] = useState(false);
   const [loadingCancelReason, setLoadingCancelReason] = useState(false);
+  const [loadingRefundReason, setLoadingRefundReason] = useState(false);
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [showCancelReasonModal, setShowCancelReasonModal] = useState(false);
+  const [showRefundReasonModal, setShowRefundReasonModal] = useState(false);
   const [refundForm, setRefundForm] = useState({
     amount: '',
     reason: ''
@@ -163,53 +167,81 @@ const ChiTietDonTrongAdmin = () => {
     setRefundForm({ amount: '', reason: '' });
   };
 
-  // Xem lý do hủy - Gọi API khi click button
+  // ⭐ Helper function: Parse lý do từ notification message
+  const parseReasonFromNotification = (message, orderId) => {
+    if (!message || typeof message !== 'string') return null;
+    
+    // Tìm message chứa orderId
+    const orderIdInMessage = `#${orderId}`;
+    if (!message.includes(orderIdInMessage)) return null;
+    
+    // Parse lý do từ format: "Đơn hàng #... đã bị hủy. Lý do: Khách bảo hủy"
+    // Tìm pattern: "Lý do: " hoặc "lý do: " và lấy phần sau
+    const reasonMatch = message.match(/[Ll]ý do[:\s]+(.+?)(?:\.|$)/i);
+    if (reasonMatch && reasonMatch[1]) {
+      return reasonMatch[1].trim();
+    }
+    
+    // Nếu không tìm thấy "Lý do:", trả về toàn bộ message (fallback)
+    return message;
+  };
+
+  // Xem lý do hủy - Lấy từ Notification trong database
   const handleViewCancelReason = async () => {
     try {
       setLoadingCancelReason(true);
       setCancellationReason(null);
       setShowCancelReasonModal(true);
 
-      // Gọi API để lấy chi tiết đơn hàng
-      const { orderService } = await import("../services/orderService");
-      const allOrdersRes = await orderService.getAll();
-      const allOrders = Array.isArray(allOrdersRes?.data) ? allOrdersRes.data : 
-                       Array.isArray(allOrdersRes) ? allOrdersRes : [];
-      
-      const order = allOrders.find(o => 
-        String(o.orderId || o.order_id) === String(orderId)
-      );
+      // ⭐ Lấy tất cả notifications và tìm message chứa orderId
+      try {
+        const notificationsRes = await notificationService.getAll();
+        const notifications = Array.isArray(notificationsRes?.data) 
+          ? notificationsRes.data 
+          : Array.isArray(notificationsRes) 
+            ? notificationsRes 
+            : [];
+        
+        // Tìm notification có message chứa orderId này
+        const orderNotification = notifications.find(notif => {
+          const message = notif.message || notif.content || '';
+          return message.includes(`#${orderId}`) && 
+                 (message.includes('đã bị hủy') || message.includes('đã hủy'));
+        });
 
-      if (order) {
-        const reason = order.cancellationReason || 
-                     order.cancelReason || 
-                     order.reason || 
-                     'Không có lý do hủy';
-        setCancellationReason(reason);
-      } else {
-        // Thử lấy từ details nếu có
-        try {
-          const detailsRes = await axios.get(
-            `http://localhost:8080/api/order-details/order/${orderId}`
+        if (orderNotification) {
+          const message = orderNotification.message || orderNotification.content || '';
+          const reason = parseReasonFromNotification(message, orderId);
+          if (reason) {
+            setCancellationReason(reason);
+          } else {
+            // Nếu không parse được, hiển thị toàn bộ message
+            setCancellationReason(message || 'Không có lý do hủy');
+          }
+        } else {
+          // Fallback: Thử lấy từ order nếu không tìm thấy notification
+          const { orderService } = await import("../services/orderService");
+          const allOrdersRes = await orderService.getAll();
+          const allOrders = Array.isArray(allOrdersRes?.data) ? allOrdersRes.data : 
+                           Array.isArray(allOrdersRes) ? allOrdersRes : [];
+          
+          const order = allOrders.find(o => 
+            String(o.orderId || o.order_id) === String(orderId)
           );
-          if (detailsRes.data && detailsRes.data.length > 0) {
-            const firstDetail = detailsRes.data[0];
-            if (firstDetail.order) {
-              const reason = firstDetail.order.cancellationReason || 
-                           firstDetail.order.cancelReason || 
-                           firstDetail.order.reason || 
-                           'Không có lý do hủy';
-              setCancellationReason(reason);
-            } else {
-              setCancellationReason('Không tìm thấy thông tin lý do hủy');
-            }
+
+          if (order) {
+            const reason = order.cancellationReason || 
+                         order.cancelReason || 
+                         order.reason || 
+                         'Không có lý do hủy';
+            setCancellationReason(reason);
           } else {
             setCancellationReason('Không tìm thấy thông tin lý do hủy');
           }
-        } catch (detailErr) {
-          console.error("❌ Lỗi khi lấy chi tiết đơn hàng:", detailErr);
-          setCancellationReason('Không thể tải lý do hủy. Vui lòng thử lại sau.');
         }
+      } catch (notifErr) {
+        console.error("❌ Lỗi khi lấy notifications:", notifErr);
+        setCancellationReason('Không thể tải lý do hủy từ thông báo. Vui lòng thử lại sau.');
       }
     } catch (err) {
       console.error('❌ Lỗi khi lấy lý do hủy:', err);
@@ -223,6 +255,83 @@ const ChiTietDonTrongAdmin = () => {
   const handleCloseCancelReasonModal = () => {
     setShowCancelReasonModal(false);
     setCancellationReason(null);
+  };
+
+  // ⭐ Xem lý do hoàn tiền - Lấy từ Notification trong database
+  const handleViewRefundReason = async () => {
+    try {
+      setLoadingRefundReason(true);
+      setRefundReason(null);
+      setShowRefundReasonModal(true);
+
+      // ⭐ Lấy tất cả notifications và tìm message chứa orderId
+      try {
+        const notificationsRes = await notificationService.getAll();
+        const notifications = Array.isArray(notificationsRes?.data) 
+          ? notificationsRes.data 
+          : Array.isArray(notificationsRes) 
+            ? notificationsRes 
+            : [];
+        
+        // Tìm notification có message chứa orderId này (có thể liên quan đến hủy/hoàn tiền)
+        const orderNotification = notifications.find(notif => {
+          const message = notif.message || notif.content || '';
+          return message.includes(`#${orderId}`);
+        });
+
+        if (orderNotification) {
+          const message = orderNotification.message || orderNotification.content || '';
+          const reason = parseReasonFromNotification(message, orderId);
+          if (reason) {
+            setRefundReason(reason);
+          } else {
+            // Nếu không parse được, hiển thị toàn bộ message
+            setRefundReason(message || 'Không có lý do hoàn tiền');
+          }
+        } else {
+          // Fallback: Thử gọi API refund-reason nếu không tìm thấy notification
+          try {
+            const refundReasonRes = await api.get(`/payment/order/${orderId}/refund-reason`);
+            const refundReasonData = refundReasonRes?.data || refundReasonRes;
+
+            if (refundReasonData) {
+              const reason = refundReasonData.reason || 
+                            refundReasonData.refundReason || 
+                            refundReasonData.message ||
+                            (typeof refundReasonData === 'string' ? refundReasonData : null);
+              
+              if (reason) {
+                setRefundReason(reason);
+              } else {
+                const reasonStr = typeof refundReasonData === 'object' 
+                  ? JSON.stringify(refundReasonData) 
+                  : String(refundReasonData);
+                setRefundReason(reasonStr || 'Không có lý do hoàn tiền');
+              }
+            } else {
+              setRefundReason('Không có lý do hoàn tiền');
+            }
+          } catch (apiErr) {
+            console.error("❌ Lỗi khi gọi API refund-reason:", apiErr);
+            setRefundReason('Không tìm thấy lý do hoàn tiền');
+          }
+        }
+      } catch (notifErr) {
+        console.error("❌ Lỗi khi lấy notifications:", notifErr);
+        setRefundReason('Không thể tải lý do hoàn tiền từ thông báo. Vui lòng thử lại sau.');
+      }
+    } catch (err) {
+      console.error('❌ Lỗi khi lấy lý do hoàn tiền:', err);
+      setRefundReason('Không thể tải lý do hoàn tiền. Vui lòng thử lại sau.');
+    } finally {
+      setLoadingRefundReason(false);
+    }
+  };
+
+  // Đóng modal lý do hoàn tiền
+  const handleCloseRefundReasonModal = () => {
+    setShowRefundReasonModal(false);
+    setRefundReason(null);
   };
 
   // Xử lý submit hoàn tiền
@@ -274,6 +383,25 @@ const ChiTietDonTrongAdmin = () => {
                 Số tiền đã hoàn: <strong>{Number(refundedAmount).toLocaleString('vi-VN')} VNĐ</strong>
               </p>
             )}
+            {/* ⭐ Button xem lý do hoàn tiền */}
+            <button 
+              className="od-cancel-reason-btn" 
+              onClick={handleViewRefundReason}
+              disabled={loadingRefundReason}
+              style={{
+                marginTop: '12px',
+                padding: '8px 16px',
+                background: '#fff',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                cursor: loadingRefundReason ? 'not-allowed' : 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                color: '#374151'
+              }}
+            >
+              {loadingRefundReason ? 'Đang tải...' : 'Xem lý do hoàn tiền'}
+            </button>
           </div>
         </div>
       )}
@@ -443,6 +571,60 @@ const ChiTietDonTrongAdmin = () => {
                 className="od-modal-btn-submit" 
                 onClick={handleCloseCancelReasonModal}
                 disabled={loadingCancelReason}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ⭐ Modal hiển thị lý do hoàn tiền */}
+      {showRefundReasonModal && (
+        <div className="od-modal-overlay" onClick={handleCloseRefundReasonModal}>
+          <div className="od-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="od-modal-header">
+              <h2>LÝ DO HỦY ĐƠN HÀNG</h2>
+              <button className="od-modal-close" onClick={handleCloseRefundReasonModal}>
+                ×
+              </button>
+            </div>
+
+            <div className="od-modal-body">
+              {loadingRefundReason ? (
+                <p style={{ textAlign: 'center', padding: '20px' }}>Đang tải...</p>
+              ) : (
+                <textarea
+                  readOnly
+                  value={refundReason || 'Không có lý do hủy'}
+                  style={{
+                    width: '100%',
+                    minHeight: '120px',
+                    padding: '12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    fontFamily: 'inherit',
+                    lineHeight: '1.6',
+                    color: '#374151',
+                    backgroundColor: '#f9fafb',
+                    resize: 'vertical',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word'
+                  }}
+                />
+              )}
+            </div>
+
+            <div className="od-modal-actions">
+              <button 
+                className="od-modal-btn-submit" 
+                onClick={handleCloseRefundReasonModal}
+                disabled={loadingRefundReason}
+                style={{
+                  background: '#dc2626',
+                  borderColor: '#dc2626'
+                }}
               >
                 Đóng
               </button>
