@@ -2,7 +2,7 @@
 .incident-page {
   padding: 40px 60px;
   max-width: 1600px;
-  margin: 0 auto;
+  margin: auto;
   background: #FFFFFF;
   min-height: 100vh;
   font-family: "Poppins", -apple-system, sans-serif;
@@ -36,46 +36,6 @@
   filter: blur(0.5px);
 }
 
-.incident-stats {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 30px;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.stat-box {
-  background: #FFFFFF;
-  border: 2px solid #000000;
-  border-radius: 0;
-  padding: 30px 40px;
-  text-align: center;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.stat-box::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 0;
-  height: 100%;
-  background: #DC0000;
-  transition: width 0.3s ease;
-  z-index: 0;
-}
-
-.stat-box:hover::before {
-  width: 4px;
-}
-
-.stat-box > * {
-  position: relative;
-  z-index: 1;
-}
-
 .stat-label {
   display: block;
   font-size: 11px;
@@ -99,6 +59,23 @@
   font-weight: 400;
 }
 
+/* Stat box inline trong filters */
+.stat-box-inline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.stat-box-inline .stat-label {
+  margin-bottom: 15px;
+}
+
+.stat-box-inline .stat-value {
+  font-size: 36px;
+}
+
 .incident-loading {
   padding: 80px 40px;
   text-align: center;
@@ -109,13 +86,14 @@
 /* Filters - Mercedes Style */
 .incident-filters {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 30px;
   margin-bottom: 40px;
-  max-width: 800px;
+  max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
 }
+
 
 .filter-group {
   background: #FFFFFF;
@@ -124,6 +102,13 @@
   padding: 25px;
   transition: all 0.3s ease;
   position: relative;
+  box-sizing: border-box; /* ✅ Đảm bảo border không bị mất */
+  min-width: 0; /* ✅ Tránh overflow */
+}
+
+/* ✅ Đảm bảo viền bên phải không bị mất */
+.filter-group:last-child {
+  border-right: 2px solid #000000;
 }
 
 .filter-group:hover {
@@ -153,6 +138,7 @@
   font-weight: 300;
   letter-spacing: 0.5px;
   transition: all 0.3s ease;
+  box-sizing: border-box; /* ✅ Đảm bảo border không bị mất */
 }
 
 .filter-group select:focus,
@@ -374,19 +360,9 @@
   letter-spacing: 2px;
   margin-bottom: 24px;
   padding-bottom: 12px;
-  border-bottom: 2px solid #DC0000;
   position: relative;
 }
 
-.detail-section h3::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 60px;
-  height: 2px;
-  background: #DC0000;
-}
 
 .detail-grid {
   display: grid;
@@ -484,17 +460,7 @@
     padding-bottom: 20px;
   }
 
-  .incident-stats {
-    grid-template-columns: 1fr;
-    gap: 20px;
-    max-width: 100%;
-  }
-
-  .stat-box {
-    padding: 25px 30px;
-  }
-
-  .stat-value {
+  .stat-box-inline .stat-value {
     font-size: 28px;
   }
 
