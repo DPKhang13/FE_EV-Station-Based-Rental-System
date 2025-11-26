@@ -68,17 +68,18 @@ const AdminDashBoardPage = () => {
     ? data.revenueByStationAnalysis
     : [];
 
-  // Danh sách incidents gần đây
-  const incidents = Array.isArray(data.recentIncidents)
-    ? data.recentIncidents
+  // Danh sách services gần đây (dịch vụ)
+  const services = Array.isArray(data.recentServices)
+    ? data.recentServices
     : [];
 
-  // Thống kê incidents với default values
+  // Thống kê services với default values
   // Object với default values: Đảm bảo luôn có các field cần thiết
-  const incidentStats = data.incidentKpi || {
-    totalIncidentsInRange: 0,
-    openIncidents: 0,
-    incidentCostInRange: 0,
+  const serviceStats = data.serviceKpi || {
+    totalServices: 0,
+    totalCost: 0,
+    servicesByType: {},
+    servicesByStatus: {},
   };
 
   // Giờ cao điểm với default values
@@ -131,12 +132,6 @@ const AdminDashBoardPage = () => {
     rate: s.utilization || 0, // Tỷ lệ sử dụng (%)
   }));
 
-  // MOCK TREND DATA
-  const trends = [
-    { type: "Thuê theo giờ", percent: 60, color: "blue" },
-    { type: "Thuê theo ngày", percent: 30, color: "green" },
-    { type: "Thuê dài hạn", percent: 10, color: "purple" },
-  ];
 
   const peakTimes = [
     {
@@ -216,10 +211,10 @@ const AdminDashBoardPage = () => {
         </div>
       </div>
 
-      {/* USAGE + TRENDS */}
-      <div className="usage-trend">
+      {/* USAGE */}
+      <div className="section">
+        <h2>Tỷ lệ sử dụng xe</h2>
         <div className="usage">
-          <h2>Tỷ lệ sử dụng xe</h2>
           {usage.map((u, i) => (
             <div key={i} className="usage-item">
               <p>
@@ -237,43 +232,50 @@ const AdminDashBoardPage = () => {
             </div>
           ))}
         </div>
-
-        <div className="trends">
-          <h2>Xu hướng thuê xe</h2>
-          <div className="trend-cards">
-            {trends.map((t, i) => (
-              <div key={i} className={`trend ${t.color}`}>
-                <p className="percent">{t.percent}%</p>
-                <p>{t.type}</p>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
 
-      {/* INCIDENTS */}
+      {/* SERVICES */}
       <div className="section incident">
         <h2>TỶ LỆ SỬ DỤNG DỊCH VỤ</h2>
 
         <div className="incident-summary">
           <div className="card red">
             <h3>Tổng dịch vụ</h3>
-            <p>{incidentStats.totalIncidentsInRange}</p>
+            <p>{serviceStats.totalServices || 0}</p>
           </div>
           <div className="card orange">
-            <h3>Đang mở</h3>
-            <p>{incidentStats.openIncidents}</p>
+            <h3>Thành công</h3>
+            <p>{serviceStats.servicesByStatus?.SUCCESS || 0}</p>
           </div>
           <div className="card yellow">
             <h3>Chi phí dịch vụ</h3>
             <p>
-              {(incidentStats.incidentCostInRange || 0).toLocaleString(
+              {(serviceStats.totalCost || 0).toLocaleString(
                 "vi-VN"
               )}{" "}
               đ
             </p>
           </div>
         </div>
+
+        {/* Phân loại dịch vụ theo loại */}
+        {serviceStats.servicesByType && Object.keys(serviceStats.servicesByType).length > 0 && (
+          <div style={{ marginTop: '20px', marginBottom: '20px' }}>
+            <h3>Dịch vụ theo loại</h3>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '12px' }}>
+              {Object.entries(serviceStats.servicesByType).map(([type, count]) => (
+                <div key={type} style={{
+                  padding: '12px 16px',
+                  background: '#f3f4f6',
+                  borderRadius: '8px',
+                  border: '1px solid #e5e7eb'
+                }}>
+                  <strong>{type}:</strong> {count} dịch vụ
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <h3>Chi tiết dịch vụ gần đây</h3>
         <div style={{ overflowX: 'auto', marginTop: '20px' }}>
@@ -282,27 +284,40 @@ const AdminDashBoardPage = () => {
               <tr>
                 <th>Mã</th>
                 <th>Xe</th>
+                <th>Loại dịch vụ</th>
                 <th>Mô tả</th>
-                <th>Mức độ</th>
+                <th>Trạng thái</th>
                 <th>Ngày</th>
                 <th>Chi phí</th>
               </tr>
             </thead>
             <tbody>
-              {incidents.length === 0 && (
+              {services.length === 0 && (
                 <tr>
-                  <td colSpan="6">Không có dịch vụ</td>
+                  <td colSpan="7">Không có dịch vụ</td>
                 </tr>
               )}
 
-              {incidents.slice(0, 5).map((i) => (
-                <tr key={i.incidentId}>
-                  <td>#{i.incidentId}</td>
-                  <td>{i.vehicleName}</td>
-                  <td>{i.description}</td>
-                  <td>{i.severity}</td>
-                  <td>{i.occurredOn}</td>
-                  <td>{(i.cost || 0).toLocaleString("vi-VN")} đ</td>
+              {services.slice(0, 5).map((s) => (
+                <tr key={s.serviceId}>
+                  <td>#{s.serviceId}</td>
+                  <td>{s.vehicleName || 'N/A'}</td>
+                  <td>{s.serviceType || 'N/A'}</td>
+                  <td>{s.description || 'N/A'}</td>
+                  <td>
+                    <span style={{
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      background: s.status === 'SUCCESS' ? '#d1fae5' : '#fef3c7',
+                      color: s.status === 'SUCCESS' ? '#059669' : '#d97706'
+                    }}>
+                      {s.status === 'SUCCESS' ? 'Thành công' : s.status || 'N/A'}
+                    </span>
+                  </td>
+                  <td>{s.occurredAt ? new Date(s.occurredAt).toLocaleDateString('vi-VN') : 'N/A'}</td>
+                  <td>{(s.cost || 0).toLocaleString("vi-VN")} đ</td>
                 </tr>
               ))}
             </tbody>
