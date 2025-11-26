@@ -95,6 +95,7 @@ export const transformVehicleData = (apiVehicle) => {
         vehicle_name: apiVehicle.vehicleName,
         brand: apiVehicle.brand,
         name: apiVehicle.vehicleName,
+        carmodel: apiVehicle.carmodel || apiVehicle.carModel || apiVehicle.car_model || null, // ✅ Thêm carmodel
         image: is7Seater ? image7Seater : image4Seater,
         type: vehicleType,
         seat_count: seatCount,
@@ -143,10 +144,19 @@ const mapStatus = (apiStatus) => {
 
 /**
  * Lấy và transform tất cả xe
+ * @param {Number} stationId - Optional: Nếu có stationId, chỉ lấy xe của trạm đó
  */
-export const fetchAndTransformVehicles = async () => {
+export const fetchAndTransformVehicles = async (stationId = null) => {
     try {
-        const vehicles = await getVehicles();
+        let vehicles;
+        if (stationId) {
+            // ✅ Nếu có stationId, gọi API theo trạm (không load tất cả 120 xe)
+            vehicles = await getVehiclesByStation(stationId);
+        } else {
+            // Nếu không có stationId, lấy tất cả xe
+            vehicles = await getVehicles();
+        }
+        
         const transformed = vehicles.map(transformVehicleData);
 
         // ✅ DEBUG: In ra 3 xe đầu tiên để kiểm tra
@@ -158,6 +168,53 @@ export const fetchAndTransformVehicles = async () => {
         return transformed;
     } catch (error) {
         console.error('Lỗi khi fetch và transform vehicles:', error);
+        return [];
+    }
+};
+
+/**
+ * Lấy danh sách xe tương tự từ API
+ * @param {number} vehicleId - ID của xe cần tìm xe tương tự
+ * @returns {Promise<Array>} Danh sách xe tương tự
+ */
+export const getSimilarVehicles = async (vehicleId) => {
+    try {
+        const token = localStorage.getItem('accessToken');
+
+        console.log('🚀 [API] Đang gọi API similar vehicles:', `${API_BASE_URL}/vehicles/${vehicleId}/similar`);
+
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/vehicles/${vehicleId}/similar`, {
+            method: 'GET',
+            headers: headers
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ [API] Error response:', errorText);
+            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ [API] Nhận được xe tương tự:', Array.isArray(data) ? data.length : 0, 'xe');
+
+        if (!Array.isArray(data)) {
+            console.error('❌ [API] Data không phải array:', typeof data);
+            return [];
+        }
+
+        // Transform data nếu cần
+        const transformed = data.map(transformVehicleData);
+        return transformed;
+    } catch (error) {
+        console.error('❌ Lỗi khi lấy xe tương tự:', error);
         return [];
     }
 };
@@ -243,9 +300,9 @@ export const getVehiclesByStation = async (stationId) => {
     try {
         const token = localStorage.getItem('accessToken');
 
-        console.log('🚀 [API] Đang lấy xe theo trạm:', stationId);
+        console.log('🚀 [API] Đang lấy xe theo trạm:', `${API_BASE_URL}/vehicles/station/${stationId}`);
 
-        const response = await fetch(`${API_BASE_URL}/vehicles/get`, {
+        const response = await fetch(`${API_BASE_URL}/vehicles/station/${stationId}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -262,13 +319,11 @@ export const getVehiclesByStation = async (stationId) => {
         }
 
         const data = await response.json();
-        console.log('✅ [API] Tất cả xe:', data.length);
+        const vehicleList = Array.isArray(data) ? data : (data.data || []);
+        console.log('✅ [API] Xe của trạm', stationId, ':', vehicleList.length, 'xe');
+        console.log('📊 [API] Sample vehicle:', vehicleList.length > 0 ? vehicleList[0] : 'No data');
 
-        // Lọc xe theo stationId
-        const filteredVehicles = data.filter(vehicle => vehicle.stationId === stationId);
-        console.log('✅ [API] Xe của trạm', stationId, ':', filteredVehicles.length, 'xe');
-
-        return filteredVehicles;
+        return vehicleList;
     } catch (error) {
         console.error('❌ [API] Lỗi khi lấy xe theo trạm:', error);
         throw error;
@@ -310,6 +365,82 @@ export const updateVehicle = async (vehicleId, vehicleData) => {
         return data;
     } catch (error) {
         console.error('❌ [API] Lỗi khi cập nhật xe:', error);
+        throw error;
+    }
+};
+
+/**
+ * Cập nhật trạng thái và/hoặc pin của xe
+ * @param {Number} vehicleId - ID của xe
+ * @param {Object} statusData - { status?: string, batteryStatus?: string }
+ * @returns {Promise<Object>} Xe đã cập nhật
+ */
+export const updateVehicleStatus = async (vehicleId, statusData) => {
+    try {
+        const token = localStorage.getItem('accessToken');
+
+        console.log('🚀 [API] Đang cập nhật trạng thái xe:', vehicleId, statusData);
+
+        const response = await fetch(`${API_BASE_URL}/vehicles/updateStatus/${vehicleId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(statusData)
+        });
+
+        console.log('📡 [API] Response status:', response.status);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ [API] Error response:', errorText);
+            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ [API] Trạng thái xe đã được cập nhật:', data);
+
+        return data;
+    } catch (error) {
+        console.error('❌ [API] Lỗi khi cập nhật trạng thái xe:', error);
+        throw error;
+    }
+};
+
+/**
+ * Lấy chi tiết một xe theo vehicleId
+ * @param {Number} vehicleId - ID của xe
+ * @returns {Promise<Object>} Chi tiết xe
+ */
+export const getVehicleDetail = async (vehicleId) => {
+    try {
+        const token = localStorage.getItem('accessToken');
+
+        console.log('🚀 [API] Đang lấy chi tiết xe:', vehicleId);
+
+        const response = await fetch(`${API_BASE_URL}/vehicles/${vehicleId}/detail`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        console.log('📡 [API] Response status:', response.status);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ [API] Error response:', errorText);
+            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ [API] Chi tiết xe:', data);
+
+        return data;
+    } catch (error) {
+        console.error('❌ [API] Lỗi khi lấy chi tiết xe:', error);
         throw error;
     }
 };
@@ -376,6 +507,8 @@ const vehicleService = {
     deleteVehicle,
     getVehiclesByStation,
     updateVehicle,
+    updateVehicleStatus,
+    getVehicleDetail,
     getVehicleOrderHistory
 };
 

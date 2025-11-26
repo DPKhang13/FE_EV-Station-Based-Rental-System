@@ -23,7 +23,14 @@ const Footer = () => {
                                     Câu chuyện của chúng tôi
                                 </a>
                             </li>
-                            <li><a href="/">Chính sách bảo mật</a></li>
+                            <li>
+                                <a href="/privacy-policy" onClick={e => {
+                                    e.preventDefault();
+                                    navigate('/privacy-policy');
+                                }}>
+                                    Chính sách thuê hàng
+                                </a>
+                            </li>
                         </ul>
                     </div>
 

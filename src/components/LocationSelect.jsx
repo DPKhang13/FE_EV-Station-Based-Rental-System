@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { rentalStationService } from '../services';
 import './LocationSelect.css';
 
 const LocationSelect = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    // Nhận state từ Offers (nếu có)
+    const { gradeFilter, seatCount } = location.state || {};
     const [nearestLocation, setNearestLocation] = useState(null);
     const [selectedBranch, setSelectedBranch] = useState('');
     const [locations, setLocations] = useState([]);
@@ -157,7 +160,14 @@ const LocationSelect = () => {
     const goToListCar = () => {
         // Nếu chưa chọn chi nhánh, tự động chọn chi nhánh đầu tiên hoặc xem tất cả
         const branchId = selectedBranch || (locations.length > 0 ? locations[0].id : 'all');
-        navigate(`/listcar?branch=${branchId}`);
+        
+        // Điều hướng đến ListCarPage với gradeFilter (nếu có từ Offers)
+        navigate(`/listcar?branch=${branchId}`, {
+            state: {
+                gradeFilter: gradeFilter || null,
+                seatCount: seatCount || null
+            }
+        });
     };
 
     return (

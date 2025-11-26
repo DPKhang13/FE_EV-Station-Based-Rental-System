@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { orderService, authService } from "../services";
+import { orderService, authService, rentalStationService } from "../services";
 import "./XacThucKhachHang.css";
-import PopupXacThucHoSoCaNhan from "../components/staff/PopupXacThucHoSoCaNhan";
+import PopupXacThucHoSoCaNhan from "../components/popup/PopupXacThucHoSoCaNhan";
 import { AuthContext } from "../context/AuthContext";
 
 // 🕒 Định dạng
@@ -18,6 +18,7 @@ export default function VerifyCustomerPage() {
   const [stations, setStations] = useState([]); // ⭐ Danh sách trạm
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null); // ⭐ State để hiển thị lỗi
 
   const [selectedRow, setSelectedRow] = useState(null);
   const [selectedProfile, setSelectedProfile] = useState(null);
@@ -28,68 +29,85 @@ export default function VerifyCustomerPage() {
   
 
   // 🧾 Lấy đơn hàng theo trạm
-  const fetchOrders = useCallback(async () => {
+  const fetchOrders = async () => {
     try {
+      setError(null); // Clear error trước khi fetch
       const res = await orderService.getPendingOrders();
       const data = res.data || res || [];
-      const stationId = user?.stationId || 1;
-
-      setOrders(data.filter((o) => Number(o.stationId) === Number(stationId)));
+      
+      console.log('📋 [fetchOrders] Raw data:', data);
+      console.log('📋 [fetchOrders] Data length:', data.length);
+      
+      // Lấy stationId từ user hoặc default
+      const userStationId = user?.stationId || user?.station_id || user?.stationid;
+      
+      console.log('👤 [fetchOrders] User stationId:', userStationId);
+      console.log('📋 [fetchOrders] All orders before filter:', data);
+      
+      // Nếu không có user stationId, hiển thị tất cả orders
+      let filtered;
+      if (!userStationId) {
+        console.log('⚠️ [fetchOrders] No user stationId, showing all orders');
+        filtered = data;
+      } else {
+        const stationId = userStationId;
+        console.log('🔍 [fetchOrders] Filtering with stationId:', stationId);
+        
+        // Xử lý nhiều tên field có thể có: stationId, station_id, stationid
+        filtered = data.filter((o) => {
+          const orderStationId = o.stationId || o.station_id || o.stationid;
+          const match = Number(orderStationId) === Number(stationId);
+          console.log('🔍 [fetchOrders] Order:', {
+            orderId: o.orderId,
+            orderStationId: orderStationId,
+            targetStationId: stationId,
+            match: match
+          });
+          return match;
+        });
+        
+        // ⚠️ Nếu sau khi filter không có order nào, hiển thị tất cả để tránh mất dữ liệu
+        if (filtered.length === 0 && data.length > 0) {
+          console.log('⚠️ [fetchOrders] No orders match stationId, showing all orders instead');
+          filtered = data;
+        }
+      }
+      
+      console.log('✅ [fetchOrders] Filtered orders:', filtered.length);
+      console.log('✅ [fetchOrders] Filtered orders data:', filtered);
+      setOrders(filtered);
     } catch (err) {
       console.error("❌ Lỗi tải hồ sơ:", err);
+      const errorMessage = err?.response?.data?.message || err?.message || "Không thể tải danh sách đơn hàng. Vui lòng thử lại sau.";
+      setError(errorMessage);
       setOrders([]);
     } finally {
       setLoading(false);
     }
-  }, [user?.stationId]);
+  };
 
   // 🚉 Fetch toàn bộ trạm
-  const fetchStations = useCallback(async () => {
+  const fetchStations = async () => {
     try {
-      const res = await fetch("http://localhost:8080/api/rentalstation/getAll");
-      const data = await res.json();
-      setStations(data || []);
+      const res = await rentalStationService.getAll();
+      const data = Array.isArray(res) ? res : (res?.data || []);
+      setStations(data);
     } catch (err) {
       console.error("❌ Không thể tải danh sách trạm:", err);
+      // Không set error cho stations vì không ảnh hưởng đến chức năng chính
+      setStations([]);
     }
-  }, []);
-
-  // 👉 Xem chi tiết đơn hàng - Phải định nghĩa trước khi sử dụng trong useEffect
-  const handleViewOrderDetail = useCallback((orderId, userId) => {
-    console.log('📋 Navigating to order detail:', { orderId, userId });
-    nav(`/staff/chitiet/${orderId}/${userId}`);
-  }, [nav]);
+  };
 
   useEffect(() => {
     // ✅ Chạy lại khi user data ready (có stationId) hoặc location thay đổi
-    if (user?.stationId) {
-      console.log('👤 User ready with stationId:', user.stationId);
-      fetchOrders();
-    } else {
-      // ✅ Nếu không có stationId, vẫn set loading = false để hiển thị trang
-      console.log('⚠️ User chưa có stationId, không thể tải đơn hàng');
-      setLoading(false);
-    }
-    fetchStations(); // ⭐ Tải trạm khi mở trang
-  }, [user?.stationId, fetchOrders, fetchStations]);
-
-  // ✅ Tự động mở chi tiết đơn hàng khi navigate từ GiaoTraXe
-  useEffect(() => {
-    const autoOpenOrderDetail = location.state?.autoOpenOrderDetail;
-    const userId = location.state?.userId;
+    console.log('🔄 [useEffect] User:', user);
+    console.log('🔄 [useEffect] User stationId:', user?.stationId || user?.station_id || user?.stationid);
     
-    if (autoOpenOrderDetail && orders.length > 0 && userId) {
-      const orderId = typeof autoOpenOrderDetail === 'string' || typeof autoOpenOrderDetail === 'number' 
-        ? autoOpenOrderDetail 
-        : location.state?.autoOpenOrderDetail;
-      
-      if (orderId && userId) {
-        console.log('🎯 Auto opening order detail:', { orderId, userId });
-        // Không cần delay, orders đã ready
-        handleViewOrderDetail(orderId, userId);
-      }
-    }
-  }, [location.state?.autoOpenOrderDetail, location.state?.userId, orders.length, handleViewOrderDetail]);
+    // Fetch orders ngay cả khi không có user.stationId (sẽ dùng default = 1)
+    fetchOrders();
+    fetchStations(); 
+  }, [user?.stationId, user?.station_id, user?.stationid, location]); // ✅ Thêm các variant của stationId vào dependency
 
   // 🔍 Tìm kiếm
   const filtered = orders.filter((x) => {
@@ -145,59 +163,85 @@ export default function VerifyCustomerPage() {
     }
   };
 
-  if (loading) {
+  // 👉 Xem chi tiết đơn hàng
+  const handleViewOrderDetail = useCallback((orderId, userId) => {
+    console.log('📋 Navigating to order detail:', { orderId, userId });
+    nav(`/staff/chitiet/${orderId}/${userId}`);
+  }, [nav]);
+
+  // ✅ Tự động mở chi tiết đơn hàng khi navigate từ GiaoTraXe
+  useEffect(() => {
+    if (location.state?.autoOpenOrderDetail && orders.length > 0) {
+      const { autoOpenOrderDetail: orderId } = location.state;
+      
+      // ✅ Tự động tìm userId từ orders dựa vào orderId
+      const order = orders.find(o => String(o.orderId) === String(orderId));
+      const userId = order?.userId;
+      
+      if (!userId) {
+        console.error('❌ Không tìm thấy userId cho orderId:', orderId);
+        return;
+      }
+      
+      console.log('🎯 Auto opening order detail:', { orderId, userId });
+      // Tự động mở chi tiết đơn hàng
+      handleViewOrderDetail(orderId, userId);
+    }
+  }, [location.state?.autoOpenOrderDetail, orders, handleViewOrderDetail]);
+
+  if (loading)
     return (
       <div className="verify-container">
-        <h1 className="verify-title">Xác thực khách hàng</h1>
+        <h1 className="verify-title">Quản lí đơn hàng</h1>
         <p style={{ textAlign: "center", padding: 40 }}>Đang tải dữ liệu...</p>
       </div>
     );
-  }
-
-  // ✅ Hiển thị thông báo nếu không có user hoặc stationId
-  if (!user) {
-    return (
-      <div className="verify-container">
-        <h1 className="verify-title">Xác thực khách hàng</h1>
-        <p style={{ textAlign: "center", padding: 40, color: "#dc2626" }}>
-          ⚠️ Vui lòng đăng nhập để tiếp tục
-        </p>
-      </div>
-    );
-  }
-
-  if (!user?.stationId) {
-    return (
-      <div className="verify-container">
-        <h1 className="verify-title">Xác thực khách hàng</h1>
-        <p style={{ textAlign: "center", padding: 40, color: "#dc2626" }}>
-          ⚠️ Tài khoản của bạn chưa được gán trạm. Vui lòng liên hệ quản trị viên.
-        </p>
-      </div>
-    );
-  }
 
   return (
     <>
       <div className="verify-container">
-        {/* Box tìm kiếm với viền đỏ */}
-        <div className="verify-section" style={{ marginBottom: '40px' }}>
-          <div style={{ padding: '40px 50px' }}>
-            <h1 className="verify-title">Xác thực khách hàng</h1>
-            <p className="verify-subtitle">
-              Kiểm tra giấy tờ và xử lý hồ sơ đặt xe
-            </p>
+        <h1 className="verify-title">Quản lí đơn hàng</h1>
+        <p className="verify-subtitle">Kiểm tra giấy tờ và xử lý hồ sơ đặt xe</p>
 
-            {/* 🔍 Tìm kiếm */}
-            <input
-              className="verify-search"
-              type="text"
-              placeholder="Tìm kiếm theo họ tên, SĐT, mã đơn..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+        {/* 🔍 Tìm kiếm */}
+        <input
+          className="verify-search"
+          type="text"
+          placeholder="Tìm kiếm theo họ tên, SĐT, mã đơn..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+
+        {/* Hiển thị lỗi nếu có */}
+        {error && (
+          <div style={{
+            padding: "16px",
+            marginBottom: "20px",
+            backgroundColor: "#FFEBEE",
+            border: "2px solid #F44336",
+            borderRadius: "4px",
+            color: "#C62828"
+          }}>
+            <strong>⚠️ Lỗi:</strong> {error}
+            <button
+              onClick={() => {
+                setError(null);
+                fetchOrders();
+              }}
+              style={{
+                marginLeft: "12px",
+                padding: "6px 12px",
+                backgroundColor: "#F44336",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer"
+              }}
+            >
+              Thử lại
+            </button>
           </div>
-        </div>
+        )}
 
         <div className="verify-section">
           <h2>Hồ sơ đặt xe cần xử lý ({filtered.length})</h2>
@@ -221,21 +265,12 @@ export default function VerifyCustomerPage() {
                   row.profileVerified ||
                   ["ACTIVE", "ĐÃ XÁC THỰC", "ĐÃ XÁC THỰC (HỒ SƠ)"].includes(
                     row.userStatus?.toUpperCase?.()
-                  ) ||
-                  row.userStatus?.includes("ĐÃ XÁC THỰC");
-                
-                // eslint-disable-next-line no-unused-vars
-                const isDelivered =
-                  !!row.pickedUpAt ||
-                  ["RENTAL", "Rented"].includes(row.status);
-                // eslint-disable-next-line no-unused-vars
-                const deposit =
-                  row.depositAmount ??
-                  Math.round(Number(row.totalPrice || 0) * 0.3);
+                  );
 
-                // ⭐ Tìm trạm theo stationId
+                // ⭐ Tìm trạm theo stationId (xử lý nhiều tên field)
+                const orderStationId = row.stationId || row.station_id || row.stationid;
                 const station = stations.find(
-                  (s) => Number(s.stationid) === Number(row.stationId)
+                  (s) => Number(s.stationid || s.stationId || s.station_id) === Number(orderStationId)
                 );
 
                 return (

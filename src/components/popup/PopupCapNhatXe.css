@@ -1,0 +1,257 @@
+.popup-content-update {
+  background: white;
+  border-radius: 16px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.popup-header-update {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 28px;
+  border-bottom: 2px solid #e5e7eb;
+  background: #000000;
+  color: white;
+  border-radius: 16px 16px 0 0;
+}
+
+.popup-header-update h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.close-btn-update {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 24px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+
+.close-btn-update:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.popup-body-update {
+  padding: 28px;
+}
+
+.vehicle-info-box {
+  background: #f3f4f6;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  border-left: 4px solid #000000;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 12px;
+}
+
+.vehicle-info-item {
+  padding: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: white;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.vehicle-info-box p {
+  margin: 0;
+  font-size: 14px;
+  color: #374151;
+}
+
+.vehicle-info-box strong {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.form-group-update {
+  margin-bottom: 20px;
+}
+
+.form-group-update label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.form-control-update {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 15px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.3s;
+  font-family: inherit;
+}
+
+.form-control-update:focus {
+  border-color: #000000;
+}
+
+.form-control-update::placeholder {
+  color: #9ca3af;
+}
+
+.form-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.error-box-update {
+  padding: 12px 16px;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  color: #991b1b;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.popup-footer-update {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 2px solid #e5e7eb;
+}
+
+.btn-cancel-update,
+.btn-submit-update {
+  padding: 12px 28px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-cancel-update {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.btn-cancel-update:hover {
+  background: #d1d5db;
+}
+
+.btn-cancel-update:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-submit-update {
+  background: #000000;
+  color: white;
+}
+
+.btn-submit-update:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3);
+}
+
+.btn-submit-update:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.3s;
+  border-radius: 26px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: #10B981; /* Màu xanh khi bật */
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(24px);
+}
+
+.toggle-switch input:focus + .toggle-slider {
+  box-shadow: 0 0 1px #10B981;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .popup-content-update {
+    width: 95%;
+  }
+
+  .popup-header-update {
+    padding: 16px 20px;
+  }
+
+  .popup-header-update h2 {
+    font-size: 18px;
+  }
+
+  .popup-body-update {
+    padding: 20px;
+  }
+
+  .popup-footer-update {
+    flex-direction: column-reverse;
+  }
+
+  .btn-cancel-update,
+  .btn-submit-update {
+    width: 100%;
+  }
+}

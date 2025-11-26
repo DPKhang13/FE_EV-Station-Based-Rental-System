@@ -8,7 +8,6 @@ const CustomerManagement = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [filterRole, setFilterRole] = useState('all');
-    const [filterStatus, setFilterStatus] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
 
     const navigate = useNavigate();                   // 👈 thêm
@@ -33,13 +32,12 @@ const CustomerManagement = () => {
 
     const filteredUsers = users.filter(user => {
         const matchRole = filterRole === 'all' || user.role === filterRole;
-        const matchStatus = filterStatus === 'all' || user.status === filterStatus;
         const matchSearch = !searchQuery ||
             user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
             user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
             user.phone.includes(searchQuery);
 
-        return matchRole && matchStatus && matchSearch;
+        return matchRole && matchSearch;
     });
 
     const getRoleBadgeClass = (role) => {
@@ -76,6 +74,11 @@ const CustomerManagement = () => {
             case 'BANNED': return 'Bị cấm';
             default: return status;
         }
+    };
+
+    // 🔍 Xử lý tìm kiếm
+    const handleSearch = () => {
+        // Logic tìm kiếm đã được áp dụng trong filteredUsers thông qua searchQuery
     };
 
     // 👇 hàm xem chi tiết
@@ -120,28 +123,18 @@ const CustomerManagement = () => {
                 </div>
             )}
 
-            <div className="customer-filters">
-                <div className="filter-left">
-                    <div className="filter-group">
-                        <label>Trạng thái:</label>
-                        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                            <option value="all">Tất cả</option>
-                            <option value="ACTIVE">Hoạt động</option>
-                            <option value="VERIFIED">Đã xác thực</option>
-                            <option value="BANNED">Bị cấm</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div className="filter-right">
-                    <input
-                        type="text"
-                        className="search-input"
-                        placeholder="Tìm kiếm theo tên, email, SĐT..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                </div>
+            <div className="customer-search-section">
+                <input
+                    type="text"
+                    className="customer-search-input"
+                    placeholder="Tìm kiếm theo tên, email, SĐT..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                />
+                <button className="btn-search" onClick={handleSearch}>
+                    TÌM KIẾM
+                </button>
             </div>
 
             <div className="customer-table-container">

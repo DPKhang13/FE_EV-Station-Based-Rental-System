@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { orderService, vehicleService, notificationService } from '../services';
+import { orderService, notificationService, feedbackService } from '../services';
 import './MyBookingsPage.css';
 
 const MyBookingsPage = () => {
@@ -19,6 +19,13 @@ const MyBookingsPage = () => {
     const [orderStatuses, setOrderStatuses] = useState({}); // Store status của từng order
     const [showPaymentMethodModal, setShowPaymentMethodModal] = useState(false);
     const [selectedOrderId, setSelectedOrderId] = useState(null);
+    const [orderFeedbacks, setOrderFeedbacks] = useState({}); // Store feedback của từng order
+    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+    const [selectedFeedback, setSelectedFeedback] = useState(null);
+    const [isEditingFeedback, setIsEditingFeedback] = useState(false);
+    const [editRating, setEditRating] = useState(5);
+    const [editComment, setEditComment] = useState('');
+    const [updatingFeedback, setUpdatingFeedback] = useState(false);
 
 
     useEffect(() => {
@@ -47,6 +54,22 @@ const MyBookingsPage = () => {
                     setTimeout(() => element.classList.remove('highlight-order'), 3000);
                 }
             }, 500);
+        }
+
+        // ✅ Reload feedbacks nếu có orderId trong location.state (quay lại từ trang feedback)
+        if (location.state?.orderId) {
+            setTimeout(async () => {
+                try {
+                    // Reload lại toàn bộ feedbacks để đảm bảo có feedback mới nhất
+                    const orders = await orderService.getMyOrders();
+                    if (orders && Array.isArray(orders)) {
+                        await fetchOrderFeedbacks(orders);
+                        console.log('✅ Feedbacks reloaded after feedback submission');
+                    }
+                } catch (err) {
+                    console.warn('⚠️ Cannot reload feedbacks:', err);
+                }
+            }, 1500);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [navigate, location]);
@@ -97,35 +120,6 @@ const MyBookingsPage = () => {
 
     let finalOrders = [...orders];
 
-    try {
-      console.log("🚗 [MyBookings] Fetching vehicle details...");
-      const vehicles = await vehicleService.getVehicles();
-
-      finalOrders = orders.map((order) => {
-        const vehicle = vehicles.find((v) => v.vehicleId === order.vehicleId);
-
-        // Ưu tiên dữ liệu từ backend (nếu đã có)
-        if (order.vehicleName || order.plateNumber) return order;
-
-        // Ghép thêm thông tin xe nếu có
-        return vehicle
-          ? {
-              ...order,
-              vehicleName: vehicle.vehicleName,
-              plateNumber: vehicle.plateNumber,
-              vehicleColor: vehicle.color,
-              vehicleType: vehicle.seatCount >= 7 ? "7-seater" : "4-seater",
-            }
-          : {
-              ...order,
-              vehicleName: "Chưa cập nhật",
-              plateNumber: "Chưa cập nhật",
-            };
-      });
-    } catch (vehicleErr) {
-      console.warn("⚠️ Vehicle API failed:", vehicleErr);
-    }
-
     // Sort theo thời gian tạo
     finalOrders.sort(
       (a, b) =>
@@ -134,6 +128,9 @@ const MyBookingsPage = () => {
     );
 
     setBookings(finalOrders);
+
+    // ✅ Fetch feedback cho các order đã hoàn thành
+    await fetchOrderFeedbacks(finalOrders);
   } catch (err) {
     console.error("[MyBookings] Unexpected error:", err);
     setBookings([]);
@@ -141,6 +138,42 @@ const MyBookingsPage = () => {
     setLoading(false);
   }
 };
+
+    // ✅ Fetch feedback cho các order
+    const fetchOrderFeedbacks = async (orders) => {
+        const feedbackMap = {};
+        
+        for (const order of orders) {
+            // Chỉ fetch feedback cho các order đã hoàn thành
+            if (order.status?.toUpperCase() === 'COMPLETED') {
+                try {
+                    const feedback = await feedbackService.getByOrderId(order.orderId);
+                    if (feedback) {
+                        // Xử lý cả trường hợp API trả về array hoặc object
+                        if (Array.isArray(feedback)) {
+                            if (feedback.length > 0) {
+                                feedbackMap[order.orderId] = feedback[0];
+                            }
+                        } else if (feedback && typeof feedback === 'object') {
+                            // Nếu là object, lưu trực tiếp
+                            feedbackMap[order.orderId] = feedback;
+                        }
+                    }
+                    // Nếu feedback là null (order chưa có feedback), không làm gì
+                } catch (err) {
+                    // Chỉ log warning cho lỗi không phải 500/404 (network, etc.)
+                    const statusCode = err?.response?.status || err?.status;
+                    if (statusCode && statusCode !== 500 && statusCode !== 404) {
+                        console.warn(`⚠️ [MyBookings] Cannot fetch feedback for order ${order.orderId}:`, err);
+                    }
+                    // Bỏ qua lỗi - tiếp tục với order tiếp theo
+                }
+            }
+        }
+        
+        setOrderFeedbacks(feedbackMap);
+        console.log('Order feedbacks loaded:', feedbackMap);
+    };
 
 
 
@@ -155,18 +188,29 @@ const MyBookingsPage = () => {
     };
 
     const getStatusColor = (status) => {
+        if (!status) return '#6b7280';
+        const statusUpper = String(status).toUpperCase();
         const colors = {
             'PENDING': '#f59e0b',
             'PENDING_DEPOSIT': '#f59e0b',
+            'PENDING_FULL_PAYMENT': '#f59e0b',
             'DEPOSITED': '#3b82f6',
+            'BOOKED': '#3b82f6',
+            'RENTAL': '#8b5cf6',
+            'WAITING_FOR_VEHICLE': '#f59e0b',
+            'WAITING': '#f59e0b',
             'CONFIRMED': '#3b82f6',
+            'CHECKING': '#3b82f6',
+            'AWAITING': '#f59e0b',
             'PAID': '#10b981',
+            'SUCCESS': '#10b981',
             'COMPLETED': '#10b981',
             'CANCELLED': '#ef4444',
+            'FAILED': '#ef4444',
             'PAYMENT_FAILED': '#ef4444',
             'IN_PROGRESS': '#8b5cf6'
         };
-        return colors[status] || '#6b7280';
+        return colors[statusUpper] || '#6b7280';
     };
 
     const getStatusIcon = (status) => {
@@ -185,18 +229,30 @@ const MyBookingsPage = () => {
     };
 
     const getStatusText = (status) => {
+        if (!status) return "N/A";
+        const statusUpper = String(status).toUpperCase();
         const statusTexts = {
-            'PENDING': 'CHỜ XỬ LÝ',
+            'PENDING': 'CHƯA THANH TOÁN',
             'PENDING_DEPOSIT': 'CHỜ ĐẶT CỌC',
+            'PENDING_FINAL_PAYMENT': 'CHỜ THANH TOÁN CUỐI',
+            'PENDING_FULL_PAYMENT': 'CHỜ THANH TOÁN ',
             'DEPOSITED': 'ĐÃ ĐẶT CỌC',
+            'BOOKED': 'ĐÃ ĐẶT',
+            'RENTAL': 'ĐANG THUÊ',
+            'WAITING_FOR_VEHICLE': 'CHỜ XE',
+            'WAITING': 'CHỜ XE',
             'CONFIRMED': 'ĐÃ XÁC NHẬN',
+            'CHECKING': 'ĐANG KIỂM TRA',
+            'AWAITING': 'CHỜ NHẬN XE',
             'PAID': 'ĐÃ THANH TOÁN',
+            'SUCCESS': 'THÀNH CÔNG',
             'COMPLETED': 'HOÀN THÀNH',
             'CANCELLED': 'ĐÃ HỦY',
+            'FAILED': 'ĐÃ HỦY',
             'PAYMENT_FAILED': 'THANH TOÁN THẤT BẠI',
             'IN_PROGRESS': 'ĐANG THỰC HIỆN'
         };
-        return statusTexts[status] || status;
+        return statusTexts[statusUpper] || status;
     };
 
     const checkExpiry = (createdAt) => {
@@ -299,10 +355,139 @@ const MyBookingsPage = () => {
         }
     };
 
-    // ✅ Mở trang feedback cho COMPLETED
+    // ✅ Mở trang feedback cho COMPLETED (chưa có feedback)
     const handleFeedback = (orderId) => {
         console.log('Opening feedback for order:', orderId);
         navigate('/feedback', { state: { orderId } });
+    };
+
+    // ✅ Xem feedback đã đánh giá
+    const handleViewFeedback = async (orderId) => {
+        try {
+            // Nếu đã có trong state thì dùng luôn
+            if (orderFeedbacks[orderId]) {
+                setSelectedFeedback(orderFeedbacks[orderId]);
+                setEditRating(orderFeedbacks[orderId].rating || 5);
+                setEditComment(orderFeedbacks[orderId].comment || '');
+                setIsEditingFeedback(false);
+                setShowFeedbackModal(true);
+                return;
+            }
+
+            // Nếu chưa có thì fetch lại
+            console.log('📝 [MyBookings] Fetching feedback for order:', orderId);
+            const feedback = await feedbackService.getByOrderId(orderId);
+            if (feedback) {
+                // Xử lý cả trường hợp API trả về array hoặc object
+                let feedbackData;
+                if (Array.isArray(feedback)) {
+                    feedbackData = feedback.length > 0 ? feedback[0] : null;
+                } else if (feedback && typeof feedback === 'object') {
+                    feedbackData = feedback;
+                } else {
+                    feedbackData = null;
+                }
+                
+                if (feedbackData) {
+                    setSelectedFeedback(feedbackData);
+                    setEditRating(feedbackData.rating || 5);
+                    setEditComment(feedbackData.comment || '');
+                    setIsEditingFeedback(false);
+                    setOrderFeedbacks(prev => ({ ...prev, [orderId]: feedbackData }));
+                    setShowFeedbackModal(true);
+                } else {
+                    alert('Không tìm thấy đánh giá cho đơn hàng này.');
+                }
+            } else {
+                alert('Đơn hàng này chưa có đánh giá.');
+            }
+        } catch (err) {
+            // Xử lý lỗi khi fetch feedback
+            const statusCode = err?.response?.status || err?.status;
+            if (statusCode === 500 || statusCode === 404) {
+                // Lỗi 500 hoặc 404 có thể là do order chưa có feedback - bình thường
+                console.log(`ℹ️ [MyBookings] Order ${orderId} chưa có feedback (status: ${statusCode})`);
+                alert('Đơn hàng này chưa có đánh giá.');
+            } else {
+                // Lỗi khác (network, etc.)
+                console.error('❌ [MyBookings] Error fetching feedback:', err);
+                alert('Không thể tải đánh giá. Vui lòng thử lại sau.');
+            }
+        }
+    };
+
+    // ✅ Chỉnh sửa feedback
+    const handleEditFeedback = () => {
+        setIsEditingFeedback(true);
+    };
+
+    // ✅ Hủy chỉnh sửa
+    const handleCancelEdit = () => {
+        setIsEditingFeedback(false);
+        setEditRating(selectedFeedback?.rating || 5);
+        setEditComment(selectedFeedback?.comment || '');
+    };
+
+    // ✅ Lưu chỉnh sửa feedback
+    const handleUpdateFeedback = async () => {
+        if (!selectedFeedback?.feedbackId) {
+            alert('Không tìm thấy ID đánh giá.');
+            return;
+        }
+
+        try {
+            setUpdatingFeedback(true);
+            const feedbackData = {
+                comment: editComment
+            };
+            
+            console.log('📝 [MyBookings] Updating feedback:', selectedFeedback.feedbackId, feedbackData);
+            await feedbackService.update(selectedFeedback.feedbackId, feedbackData);
+            
+            // Cập nhật lại feedback trong state
+            const updatedFeedback = {
+                ...selectedFeedback,
+                comment: editComment
+            };
+            setSelectedFeedback(updatedFeedback);
+            setOrderFeedbacks(prev => ({ ...prev, [selectedFeedback.orderId]: updatedFeedback }));
+            setIsEditingFeedback(false);
+            
+            alert('✅ Đã cập nhật đánh giá thành công!');
+        } catch (err) {
+            console.error('❌ [MyBookings] Error updating feedback:', err);
+            const errorMsg = err?.response?.data?.message || err?.message || 'Không thể cập nhật đánh giá. Vui lòng thử lại sau.';
+            alert(errorMsg);
+        } finally {
+            setUpdatingFeedback(false);
+        }
+    };
+
+    // ✅ Xóa đơn hàng
+    const handleDeleteOrder = async (orderId) => {
+        if (!orderId) {
+            alert('Không tìm thấy mã đơn hàng!');
+            return;
+        }
+
+        const confirmDelete = window.confirm('Bạn có chắc chắn muốn xóa đơn hàng này? Hành động này không thể hoàn tác.');
+        if (!confirmDelete) {
+            return;
+        }
+
+        try {
+            console.log('🗑️ [MyBookings] Deleting order:', orderId);
+            await orderService.delete(orderId);
+            console.log('✅ [MyBookings] Order deleted successfully');
+            alert('Đơn hàng đã được xóa thành công!');
+            loadMyBookings(); // Reload danh sách
+        } catch (err) {
+            console.error('❌ Error deleting order:', err);
+            const errorMessage = err?.response?.data?.message || 
+                                err?.message || 
+                                'Không thể xóa đơn hàng. Vui lòng thử lại sau.';
+            alert(`Không thể xóa đơn hàng:\n${errorMessage}`);
+        }
     };
 
     const handleCancelOrder = (orderId) => {
@@ -312,16 +497,24 @@ const MyBookingsPage = () => {
     };
 
     const confirmCancelOrder = async () => {
-        if (!cancelReason.trim()) {
-            alert('Vui lòng nhập lý do hủy đơn!');
+        if (!cancelOrderId) {
+            alert('Không tìm thấy mã đơn hàng!');
             return;
         }
 
         try {
-            console.log(' Cancelling order:', cancelOrderId);
+            // Giới hạn độ dài lý do hủy để tránh lỗi backend
+            let trimmedReason = cancelReason.trim() || "";
+            if (trimmedReason.length > 500) {
+                trimmedReason = trimmedReason.substring(0, 500);
+                console.warn('⚠️ [MyBookings] Cancellation reason truncated to 500 characters');
+            }
+            console.log('🚀 [MyBookings] Cancelling order:', cancelOrderId);
+            console.log('📝 [MyBookings] Cancellation reason:', trimmedReason || '(Không có)');
 
-            // 1. Gọi API xóa đơn hàng
-            await orderService.delete(cancelOrderId);
+            // 1. Gọi API hủy đơn hàng (có thể không có lý do)
+            const result = await orderService.cancel(cancelOrderId, trimmedReason);
+            console.log('✅ [MyBookings] Cancel result:', result);
 
             // 2. Lấy userId từ localStorage
             const userStr = localStorage.getItem('user');
@@ -355,14 +548,26 @@ const MyBookingsPage = () => {
             setCancelReason('');
             loadMyBookings();
         } catch (err) {
-            console.error('Error cancelling order:', err);
-            alert('Không thể hủy đơn hàng: ' + (err.message || 'Unknown error'));
+            console.error('❌ Error cancelling order:', err);
+            const errorMessage = err?.response?.data?.message || 
+                                err?.message || 
+                                'Không thể hủy đơn hàng. Vui lòng thử lại sau.';
+            alert(`Không thể hủy đơn hàng:\n${errorMessage}`);
         }
     };
 
     const filteredBookings = bookings.filter(booking => {
-        // Filter by statusAQ
-        const matchesStatus = filter === 'all' || booking.status?.toUpperCase() === filter.toUpperCase();
+        // Filter by status
+        let matchesStatus = false;
+        if (filter === 'all') {
+            matchesStatus = true;
+        } else if (filter === 'pending') {
+            matchesStatus = ["PENDING", "PENDING_DEPOSIT"].includes(booking.status?.toUpperCase());
+        } else if (filter === 'cancelled') {
+            matchesStatus = ["CANCELLED", "FAILED"].includes(booking.status?.toUpperCase());
+        } else {
+            matchesStatus = booking.status?.toUpperCase() === filter.toUpperCase();
+        }
 
         // Filter by search order ID
         const matchesSearch = searchOrderId.trim() === '' ||
@@ -408,19 +613,21 @@ const MyBookingsPage = () => {
 
       {/* Search Box */}
       <div className="search-container">
-        <div className="search-box">
+        <div className="search-box-wrapper">
           <input
             type="text"
             className="search-input"
             placeholder="Tìm kiếm theo mã đơn hàng..."
             value={searchOrderId}
             onChange={(e) => setSearchOrderId(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && setSearchOrderId(searchOrderId)}
           />
-          {searchOrderId && (
-            <button className="clear-search" onClick={() => setSearchOrderId("")}>
-              ✕
-            </button>
-          )}
+          <button
+            className="btn-search"
+            onClick={() => setSearchOrderId(searchOrderId)}
+          >
+            TÌM KIẾM
+          </button>
         </div>
       </div>
 
@@ -458,6 +665,14 @@ const MyBookingsPage = () => {
         >
           Hoàn Thành (
           {bookings.filter((b) => b.status?.toUpperCase() === "COMPLETED").length}
+          )
+        </button>
+        <button
+          className={filter === "cancelled" ? "tab active" : "tab"}
+          onClick={() => setFilter("cancelled")}
+        >
+          Đã Hủy (
+          {bookings.filter((b) => ["CANCELLED", "FAILED"].includes(b.status?.toUpperCase())).length}
           )
         </button>
       </div>
@@ -501,7 +716,7 @@ const MyBookingsPage = () => {
                 <div className="detail-box">
                   <div className="detail-label">Hãng Xe</div>
                   <div className="detail-value">
-                    {booking.vehicleName || "Đang cập nhật"}
+                    {booking.brand || "Đang cập nhật"}
                   </div>
                 </div>
 
@@ -522,26 +737,30 @@ const MyBookingsPage = () => {
                 <div className="detail-box">
                   <div className="detail-label">Ngày Nhận Xe</div>
                   <div className="detail-value">
-                    {new Date(booking.startTime).toLocaleString("vi-VN", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                    })}
+                    {(() => {
+                      const date = new Date(booking.startTime);
+                      const day = String(date.getDate()).padStart(2, "0");
+                      const month = String(date.getMonth() + 1).padStart(2, "0");
+                      const year = date.getFullYear();
+                      const hours = String(date.getHours()).padStart(2, "0");
+                      const minutes = String(date.getMinutes()).padStart(2, "0");
+                      return `${day}/${month}/${year} ${hours}:${minutes}`;
+                    })()}
                   </div>
                 </div>
 
                 <div className="detail-box">
                   <div className="detail-label">Ngày Trả Xe</div>
                   <div className="detail-value">
-                    {new Date(booking.endTime).toLocaleString("vi-VN", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                    })}
+                    {(() => {
+                      const date = new Date(booking.endTime);
+                      const day = String(date.getDate()).padStart(2, "0");
+                      const month = String(date.getMonth() + 1).padStart(2, "0");
+                      const year = date.getFullYear();
+                      const hours = String(date.getHours()).padStart(2, "0");
+                      const minutes = String(date.getMinutes()).padStart(2, "0");
+                      return `${day}/${month}/${year} ${hours}:${minutes}`;
+                    })()}
                   </div>
                 </div>
 
@@ -556,16 +775,46 @@ const MyBookingsPage = () => {
 
               {/* Footer */}
               <div className="booking-footer">
-                <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                  <button
-                    onClick={() => handleViewDetails(booking)}
-                    className="view-details-btn"
-                  >
-                    Xem chi tiết
-                  </button>
-
-                  {/* Hiển thị trạng thái phù hợp */}
-                  {["PENDING", "PENDING_DEPOSIT"].includes(booking.status) && (
+                {["DEPOSITED", "CONFIRMED", "PAID", "AWAITING"].includes(booking.status) ? (
+                  <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
+                    <button
+                      onClick={() => handleViewDetails(booking)}
+                      className="view-details-btn"
+                    >
+                      Xem chi tiết
+                    </button>
+                    {String(booking.status || "").toUpperCase() === "PENDING_FINAL_PAYMENT" && (
+                      <span
+                        style={{
+                          color: "#856404",
+                          fontWeight: "500",
+                          padding: "10px 16px",
+                          background: "#FFF3CD",
+                          border: "1px solid #FFC107",
+                          borderRadius: "8px",
+                          fontSize: "13px",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        Vui lòng thanh toán phí dịch vụ và phát sinh
+                      </span>
+                    )}
+                    {String(booking.status || "").toUpperCase() === "RENTAL" && (
+                      <span
+                        style={{
+                          color: "#065F46",
+                          fontWeight: "500",
+                          padding: "10px 16px",
+                          background: "#D1FAE5",
+                          border: "1px solid #10B981",
+                          borderRadius: "8px",
+                          fontSize: "13px",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        Bạn đang thuê xe
+                      </span>
+                    )}
                     <button
                       onClick={() => handleCancelOrder(booking.orderId)}
                       className="btn-cancel"
@@ -582,61 +831,514 @@ const MyBookingsPage = () => {
                     >
                       Hủy đơn hàng
                     </button>
-                  )}
-
-                  {["DEPOSITED", "CONFIRMED", "PAID"].includes(booking.status) && (
                     <span
                       style={{
-                        color: "#10b981",
-                        fontWeight: "600",
+                        color: "#856404",
+                        fontWeight: "500",
                         padding: "10px 16px",
-                        background: "#d1fae5",
+                        background: "#FFF3CD",
+                        border: "1px solid #FFC107",
                         borderRadius: "8px",
-                        fontSize: "14px",
+                        fontSize: "13px",
+                        flex: 1,
+                        maxWidth: "100%",
                       }}
                     >
-                      Đã đặt cọc - Chờ nhận xe
+                      ⚠️ Vui lòng nếu đến nhận xe thì phải thanh toán số tiền còn lại
                     </span>
-                  )}
-
-                  {booking.status === "COMPLETED" && (
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
                     <button
-                      onClick={() => handleFeedback(booking.orderId)}
-                      style={{
-                        background:
-                          "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
-                        color: "white",
-                        border: "none",
-                        padding: "10px 20px",
-                        borderRadius: "8px",
-                        fontSize: "14px",
-                        fontWeight: "600",
-                        cursor: "pointer",
-                      }}
+                      onClick={() => handleViewDetails(booking)}
+                      className="view-details-btn"
                     >
-                      Đánh giá
+                      Xem chi tiết
                     </button>
-                  )}
-                </div>
+                    {String(booking.status || "").toUpperCase() === "PENDING_FINAL_PAYMENT" && (
+                      <span
+                        style={{
+                          color: "#856404",
+                          fontWeight: "500",
+                          padding: "10px 16px",
+                          background: "#FFF3CD",
+                          border: "1px solid #FFC107",
+                          borderRadius: "8px",
+                          fontSize: "13px",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        Vui lòng thanh toán phí dịch vụ và phát sinh
+                      </span>
+                    )}
+                    {String(booking.status || "").toUpperCase() === "RENTAL" && (
+                      <span
+                        style={{
+                          color: "#065F46",
+                          fontWeight: "500",
+                          padding: "10px 16px",
+                          background: "#D1FAE5",
+                          border: "1px solid #10B981",
+                          borderRadius: "8px",
+                          fontSize: "13px",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        Bạn đang thuê xe
+                      </span>
+                    )}
 
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "flex-end",
-                    gap: "4px",
-                  }}
-                >
-                  {booking.createdAt && (
-                    <span className="created-time">
-                      Tạo lúc:{" "}
-                      {new Date(booking.createdAt).toLocaleString("vi-VN")}
-                    </span>
-                  )}
-                </div>
+                    {/* Hiển thị trạng thái phù hợp */}
+                    {["PENDING", "PENDING_DEPOSIT", "PENDING_FULL_PAYMENT"].includes(booking.status) && (
+                      <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+                        <button
+                          onClick={() => handleCancelOrder(booking.orderId)}
+                          className="btn-cancel"
+                          style={{
+                            background: "#ef4444",
+                            color: "white",
+                            border: "none",
+                            padding: "10px 20px",
+                            borderRadius: "8px",
+                            fontSize: "14px",
+                            fontWeight: "600",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Hủy đơn hàng
+                        </button>
+                        <span
+                          style={{
+                            color: "#dc2626",
+                            fontWeight: "500",
+                            padding: "10px 16px",
+                            background: "#fee2e2",
+                            border: "1px solid #fca5a5",
+                            borderRadius: "8px",
+                            fontSize: "13px",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          ⚠️ Vui lòng thanh toán để giữ xe
+                        </span>
+                      </div>
+                    )}
+
+                    {booking.status === "COMPLETED" && (
+                      <>
+                        {orderFeedbacks[booking.orderId] ? (
+                          <button
+                            onClick={() => handleViewFeedback(booking.orderId)}
+                            style={{
+                              background:
+                                "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
+                              color: "white",
+                              border: "none",
+                              padding: "10px 20px",
+                              borderRadius: "8px",
+                              fontSize: "14px",
+                              fontWeight: "600",
+                              cursor: "pointer",
+                            }}
+                          >
+                            Xem đánh giá
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleFeedback(booking.orderId)}
+                            style={{
+                              background:
+                                "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
+                              color: "white",
+                              border: "none",
+                              padding: "10px 20px",
+                              borderRadius: "8px",
+                              fontSize: "14px",
+                              fontWeight: "600",
+                              cursor: "pointer",
+                            }}
+                          >
+                            Đánh giá
+                          </button>
+                        )}
+                      </>
+                    )}
+
+                    {/* Nút xóa đơn hàng - chỉ hiển thị khi đã hủy hoặc hoàn thành */}
+                    {["CANCELLED", "COMPLETED", "FAILED"].includes(booking.status?.toUpperCase()) && (
+                      <button
+                        onClick={() => handleDeleteOrder(booking.orderId)}
+                        style={{
+                          background: "#6b7280",
+                          color: "white",
+                          border: "none",
+                          padding: "10px 20px",
+                          borderRadius: "8px",
+                          fontSize: "14px",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                          transition: "all 0.3s",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.background = "#4b5563";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.background = "#6b7280";
+                        }}
+                      >
+                        Xóa đơn hàng
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-end",
+                  gap: "4px",
+                }}
+              >
+                {booking.createdAt && (
+                  <span className="created-time">
+                    Tạo lúc:{" "}
+                    {(() => {
+                      const date = new Date(booking.createdAt);
+                      const day = String(date.getDate()).padStart(2, "0");
+                      const month = String(date.getMonth() + 1).padStart(2, "0");
+                      const year = date.getFullYear();
+                      const hours = String(date.getHours()).padStart(2, "0");
+                      const minutes = String(date.getMinutes()).padStart(2, "0");
+                      const seconds = String(date.getSeconds()).padStart(2, "0");
+                      return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+                    })()}
+                  </span>
+                )}
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Modal hủy đơn hàng */}
+      {showCancelModal && (
+        <div 
+          className="modal-overlay" 
+          onClick={() => setShowCancelModal(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+          }}
+        >
+          <div 
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'white',
+              padding: '24px',
+              borderRadius: '8px',
+              maxWidth: '500px',
+              width: '90%',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+            }}
+          >
+            <h2 style={{ marginTop: 0, marginBottom: '16px' }}>Hủy đơn hàng</h2>
+            <p style={{ marginBottom: '16px', color: '#666' }}>
+              Lý do hủy đơn hàng (tùy chọn):
+            </p>
+            <textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="Nhập lý do hủy đơn hàng..."
+              style={{
+                width: '100%',
+                minHeight: '100px',
+                padding: '12px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                fontSize: '14px',
+                marginBottom: '20px',
+                fontFamily: 'inherit'
+              }}
+            />
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowCancelModal(false);
+                  setCancelReason('');
+                  setCancelOrderId(null);
+                }}
+                style={{
+                  padding: '10px 20px',
+                  background: '#f3f4f6',
+                  color: '#333',
+                  border: '1px solid #ddd',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                Hủy
+              </button>
+              <button
+                onClick={confirmCancelOrder}
+                style={{
+                  padding: '10px 20px',
+                  background: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                Xác nhận hủy
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal hiển thị feedback */}
+      {showFeedbackModal && selectedFeedback && (
+        <div 
+          className="modal-overlay" 
+          onClick={() => {
+            setShowFeedbackModal(false);
+            setSelectedFeedback(null);
+          }}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+          }}
+        >
+          <div 
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'white',
+              padding: '32px',
+              borderRadius: '8px',
+              maxWidth: '500px',
+              width: '90%',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h2 style={{ margin: 0, textAlign: 'center', flex: 1 }}>
+                Đánh giá của bạn
+              </h2>
+              {!isEditingFeedback && (
+                <button
+                  onClick={handleEditFeedback}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginLeft: '12px'
+                  }}
+                  title="Chỉnh sửa đánh giá"
+                >
+                  <svg 
+                    width="20" 
+                    height="20" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2"
+                    style={{ color: '#666' }}
+                  >
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </button>
+              )}
+            </div>
+            
+            {isEditingFeedback ? (
+              // ⭐⭐ CHẾ ĐỘ CHỈNH SỬA ⭐⭐
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ marginBottom: '16px' }}>
+                  <strong style={{ display: 'block', marginBottom: '8px' }}>Đánh giá:</strong>
+                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <span
+                        key={star}
+                        style={{
+                          fontSize: '24px',
+                          color: star <= (selectedFeedback.rating || 0) ? '#FFD700' : '#E5E5E5'
+                        }}
+                      >
+                        ★
+                      </span>
+                    ))}
+                    <span style={{ marginLeft: '8px', fontWeight: '600' }}>
+                      {selectedFeedback.rating || 0}/5
+                    </span>
+                  </div>
+                  <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#666', fontStyle: 'italic' }}>
+                    (Không thể thay đổi đánh giá)
+                  </p>
+                </div>
+                
+                <div style={{ marginBottom: '16px' }}>
+                  <strong style={{ display: 'block', marginBottom: '8px' }}>Nhận xét:</strong>
+                  <textarea
+                    value={editComment}
+                    onChange={(e) => setEditComment(e.target.value)}
+                    placeholder="Nhập nhận xét của bạn..."
+                    style={{
+                      width: '100%',
+                      minHeight: '100px',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: '1px solid #e5e7eb',
+                      fontSize: '14px',
+                      fontFamily: 'inherit',
+                      resize: 'vertical',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                  <button
+                    onClick={handleCancelEdit}
+                    disabled={updatingFeedback}
+                    style={{
+                      padding: '10px 24px',
+                      background: '#f3f4f6',
+                      color: '#374151',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: updatingFeedback ? 'not-allowed' : 'pointer',
+                      opacity: updatingFeedback ? 0.6 : 1
+                    }}
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={handleUpdateFeedback}
+                    disabled={updatingFeedback}
+                    style={{
+                      padding: '10px 24px',
+                      background: '#000000',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: updatingFeedback ? 'not-allowed' : 'pointer',
+                      opacity: updatingFeedback ? 0.6 : 1
+                    }}
+                  >
+                    {updatingFeedback ? 'Đang lưu...' : 'Lưu'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              // ⭐⭐ CHẾ ĐỘ XEM ⭐⭐
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ 
+                  marginBottom: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <strong>Đánh giá:</strong>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <span
+                        key={star}
+                        style={{
+                          fontSize: '24px',
+                          color: star <= (selectedFeedback.rating || 0) ? '#FFD700' : '#E5E5E5'
+                        }}
+                      >
+                        ★
+                      </span>
+                    ))}
+                  </div>
+                  <span style={{ marginLeft: '8px', fontWeight: '600' }}>
+                    {selectedFeedback.rating || 0}/5
+                  </span>
+                </div>
+                
+                {selectedFeedback.comment && (
+                  <div style={{ marginTop: '16px' }}>
+                    <strong style={{ display: 'block', marginBottom: '8px' }}>Nhận xét:</strong>
+                    <div style={{
+                      padding: '12px',
+                      background: '#f9fafb',
+                      borderRadius: '8px',
+                      border: '1px solid #e5e7eb',
+                      minHeight: '60px',
+                      lineHeight: '1.6'
+                    }}>
+                      {selectedFeedback.comment}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {!isEditingFeedback && (
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => {
+                    setShowFeedbackModal(false);
+                    setSelectedFeedback(null);
+                    setIsEditingFeedback(false);
+                  }}
+                  style={{
+                    padding: '10px 24px',
+                    background: '#000000',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = '#333333';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = '#000000';
+                  }}
+                >
+                  Đóng
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

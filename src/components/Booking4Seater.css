@@ -23,11 +23,20 @@
     align-items: start;
 }
 
+.booking-right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
 .booking-form-section {
     background: white;
     border-radius: 16px;
     padding: 40px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
 .booking-form {
@@ -61,6 +70,36 @@
 .form-group input:focus,
 .form-group select:focus {
     border-color: #dc2626;
+}
+
+/* Tóm tắt giá tiền theo ngày */
+.price-summary {
+    margin-top: 8px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: #f3f4ff;
+    border: 1px solid #c7d2fe;
+}
+
+.price-summary-text {
+    margin: 2px 0;
+    font-size: 14px;
+    color: #111827;
+}
+
+.price-summary-total {
+    font-weight: 700;
+    color: #dc2626;
+}
+
+.price-summary-sub {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.original-price {
+    text-decoration: line-through;
 }
 
 .submit-button {
@@ -114,6 +153,304 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
+}
+
+.car-specs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.car-spec-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 14px;
+    color: #000000;
+}
+
+.car-spec-icon {
+    width: 24px;
+    height: 24px;
+    stroke: #000000;
+    stroke-width: 2;
+    flex-shrink: 0;
+}
+
+.car-spec-text {
+    font-size: 14px;
+    color: #000000;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.car-color-swatch-inline {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 1px solid #E5E5E5;
+    border-radius: 2px;
+    margin-left: 4px;
+    vertical-align: middle;
+}
+
+/* Khung thông tin xe đẹp */
+.vehicle-info-box {
+    background: #FFFFFF;
+    border: 2px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 24px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.vehicle-info-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1F2937;
+    margin: 0 0 20px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 24px;
+    border-radius: 10px;
+    border: 1px solid #E5E7EB;
+    background: #F9FAFB;
+    box-shadow: 0 4px 8px rgba(15, 23, 42, 0.05);
+}
+
+.vehicle-info-box {
+    text-align: center;
+}
+
+.vehicle-info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.vehicle-info-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #F9FAFB;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.vehicle-info-item:hover {
+    background: #F3F4F6;
+    transform: translateY(-1px);
+}
+
+.vehicle-info-icon {
+    width: 24px;
+    height: 24px;
+    stroke: #374151;
+    stroke-width: 2;
+    flex-shrink: 0;
+}
+
+.vehicle-info-text {
+    font-size: 14px;
+    color: #000000;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.vehicle-color-swatch {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    margin-left: 6px;
+    vertical-align: middle;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Điều kiện thuê xe */
+.rental-conditions-container {
+    margin-top: 0;
+}
+
+.rental-condition-box-wrapper {
+    background: #FFFFFF;
+    border: 2px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.3s ease;
+}
+
+.rental-condition-box-wrapper:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.rental-condition-box {
+    background: #FFFFFF;
+    padding: 0;
+    margin-bottom: 0;
+}
+
+.rental-condition-box-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1E40AF;
+    margin: 0 0 20px 0;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #E5E7EB;
+}
+
+.rental-condition-subsection {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #E5E5E5;
+}
+
+.rental-condition-subsection:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.rental-condition-subtitle {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1E40AF;
+    margin: 0 0 12px 0;
+}
+
+.rental-condition-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.rental-condition-list li {
+    padding: 8px 0;
+    padding-left: 24px;
+    position: relative;
+    font-size: 14px;
+    color: #374151;
+    line-height: 1.6;
+}
+
+.rental-condition-list li::before {
+    content: "•";
+    position: absolute;
+    left: 8px;
+    color: #1E40AF;
+    font-weight: bold;
+}
+
+/* Xe tương tự */
+.similar-cars-section-wrapper {
+    background: #FFFFFF;
+    border: 2px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    margin-top: 0;
+    transition: box-shadow 0.3s ease;
+}
+
+.similar-cars-section-wrapper:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.similar-cars-section {
+    margin-top: 0;
+}
+
+.similar-cars-section-full {
+    margin-top: 40px;
+    width: 100%;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 20px;
+}
+
+.similar-cars-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1F2937;
+    margin: 0 0 24px 0;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #E5E7EB;
+}
+
+.similar-cars-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.similar-car-card {
+    background: #FFFFFF;
+    border: 1px solid #E5E5E5;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s;
+}
+
+.similar-car-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.similar-car-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-bottom: 2px solid #E5E5E5;
+}
+
+.similar-car-info {
+    padding: 16px;
+}
+
+.similar-car-name-wrapper {
+    border: 1px solid #E5E5E5;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    background: #FFFFFF;
+}
+
+.similar-car-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #000000;
+    margin: 0;
+    text-align: center;
+}
+
+.similar-car-price {
+    font-size: 14px;
+    color: #666666;
+    margin: 0;
+}
+
+.no-similar-cars {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px;
+    color: #999999;
+    font-size: 14px;
+}
+
+.loading-similar-cars {
+    text-align: center;
+    padding: 40px;
+    color: #666666;
+    font-size: 14px;
 }
 
 .car-name {
@@ -248,6 +585,43 @@
     }
 
     .car-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .vehicle-info-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .vehicle-info-title {
+        font-size: 20px;
+    }
+
+    .vehicle-info-item {
+        padding: 10px;
+    }
+
+    .vehicle-info-icon {
+        width: 20px;
+        height: 20px;
+    }
+
+    .vehicle-info-text {
+        font-size: 13px;
+    }
+
+    .rental-condition-box-wrapper,
+    .similar-cars-section-wrapper {
+        padding: 20px;
+    }
+
+    .rental-condition-box {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .vehicle-info-grid {
         grid-template-columns: 1fr;
     }
 }

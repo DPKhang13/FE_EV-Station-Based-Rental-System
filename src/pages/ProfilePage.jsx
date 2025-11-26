@@ -9,13 +9,21 @@ const ProfilePage = () => {
   const navigate = useNavigate();
   const { user, logout, updateUser } = useContext(AuthContext);
 
-  // Ảnh & preview
+  // Ảnh & trạng thái upload
   const [idPreview, setIdPreview] = useState('');
   const [dlPreview, setDlPreview] = useState('');
-  const [idCardUrl, setIdCardUrl] = useState(null);           // URL thật sau upload
+  const [idCardUrl, setIdCardUrl] = useState(null);
   const [driverLicenseUrl, setDriverLicenseUrl] = useState(null);
+  const [idUploading, setIdUploading] = useState(false);
+  const [dlUploading, setDlUploading] = useState(false);
 
-  // Thông tin hồ sơ
+  // Trạng thái có/không giấy tờ trong DB
+  const [docStatus, setDocStatus] = useState({
+    hasIdCard: false,
+    hasDriverLicense: false,
+  });
+
+  // Form thông tin người dùng
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -26,7 +34,79 @@ const ProfilePage = () => {
     dateOfBirth: '',
   });
 
-  // Scroll + check login + load dữ liệu
+  // =========================
+  // Helpers
+  // =========================
+  const getUserId = () => user?.id || user?.userId || user?.data?.id || null;
+
+  const loadUserProfileFromLocalStorage = () => {
+    if (user) {
+      setFormData({
+        fullName: user.name || user.fullName || user.username || '',
+        email: user.email || '',
+        phone: user.phone || user.phoneNumber || '',
+        address: user.address || '',
+        dateOfBirth: user.dateOfBirth || user.dob || '',
+      });
+
+      const cccd = user.cccdImageUrl || user.idCardUrl || user.cccdUrl || null;
+      const dl = user.driverLicenseImageUrl || user.driverLicenseUrl || user.licenseUrl || null;
+
+      if (cccd) {
+        setIdPreview(cccd);
+        setIdCardUrl(cccd);
+      }
+      if (dl) {
+        setDlPreview(dl);
+        setDriverLicenseUrl(dl);
+      }
+
+      setDocStatus({
+        hasIdCard: !!cccd,
+        hasDriverLicense: !!dl,
+      });
+      return;
+    }
+
+    const saved = localStorage.getItem('user');
+    if (!saved) return;
+
+    try {
+      const u = JSON.parse(saved);
+      setFormData({
+        fullName: u.name || u.fullName || u.username || '',
+        email: u.email || '',
+        phone: u.phone || u.phoneNumber || '',
+        address: u.address || '',
+        dateOfBirth: u.dateOfBirth || u.dob || '',
+      });
+
+      const cccd = u.cccdImageUrl || u.idCardUrl || u.cccdUrl || null;
+      const dl = u.driverLicenseImageUrl || u.driverLicenseUrl || u.licenseUrl || null;
+
+      if (cccd) {
+        setIdPreview(cccd);
+        setIdCardUrl(cccd);
+      }
+      if (dl) {
+        setDlPreview(dl);
+        setDriverLicenseUrl(dl);
+      }
+
+      setDocStatus({
+        hasIdCard: !!cccd,
+        hasDriverLicense: !!dl,
+      });
+    } catch {
+      /* noop */
+    }
+  };
+
+  // =========================
+  // Effects
+  // =========================
+
+  // Scroll + bảo đảm đăng nhập + tải hồ sơ
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (!user) {
@@ -36,11 +116,10 @@ const ProfilePage = () => {
     fetchProfileFromDatabase();
   }, [user, navigate]);
 
-  // ✅ Sync formData khi user context thay đổi
+  // Đồng bộ form khi context user đổi
   useEffect(() => {
     if (!user) return;
-    
-    console.log('🔄 User context changed, syncing formData:', user);
+
     setFormData({
       fullName: user.name || user.fullName || user.username || '',
       email: user.email || '',
@@ -48,11 +127,10 @@ const ProfilePage = () => {
       address: user.address || '',
       dateOfBirth: user.dateOfBirth || user.dob || '',
     });
-    
-    // Sync ảnh nếu có
+
     const cccdUrl = user.cccdImageUrl || user.idCardUrl || user.cccdUrl;
     const dlUrl = user.driverLicenseImageUrl || user.driverLicenseUrl || user.licenseUrl;
-    
+
     if (cccdUrl) {
       setIdPreview(cccdUrl);
       setIdCardUrl(cccdUrl);
@@ -63,22 +141,53 @@ const ProfilePage = () => {
     }
   }, [user]);
 
-  // Fetch profile từ database
+  // Lấy doc-status thật từ DB (nếu BE có endpoint), fallback theo URL đã có
+  useEffect(() => {
+    const uid = getUserId();
+    if (!uid) return;
+
+    (async () => {
+      try {
+        const status = await photoService.getDocStatus?.(uid);
+        if (status && typeof status === 'object') {
+          setDocStatus({
+            hasIdCard: !!status.hasIdCard,
+            hasDriverLicense: !!status.hasDriverLicense,
+          });
+          return;
+        }
+      } catch {
+        /* ignore, sẽ fallback */
+      }
+
+      setDocStatus({
+        hasIdCard: !!(idCardUrl || idPreview),
+        hasDriverLicense: !!(driverLicenseUrl || dlPreview),
+      });
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, idCardUrl, driverLicenseUrl]);
+
+  // Dọn objectURL khi rời trang
+  useEffect(() => {
+    return () => {
+      if (idPreview?.startsWith('blob:')) URL.revokeObjectURL(idPreview);
+      if (dlPreview?.startsWith('blob:')) URL.revokeObjectURL(dlPreview);
+    };
+  }, [idPreview, dlPreview]);
+
+  // =========================
+  // Data fetchers
+  // =========================
   const fetchProfileFromDatabase = async () => {
     try {
-      console.log('🔄 Fetching profile from database...');
-      console.log('👤 Current user from context:', user);
-      const userId = user?.id || user?.userId || user?.data?.id;
-      console.log('🔑 User ID:', userId);
-      
-      const response = await profileService.getProfile(userId);
-      console.log('✅ Profile data from DB:', response);
-      
-      const profileData = response?.data || response;
-      console.log('📋 Parsed profile data:', profileData);
-      console.log('📋 All profile keys:', Object.keys(profileData));
-      
-      // Update form data
+      const uid = getUserId();
+      if (!uid) return;
+
+      const response = await profileService.getProfile(uid);
+      const profileData = response?.data || response || {};
+
+      // Form
       setFormData({
         fullName: profileData.fullName || profileData.name || profileData.username || '',
         email: profileData.email || '',
@@ -86,91 +195,73 @@ const ProfilePage = () => {
         address: profileData.address || '',
         dateOfBirth: profileData.dateOfBirth || profileData.dob || '',
       });
-      
-      // ✅ Fetch photos riêng từ table photos
+
+      // Ảnh từ bảng photos (ưu tiên), sau đó fallback profile fields
       let cccdUrl = null;
       let dlUrl = null;
-      
-      if (userId) {
-        try {
-          console.log('🔄 Fetching photos from photos table...');
-          const photosData = await photoService.getPhotos(userId);
-          console.log('📸 Photos data:', photosData);
-          
-          if (photosData) {
-            // Nếu photosData là array
-            if (Array.isArray(photosData)) {
-              const cccdPhoto = photosData.find(p => p.type === 'CCCD' || p.type === 'cccd');
-              const dlPhoto = photosData.find(p => p.type === 'GPLX' || p.type === 'gplx' || p.type === 'driver_license');
-              
-              cccdUrl = cccdPhoto?.photo_url || cccdPhoto?.photoUrl || cccdPhoto?.url;
-              dlUrl = dlPhoto?.photo_url || dlPhoto?.photoUrl || dlPhoto?.url;
-            } else if (photosData.data && Array.isArray(photosData.data)) {
-              // Nếu wrapped trong data
-              const cccdPhoto = photosData.data.find(p => p.type === 'CCCD' || p.type === 'cccd');
-              const dlPhoto = photosData.data.find(p => p.type === 'GPLX' || p.type === 'gplx' || p.type === 'driver_license');
-              
-              cccdUrl = cccdPhoto?.photo_url || cccdPhoto?.photoUrl || cccdPhoto?.url;
-              dlUrl = dlPhoto?.photo_url || dlPhoto?.photoUrl || dlPhoto?.url;
-            } else {
-              // Nếu là object với cccd và license fields
-              cccdUrl = photosData.cccd?.photo_url || photosData.cccd?.url || photosData.cccdUrl;
-              dlUrl = photosData.license?.photo_url || photosData.license?.url || photosData.licenseUrl;
-            }
+
+      try {
+        const photos = await photoService.getPhotos(uid);
+        if (photos) {
+          if (Array.isArray(photos)) {
+            const cccd = photos.find(p => (p.type || '').toUpperCase() === 'CCCD');
+            const gplx = photos.find(p => ['GPLX', 'DRIVER_LICENSE', 'DRIVERLICENSE', 'LICENSE'].includes((p.type || '').toUpperCase()));
+            cccdUrl = cccd?.photo_url || cccd?.photoUrl || cccd?.url || cccd?.imageUrl || null;
+            dlUrl = gplx?.photo_url || gplx?.photoUrl || gplx?.url || gplx?.imageUrl || null;
+          } else if (photos?.data && Array.isArray(photos.data)) {
+            const cccd = photos.data.find(p => (p.type || '').toUpperCase() === 'CCCD');
+            const gplx = photos.data.find(p => ['GPLX', 'DRIVER_LICENSE', 'DRIVERLICENSE', 'LICENSE'].includes((p.type || '').toUpperCase()));
+            cccdUrl = cccd?.photo_url || cccd?.photoUrl || cccd?.url || cccd?.imageUrl || null;
+            dlUrl = gplx?.photo_url || gplx?.photoUrl || gplx?.url || gplx?.imageUrl || null;
+          } else {
+            cccdUrl = photos?.cccd?.photo_url || photos?.cccd?.url || photos?.cccdUrl || null;
+            dlUrl =
+              photos?.license?.photo_url ||
+              photos?.license?.url ||
+              photos?.licenseUrl ||
+              photos?.gplx?.photo_url ||
+              photos?.gplx?.url ||
+              null;
           }
-        } catch (photoErr) {
-          console.warn('⚠️ Could not fetch photos separately:', photoErr);
         }
+      } catch {
+        /* ignore */
       }
-      
-      // Fallback: check trong profile data
+
       if (!cccdUrl) {
-        cccdUrl = profileData.photo_url || profileData.photoUrl || profileData.cccdImageUrl || profileData.idCardUrl || profileData.cccdUrl || null;
+        cccdUrl =
+          profileData.photo_url ||
+          profileData.photoUrl ||
+          profileData.cccdImageUrl ||
+          profileData.idCardUrl ||
+          profileData.cccdUrl ||
+          null;
       }
       if (!dlUrl) {
-        dlUrl = profileData.license_url || profileData.licenseUrl || profileData.driverLicenseImageUrl || profileData.driverLicenseUrl || null;
+        dlUrl =
+          profileData.license_url ||
+          profileData.licenseUrl ||
+          profileData.driverLicenseImageUrl ||
+          profileData.driverLicenseUrl ||
+          null;
       }
-      
-      console.log('📸 CCCD URL from DB:', cccdUrl);
-      console.log('📸 Driver License URL from DB:', dlUrl);
-      
-      // Tìm tất cả fields có chứa 'cccd', 'id', hoặc 'card' để debug
-      const cccdFields = Object.keys(profileData).filter(k => 
-        k.toLowerCase().includes('cccd') || 
-        k.toLowerCase().includes('idcard') || 
-        k.toLowerCase().includes('photo') ||
-        k.toLowerCase().includes('id_card')
-      );
-      console.log('🔍 Possible CCCD fields in response:', cccdFields);
-      cccdFields.forEach(key => console.log(`  - ${key}:`, profileData[key]));
-      
-      // Tìm tất cả fields có chứa 'license' hoặc 'driver'
-      const dlFields = Object.keys(profileData).filter(k => 
-        k.toLowerCase().includes('license') || 
-        k.toLowerCase().includes('driver') ||
-        k.toLowerCase().includes('gplx') ||
-        k.toLowerCase().includes('bang_lai')
-      );
-      console.log('🔍 Possible Driver License fields in response:', dlFields);
-      dlFields.forEach(key => console.log(`  - ${key}:`, profileData[key]));
-      
+
       if (cccdUrl) {
-        console.log('✅ Setting CCCD preview:', cccdUrl);
         setIdPreview(cccdUrl);
         setIdCardUrl(cccdUrl);
-      } else {
-        console.log('⚠️ No CCCD URL found in database');
       }
-      
       if (dlUrl) {
-        console.log('✅ Setting DL preview:', dlUrl);
         setDlPreview(dlUrl);
         setDriverLicenseUrl(dlUrl);
-      } else {
-        console.log('⚠️ No Driver License URL found in database');
       }
-      
-      // Update user in context và localStorage
+
+      // Cập nhật docStatus ngay tại đây (để FE bám vào DB)
+      setDocStatus({
+        hasIdCard: !!cccdUrl,
+        hasDriverLicense: !!dlUrl,
+      });
+
+      // Cập nhật user context để các màn khác dùng được ngay
       updateUser({
         ...profileData,
         name: profileData.fullName || profileData.name,
@@ -181,189 +272,122 @@ const ProfilePage = () => {
         driverLicenseUrl: dlUrl,
         licenseUrl: dlUrl,
       });
-      
     } catch (err) {
-      console.error('❌ Failed to fetch profile from database:', err);
-      console.error('❌ Error details:', err.message);
-      // Fallback to localStorage if API fails
+      // Fallback localStorage
       loadUserProfileFromLocalStorage();
     }
   };
 
-  // Fallback: Load từ localStorage
-  const loadUserProfileFromLocalStorage = () => {
-    console.log('⚠️ Loading profile from localStorage (fallback)');
-    if (user) {
-      setFormData({
-        fullName: user.name || user.fullName || user.username || '',
-        email: user.email || '',
-        phone: user.phone || user.phoneNumber || '',
-        address: user.address || '',
-        dateOfBirth: user.dateOfBirth || user.dob || '',
-      });
-      
-      const cccd = user.cccdImageUrl || user.idCardUrl || user.cccdUrl || null;
-      const dl = user.driverLicenseImageUrl || user.driverLicenseUrl || user.licenseUrl || null;
-      
-      if (cccd) {
-        setIdPreview(cccd);
-        setIdCardUrl(cccd);
-      }
-      if (dl) {
-        setDlPreview(dl);
-        setDriverLicenseUrl(dl);
-      }
-      return;
-    }
-    
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      try {
-        const u = JSON.parse(savedUser);
-        setFormData({
-          fullName: u.name || u.fullName || u.username || '',
-          email: u.email || '',
-          phone: u.phone || u.phoneNumber || '',
-          address: u.address || '',
-          dateOfBirth: u.dateOfBirth || u.dob || '',
-        });
-        
-        const cccd = u.cccdImageUrl || u.idCardUrl || u.cccdUrl || null;
-        const dl = u.driverLicenseImageUrl || u.driverLicenseUrl || u.licenseUrl || null;
-        
-        if (cccd) {
-          setIdPreview(cccd);
-          setIdCardUrl(cccd);
-        }
-        if (dl) {
-          setDlPreview(dl);
-          setDriverLicenseUrl(dl);
-        }
-      } catch (err) {
-        console.error('❌ Failed to parse user from localStorage:', err);
-      }
-    }
-  };
-
-  // Dọn objectURL tránh leak
-  useEffect(() => {
-    return () => {
-      if (idPreview?.startsWith('blob:')) URL.revokeObjectURL(idPreview);
-      if (dlPreview?.startsWith('blob:')) URL.revokeObjectURL(dlPreview);
-    };
-  }, [idPreview, dlPreview]);
-
-  const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  // =========================
+  // Handlers
+  // =========================
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleEditToggle = () => {
-    if (isEditing) {
-      // Hủy sửa -> load lại từ database
-      fetchProfileFromDatabase();
-    }
-    setIsEditing((v) => !v);
+    if (isEditing) fetchProfileFromDatabase(); // hủy sửa -> reset
+    setIsEditing(v => !v);
   };
 
-  // Chọn ảnh -> preview ngay -> upload ngay -> thay preview = URL thật
   const handlePickId = async (e) => {
     const f = e.target.files?.[0];
     if (!f) return;
-    if (!f.type?.startsWith('image/')) return alert('Please choose an image');
-    if (f.size > 5 * 1024 * 1024) return alert('Image > 5MB');
+    if (!f.type?.startsWith('image/')) return alert('Vui lòng chọn đúng file ảnh');
+    if (f.size > 5 * 1024 * 1024) return alert('Ảnh vượt quá 5MB');
 
-    const tempUrl = URL.createObjectURL(f);
-    setIdPreview(tempUrl);
+    const blobUrl = URL.createObjectURL(f);
+    setIdPreview(blobUrl);
 
-    const userId = user?.id || user?.userId || user?.data?.id;
-    if (!userId) {
-      console.error('❌ No userId found');
-      alert('Upload CCCD thất bại: Không tìm thấy thông tin người dùng');
-      return;
-    }
+    const uid = getUserId();
+    if (!uid) return alert('Không tìm thấy thông tin người dùng');
 
     try {
-      const res = await photoService.uploadIdCard(f, userId);
-      const url =
-        typeof res === 'string'
-          ? res
-          : res?.url ||
-            res?.photoUrl ||
-            res?.location ||
-            res?.imageUrl ||
-            res?.path;
-      if (url) {
-        setIdPreview(url);
-        setIdCardUrl(url);
-        console.log('✅ Upload CCCD thành công:', url);
-      } else {
-        throw new Error('Không nhận được URL từ server');
-      }
+      setIdUploading(true);
+      const url = await photoService.uploadIdCard(f, uid, { overwrite: true });
+      if (!url) throw new Error('Không nhận được URL trả về');
+
+      setIdPreview(url);
+      setIdCardUrl(url);
+      setDocStatus(s => ({ ...s, hasIdCard: true }));
+
+      updateUser({
+        ...user,
+        cccdImageUrl: url,
+        idCardUrl: url,
+        cccdUrl: url,
+        photo_url: url,
+        photoUrl: url,
+      });
+
+      alert('✅ Upload CCCD thành công! Ảnh đã được lưu.');
     } catch (err) {
-      console.error('❌ Upload CCCD error:', err);
       alert('Upload CCCD thất bại: ' + (err.message || 'Unknown error'));
+    } finally {
+      setIdUploading(false);
     }
   };
 
   const handlePickDL = async (e) => {
     const f = e.target.files?.[0];
     if (!f) return;
-    if (!f.type?.startsWith('image/')) return alert('Please choose an image');
-    if (f.size > 5 * 1024 * 1024) return alert('Image > 5MB');
+    if (!f.type?.startsWith('image/')) return alert('Vui lòng chọn đúng file ảnh');
+    if (f.size > 5 * 1024 * 1024) return alert('Ảnh vượt quá 5MB');
 
-    const tempUrl = URL.createObjectURL(f);
-    setDlPreview(tempUrl);
+    const blobUrl = URL.createObjectURL(f);
+    setDlPreview(blobUrl);
 
-    const userId = user?.id || user?.userId || user?.data?.id;
-    if (!userId) {
-      console.error('❌ No userId found');
-      alert('Upload Bằng lái thất bại: Không tìm thấy thông tin người dùng');
-      return;
-    }
+    const uid = getUserId();
+    if (!uid) return alert('Không tìm thấy thông tin người dùng');
 
     try {
-      const res = await photoService.uploadDriverLicense(f, userId);
-      const url =
-        typeof res === 'string'
-          ? res
-          : res?.url ||
-            res?.photoUrl ||
-            res?.location ||
-            res?.imageUrl ||
-            res?.path;
-      if (url) {
-        setDlPreview(url);
-        setDriverLicenseUrl(url);
-        console.log('✅ Upload Bằng lái thành công:', url);
-      } else {
-        throw new Error('Không nhận được URL từ server');
-      }
+      setDlUploading(true);
+      const url = await photoService.uploadDriverLicense(f, uid, { overwrite: true });
+      if (!url) throw new Error('Không nhận được URL trả về');
+
+      setDlPreview(url);
+      setDriverLicenseUrl(url);
+      setDocStatus(s => ({ ...s, hasDriverLicense: true }));
+
+      updateUser({
+        ...user,
+        driverLicenseImageUrl: url,
+        driverLicenseUrl: url,
+        licenseUrl: url,
+        license_url: url,
+      });
+
+      alert('✅ Upload Bằng lái thành công! Ảnh đã được lưu.');
     } catch (err) {
-      console.error('❌ Upload Bằng lái error:', err);
       alert('Upload bằng lái thất bại: ' + (err.message || 'Unknown error'));
+    } finally {
+      setDlUploading(false);
     }
   };
 
-  // Save: chỉ lưu text + URL ảnh đã có
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
+
+    // Chặn lưu khi upload chưa xong
+    if (idUploading || dlUploading) {
+      alert('Vui lòng đợi upload hình hoàn tất rồi mới lưu thay đổi.');
+      return;
+    }
+
     setLoading(true);
     try {
-      const userId = user?.id || user?.userId || user?.data?.id;
-      console.log('🔑 Sending userId:', userId);
-      console.log('👤 Current user:', user);
-      
+      const uid = getUserId();
+      if (!uid) throw new Error('Không xác định được người dùng');
+
       const payload = {
         ...formData,
         idCardUrl: idCardUrl || undefined,
         driverLicenseUrl: driverLicenseUrl || undefined,
       };
-      
-      console.log('💾 Saving profile with payload:', payload);
-      const res = await profileService.update(payload, userId);
-      console.log('✅ Profile saved to database:', res);
-      
-      // ✅ Cập nhật user context ngay lập tức
-      const updatedUserData = {
+
+      await profileService.update(payload, uid);
+
+      // Đồng bộ context để hiển thị ngay
+      updateUser({
+        ...user,
         name: formData.fullName,
         fullName: formData.fullName,
         email: formData.email,
@@ -378,21 +402,14 @@ const ProfilePage = () => {
         driverLicenseImageUrl: driverLicenseUrl,
         driverLicenseUrl: driverLicenseUrl,
         licenseUrl: driverLicenseUrl,
-      };
-      
-      console.log('🔄 Updating user context with:', updatedUserData);
-      updateUser(updatedUserData);
-      console.log('✅ User context updated, changes should appear immediately');
-      
+      });
+
       alert('Profile updated successfully!');
       setIsEditing(false);
-      
-      // ✅ Fetch lại profile từ database để đảm bảo sync (second priority)
-      console.log('🔄 Fetching latest profile from database...');
+
+      // Làm “chắc cú” đồng bộ lại từ DB
       await fetchProfileFromDatabase();
-      
     } catch (err) {
-      console.error('❌ Error updating profile:', err);
       alert('Failed to update profile: ' + (err.message || 'Unknown error'));
     } finally {
       setLoading(false);
@@ -400,7 +417,7 @@ const ProfilePage = () => {
   };
 
   const handleLogout = () => {
-    if (window.confirm('Are you sure you want to logout?')) {
+    if (window.confirm('Bạn chắc chắn muốn đăng xuất?')) {
       logout();
       navigate('/');
     }
@@ -408,6 +425,9 @@ const ProfilePage = () => {
 
   if (!user) return null;
 
+  // =========================
+  // Render
+  // =========================
   return (
     <div className="profile-page">
       <div className="profile-container">
@@ -433,10 +453,10 @@ const ProfilePage = () => {
 
             <div className="profile-actions">
               <button onClick={handleEditToggle} className="btn-edit">
-                {isEditing ? '✕ Cancel' : ' Chỉnh sửa hồ sơ'}
+                {isEditing ? '✕ Hủy' : ' Chỉnh sửa hồ sơ'}
               </button>
               <button onClick={handleLogout} className="btn-logout">
-                  Đăng xuất
+                Đăng xuất
               </button>
             </div>
           </div>
@@ -509,12 +529,16 @@ const ProfilePage = () => {
                 </div>
               </div>
 
-              {/* UPLOAD CHỈ KHI ĐANG EDIT */}
+              {/* Upload CCCD */}
               <div className="form-group">
-                <label>CCCD (ID Card)</label>
-                <input 
-                  type="file" 
-                  accept="image/*" 
+                <label>
+                  CCCD (ID Card){' '}
+                  {docStatus.hasIdCard ? '— ĐÃ TẢI LÊN' : '— CHƯA CÓ'}
+                  {idUploading && ' — ĐANG UPLOAD...'}
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
                   onChange={handlePickId}
                   disabled={!isEditing}
                 />
@@ -530,10 +554,7 @@ const ProfilePage = () => {
                       objectFit: 'cover',
                       border: '1px solid #e5e7eb',
                     }}
-                    onError={(e) => {
-                      console.error(' Failed to load CCCD image:', idPreview);
-                      e.target.style.display = 'none';
-                    }}
+                    onError={(e) => (e.target.style.display = 'none')}
                   />
                 ) : (
                   <div
@@ -554,11 +575,16 @@ const ProfilePage = () => {
                 )}
               </div>
 
+              {/* Upload GPLX */}
               <div className="form-group">
-                <label>Bằng lái (Driver License)</label>
-                <input 
-                  type="file" 
-                  accept="image/*" 
+                <label>
+                  Bằng lái (Driver License){' '}
+                  {docStatus.hasDriverLicense ? '— ĐÃ TẢI LÊN' : '— CHƯA CÓ'}
+                  {dlUploading && ' — ĐANG UPLOAD...'}
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
                   onChange={handlePickDL}
                   disabled={!isEditing}
                 />
@@ -574,10 +600,7 @@ const ProfilePage = () => {
                       objectFit: 'cover',
                       border: '1px solid #e5e7eb',
                     }}
-                    onError={(e) => {
-                      console.error(' Failed to load Driver License image:', dlPreview);
-                      e.target.style.display = 'none';
-                    }}
+                    onError={(e) => (e.target.style.display = 'none')}
                   />
                 ) : (
                   <div
@@ -600,15 +623,23 @@ const ProfilePage = () => {
 
               {isEditing && (
                 <div className="form-actions">
-                  <button type="submit" className="btn-save" disabled={loading}>
-                    {loading ? 'Saving...' : ' Lưu thay đổi'}
+                  <button
+                    type="submit"
+                    className="btn-save"
+                    disabled={loading || idUploading || dlUploading}
+                  >
+                    {loading
+                      ? 'Saving...'
+                      : idUploading || dlUploading
+                      ? 'Đang upload ảnh...'
+                      : ' Lưu thay đổi'}
                   </button>
                 </div>
               )}
             </form>
           </div>
 
-          {/* Extra: link bookings */}
+          {/* Link đặt xe */}
           <div className="profile-stats">
             <div className="stat-card">
               <div className="stat-icon">📋</div>

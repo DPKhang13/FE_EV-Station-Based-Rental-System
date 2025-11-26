@@ -17,7 +17,7 @@ const ChiTietKhachHang = () => {
         const res = await axios.get(`http://localhost:8080/api/auth/getUser/${id}`);
         setUser(res.data);
       } catch (err) {
-        console.error("❌ Lỗi tải thông tin khách hàng:", err);
+        console.error("Lỗi tải thông tin khách hàng:", err);
       } finally {
         setLoading(false);
       }
@@ -27,19 +27,16 @@ const ChiTietKhachHang = () => {
   }, [id]);
 
   if (loading) {
-    return <div className="ct-loading">⏳ Đang tải thông tin khách hàng...</div>;
+    return <div className="ct-loading"> Đang tải thông tin khách hàng...</div>;
   }
 
   if (!user) {
-    return <div className="ct-error">⚠️ Không tìm thấy thông tin khách hàng!</div>;
+    return <div className="ct-error"> Không tìm thấy thông tin khách hàng!</div>;
   }
 
   return (
     <div className="ct-container">
-
-      
-
-      <h1 className="ct-title">Chi tiết khách hàng</h1>
+      <h1 className="ct-title">CHI TIẾT KHÁCH HÀNG</h1>
 
       <div className="ct-card">
 
@@ -65,18 +62,18 @@ const ChiTietKhachHang = () => {
           </span>
         </div>
 
-        {/* 🔥 Nút xem lịch sử thuê (bên trong khung) */}
+        {/*  Nút xem lịch sử thuê (bên trong khung) */}
         <div className="ct-actions">
           <button
             className="btn-history"
             onClick={() => navigate(`/admin/lichsu-thue/${user.userId}`)}
           >
-            📘 Xem lịch sử thuê xe
+             Xem lịch sử thuê xe
           </button>
         </div>
 
       </div>
-      {/* 🔙 Nút quay lại ngoài khung */}
+      {/*  Nút quay lại ngoài khung */}
       <button className="btn-back" onClick={() => navigate(-1)}>
         ⬅ Quay lại
       </button>

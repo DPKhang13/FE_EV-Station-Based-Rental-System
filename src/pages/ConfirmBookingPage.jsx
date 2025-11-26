@@ -2,7 +2,12 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { orderService } from '../services';
+import { pricingRuleService } from '../services/pricingRuleService';
+import photoService from '../services/photoService';
+import { validateVehicleForBooking } from '../utils/vehicleValidator';
 import './ConfirmBookingPage.css';
+
+// Assets
 import car4SeatBlack from '../assets/4seatblack.png';
 import car4SeatBlue from '../assets/4seatblue.png';
 import car4SeatRed from '../assets/4seatred.png';
@@ -14,47 +19,76 @@ const ConfirmBookingPage = () => {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const bookingData = location.state?.bookingData;
-  const [loading, setLoading] = useState(false);
 
-  // --- Chọn ảnh xe theo màu ---
-  const getCarImageByColor = (color, seatCount) => {
-    if (!color || seatCount !== 4) return null;
-    const c = color.toLowerCase();
-    if (c.includes('black') || c.includes('đen')) return car4SeatBlack;
-    if (c.includes('blue') || c.includes('xanh')) return car4SeatBlue;
-    if (c.includes('red') || c.includes('đỏ')) return car4SeatRed;
-    if (c.includes('silver') || c.includes('bạc')) return car4SeatSilver;
-    if (c.includes('white') || c.includes('trắng')) return car4SeatWhite;
-    return null;
-  };
+  const [loading, setLoading] = useState(false);
+  const [pricingRules, setPricingRules] = useState([]);
+
+  // ================================
+  // Load bảng giá
+  // ================================
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await pricingRuleService.getAll();
+        setPricingRules(Array.isArray(res) ? res : res?.data || []);
+      } catch (e) {
+        console.error('❌ Lỗi tải pricing rules:', e);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0 });
     if (!bookingData) {
-      alert('Không tìm thấy dữ liệu đặt xe. Đang chuyển hướng...');
+      alert('Không tìm thấy dữ liệu đặt xe!');
       navigate('/');
     }
   }, [bookingData, navigate]);
 
-  // --- Chuẩn hóa format thời gian ---
- // --- Giữ đúng định dạng "yyyy-MM-dd HH:mm:ss"
-const formatDateTimeForBackend = (dateStr, isStart = true) => {
-  if (!dateStr) return null;
+  // ================================
+  // Helper
+  // ================================
+  const getUserId = () => user?.id || user?.userId || user?.data?.id || null;
 
-  // nếu là ISO string từ DatePicker hoặc toISOString()
-  const date = new Date(dateStr);
+  const formatDateTimeForBackend = (dateStr) => {
+    if (!dateStr) return null;
+    const d = new Date(dateStr);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:00`;
+  };
 
-  // đảm bảo lấy đúng local time, không bị +7 hoặc -7
-  const yyyy = date.getFullYear();
-  const MM = String(date.getMonth() + 1).padStart(2, "0");
-  const dd = String(date.getDate()).padStart(2, "0");
-  const HH = String(date.getHours()).padStart(2, "0");
-  const mm = String(date.getMinutes()).padStart(2, "0");
-  const ss = "00";
+  const normalizePhotoArray = (raw) => {
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw;
+    if (raw.data && Array.isArray(raw.data)) return raw.data;
+    if (typeof raw === 'object') return Object.values(raw).filter(v => v && typeof v === 'object');
+    return [];
+  };
 
-  return `${yyyy}-${MM}-${dd} ${HH}:${mm}:${ss}`;
-};
+  // ================================
+  // Kiểm tra ảnh giấy tờ
+  // ================================
+  const checkUserPhotos = async (userId) => {
+    try {
+      const res = await photoService.getPhotos(userId);
+      const photos = normalizePhotoArray(res).map(p => ({
+        type: (p.type || '').toUpperCase(),
+        url: p.photo_url || p.photoUrl || p.url || p.imageUrl || null,
+      }));
 
+      const hasCCCD = photos.some(p => ['CCCD', 'ID_CARD', 'IDCARD'].includes(p.type) && p.url);
+      const hasGPLX = photos.some(p => ['GPLX', 'DRIVER_LICENSE', 'LICENSE'].includes(p.type) && p.url);
+
+      console.log('📸 [Check Photos] Found:', { photos, hasCCCD, hasGPLX });
+      return { hasCCCD, hasGPLX };
+    } catch (err) {
+      console.error('❌ [Check Photos] Error:', err);
+      return { hasCCCD: false, hasGPLX: false };
+    }
+  };
+
+  // ================================
+  // Xử lý đặt xe
+  // ================================
   const handleConfirmBooking = async () => {
     setLoading(true);
     try {
@@ -64,71 +98,120 @@ const formatDateTimeForBackend = (dateStr, isStart = true) => {
         return;
       }
 
-      // ✅ Lấy vehicleId chuẩn từ dữ liệu (dù backend trả id hay vehicleId)
-      const vehicleId = Number(
-        bookingData.orderData.vehicleId ??
-        bookingData.car?.vehicleId ??
-        bookingData.car?.id ??
-        bookingData.car?.vehicle_id
-      );
+      const userId = getUserId();
+      if (!userId) throw new Error('Không tìm thấy thông tin người dùng.');
 
-      const startDateRaw = bookingData.startTime || bookingData.orderData.startTime;
-      const endDateRaw = bookingData.endTime || bookingData.orderData.endTime;
+      // ✅ Kiểm tra ảnh
+      const { hasCCCD, hasGPLX } = await checkUserPhotos(userId);
 
-      const startTimeFormatted = formatDateTimeForBackend(startDateRaw, true);
-      const endTimeFormatted = formatDateTimeForBackend(endDateRaw, false);
+      let finalHasCCCD = hasCCCD;
+      let finalHasGPLX = hasGPLX;
 
-      if (!vehicleId || isNaN(vehicleId)) throw new Error('Mã xe không hợp lệ');
-      if (!startTimeFormatted) throw new Error('Ngày nhận xe không được để trống');
-      if (!endTimeFormatted) throw new Error('Ngày trả xe không được để trống');
-
-      // --- Payload gửi backend ---
-      const cleanedOrderData = {
-        vehicleId,
-        startTime: startTimeFormatted,
-        endTime: endTimeFormatted,
-        holiday: false,
-      };
-
-      if (bookingData.orderData.couponCode?.trim()) {
-        cleanedOrderData.couponCode = bookingData.orderData.couponCode.trim();
+      // fallback kiểm tra context
+      if (!finalHasCCCD) {
+        const cccd = user?.cccdImageUrl || user?.idCardUrl || user?.cccdUrl;
+        if (cccd) finalHasCCCD = true;
+      }
+      if (!finalHasGPLX) {
+        const gplx = user?.driverLicenseImageUrl || user?.driverLicenseUrl || user?.licenseUrl;
+        if (gplx) finalHasGPLX = true;
       }
 
-      console.log('📦 Payload gửi backend:', cleanedOrderData);
+      if (!finalHasCCCD || !finalHasGPLX) {
+        const missing = [];
+        if (!finalHasCCCD) missing.push('CCCD/CMND');
+        if (!finalHasGPLX) missing.push('Bằng lái xe');
+        const msg = `Bạn chưa upload ${missing.join(' và ')}.\n\nVui lòng upload ảnh trong trang cá nhân trước khi đặt xe.\n\nBạn có muốn chuyển đến trang cá nhân để upload ảnh không?`;
+        if (window.confirm(msg)) navigate('/profile');
+        setLoading(false);
+        return;
+      }
 
-      const response = await orderService.create(cleanedOrderData);
+      // ================================
+      // Chuẩn bị dữ liệu
+      // ================================
+      const vehicleId = Number(bookingData.orderData?.vehicleId ?? bookingData.car?.vehicleId);
+      if (!vehicleId) throw new Error('Không xác định được vehicleId.');
 
-      alert(
-        `🎉 Đặt xe thành công!\n\n` +
-          `Mã đơn hàng: ${response.orderId || 'N/A'}\n` +
-          `Mã xe: ${response.vehicleId || vehicleId}\n` +
-          `Trạng thái: ${response.status || 'CHỜ XỬ LÝ'}\n` +
-          `Tổng giá: ${
-            response.totalPrice
-              ? response.totalPrice.toLocaleString() + ' VND'
-              : 'Đang tính toán'
-          }\n\n` +
-          `Bạn có thể xem và quản lý đơn đặt xe trong trang "Đơn Đặt Xe".`
-      );
+      const startTime = formatDateTimeForBackend(bookingData.startTime);
+      const endTime = formatDateTimeForBackend(bookingData.endTime);
+      if (!startTime || !endTime) throw new Error('Thời gian gửi backend không hợp lệ.');
 
+      const validation = validateVehicleForBooking(bookingData.car);
+      if (!validation.valid) {
+        alert(validation.errors.join('\n'));
+        return;
+      }
+
+      const payload = {
+        vehicleId,
+        startTime,
+        endTime,
+        holiday: false,
+        ...(bookingData.orderData?.couponCode?.trim()
+          ? { couponCode: bookingData.orderData.couponCode.trim() }
+          : {}),
+      };
+
+      console.log('🚀 Gửi booking payload:', payload);
+      await orderService.create(payload);
+
+      alert('🎉 Đặt xe thành công!');
       navigate('/my-bookings');
-    } catch (error) {
-      console.error('❌ Lỗi khi tạo đơn:', error);
-      alert(error.message || 'Không thể tạo đơn đặt xe. Vui lòng thử lại.');
+    } catch (err) {
+      alert(err.message || 'Đặt xe thất bại.');
+      console.error('❌ Booking error:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  if (!bookingData) {
-    return (
-      <div style={{ padding: '100px 20px', textAlign: 'center' }}>
-        <p>Đang tải...</p>
-      </div>
-    );
-  }
+  // ================================
+  // Tính giá & hiển thị
+  // ================================
+  const car = bookingData?.car;
+  const getCarImageByColor = (color) => {
+    if (!color) return car4SeatSilver;
+    const c = color.toLowerCase();
+    if (c.includes('đen') || c.includes('black')) return car4SeatBlack;
+    if (c.includes('xanh') || c.includes('blue')) return car4SeatBlue;
+    if (c.includes('đỏ') || c.includes('red')) return car4SeatRed;
+    if (c.includes('trắng') || c.includes('white')) return car4SeatWhite;
+    return car4SeatSilver;
+  };
 
-  const { car, orderData } = bookingData;
+  const isWeekend = (date) => [0, 6].includes(date.getDay());
+
+  const calculateRentalPrice = (car, start, end) => {
+    if (!car || !pricingRules.length) return { total: 0, days: 0, daily: 0 };
+    let rule =
+      pricingRules.find((r) => Number(r.pricingRuleId) === Number(car.pricingRuleId)) ||
+      pricingRules.find((r) => (r.carmodel || '').toUpperCase() === (car.carmodel || car.carModel || '').toUpperCase());
+    if (!rule) return { total: 0, days: 0, daily: 0 };
+
+    const s = new Date(start);
+    const e = new Date(end);
+    let days = 0,
+      total = 0;
+    for (let d = new Date(s); d < e; d.setDate(d.getDate() + 1)) {
+      days++;
+      total += isWeekend(d) && rule.holidayPrice ? rule.holidayPrice : rule.dailyPrice;
+    }
+    return { total, days, daily: rule.dailyPrice, weekend: rule.holidayPrice };
+  };
+
+  const priceInfo = calculateRentalPrice(car, bookingData.startTime, bookingData.endTime);
+  const coupon = bookingData.orderData?.couponCode?.trim();
+  const discount = coupon === 'EV20' ? 20 : coupon === 'EV10' ? 10 : 0;
+  const finalTotal = discount ? priceInfo.total * (1 - discount / 100) : priceInfo.total;
+
+  // ================================
+  // Render
+  // ================================
+  if (!bookingData) return null;
+
+  const formatCurrency = (v) =>
+    v.toLocaleString('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 });
 
   return (
     <div className="confirm-booking-page">
@@ -137,84 +220,44 @@ const formatDateTimeForBackend = (dateStr, isStart = true) => {
         <p className="confirm-subtitle">Kiểm tra thông tin trước khi xác nhận</p>
 
         <div className="confirm-content">
-          {/* Thông tin xe */}
-          <div className="confirm-section car-details">
+          {/* THÔNG TIN XE */}
+          <div className="confirm-section">
             <h2>Thông Tin Xe</h2>
             <div className="car-info-grid">
-              <img
-                src={getCarImageByColor(car.color, car.seat_count) || car.image}
-                alt={car.vehicle_name}
-                className="car-image"
-              />
-              <div className="car-info">
-                <h3>{car.vehicle_name}</h3>
-                <div className="info-row"><span className="label">Hãng:</span><span className="value">{car.brand}</span></div>
-                <div className="info-row"><span className="label">Loại:</span><span className="value">{car.type}</span></div>
-                {car.grade && <div className="info-row"><span className="label">Hạng:</span><span className="value">{car.grade}</span></div>}
-                <div className="info-row"><span className="label">Màu:</span><span className="value">{car.color}</span></div>
-                <div className="info-row"><span className="label">Biển số:</span><span className="value">{car.plate_number}</span></div>
-                <div className="info-row"><span className="label">Số chỗ:</span><span className="value">{car.seat_count} chỗ</span></div>
-                <div className="info-row"><span className="label">Pin:</span><span className="value">{car.battery_status} ({car.battery_capacity})</span></div>
-                <div className="info-row"><span className="label">Quãng đường:</span><span className="value">{car.range_km} km</span></div>
+              <img src={getCarImageByColor(car.color)} alt="Xe" className="car-image" />
+              <div className="vehicle-info-box">
+                <h3>{car.vehicle_name || car.vehicleName}</h3>
+                <p>Biển số: {car.plateNumber || 'N/A'}</p>
+                <p>Số chỗ: {car.seatCount || 4}</p>
+                <p>Model: {car.carmodel || car.carModel}</p>
+                <p>Màu: {car.color}</p>
+                <p>Trạm: {car.stationName || 'N/A'}</p>
               </div>
             </div>
           </div>
 
-          {/* Chi tiết đặt xe */}
-          <div className="confirm-section booking-details">
-            <h2>Chi Tiết Đặt Xe</h2>
-            <div className="details-grid">
-              <div className="detail-item">
-                <span className="label">Ngày & Giờ Nhận Xe:</span>
-                <span className="value highlight">{bookingData.startTime || 'N/A'}</span>
-              </div>
-              <div className="detail-item">
-                <span className="label">Ngày & Giờ Trả Xe:</span>
-                <span className="value highlight">{bookingData.endTime || 'N/A'}</span>
-              </div>
-              {orderData.couponCode && (
-                <div className="detail-item">
-                  <span className="label">Mã Giảm Giá:</span>
-                  <span className="value coupon">{orderData.couponCode}</span>
-                </div>
-              )}
-            </div>
+          {/* THÔNG TIN KHÁCH */}
+          <div className="confirm-section">
+            <h2>Thông Tin Đặt Xe</h2>
+            <p>Tên: {user?.fullName || user?.name}</p>
+            <p>Điện thoại: {user?.phoneNumber || user?.phone}</p>
+            <p>Email: {user?.email}</p>
+            <p>Ngày nhận: {new Date(bookingData.startTime).toLocaleString('vi-VN')}</p>
+            <p>Ngày trả: {new Date(bookingData.endTime).toLocaleString('vi-VN')}</p>
+            {coupon && <p>Mã giảm giá: <b>{coupon}</b></p>}
+            <p>
+              Tổng tiền:{' '}
+              <b style={{ color: '#059669' }}>
+                {formatCurrency(finalTotal)}{' '}
+                {discount > 0 && <span style={{ textDecoration: 'line-through', color: '#999' }}>{formatCurrency(priceInfo.total)}</span>}
+              </b>
+            </p>
           </div>
 
-          {/* Thông tin khách hàng */}
-          <div className="confirm-section customer-info">
-            <h2>Thông Tin Khách Hàng</h2>
-            <div className="details-grid">
-              <div className="detail-item">
-                <span className="label">Tên Khách Hàng:</span>
-                <span className="value">
-                  {bookingData.customerName || user?.fullName || user?.username || 'N/A'}
-                </span>
-              </div>
-              <div className="detail-item">
-                <span className="label">Số Điện Thoại:</span>
-                <span className="value">
-                  {bookingData.customerPhone || user?.phoneNumber || user?.phone || 'N/A'}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Tóm tắt */}
-          <div className="confirm-section summary">
-            <h2>Tóm Tắt Đặt Xe</h2>
-            <div className="summary-item">
-              <span className="label">Trạng Thái:</span>
-              <span className="value status-pending">CHỜ XỬ LÝ</span>
-            </div>
-          </div>
-
+          {/* Nút hành động */}
           <div className="confirm-actions">
-            <button onClick={() => navigate(-1)} className="btn-back" disabled={loading}>
-              Quay Lại
-            </button>
-            <button onClick={handleConfirmBooking} className="btn-confirm" disabled={loading}>
-              {loading ? 'Đang xử lý...' : 'Xác Nhận Đặt Xe'}
+            <button className="btn-confirm" onClick={handleConfirmBooking} disabled={loading}>
+              {loading ? 'Đang xử lý...' : 'Xác nhận đặt xe'}
             </button>
           </div>
         </div>

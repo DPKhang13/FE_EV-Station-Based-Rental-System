@@ -42,6 +42,7 @@ const QuanLyXePage = () => {
       id: v.id,
       ten: v.vehicle_name || v.name,
       bienSo: v.plate_number,
+      carmodel: v.carmodel || v.carModel || v.car_model || "N/A", // ✅ Thêm carmodel
       pin: v.battery_status
         ? parseInt(v.battery_status.replace("%", ""))
         : 100,
@@ -253,6 +254,7 @@ const QuanLyXePage = () => {
               />
               <h3>{xe.ten}</h3>
               <p>Biển số: {xe.bienSo}</p>
+              <p>Loại xe: {xe.carmodel || xe.carModel || "N/A"}</p>
               <p>Pin: {xe.pin}%</p>
               <p>Hãng: {xe.hang}</p>
               <p className="status">{xe.trangThai}</p>
@@ -288,6 +290,15 @@ const QuanLyXePage = () => {
                   </>
                 )}
               </div>
+              <button
+                className="btn-view-detail"
+                onClick={() => {
+                  // TODO: Thêm logic xem chi tiết xe
+                  console.log("Xem chi tiết xe:", xe);
+                }}
+              >
+                Xem chi tiết
+              </button>
             </div>
           ))}
         </div>

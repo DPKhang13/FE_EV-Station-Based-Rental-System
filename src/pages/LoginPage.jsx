@@ -9,7 +9,7 @@ import logo from "../assets/logo2.png";
 const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 export default function LoginPage() {
-  const { login } = useContext(AuthContext);
+  const { login,logout} = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
@@ -39,25 +39,34 @@ export default function LoginPage() {
 
       // ✅ Navigate by role
       const role = data.role?.toLowerCase();
+      const status=data.status?.toLowerCase();
+      if(status==="inactive"){
+        logout();
+        return setMsg("Bạn không được cấp phép truy cập. Vui lòng liên hệ quản trị viên.");
+      }
       navigate(role === "customer" ? "/" : `/${role}`);
-    } catch (err) {
-      const s = err.response?.status;
-let errorMsg = "Đăng nhập thất bại.";
+   } catch (err) {
+  const s = err.response?.status;
+  const backendMsg = err.response?.data?.message || "";
+  const backendStatus = err.response?.data?.status?.toLowerCase?.();
+  let errorMsg = "Đăng nhập thất bại";
 
-if (s === 400) errorMsg = "Sai email hoặc mật khẩu.";
-else if (s === 401) errorMsg = "Phiên đăng nhập không hợp lệ.";
-else if (s === 404) {
-  // lấy message trong response.data nếu có
-  const backendMsg = err.response?.data?.message;
-  errorMsg = backendMsg || "Không tìm thấy người dùng.";
-} 
-else if (s === 423) errorMsg = "Tài khoản bị khoá tạm thời.";
-else if (s === 429) errorMsg = "Thử quá nhiều lần. Thử lại sau.";
-else if (err.code === "ERR_NETWORK") errorMsg = "Không thể kết nối server.";
+  if (backendStatus === "inactive" || backendMsg.toLowerCase().includes("inactive")) {
+    errorMsg = "Bạn không được cấp phép truy cập. Vui lòng liên hệ quản trị viên.";
+    logout();
+  } 
+  else if (s === 400 || s === 401) errorMsg = "Sai email hoặc mật khẩu.";
+  else if (s === 403) errorMsg = "Tài khoản không có quyền đăng nhập.";
+  else if (s === 404) errorMsg = backendMsg || "Không tìm thấy người dùng.";
+  else if (s === 423) errorMsg = "Tài khoản bị khoá tạm thời.";
+  else if (s === 429) errorMsg = "Thử quá nhiều lần. Thử lại sau.";
+  else if (err.code === "ERR_NETWORK") errorMsg = "Không thể kết nối server.";
+  else if (s === 500 && backendMsg.toLowerCase().includes("unexpected")) {
+    errorMsg = "Bạn không được cấp phép truy cập. Vui lòng liên hệ quản trị viên.";
+  }
 
-setMsg(errorMsg);
-
-    } finally {
+  setMsg(errorMsg);
+} finally {
       setLoading(false);
     }
   };
@@ -97,7 +106,10 @@ setMsg(errorMsg);
         <button
           type="button"
           className="home-button"
-          onClick={() => navigate("/")}
+          onClick={() => {
+            // Force reload để tránh routing issue
+            window.location.href = "/";
+          }}
         >
           ← Quay lại Trang chủ
         </button>

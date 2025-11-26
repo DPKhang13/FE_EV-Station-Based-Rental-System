@@ -29,17 +29,24 @@ export const validateVehicleForBooking = (vehicle) => {
 
     // ⚠️ IMPORTANT: pricingRuleId can be null in frontend
     // Backend will calculate price based on seatCount + variant
-    // So we only warn, not block
-    if (!vehicle.pricingRuleId && vehicle.pricingRuleId !== 0) {
-        console.warn('⚠️ Vehicle has no pricingRuleId, backend will calculate price');
-        // Don't add to errors - let backend handle it
-    }
+    // Không cần warning vì backend sẽ tự xử lý
+    // if (!vehicle.pricingRuleId && vehicle.pricingRuleId !== 0) {
+    //     // Backend sẽ tự tính giá
+    // }
 
-    // Check vehicle status
-    const status = vehicle.status?.toUpperCase();
-    if (status !== 'AVAILABLE') {
-        errors.push(`Xe không sẵn sàng (status: ${vehicle.status})`);
-    }
+    // ✅ Kiểm tra vehicle có VehicleModel không (backend cần để tìm PricingRule)
+    // Backend sẽ tự tìm model hoặc throw exception nếu không tìm thấy
+    // Không cần warning ở frontend vì backend sẽ xử lý
+    // if (!vehicle.vehicleModelId && !vehicle.modelId && !vehicle.carModelId) {
+    //     // Backend sẽ tự xử lý
+    // }
+
+    // ✅ KHÔNG KIỂM TRA STATUS - Cho phép đặt xe dù đang RENTAL/BOOKED/CHECKING
+    // Backend sẽ kiểm tra overlap timeline thay vì status
+    // const status = vehicle.status?.toUpperCase();
+    // if (status !== 'AVAILABLE') {
+    //     errors.push(`Xe không sẵn sàng (status: ${vehicle.status})`);
+    // }
 
     // Check vehicle has station
     const stationId = vehicle.stationId || vehicle.station_id || vehicle.station;

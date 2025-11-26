@@ -15,13 +15,25 @@ export const authService = {
 
         console.log('📥 API Login Response:', response);
 
-        // ✅ Lưu token vào localStorage VÀ Cookie
-      if (response.accessToken || response.jwtToken || response.token) {
-  const token = response.accessToken || response.jwtToken || response.token;
-  setAuthToken(token); // ✅ token giờ chắc chắn có
-} else {
-  console.error("❌ Không tìm thấy accessToken trong phản hồi:", response);
-}
+        // ✅ Lưu accessToken và refreshToken vào localStorage VÀ Cookie
+        if (response.accessToken || response.jwtToken || response.token) {
+            const token = response.accessToken || response.jwtToken || response.token;
+            setAuthToken(token); // ✅ Lưu accessToken vào localStorage và cookie
+            
+            // ✅ Lưu refreshToken nếu có
+            if (response.refreshToken || response.refresh_token) {
+                const refreshToken = response.refreshToken || response.refresh_token;
+                localStorage.setItem('refreshToken', refreshToken);
+                // Set refreshToken cookie (thời gian dài hơn, ví dụ 7 ngày)
+                const expiryDate = new Date();
+                expiryDate.setTime(expiryDate.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 ngày
+                const isLocal = window.location.hostname === "localhost";
+                document.cookie = `RefreshToken=${refreshToken}; path=/; expires=${expiryDate.toUTCString()}; SameSite=Lax${isLocal ? "" : "; Secure"}`;
+                console.log('✅ RefreshToken saved to localStorage and cookie');
+            }
+        } else {
+            console.error("❌ Không tìm thấy accessToken trong phản hồi:", response);
+        }
 
 
         // Normalize response format for AuthContext
