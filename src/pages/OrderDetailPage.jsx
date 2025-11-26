@@ -391,19 +391,11 @@ export default function OrderDetailPage() {
 
     try {
       setHandoverLoading(true);
-      const vehicleId = orderDetails?.[0]?.vehicleId;
+      
+      // ⭐ Gọi API cancel như trong ảnh: PUT /api/order/cancel/{orderId}
+      await orderService.cancel(orderId, "Hủy bàn giao");
 
-      await orderService.update(orderId, {
-        status: "CANCELLED",
-        vehicleId,
-        couponCode: ""
-      });
-      await vehicleService.updateVehicleStatus(vehicleId, {
-        status: "AVAILABLE",
-        batteryStatus: vehicle?.batteryStatus
-      });
-
-      showToast("success", " Đã hủy bàn giao / hủy đơn!");
+      showToast("success", "✅ Đã hủy bàn giao và hủy đơn!");
       await refetchDetails();
     } catch (err) {
       console.error(err);
