@@ -68,12 +68,15 @@ export default function OrderDetailPage() {
     return String(err);
   };
 
-  // Fetch order status để kiểm tra đơn đã hoàn thành chưa
+  // Fetch order status để kiểm tra đơn đã hoàn thành chưa - Lấy từ order chính, không phải detail
   const fetchOrderStatus = useCallback(async () => {
     try {
-      const preview = await orderService.getReturnPreview(orderId);
-      const status = String(preview?.status || "").toUpperCase();
-      setOrderStatus(status); // Lưu order status vào state
+      // Lấy tất cả orders và tìm order theo orderId
+      const allOrders = await orderService.getAll();
+      const ordersData = Array.isArray(allOrders) ? allOrders : (allOrders?.data || []);
+      const order = ordersData.find(o => String(o.orderId || o.order_id) === String(orderId));
+      const status = String(order?.status || "").toUpperCase();
+      setOrderStatus(status);
     } catch (err) {
       setOrderStatus("");
     }
@@ -219,17 +222,24 @@ export default function OrderDetailPage() {
 
     try {
       setHandoverLoading(true);
-      const res = await fetch(
-        `http://localhost:8080/api/order/${orderId}/preview-return`
-      );
-      const data = await res.json();
 
-      setReturnPreview(data);
+      const firstDetail = orderDetails[0];
+      if (!firstDetail) {
+        showToast("error", "Không tìm thấy thông tin chi tiết đơn hàng để trả xe.");
+        return;
+      }
+
+      setReturnPreview({
+        stationName: firstDetail.stationName || firstDetail.returnStationName || firstDetail.station_name || "N/A",
+        startTime: firstDetail.startTime || firstDetail.start_time,
+        endTime: firstDetail.endTime || firstDetail.end_time
+      });
+
       setReturnTime(""); // Reset returnTime khi mở modal
       setShowReturnModal(true);
     } catch (err) {
       console.error(err);
-      showToast("error", "Không thể load thông tin trả xe!");
+      showToast("error", "Không thể chuẩn bị thông tin trả xe!");
     } finally {
       setHandoverLoading(false);
     }
@@ -387,6 +397,10 @@ export default function OrderDetailPage() {
         status: "CANCELLED",
         vehicleId,
         couponCode: ""
+      });
+      await vehicleService.updateVehicleStatus(vehicleId, {
+        status: "AVAILABLE",
+        batteryStatus: vehicle?.batteryStatus
       });
 
       showToast("success", " Đã hủy bàn giao / hủy đơn!");
@@ -749,7 +763,10 @@ export default function OrderDetailPage() {
     return (type === "SERVICE" || type === "SERVICE_SERVICE") && status === "PENDING";
   });
 
-  const isOrderCompleted = String(orderStatus || "").toUpperCase() === "COMPLETED";
+  const orderStatusUpperGlobal = String(orderStatus || "").toUpperCase();
+  const isOrderCompleted = orderStatusUpperGlobal === "COMPLETED";
+  const isOrderCancelled = orderStatusUpperGlobal === "CANCELLED";
+  const isOrderServiceDisabled = isOrderCompleted || isOrderCancelled;
 
   if (loading)
     return (
@@ -950,13 +967,13 @@ export default function OrderDetailPage() {
           <button 
             className="btn btn-add-service" 
             onClick={() => {
-              if (isOrderCompleted) return;
+              if (isOrderServiceDisabled) return;
               setService({ serviceType: "", cost: 0, description: "" });
               setSelectedServiceList([]);
               setShowServiceModal(true);
             }}
-            disabled={isOrderCompleted}
-            title={isOrderCompleted ? "Đơn hàng đã hoàn tất, không thể thêm dịch vụ." : undefined}
+            disabled={isOrderServiceDisabled}
+            title={isOrderServiceDisabled ? "Đơn hàng đã hoàn tất hoặc đã hủy, không thể thêm dịch vụ." : undefined}
           >
             ➕ Thêm dịch vụ
           </button>
@@ -1337,10 +1354,20 @@ if (hasPendingServiceDetail) {
 }
 
             // ⭐⭐ KIỂM TRA ĐẦU TIÊN: Nếu đơn đã hoàn thành (COMPLETED) → hiển thị thông báo ⭐⭐
-            const isCompleted = orderStatus === "COMPLETED";
-            const isAwaiting = orderStatus === "AWAITING";
-            const isPaid = orderStatus === "PAID"; // Status mới: đã thanh toán hết dịch vụ
-            const isPendingFinalPayment = orderStatus === "PENDING_FINAL_PAYMENT";
+            const orderStatusUpper = String(orderStatus || "").toUpperCase();
+            const isCompleted = orderStatusUpper === "COMPLETED";
+            const isAwaiting = orderStatusUpper === "AWAITING";
+            const isPaid = orderStatusUpper === "PAID"; // Status mới: đã thanh toán hết dịch vụ
+            const isPendingFinalPayment = orderStatusUpper === "PENDING_FINAL_PAYMENT";
+
+            // Nếu đơn đã hủy → chỉ hiển thị banner thông báo cho staff
+            if (orderStatusUpper === "CANCELLED") {
+              return (
+                <div className="handover-warning">
+                  ⚠️ Đơn hàng đã bị hủy. Quản trị viên sẽ kiểm tra và hoàn tiền lại cho khách hàng sau.
+                </div>
+              );
+            }
             // ⭐⭐ NEW: Nếu chỉ có đặt cọc thành công → KHÔNG render nút, chỉ báo chờ thanh toán ⭐⭐
 if (depositedOK && !pickupOK && !fullOK) {
   return (
@@ -1362,7 +1389,6 @@ if (depositedOK && !pickupOK && !fullOK) {
             // ⭐⭐ KIỂM TRA PAID TRƯỚC → Hiển thị nút "Xác nhận hoàn tất đơn hàng" ⭐⭐
             // PAID: đã thanh toán hết dịch vụ → hiển thị nút hoàn tất
             // AWAITING: đã thanh toán đặt cọc, chờ nhận xe → hiển thị nút bàn giao (không phải hoàn tất)
-            const orderStatusUpper = String(orderStatus || "").toUpperCase();
             const completionEligibleStatuses = ["PAID", "CHECKING", "PENDING_FINAL_PAYMENT"];
             const isReadyForCompletion =
               completionEligibleStatuses.includes(orderStatusUpper) &&

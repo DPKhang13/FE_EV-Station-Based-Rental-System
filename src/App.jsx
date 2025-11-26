@@ -48,6 +48,7 @@ import ChiTietKhachHang from './pages/ChiTietKhachHang.jsx';
 import LichSuThue from './pages/LichSuThue.jsx';
 import ChiTietDonTrongAdmin from './pages/ChiTietDonTrongAdmin.jsx';
 import VehicleHistoryPage from './pages/VehicleHistoryPage.jsx';
+import AdminQuanLyDonHangPage from './pages/AdminQuanLyDonHangPage.jsx';
 import IncidentReportPage from './components/admin/IncidentReportPage.jsx';
 
 const HomePage = () => (
@@ -204,6 +205,7 @@ function App() {
               <Route path="banggia" element={<AdminBangGiaPage/>}/>
               <Route path="vehicle-history/:vehicleId" element={<VehicleHistoryPage/>}/>
               <Route path="incident-reports" element={<IncidentReportPage/>}/>
+              <Route path="quanlydonhang" element={<AdminQuanLyDonHangPage/>}/>
             </Route>
           </Routes >
         </LayoutWrapper >

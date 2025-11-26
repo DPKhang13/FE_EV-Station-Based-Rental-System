@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { FaChartPie, FaUsers, FaSignOutAlt, FaCar, FaMapMarkerAlt, FaUserTie, FaClipboardList, FaExclamationTriangle } from "react-icons/fa";
+import { FaChartPie, FaUsers, FaSignOutAlt, FaCar, FaMapMarkerAlt, FaUserTie, FaClipboardList, FaExclamationTriangle, FaShoppingCart } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
 import React, { useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
@@ -46,6 +46,13 @@ export default function SideBarAdmin() {
           <NavLink to="/admin/customers" className="sidebar__btn">
             <FaUsers />
             <span>Danh sách khách hàng</span>
+          </NavLink>
+
+          {/* --- Nhóm f. Quản lý đơn hàng --- */}
+          <p className="sidebar__section-title"> Quản lý đơn hàng</p>
+          <NavLink to="/admin/quanlydonhang" className="sidebar__btn">
+            <FaShoppingCart />
+            <span>Quản lý đơn hàng</span>
           </NavLink>
 
 
