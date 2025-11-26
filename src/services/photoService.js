@@ -1,5 +1,5 @@
 // src/services/photoService.js
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api').replace(/\/+$/, '');
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'https://be-ev-station-based-rental-system.onrender.com/api').replace(/\/+$/, '');
 
 const joinUrl = (base, path) => `${base}/${String(path).replace(/^\/+/, '')}`;
 

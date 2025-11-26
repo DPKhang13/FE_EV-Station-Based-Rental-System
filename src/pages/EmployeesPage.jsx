@@ -115,7 +115,7 @@ const [deleteEmail, setDeleteEmail] = useState("");
     }
 
     try {
-      await fetch(`http://localhost:8080/api/staffschedule/staff/${staff.staffId}/toggle`, {
+      await fetch(`https://be-ev-station-based-rental-system.onrender.com/api/staffschedule/staff/${staff.staffId}/toggle`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
       });
@@ -140,7 +140,7 @@ const [deleteEmail, setDeleteEmail] = useState("");
 
   try {
     const res = await fetch(
-      `http://localhost:8080/api/staffschedule/deleteUser/by-email?email=${deleteEmail}`,
+      `https://be-ev-station-based-rental-system.onrender.com/api/staffschedule/deleteUser/by-email?email=${deleteEmail}`,
       {
         method: "DELETE",
       }
@@ -199,7 +199,7 @@ const [deleteEmail, setDeleteEmail] = useState("");
 
     try {
       const res = await fetch(
-        `http://localhost:8080/api/staffschedule/staff/update/${updateStaff.email}`,
+        `https://be-ev-station-based-rental-system.onrender.com/api/staffschedule/staff/update/${updateStaff.email}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },

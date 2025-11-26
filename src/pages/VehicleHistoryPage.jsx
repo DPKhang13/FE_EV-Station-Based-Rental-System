@@ -19,7 +19,7 @@ const VehicleHistoryPage = () => {
 
         // Lấy lịch sử giao dịch
         const res = await axios.get(
-          `http://localhost:8080/api/order/vehicle/${vehicleId}/compact`,
+          `https://be-ev-station-based-rental-system.onrender.com/api/order/vehicle/${vehicleId}/compact`,
           { headers: token ? { Authorization: `Bearer ${token}` } : {} }
         );
 

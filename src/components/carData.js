@@ -4,7 +4,7 @@
  * Không còn fallback data nào cả!
  * App bắt buộc phải kết nối backend API để lấy dữ liệu xe.
  * 
- * Backend: http://localhost:8080/api/vehicles/get
+ * Backend: https://be-ev-station-based-rental-system.onrender.com/api/vehicles/get
  * Hiện tại có 120+ xe trong database
  */
 

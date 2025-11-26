@@ -15,7 +15,7 @@ const LichSuThue = () => {
     const fetchHistory = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:8080/api/order/customer/${userId}/history`
+          `https://be-ev-station-based-rental-system.onrender.com/api/order/customer/${userId}/history`
         );
         setOrders(res.data || []);
       } catch (err) {

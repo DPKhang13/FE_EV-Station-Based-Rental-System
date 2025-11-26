@@ -147,7 +147,7 @@ export default function OrderDetailPage() {
   // Fetch danh sách dịch vụ từ price-list API (không cần lưu vào state, fetch lại mỗi lần cần)
   const fetchPriceList = useCallback(async () => {
     try {
-      const res = await fetch("http://localhost:8080/api/order-services/price-list");
+      const res = await fetch("https://be-ev-station-based-rental-system.onrender.com/api/order-services/price-list");
       const data = await res.json();
       const priceListData = Array.isArray(data) ? data : (data.data || []);
       // Không cần setPriceList vì fetchServiceListByType sẽ fetch lại khi cần
@@ -165,7 +165,7 @@ export default function OrderDetailPage() {
     
     try {
       setLoadingServiceList(true);
-      const res = await fetch("http://localhost:8080/api/order-services/price-list");
+      const res = await fetch("https://be-ev-station-based-rental-system.onrender.com/api/order-services/price-list");
       const data = await res.json();
       const priceListData = Array.isArray(data) ? data : (data.data || []);
       // Lọc danh sách theo serviceType
@@ -183,7 +183,7 @@ export default function OrderDetailPage() {
 
   const refetchDetails = useCallback(async () => {
     const res = await fetch(
-      `http://localhost:8080/api/order-details/order/${orderId}`
+      `https://be-ev-station-based-rental-system.onrender.com/api/order-details/order/${orderId}`
     );
     const details = await res.json();
     const detailsArray = Array.isArray(details) ? details : (details?.data || []);
@@ -329,7 +329,7 @@ export default function OrderDetailPage() {
 
     try {
       setReturnLoading(true);
-      await fetch(`http://localhost:8080/api/order/${orderId}/return`, {
+      await fetch(`https://be-ev-station-based-rental-system.onrender.com/api/order/${orderId}/return`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ actualReturnTime: time })
@@ -366,7 +366,7 @@ export default function OrderDetailPage() {
         description: service.description.trim()
       };
 
-      const response = await fetch("http://localhost:8080/api/order-services", {
+      const response = await fetch("https://be-ev-station-based-rental-system.onrender.com/api/order-services", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -623,7 +623,7 @@ export default function OrderDetailPage() {
         // ✅ Gọi các API song song để tăng tốc độ load (trừ fetchPriceList vì nó chỉ set state)
         const [resCus, resDetails] = await Promise.all([
           authService.getAllCustomer(),
-          fetch(`http://localhost:8080/api/order-details/order/${orderId}`).then(r => r.json())
+          fetch(`https://be-ev-station-based-rental-system.onrender.com/api/order-details/order/${orderId}`).then(r => r.json())
         ]);
         
         // Gọi các API khác song song

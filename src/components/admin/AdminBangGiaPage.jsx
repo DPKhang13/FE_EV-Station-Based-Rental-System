@@ -25,7 +25,7 @@ const AdminBangGiaPage = () => {
     const fetchPricing = async () => {
       try {
         // TODO: Thay bằng API thực tế khi có
-        // const res = await axios.get("http://localhost:8080/api/pricing-rules");
+        // const res = await axios.get("https://be-ev-station-based-rental-system.onrender.com/api/pricing-rules");
         // setRentalPricing(res.data);
       } catch (error) {
         console.error("Lỗi khi tải bảng giá:", error);
@@ -146,7 +146,7 @@ const AdminBangGiaPage = () => {
 
     try {
       // TODO: Uncomment khi có API thực tế
-      // await axios.post("http://localhost:8080/api/pricing-rules/create", {
+      // await axios.post("https://be-ev-station-based-rental-system.onrender.com/api/pricing-rules/create", {
       //   type: newRentalItem.type,
       //   dailyPrice: newRentalItem.dailyPrice,
       //   lateFeePerDay: newRentalItem.lateFee,
@@ -207,7 +207,7 @@ const AdminBangGiaPage = () => {
 
     try {
       // TODO: Thay bằng API thực tế khi có
-      // await axios.put(`http://localhost:8080/api/pricing-rules/${editingRentalItem.id}`, {
+      // await axios.put(`https://be-ev-station-based-rental-system.onrender.com/api/pricing-rules/${editingRentalItem.id}`, {
       //   dailyPrice: editRentalFormData.dailyPrice,
       //   lateFeePerDay: editRentalFormData.lateFee,
       //   holidayPrice: editRentalFormData.holidayPrice
@@ -246,7 +246,7 @@ const AdminBangGiaPage = () => {
 
     try {
       // TODO: Thay bằng API thực tế khi có
-      // await axios.delete(`http://localhost:8080/api/pricing-rules/delete/${item.id}`);
+      // await axios.delete(`https://be-ev-station-based-rental-system.onrender.com/api/pricing-rules/delete/${item.id}`);
 
       // Mock: Xóa item khỏi mảng
       // Array.filter(): Tạo mảng mới chỉ chứa các phần tử thỏa mãn điều kiện

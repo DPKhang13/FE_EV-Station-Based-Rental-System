@@ -26,7 +26,7 @@ const QuanLiXeTaiTram = () => {
       try {
         setLoading(true);
         const res = await axios.get(
-          "http://localhost:8080/api/rentalstation/getAll"
+          "https://be-ev-station-based-rental-system.onrender.com/api/rentalstation/getAll"
         );
         const data = Array.isArray(res.data) ? res.data : [];
         setStations(data);

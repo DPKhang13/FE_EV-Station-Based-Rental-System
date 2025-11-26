@@ -1,5 +1,5 @@
 // Base API Configuration và Helper Functions
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'https://be-ev-station-based-rental-system.onrender.com/api';
 
 /**
  * Set token as cookie

@@ -23,7 +23,7 @@ localStorage.getItem('accessToken')
 
 ### 2. Test API với cURL
 ```bash
-curl -X POST http://localhost:8080/api/order/create \
+curl -X POST https://be-ev-station-based-rental-system.onrender.com/api/order/create \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN_HERE" \
   -d '{

@@ -69,7 +69,7 @@ src/
 ## 🔌 API Endpoint Sử Dụng
 
 ```
-GET http://localhost:8080/api/vehicles/get
+GET https://be-ev-station-based-rental-system.onrender.com/api/vehicles/get
 Headers: Authorization: Bearer {token}
 ```
 

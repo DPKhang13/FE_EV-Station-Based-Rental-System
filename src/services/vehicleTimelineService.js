@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:8080/api";
+const API_BASE_URL = "https://be-ev-station-based-rental-system.onrender.com/api";
 
 export const vehicleTimelineService = {
   async getTimelines(vehicleId) {

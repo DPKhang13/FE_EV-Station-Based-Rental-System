@@ -14,7 +14,7 @@ const ChiTietKhachHang = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`http://localhost:8080/api/auth/getUser/${id}`);
+        const res = await axios.get(`https://be-ev-station-based-rental-system.onrender.com/api/auth/getUser/${id}`);
         setUser(res.data);
       } catch (err) {
         console.error("Lỗi tải thông tin khách hàng:", err);

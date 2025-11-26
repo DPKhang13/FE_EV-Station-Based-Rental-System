@@ -192,7 +192,7 @@ function ListCarPage() {
 
 ## 🌐 Cấu Hình API
 
-API URL mặc định: `http://localhost:8080/api`
+API URL mặc định: `https://be-ev-station-based-rental-system.onrender.com/api`
 
 Để thay đổi, sửa trong `src/services/vehicleService.js`:
 ```javascript
@@ -239,7 +239,7 @@ Khi migrate component sang sử dụng API:
 ## 🐛 Troubleshooting
 
 ### Không lấy được dữ liệu từ API:
-1. Kiểm tra backend đã chạy chưa (http://localhost:8080)
+1. Kiểm tra backend đã chạy chưa (https://be-ev-station-based-rental-system.onrender.com)
 2. Kiểm tra token trong localStorage
 3. Kiểm tra Console để xem lỗi
 4. Kiểm tra CORS settings trên backend

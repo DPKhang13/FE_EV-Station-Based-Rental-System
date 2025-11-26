@@ -3,7 +3,7 @@
 import image4Seater from '../assets/4standard.jpg';
 import image7Seater from '../assets/7standard.jpg';
 
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'https://be-ev-station-based-rental-system.onrender.com/api';
 
 /**
  * Lấy danh sách tất cả xe từ API

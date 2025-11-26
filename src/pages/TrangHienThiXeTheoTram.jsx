@@ -257,7 +257,7 @@ const TrangHienThiXeTheoTram = () => {
     try {
       const token = localStorage.getItem("accessToken");
       const res = await axios.get(
-        `http://localhost:8080/api/vehicles/station/${station}`,
+        `https://be-ev-station-based-rental-system.onrender.com/api/vehicles/station/${station}`,
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
 
@@ -276,7 +276,7 @@ const TrangHienThiXeTheoTram = () => {
     try {
       const token = localStorage.getItem("accessToken");
       const res = await axios.get(
-        "http://localhost:8080/api/rentalstation/getAll",
+        "https://be-ev-station-based-rental-system.onrender.com/api/rentalstation/getAll",
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
       const data = Array.isArray(res.data) ? res.data : [];
@@ -293,7 +293,7 @@ const TrangHienThiXeTheoTram = () => {
     try {
       const token = localStorage.getItem("accessToken");
       const res = await axios.get(
-        `http://localhost:8080/api/vehicles/station/${stationId}`,
+        `https://be-ev-station-based-rental-system.onrender.com/api/vehicles/station/${stationId}`,
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
 
@@ -511,7 +511,7 @@ const TrangHienThiXeTheoTram = () => {
       // Gọi API với multipart/form-data
       // Lưu ý: Không set Content-Type header, để axios tự động set với boundary
       console.log("[Create Vehicle] ========== SENDING REQUEST ==========");
-      console.log("[Create Vehicle] URL: http://localhost:8080/api/vehicles/create");
+      console.log("[Create Vehicle] URL: https://be-ev-station-based-rental-system.onrender.com/api/vehicles/create");
       console.log("[Create Vehicle] Method: POST");
       console.log("[Create Vehicle] Has token:", !!token);
       
@@ -531,7 +531,7 @@ const TrangHienThiXeTheoTram = () => {
       }
       
       const response = await axios.post(
-        "http://localhost:8080/api/vehicles/create",
+        "https://be-ev-station-based-rental-system.onrender.com/api/vehicles/create",
         formDataToSend,
         {
           headers: {
@@ -710,7 +710,7 @@ const TrangHienThiXeTheoTram = () => {
       };
 
       await axios.put(
-        `http://localhost:8080/api/vehicles/update/${editingVehicleId}`,
+        `https://be-ev-station-based-rental-system.onrender.com/api/vehicles/update/${editingVehicleId}`,
         updateData,
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
@@ -733,7 +733,7 @@ const TrangHienThiXeTheoTram = () => {
       const token = localStorage.getItem("accessToken");
 
       await axios.delete(
-        `http://localhost:8080/api/vehicles/deleted/${vehicleId}`,
+        `https://be-ev-station-based-rental-system.onrender.com/api/vehicles/deleted/${vehicleId}`,
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
 
@@ -752,7 +752,7 @@ const TrangHienThiXeTheoTram = () => {
       const token = localStorage.getItem("accessToken");
 
       const res = await axios.get(
-        `http://localhost:8080/api/order/vehicle/${vehicleId}/compact`,
+        `https://be-ev-station-based-rental-system.onrender.com/api/order/vehicle/${vehicleId}/compact`,
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
 
@@ -776,7 +776,7 @@ const TrangHienThiXeTheoTram = () => {
       const token = localStorage.getItem("accessToken");
 
       const res = await axios.get(
-        `http://localhost:8080/api/order-details/order/${orderId}`,
+        `https://be-ev-station-based-rental-system.onrender.com/api/order-details/order/${orderId}`,
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
 
@@ -847,7 +847,7 @@ const TrangHienThiXeTheoTram = () => {
       };
 
       await axios.put(
-        `http://localhost:8080/api/order/vehicle/${currentHistoryVehicleId}/${editingOrder.orderId}/compact`,
+        `https://be-ev-station-based-rental-system.onrender.com/api/order/vehicle/${currentHistoryVehicleId}/${editingOrder.orderId}/compact`,
         updateData,
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
@@ -928,7 +928,7 @@ const TrangHienThiXeTheoTram = () => {
       const token = localStorage.getItem("accessToken");
 
       await axios.post(
-        "http://localhost:8080/api/order/create",
+        "https://be-ev-station-based-rental-system.onrender.com/api/order/create",
         orderData,
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
@@ -965,7 +965,7 @@ const TrangHienThiXeTheoTram = () => {
       const token = localStorage.getItem("accessToken");
 
       await axios.delete(
-        `http://localhost:8080/api/order/delete/${orderId}`,
+        `https://be-ev-station-based-rental-system.onrender.com/api/order/delete/${orderId}`,
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
 

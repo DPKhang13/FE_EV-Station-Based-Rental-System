@@ -144,7 +144,7 @@ const ListCarPage = () => {
 
             try {
                 setLoadingVehicles(true);
-                const response = await fetch(`http://localhost:8080/api/vehicles/station/${selectedBranch}`);
+                const response = await fetch(`https://be-ev-station-based-rental-system.onrender.com/api/vehicles/station/${selectedBranch}`);
                 
                 if (!response.ok) {
                     const errorText = await response.text();
@@ -243,7 +243,7 @@ const ListCarPage = () => {
             }
 
             const token = localStorage.getItem('accessToken');
-            const url = `http://localhost:8080/api/vehicles/available?startTime=${encodeURIComponent(startDateTime)}&endTime=${encodeURIComponent(endDateTime)}&stationId=${selectedBranch}`;
+            const url = `https://be-ev-station-based-rental-system.onrender.com/api/vehicles/available?startTime=${encodeURIComponent(startDateTime)}&endTime=${encodeURIComponent(endDateTime)}&stationId=${selectedBranch}`;
             
             console.log('🔍 Searching available vehicles:', { startDateTime, endDateTime, stationId: selectedBranch });
 

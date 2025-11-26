@@ -33,7 +33,7 @@ const ChiTietDonTrongAdmin = () => {
       try {
         // Fetch order details
         const detailsRes = await axios.get(
-          `http://localhost:8080/api/order-details/order/${orderId}`
+          `https://be-ev-station-based-rental-system.onrender.com/api/order-details/order/${orderId}`
         );
         setDetails(detailsRes.data || []);
 

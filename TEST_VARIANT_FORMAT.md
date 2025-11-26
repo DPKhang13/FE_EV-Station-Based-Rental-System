@@ -58,7 +58,7 @@ Bạn sẽ thấy các log sau:
 
 **Request:**
 ```http
-POST http://localhost:8080/api/vehicles/create
+POST https://be-ev-station-based-rental-system.onrender.com/api/vehicles/create
 Authorization: Bearer {YOUR_ACCESS_TOKEN}
 Content-Type: application/json
 

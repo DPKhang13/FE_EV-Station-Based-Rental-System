@@ -307,7 +307,7 @@ Mỗi component đều có fallback data để:
 
 ## ✅ TESTING CHECKLIST
 
-### Backend Running (localhost:8080)
+### Backend Running (be-ev-station-based-rental-system.onrender.com)
 - ✅ Vehicles load từ API
 - ✅ Stations load từ API
 - ✅ Feedbacks load từ API

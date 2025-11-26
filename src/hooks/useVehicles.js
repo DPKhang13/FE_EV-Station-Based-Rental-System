@@ -242,7 +242,7 @@ export const useVehicles = (autoLoad = false) => {
             // Sử dụng sample data khi API fail
             console.warn('⚠️ [useVehicles] Sử dụng sample data do lỗi API');
             console.warn('� [useVehicles] Kiểm tra:');
-            console.warn('   1. Backend có đang chạy? (http://localhost:8080)');
+            console.warn('   1. Backend có đang chạy? (https://be-ev-station-based-rental-system.onrender.com)');
             console.warn('   2. CORS đã được cấu hình?');
             console.warn('   3. Database có dữ liệu xe?');
 

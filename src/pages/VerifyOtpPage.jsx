@@ -56,7 +56,7 @@ const VerifyOtpPage = () => {
 
    try {
   const res = await axios.post(
-    `http://localhost:8080/api/auth/verify?inputOtp=${otpCode}&email=${encodeURIComponent(email)}&type=${type}`
+    `https://be-ev-station-based-rental-system.onrender.com/api/auth/verify?inputOtp=${otpCode}&email=${encodeURIComponent(email)}&type=${type}`
   );
 
   const data = res.data;

@@ -299,7 +299,7 @@ const testOrderCreation = async () => {
     console.log('📤 Sending:', payload);
     
     try {
-        const response = await fetch('http://localhost:8080/api/order/create', {
+        const response = await fetch('https://be-ev-station-based-rental-system.onrender.com/api/order/create', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

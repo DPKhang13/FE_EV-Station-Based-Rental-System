@@ -58,7 +58,7 @@ Mở Console (F12) và xem log:
 ```
 🔍 [useVehicles] Bắt đầu load dữ liệu xe...
 🔑 [useVehicles] Có token - Đang fetch từ API...
-🚀 [API] Đang gọi API: http://localhost:8080/api/vehicles/get
+🚀 [API] Đang gọi API: https://be-ev-station-based-rental-system.onrender.com/api/vehicles/get
 🔑 [API] Token: CÓ TOKEN ✅
 📡 [API] Response status: 200
 ✅ [API] Nhận được dữ liệu từ backend: 50 xe
@@ -79,7 +79,7 @@ Mở Console (F12) và xem log:
 ```
 🔍 [useVehicles] Bắt đầu load dữ liệu xe...
 🔑 [useVehicles] Có token - Đang fetch từ API...
-🚀 [API] Đang gọi API: http://localhost:8080/api/vehicles/get
+🚀 [API] Đang gọi API: https://be-ev-station-based-rental-system.onrender.com/api/vehicles/get
 🔑 [API] Token: CÓ TOKEN ✅
 ❌ [API] Lỗi khi gọi API: Failed to fetch
 ❌ [useVehicles] Lỗi khi fetch vehicles: ...
@@ -97,7 +97,7 @@ Mở Console (F12) và xem log:
 4. Tìm request tên `get` hoặc `vehicles`
 
 ### ✅ Nếu thấy request:
-- **URL:** `localhost:8080/api/vehicles/get`
+- **URL:** `be-ev-station-based-rental-system.onrender.com/api/vehicles/get`
 - **Status:** 200 OK
 - **Preview:** Array of vehicles
 
@@ -129,7 +129,7 @@ Mở http://localhost:5173
    Cách check: localStorage.getItem('accessToken')
    
 → Check: Backend đã chạy chưa?
-   Cách check: Mở http://localhost:8080/api/vehicles/get
+   Cách check: Mở https://be-ev-station-based-rental-system.onrender.com/api/vehicles/get
 ```
 
 ### Bước 4: Login để có token

@@ -289,7 +289,7 @@ const MyBookingsPage = () => {
                     paymentType: 1
                 };
 
-                const response = await fetch('http://localhost:8080/api/payment/vnpay', {
+                const response = await fetch('https://be-ev-station-based-rental-system.onrender.com/api/payment/vnpay', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)

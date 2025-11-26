@@ -23,7 +23,7 @@ export default function BangGiaPage() {
   useEffect(() => {
     const fetchPricing = async () => {
       try {
-        const res = await axios.get("http://localhost:8080/api/pricing-rules");
+        const res = await axios.get("https://be-ev-station-based-rental-system.onrender.com/api/pricing-rules");
         // ✅ API trả về format mới với carmodel
         const data = res.data || [];
         
@@ -43,7 +43,7 @@ export default function BangGiaPage() {
   useEffect(() => {
     const fetchServicePricing = async () => {
       try {
-        const res = await axios.get("http://localhost:8080/api/order-services/price-list");
+        const res = await axios.get("https://be-ev-station-based-rental-system.onrender.com/api/order-services/price-list");
         const data = res.data || [];
         
         // ✅ Sắp xếp theo serviceType và cost

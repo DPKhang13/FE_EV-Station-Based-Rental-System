@@ -390,7 +390,7 @@ const StationManagement = () => {
             try {
                 // Lấy token từ localStorage để authenticate API request
                 const token = localStorage.getItem('accessToken');
-                const API_BASE_URL = 'http://localhost:8080/api';
+                const API_BASE_URL = 'https://be-ev-station-based-rental-system.onrender.com/api';
                 
                 // Normalize color: Chuyển về lowercase để match với API
                 // Ví dụ: "White" -> "white", "Blue" -> "blue"
@@ -562,7 +562,7 @@ const StationManagement = () => {
 
     console.log("🚗 PUT update vehicle:", vehicleData);
 
-    const res = await fetch(`http://localhost:8080/api/vehicles/update/${vehicleId}`, {
+    const res = await fetch(`https://be-ev-station-based-rental-system.onrender.com/api/vehicles/update/${vehicleId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(vehicleData),
@@ -686,7 +686,7 @@ const StationManagement = () => {
                             {error}
                         </div>
                         <div style={{ fontSize: '12px', color: '#999', marginTop: '8px' }}>
-                            Kiểm tra: Backend có chạy không? (http://localhost:8080)
+                            Kiểm tra: Backend có chạy không? (https://be-ev-station-based-rental-system.onrender.com)
                         </div>
                     </div>
                     <button onClick={fetchStations}>
