@@ -1,5 +1,5 @@
-// Component quản lý bảng giá
-// Component này cho phép admin xem, thêm, sửa, xóa bảng giá thuê xe và dịch vụ
+// quản lý bảng giá
+// admin xem, thêm, sửa, xóa bảng giá thuê xe và dịch vụ
 import React, { useState, useEffect } from "react";
 import "./AdminBangGiaPage.css";
 // import axios from "axios"; // TODO: Uncomment khi kết nối API

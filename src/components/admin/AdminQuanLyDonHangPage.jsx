@@ -16,6 +16,7 @@ const getStatusText = (status) => {
     'PENDING': 'Chờ xác nhận',
     'CONFIRMED': 'Đã xác nhận',
     'RENTED': 'Đang thuê',
+    'RENTAL': 'Đang thuê',
     'COMPLETED': 'Hoàn thành',
     'CANCELLED': 'Đã hủy',
     'PAYMENT_FAILED': 'Thanh toán thất bại',
@@ -30,7 +31,7 @@ const getStatusText = (status) => {
 const getStatusClass = (status) => {
   if (!status) return 'warning';
   const s = status.toUpperCase();
-  if (['COMPLETED', 'CONFIRMED', 'RENTED', 'ACTIVE'].includes(s)) {
+  if (['COMPLETED', 'CONFIRMED', 'RENTED', 'RENTAL', 'ACTIVE'].includes(s)) {
     return 'success';
   }
   if (['PAYMENT_FAILED', 'REFUNDED', 'CANCELLED', 'FAILED'].includes(s)) {

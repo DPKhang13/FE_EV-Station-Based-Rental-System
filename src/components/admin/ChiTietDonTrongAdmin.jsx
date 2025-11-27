@@ -153,6 +153,31 @@ const ChiTietDonTrongAdmin = () => {
     return statusMap[s] || status;
   };
 
+  // Helper function: Chuyển loại dịch vụ sang tiếng Việt
+  const getServiceTypeText = (type) => {
+    if (!type) return 'N/A';
+    const t = type.toUpperCase();
+    const typeMap = {
+      'DEPOSIT': 'Đặt cọc',
+      'PICKUP': 'Nhận xe',
+      'RETURN': 'Trả xe',
+      'SERVICE': 'Dịch vụ',
+      'FULL_PAYMENT': 'Thanh toán toàn bộ',
+      'PARTIAL_PAYMENT': 'Thanh toán một phần',
+      'RENTAL': 'Thuê xe',
+      'EXTENSION': 'Gia hạn',
+      'CANCELLATION': 'Hủy đơn',
+      'REFUND': 'Hoàn tiền',
+      'MAINTENANCE': 'Bảo dưỡng',
+      'REPAIR': 'Sửa chữa',
+      'CLEANING': 'Vệ sinh',
+      'INSURANCE': 'Bảo hiểm',
+      'FUEL': 'Nhiên liệu',
+      'OTHER': 'Khác'
+    };
+    return typeMap[t] || type;
+  };
+
   if (loading) {
     return <div className="od-loading">Đang tải chi tiết đơn hàng...</div>;
   }
@@ -499,7 +524,7 @@ const ChiTietDonTrongAdmin = () => {
           <table className="od-table">
             <thead>
               <tr>
-                <th>Detail ID</th>
+                <th>Mã</th>
                 <th>Loại dịch vụ</th>
                 <th>Mô tả</th>
                 <th>Giá</th>
@@ -513,7 +538,7 @@ const ChiTietDonTrongAdmin = () => {
               {details.map((d, index) => (
                 <tr key={d.detailId || index}>
                   <td>{index + 1}</td>
-                  <td>{d.type}</td>
+                  <td>{getServiceTypeText(d.type)}</td>
                   <td>{d.description}</td>
                   <td className="od-money">
                     {d.price.toLocaleString()} VNĐ
