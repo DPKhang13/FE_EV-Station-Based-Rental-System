@@ -16,7 +16,7 @@ export default function SideBarAdmin() {
   
   // useContext: Lấy dữ liệu user từ AuthContext
   // AuthContext là nơi lưu trữ thông tin user đã đăng nhập
-  const { user } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
 
   // Early return: Nếu chưa có user thì hiển thị loading
   // Đây là pattern phổ biến để tránh render khi chưa có dữ liệu
@@ -28,11 +28,11 @@ export default function SideBarAdmin() {
 
   // Hàm xử lý đăng xuất
   // Khi user click nút đăng xuất:
-  // 1. Xóa token khỏi localStorage (token dùng để xác thực)
-  // 2. Điều hướng về trang login
+  // 1. Gọi hàm logout từ AuthContext để xóa tất cả thông tin (token, user, role, cookies)
+  // 2. Điều hướng về trang home
   const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    navigate("/login");
+    logout();
+    navigate("/");
   };
 
   return (

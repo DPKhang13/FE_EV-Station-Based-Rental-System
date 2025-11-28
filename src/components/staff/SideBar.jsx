@@ -9,15 +9,15 @@ import { AuthContext } from "../../context/AuthContext";
 
 export default function Sidebar({ isOpen = true }) {
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
 
   if (!user) return <p>Đang tải dữ liệu người dùng...</p>;
 
   const name = user.name || "Nhân viên";
 
   const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    navigate("/login");
+    logout();
+    navigate("/");
   };
 
   return (
